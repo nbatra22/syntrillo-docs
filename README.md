@@ -1,2 +1,5 @@
 # healthie_dev
-All things Healthie
+
+Healthie API and React SDK development environment
+
+
