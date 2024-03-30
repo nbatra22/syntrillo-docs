@@ -51,6 +51,11 @@ load_dotenv()
 # Get the API key from the environment variables
 api_key = os.getenv('API_KEY')
 
+# Check if the API key is available
+if api_key is None:
+    print("API key not found. Make sure it's defined in the .env file.")
+    exit()
+
 # Set up the request headers with the API key
 headers = {
     'Authorization': f'Basic {api_key}',
