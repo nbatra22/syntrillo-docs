@@ -26,6 +26,7 @@ query formAnswerGroups(
     user_id
     finished
     form_answers {
+      custom_module_id
       label
       answer
       # id
