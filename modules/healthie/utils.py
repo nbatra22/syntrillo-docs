@@ -36,6 +36,8 @@ class HealthieAPI:
         elif self.organization == 'production':
             self.url = 'https://prod-api.gethealthie.com/graphql'
 
+
+
     def send_query(self, query: str, variables: dict = {}):
         # Set up the request headers with the API key
         headers = {
@@ -60,6 +62,7 @@ class HealthieAPI:
             print(f"Request Exception: {err}")
             raise
 
+
     def get_organization_details(self):
         # Set up the GraphQL query
         query = '''
@@ -82,6 +85,59 @@ class HealthieAPI:
         response = self.send_query(query, variables)
         return response
 
+
+    def list_patients(self):
+
+        # Set up the GraphQL query
+        query = '''
+            query users(
+                $offset: Int,
+                $keywords: String,
+                $sort_by: String,
+                $active_status: String,
+                $group_id: String,
+                $show_all_by_default: Boolean,
+                $should_paginate: Boolean,
+                $provider_id: String,
+                $conversation_id: ID,
+                $limited_to_provider: Boolean,
+                ) {
+                usersCount(
+                    keywords: $keywords,
+                    active_status:$active_status,
+                    group_id: $group_id,
+                    conversation_id: $conversation_id,
+                    provider_id: $provider_id,
+                    limited_to_provider: $limited_to_provider
+                )
+                users(
+                    offset: $offset,
+                    keywords: $keywords,
+                    sort_by: $sort_by,
+                    active_status: $active_status,
+                    group_id: $group_id,
+                    conversation_id: $conversation_id,
+                    show_all_by_default: $show_all_by_default,
+                    should_paginate: $should_paginate,
+                    provider_id: $provider_id,
+                    limited_to_provider: $limited_to_provider
+                ) {
+                    id
+                }
+            }
+        '''
+
+        # Set up the GraphQL variables
+        variables = {
+            'offset': 0,  # Offset for pagination (if applicable)
+            # Add other variables as needed
+        }
+
+        # Send the GraphQL query using the inherited send_query method
+        response = self.send_query(query, variables)
+        return response
+
+
 if __name__ == "__main__":
     # Load environment variables from .env file
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
@@ -92,8 +148,12 @@ if __name__ == "__main__":
 
     # Call the method to get organization details
     try:
+        # org
         response = healthie_api.get_organization_details()
-        # Pretty print the JSON response
+        print(json.dumps(response, indent=4))
+
+        # patients
+        response = healthie_api.list_patients()
         print(json.dumps(response, indent=4))
 
     except ValueError as ve:
