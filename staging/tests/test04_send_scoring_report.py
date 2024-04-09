@@ -37,6 +37,9 @@ html_content = '''
             <td style="background-color: lightskyblue;">Cell 4</td>
         </tr>
     </table>
+    <p>iFrame starts:</p>
+    <iframe src="https://www.syntrillo.com" width="800" height="600" style="border: 1px solid #ccc;"></iframe>
+    <p>iFrame ends</p>
 </body>
 </html>
 '''
@@ -86,7 +89,8 @@ mutation createFormAnswerGroup(
 '''
 
 # Load environment variables from .env file
-load_dotenv()
+dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(sys.argv[0])) + "/../.env")
+load_dotenv(dotenv_path=dotenv_path)
 
 # Get the API key from the environment variables
 api_key = os.getenv('API_KEY')

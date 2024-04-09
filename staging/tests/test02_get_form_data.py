@@ -36,7 +36,8 @@ query formAnswerGroups(
 '''
 
 # Load environment variables from .env file
-load_dotenv()
+dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(sys.argv[0])) + "/../.env")
+load_dotenv(dotenv_path=dotenv_path)
 
 # Get the API key from the environment variables
 api_key = os.getenv('API_KEY')

@@ -3,6 +3,7 @@
 # query from https://docs.gethealthie.com/docs/#querying-filled-out-forms
 # use https://docs.gethealthie.com/docs/explorer to get parameters
 
+import sys
 import requests
 import os
 import json
@@ -22,8 +23,11 @@ query getOrganization($id: ID) {
 }
 '''
 
+# sys.path.append(os.path.abspath("./modules/"))
+
 # Load environment variables from .env file
-load_dotenv()
+dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(sys.argv[0])) + "/../.env")
+load_dotenv(dotenv_path=dotenv_path)
 
 # Get the API key from the environment variables
 api_key = os.getenv('API_KEY')
