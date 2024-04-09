@@ -23,8 +23,6 @@ query getOrganization($id: ID) {
 }
 '''
 
-# sys.path.append(os.path.abspath("./modules/"))
-
 # Load environment variables from .env file
 dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(sys.argv[0])) + "/../.env")
 load_dotenv(dotenv_path=dotenv_path)
