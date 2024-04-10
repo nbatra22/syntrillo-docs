@@ -1,4 +1,4 @@
-# staging/get_organization_details.py
+# staging/get_organization_status.py
 
 import sys
 import os

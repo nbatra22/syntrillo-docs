@@ -10,16 +10,41 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from healthie.base import HealthieAPI
 
 class HealthieAPIUtils(HealthieAPI):
+    """
+    A utility class extending HealthieAPI for specific Healthie API interactions.
+
+    This class provides methods to retrieve organization details and list patients using GraphQL queries.
+
+    Attributes:
+        api_key (str): The API key used for authentication.
+        organization (str): The environment organization (default: 'staging').
+        dotenv_path (str): Path to the .env file containing environment variables.
+    """
     def __init__(
         self,
         api_key: str = None,
         organization: str = 'staging',
         dotenv_path: str = None,
         ):
+        """
+        Initializes the HealthieAPIUtils instance.
+
+        Parameters:
+            api_key (str, optional): The API key used for authentication.
+            organization (str, optional): The environment organization (default: 'staging').
+            dotenv_path (str, optional): Path to the .env file containing environment variables.
+        """
         super().__init__(api_key, organization, dotenv_path)
 
 
     def get_organization_details(self):
+        """
+        Retrieve organization details using GraphQL query.
+
+        Returns:
+            dict: Response data containing organization details.
+        """
+
         # Set up the GraphQL query
         query = '''
             query getOrganization($id: ID) {
@@ -45,6 +70,12 @@ class HealthieAPIUtils(HealthieAPI):
 
 
     def list_patients(self):
+        """
+        List patients using GraphQL query.
+
+        Returns:
+            dict: Response data containing a list of patients.
+        """
 
         # Set up the GraphQL query
         query = '''
@@ -103,13 +134,13 @@ if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization
     utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
 
-    # Call the method to get organization details
+    # test
     try:
-        # org
+        # Retrieve organization details
         response = utils_api.get_organization_details()
         print(json.dumps(response, indent=4))
 
-        # patients
+        # List patients
         response = utils_api.list_patients()
         print(json.dumps(response, indent=4))
 
