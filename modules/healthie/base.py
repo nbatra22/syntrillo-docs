@@ -11,6 +11,7 @@ class HealthieAPI:
         api_key: str = None,
         organization: str = 'staging',
         dotenv_path: str = None,
+        verbose=False,
         ):
 
         if dotenv_path is None :
@@ -21,6 +22,11 @@ class HealthieAPI:
             # Get the API key and organization from environment variables
             self.api_key = os.getenv('API_KEY')
             self.organization = os.getenv('ORGANIZATION')
+
+        if verbose:
+            print(dotenv_path)
+            print(self.api_key)
+            print(self.organization)
 
         # Check if the API key is available
         if self.api_key is None:
@@ -34,7 +40,7 @@ class HealthieAPI:
         if self.organization == 'staging':
             self.url = 'https://staging-api.gethealthie.com/graphql'
         elif self.organization == 'production':
-            self.url = 'https://prod-api.gethealthie.com/graphql'
+            self.url = 'https://api.gethealthie.com/graphql'
 
 
 
