@@ -23,7 +23,8 @@ class HealthieAPI:
             self.api_key = os.getenv('API_KEY')
             self.organization = os.getenv('ORGANIZATION')
 
-        if verbose:
+        self.verbose = verbose
+        if self.verbose:
             print(dotenv_path)
             print(self.api_key)
             print(self.organization)
