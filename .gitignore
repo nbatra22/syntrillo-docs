@@ -1,0 +1,24 @@
+# ignore all logs
+_**
+
+# ignore all backups
+*~
+
+# ignore binary files
+*.gz
+*.png
+*.db
+*.pkl
+*.jpg
+
+
+# ignore jupyter folders
+.ipynb_checkpoints/
+__pycache__/
+.mypy_cache/
+
+nohup.out
+
+catboost_info/
+
+**/.ipynb_checkpoints
