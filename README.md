@@ -1,8 +1,35 @@
 # healthie_dev
 
-Healthie API and React SDK development environment
+Healthie API development environment
 
-## Sandbox tests
+## Modules
+
+### Healthie
+
+Package with functions connecting with Healthie's API and GraphQL
+
+## Organization folders
+
+Each folder include a dot env file `.env` with api keys generated in Healthie > Settings
+
+```
+API_KEY='xxxx'
+ORGANIZATION='staging'  # 'staging' or 'production'
+```
+
+### Staging folder
+
+staging account, organization id 57057
+
+### Production folder
+
+production/enterprise account, organization id 8387
 
 
+## Requirements & Environments
 
+Locally, using anaconda development environment, named 'syntrillo'
+
+requirement.txt created & updated manually
+
+environement.yml created with `conda env export --name syntrillo --file environment.yml`
