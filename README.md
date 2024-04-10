@@ -12,6 +12,8 @@ Package with functions connecting with Healthie's API and GraphQL
 
 Each folder include a dot env file `.env` with api keys generated in Healthie > Settings
 
+These files are local files, not stored in the repository.
+
 ```
 API_KEY='xxxx'
 ORGANIZATION='staging'  # 'staging' or 'production'
@@ -30,6 +32,6 @@ production/enterprise account, organization id 8387
 
 Locally, using anaconda development environment, named 'syntrillo'
 
-requirement.txt created & updated manually
+`requirement.txt` created & updated manually
 
-environement.yml created with `conda env export --name syntrillo --file environment.yml`
+`environement.yml` created with `conda env export --name syntrillo --file environment.yml`
