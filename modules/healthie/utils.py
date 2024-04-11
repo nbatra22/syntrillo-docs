@@ -55,6 +55,16 @@ class HealthieAPIUtils(HealthieAPI):
                         city
                         country
                     }
+                    can_have_suborgs
+                    created_at
+                    npi
+                    num_users
+                    owner {
+                        name
+                    }
+                    tags {
+                        name
+                    }
                 }
             }
         '''
