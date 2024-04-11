@@ -69,6 +69,42 @@ class HealthieAPIUtils(HealthieAPI):
         return response
 
 
+    def get_module_types(self):
+        """
+        Retrieve organization details using GraphQL query.
+
+        Returns:
+            dict: CustomModule
+        """
+
+        # Set up the GraphQL query
+        query = '''
+            query questionBankModules(
+                $category: String
+            ) {
+                questionBankModules(
+                    category: $category
+                ) {
+                    id
+                    mod_type
+                    options
+                    options_array
+                    id
+                    label
+                }
+            }
+        '''
+
+        # Set up the GraphQL variables (if needed)
+        variables = {
+
+        }
+
+        # Send the GraphQL query using the class method
+        response = self.send_query(query, variables)
+        return response
+
+
     def list_patients(self):
         """
         List patients using GraphQL query.
@@ -139,6 +175,10 @@ if __name__ == "__main__":
 
     # Retrieve organization details
     response = utils_api.get_organization_details()
+    print(json.dumps(response, indent=4))
+
+    # Retrieve module types
+    response = utils_api.get_module_types()
     print(json.dumps(response, indent=4))
 
     # List patients
