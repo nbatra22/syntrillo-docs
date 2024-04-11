@@ -72,9 +72,10 @@ class HealthieAPIUtils(HealthieAPI):
     def list_patients(self):
         """
         List patients using GraphQL query.
+        https://docs.gethealthie.com/docs/#list-all-patients
 
         Returns:
-            dict: Response data containing a list of patients.
+            dict: 'usersCount' and 'users' data containing a list of patients.
         """
 
         # Set up the GraphQL query
@@ -112,6 +113,7 @@ class HealthieAPIUtils(HealthieAPI):
                     limited_to_provider: $limited_to_provider
                 ) {
                     id
+                    email
                 }
             }
         '''
@@ -124,6 +126,7 @@ class HealthieAPIUtils(HealthieAPI):
 
         # Send the GraphQL query using the inherited send_query method
         response = self.send_query(query, variables)
+
         return response
 
 
