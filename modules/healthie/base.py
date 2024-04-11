@@ -84,11 +84,12 @@ class HealthieAPI:
             variables (dict, optional): Variables to be passed with the query (default: {}).
 
         Returns:
-            dict: The JSON response from the API.
+            dict: The JSON response 'data' from the API.
 
         Raises:
             requests.exceptions.HTTPError: If the API request fails.
             requests.exceptions.RequestException: For other request errors.
+            Exception if the response contains an 'errors' or does not contain 'data'
         """
 
         # Set up the request headers with the API key
@@ -103,8 +104,19 @@ class HealthieAPI:
             response.raise_for_status()  # Raise an HTTPError for non-2xx responses
 
             # Parse response data as JSON
-            response_data = response.json()
-            return response_data
+            response_json = response.json()
+
+            # Check if response contains 'errors' field
+            if 'errors' in response_json:
+                error_messages = ', '.join([error['message'] for error in response_json['errors']])
+                raise Exception(f"GraphQL query returned errors: {error_messages}")
+
+            # Check if response contains 'data' field
+            if 'data' not in response_json:
+                raise Exception("GraphQL query did not return valid data")
+
+            # Return the 'data' from the response
+            return response_json['data']
 
         except requests.exceptions.HTTPError as errh:
             print(f"HTTP Error: {errh}")
