@@ -98,6 +98,12 @@ class HealthieAPI:
             'AuthorizationSource': 'API'
         }
 
+        if self.verbose :
+            print("--debug--")
+            print(query)
+            print(json.dumps(variables, indent=4))
+            print("---------")
+
         try:
             # Make the HTTP POST request to the Healthie API
             response = requests.post(self.url, json={'query': query, 'variables': variables}, headers=headers)

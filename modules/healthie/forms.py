@@ -160,8 +160,8 @@ class HealthieAPIForms(HealthieAPI):
     def create_custom_module_form(
         self,
         name: str,
-        use_for_charting: bool,
-        use_for_program: bool,
+        use_for_charting: bool = False,
+        use_for_program: bool = False,
         external_id: str = None,
         external_id_type: str = None,
         is_video: bool = False,
@@ -174,8 +174,8 @@ class HealthieAPIForms(HealthieAPI):
 
         Parameters:
             name (str): The name of the custom module form.
-            use_for_charting (bool): Indicates if the form is used for charting.
-            use_for_program (bool): Indicates if the form is used for a program.
+            use_for_charting (bool, optional): Indicates if the form is used for charting. Default False
+            use_for_program (bool, optional): Indicates if the form is used for a program. Default False
             external_id (str, optional): External ID for relating form objects with third-party systems.
             external_id_type (str, optional): Type of external ID.
             is_video (bool, optional): Indicates if the form is a video module.
@@ -297,6 +297,8 @@ class HealthieAPIForms(HealthieAPI):
                 }) {
                     customModule {
                         id
+                        external_id
+                        label
                     }
                     messages {
                         field
@@ -325,60 +327,112 @@ class HealthieAPIForms(HealthieAPI):
         response = self.send_query(mutation, variables)
         return response
 
-def create_custom_modules(
-    self,
-    custom_module_form_id: str,
-    custom_modules: list
-):
-    """
-    Create multiple CustomModules within a CustomModuleForm using the Healthie API.
+    def create_custom_modules(
+        self,
+        custom_module_form_id: str,
+        custom_modules: list
+    ):
+        """
+        Create multiple CustomModules within a CustomModuleForm using the Healthie API.
 
-    Parameters:
-        custom_module_form_id (str): The ID of the CustomModuleForm to which the CustomModules will be added.
-        custom_modules (list): A list of dictionaries, each representing a CustomModule to be created.
-                               Each dictionary should contain at least 'label' and 'mod_type'.
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm to which the CustomModules will be added.
+            custom_modules (list): A list of dictionaries, each representing a CustomModule to be created.
+                                Each dictionary should contain at least 'label' and 'mod_type'.
+                                Index have to start at 0 if form blank
 
-    Returns:
-        list: List of response data for each created CustomModule, containing IDs and messages.
-    """
-    # List to collect response data for each created CustomModule
-    response_data_list = []
+        Returns:
+            list: List of response data for each created CustomModule, containing IDs and messages.
+        """
+        # List to collect response data for each created CustomModule
+        response_data_list = []
 
-    i : int = 0
-    # Iterate over each custom module dictionary
-    for custom_module in custom_modules:
-        i = i + 1
-        # Extract parameters from the custom module dictionary
-        label = custom_module['label']
-        mod_type = custom_module['mod_type']
-        index = custom_module.get('index', i) # use provided index or local iterator
-        is_custom = custom_module.get('is_custom', False)
-        external_id = custom_module.get('external_id', None)
-        external_id_type = custom_module.get('external_id_type', None)
-        options = custom_module.get('options', None)
-        parent_custom_module_id = custom_module.get('parent_custom_module_id', None)
-        required = custom_module.get('required', False)
-        sublabel = custom_module.get('sublabel', None)
+        i : int = 0
+        # Iterate over each custom module dictionary
+        for custom_module in custom_modules:
+            # Extract parameters from the custom module dictionary
+            label = custom_module['label']
+            mod_type = custom_module['mod_type']
+            # !!! index has to start at 0 if form blank
+            # TODO : need to get number of modules if form not empty ?? Use the float variable ???
+            index = custom_module.get('index', i) # use provided index or local iterator
+            is_custom = custom_module.get('is_custom', False)
+            external_id = custom_module.get('external_id', None)
+            external_id_type = custom_module.get('external_id_type', None)
+            options = custom_module.get('options', None)
+            parent_custom_module_id = custom_module.get('parent_custom_module_id', None)
+            required = custom_module.get('required', False)
+            sublabel = custom_module.get('sublabel', None)
 
-        # Create the custom module using the create_custom_module method
-        response = self.create_custom_module(
-            custom_module_form_id=custom_module_form_id,
-            label=label,
-            mod_type=mod_type,
-            index=index,
-            is_custom=is_custom,
-            external_id=external_id,
-            external_id_type=external_id_type,
-            options=options,
-            parent_custom_module_id=parent_custom_module_id,
-            required=required,
-            sublabel=sublabel
+            # Create the custom module using the create_custom_module method
+            response = self.create_custom_module(
+                custom_module_form_id=custom_module_form_id,
+                label=label,
+                mod_type=mod_type,
+                index=index,
+                is_custom=is_custom,
+                external_id=external_id,
+                external_id_type=external_id_type,
+                options=options,
+                parent_custom_module_id=parent_custom_module_id,
+                required=required,
+                sublabel=sublabel
+            )
+
+            # Append response data to the list
+            response_data_list.append(response)
+
+            # increment index
+            i = i + 1
+
+
+        return response_data_list
+
+
+
+    def create_form_wrapper(
+        self,
+        form_name: str,
+        use_for_charting: bool,
+        use_for_program: bool,
+        modules: list
+    ):
+        """
+        Wrapper function to create a new form and its modules.
+
+        Parameters:
+            form_name (str): The name of the custom module form.
+            use_for_charting (bool): Indicates if the form is used for charting.
+            use_for_program (bool): Indicates if the form is used for a program.
+            modules (list): A list of dictionaries, each representing a CustomModule to be created.
+                            Each dictionary should contain at least 'label' and 'mod_type'.
+
+        Returns:
+            dict: Response data containing the ID of the created custom module form and messages.
+        """
+
+        # Create the custom module form using the create_custom_module_form method
+        form_response = self.create_custom_module_form(
+            name=form_name,
+            use_for_charting=use_for_charting,
+            use_for_program=use_for_program
         )
 
-        # Append response data to the list
-        response_data_list.append(response)
+        # Extract the ID of the created custom module form
+        custom_module_form_id = form_response['createCustomModuleForm']['customModuleForm']['id']
 
-    return response_data_list
+        # Create custom modules within the custom module form using the create_custom_modules method
+        modules_responses = self.create_custom_modules(
+            custom_module_form_id=custom_module_form_id,
+            custom_modules=modules
+        )
+
+        # Check if there are any errors in the responses
+        if 'errors' in form_response or 'errors' in modules_responses:
+            raise Exception("Error creating form and modules.")
+
+        # Return the modules_response
+        return { "form_response" : form_response, "modules_responses" : modules_responses }
 
 
 if __name__ == "__main__":

@@ -17,77 +17,59 @@ dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../
 
 forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
-if False:
-    try:
-        # Create a custom module form with all parameters
-        form_name = "New Form"
-        charting = True
-        program = False
-        external_id = "12345"
-        external_id_type = "external_system"
-        is_video = False
-        on_completion_ifs_tag_id = "completion_tag_1"
-        prefill = False
+# Create a custom module form with all parameters
+form_name = "New Form"
+charting = True
+program = False
+external_id = "12345"
+external_id_type = "external_system"
+is_video = False
+on_completion_ifs_tag_id = "completion_tag_1"
+prefill = False
 
-        response = forms_api.create_custom_module_form(
-            form_name,
-            charting,
-            program,
-            external_id=external_id,
-            external_id_type=external_id_type,
-            is_video=is_video,
-            on_completion_ifs_tag_id=on_completion_ifs_tag_id,
-            prefill=prefill
-        )
+response_form = forms_api.create_custom_module_form(
+    name=form_name,
+    use_for_charting=charting,
+    use_for_program=program,
+    external_id=external_id,
+    external_id_type=external_id_type,
+    is_video=is_video,
+    on_completion_ifs_tag_id=on_completion_ifs_tag_id,
+    prefill=prefill
+)
 
-        # Check if response is valid and contains data
+print(json.dumps(response_form, indent=4))
 
-        if response:
-            print(json.dumps(response, indent=4))
+form_id = response_form['createCustomModuleForm']['customModuleForm']['id']
+print(form_id)
 
-        else:
-            print("Failed to create custom module form.")
 
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        exit()
+# Add a CustomModule to a CustomModuleForm with specified parameters
+# form_id = "1143157"  # Replace with the ID of the CustomModuleForm
+label = "Question 1"
+mod_type = "text"
+index = 0
+is_custom = False
+external_id = "67890"
+external_id_type = "external_system"
+options = ""
+parent_custom_module_id = None
+required = True
+sublabel = "Please provide your answer"
 
-if True:
+response_module = forms_api.create_custom_module(
+    custom_module_form_id=form_id,
+    label=label,
+    mod_type=mod_type,
+    index=index,
+    is_custom=is_custom,
+    external_id=external_id,
+    external_id_type=external_id_type,
+    options=options,
+    parent_custom_module_id=parent_custom_module_id,
+    required=required,
+    sublabel=sublabel
+)
 
-    try:
-        # Add a CustomModule to a CustomModuleForm with specified parameters
-        form_id = "1143157"  # Replace with the ID of the CustomModuleForm
-        label = "Question 1"
-        mod_type = "text"
-        index = 0
-        is_custom = False
-        external_id = "67890"
-        external_id_type = "external_system"
-        options = ""
-        parent_custom_module_id = None
-        required = True
-        sublabel = "Please provide your answer"
+print(json.dumps(response_module, indent=4))
 
-        response = forms_api.create_custom_module(
-            form_id,
-            label,
-            mod_type,
-            index,
-            is_custom=is_custom,
-            external_id=external_id,
-            external_id_type=external_id_type,
-            options=options,
-            parent_custom_module_id=parent_custom_module_id,
-            required=required,
-            sublabel=sublabel
-        )
-
-        if response:
-            print(json.dumps(response, indent=4))
-
-        else:
-            print("Failed to create custom module form.")
-
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        exit()
