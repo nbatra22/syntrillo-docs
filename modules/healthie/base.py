@@ -135,13 +135,8 @@ if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization
     healthie_api = HealthieAPI(dotenv_path=dotenv_path)
 
-    # test
-    try:
-        # Example: Send a test query to retrieve organization details
-        response = healthie_api.send_query(query='query { organization { id name } }')
-        print(json.dumps(response, indent=4))
+    # Example: Send a test query to retrieve organization details
+    response = healthie_api.send_query(query='query { organization { id name } }')
+    print(json.dumps(response, indent=4))
 
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        exit()
 

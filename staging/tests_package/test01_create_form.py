@@ -56,7 +56,7 @@ if True:
 
     try:
         # Add a CustomModule to a CustomModuleForm with specified parameters
-        form_id = "1142884"  # Replace with the ID of the CustomModuleForm
+        form_id = "1143157"  # Replace with the ID of the CustomModuleForm
         label = "Question 1"
         mod_type = "text"
         index = 0
@@ -68,7 +68,7 @@ if True:
         required = True
         sublabel = "Please provide your answer"
 
-        response = forms_api.add_custom_module_to_form(
+        response = forms_api.create_custom_module(
             form_id,
             label,
             mod_type,

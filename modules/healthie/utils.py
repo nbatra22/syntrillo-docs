@@ -137,16 +137,11 @@ if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization
     utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
 
-    # test
-    try:
-        # Retrieve organization details
-        response = utils_api.get_organization_details()
-        print(json.dumps(response, indent=4))
+    # Retrieve organization details
+    response = utils_api.get_organization_details()
+    print(json.dumps(response, indent=4))
 
-        # List patients
-        response = utils_api.list_patients()
-        print(json.dumps(response, indent=4))
+    # List patients
+    response = utils_api.list_patients()
+    print(json.dumps(response, indent=4))
 
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        exit()

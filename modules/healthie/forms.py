@@ -36,8 +36,7 @@ class HealthieAPIForms(HealthieAPI):
             sort_by (str, optional): Field to use for sorting (default: None).
 
         Returns:
-            dict: Response data containing the list of forms matching the specified criteria.
-                  returns parts of the CustomModuleForm object "A template for a form, that can then be filled out"
+            dict: returns parts of the CustomModuleForm object "A template for a form, that can then be filled out"
                   : https://docs.gethealthie.com/schema/custommoduleform.doc
         """
         # Set up the GraphQL query to list custom module forms
@@ -74,7 +73,7 @@ class HealthieAPIForms(HealthieAPI):
                     use_for_charting
                     use_for_program
 
-                    custom_modules { id label } # "A question in a form template" : https://docs.gethealthie.com/schema/custommodule.doc
+                    # custom_modules { id label } # "A question in a form template" : https://docs.gethealthie.com/schema/custommodule.doc
 
                 }
             }
@@ -91,22 +90,19 @@ class HealthieAPIForms(HealthieAPI):
             'sortBy': sort_by
         }
 
-        try:
-            # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-            response = self.send_query(query, variables)
-            return response
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
 
-        except Exception as e:
-            print(f"An error occurred while listing forms: {str(e)}")
-            return None
+        return response
+
 
     def get_form_by_id(
         self,
         form_id: str = None,
         ):
         """
-        List forms based on the specified criteria using the Healthie API.
-        See https://docs.gethealthie.com/docs/#listing-all-forms
+        Reteive a specific form by its id
+        See https://docs.gethealthie.com/docs/#retrieving-a-form
 
         Parameters:
             id (str, Required): The ID of the Form Template
@@ -155,14 +151,10 @@ class HealthieAPIForms(HealthieAPI):
         # Set up the variables for the GraphQL query
         variables = {'id': form_id}
 
-        try:
-            # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-            response = self.send_query(query, variables)
-            return response.get('data', {}).get('customModuleForm', None)
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
 
-        except Exception as e:
-            print(f"An error occurred while retrieving the form: {str(e)}")
-            return None
+        return response
 
 
     def create_custom_module_form(
@@ -177,7 +169,8 @@ class HealthieAPIForms(HealthieAPI):
         prefill: bool = False
     ):
         """
-        Create a custom module form using the Healthie API.
+        Create a CustomModuleForm using the Healthie API.
+        See https://docs.gethealthie.com/docs/#creating-a-form
 
         Parameters:
             name (str): The name of the custom module form.
@@ -237,14 +230,9 @@ class HealthieAPIForms(HealthieAPI):
             'prefill': prefill
         }
 
-        try:
-            # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-            response = self.send_query(mutation, variables)
-            return response.get('data', {}).get('createCustomModuleForm', None)
-
-        except Exception as e:
-            print(f"An error occurred while creating the custom module form: {str(e)}")
-            return None
+        # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
+        response = self.send_query(mutation, variables)
+        return response
 
     def create_custom_module(
         self,
@@ -279,7 +267,7 @@ class HealthieAPIForms(HealthieAPI):
         Returns:
             dict: Response data containing the ID of the created CustomModule and messages.
         """
-        # Set up the GraphQL mutation to create a CustomModule
+        # Set up the GraphQL mutation to create a CustomModule in a Form
         mutation = '''
             mutation createCustomModule(
                 $custom_module_form_id: String!,
@@ -333,16 +321,64 @@ class HealthieAPIForms(HealthieAPI):
             'sublabel': sublabel
         }
 
-        try:
-            # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-            response = self.send_query(mutation, variables)
-            return response
+        # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
+        response = self.send_query(mutation, variables)
+        return response
 
-        except Exception as e:
-            print(f"An error occurred while creating the custom module form: {str(e)}")
-            return None
+def create_custom_modules(
+    self,
+    custom_module_form_id: str,
+    custom_modules: list
+):
+    """
+    Create multiple CustomModules within a CustomModuleForm using the Healthie API.
 
+    Parameters:
+        custom_module_form_id (str): The ID of the CustomModuleForm to which the CustomModules will be added.
+        custom_modules (list): A list of dictionaries, each representing a CustomModule to be created.
+                               Each dictionary should contain at least 'label' and 'mod_type'.
 
+    Returns:
+        list: List of response data for each created CustomModule, containing IDs and messages.
+    """
+    # List to collect response data for each created CustomModule
+    response_data_list = []
+
+    i : int = 0
+    # Iterate over each custom module dictionary
+    for custom_module in custom_modules:
+        i = i + 1
+        # Extract parameters from the custom module dictionary
+        label = custom_module['label']
+        mod_type = custom_module['mod_type']
+        index = custom_module.get('index', i) # use provided index or local iterator
+        is_custom = custom_module.get('is_custom', False)
+        external_id = custom_module.get('external_id', None)
+        external_id_type = custom_module.get('external_id_type', None)
+        options = custom_module.get('options', None)
+        parent_custom_module_id = custom_module.get('parent_custom_module_id', None)
+        required = custom_module.get('required', False)
+        sublabel = custom_module.get('sublabel', None)
+
+        # Create the custom module using the create_custom_module method
+        response = self.create_custom_module(
+            custom_module_form_id=custom_module_form_id,
+            label=label,
+            mod_type=mod_type,
+            index=index,
+            is_custom=is_custom,
+            external_id=external_id,
+            external_id_type=external_id_type,
+            options=options,
+            parent_custom_module_id=parent_custom_module_id,
+            required=required,
+            sublabel=sublabel
+        )
+
+        # Append response data to the list
+        response_data_list.append(response)
+
+    return response_data_list
 
 
 if __name__ == "__main__":
@@ -350,17 +386,16 @@ if __name__ == "__main__":
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
-    # tests
-    try:
-        # List all forms
-        response = forms_api.list_forms(sort_by='name_asc', keywords='Scoring')
-        print(json.dumps(response, indent=4))
+    # List all forms
+    response = forms_api.list_forms(sort_by='name_asc', keywords='Scoring')
+    print('==== All forms ====')
+    print(json.dumps(response, indent=4))
 
-        # Retrieve a form 1138897
-        response = forms_api.get_form_by_id('1138897')
-        print(json.dumps(response, indent=4))
+    # Access the first ID in the customModuleForms array
+    first_id = response['customModuleForms'][0]['id']
 
+    # Retrieve the first form
+    print(f"\n==== Details of Form {first_id} and all its custom modules  ====")
+    response = forms_api.get_form_by_id(first_id)
+    print(json.dumps(response, indent=4))
 
-    except ValueError as ve:
-        print(f"ValueError: {ve}")
-        exit()
