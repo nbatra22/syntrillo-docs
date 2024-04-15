@@ -106,7 +106,7 @@ class HealthieAPI:
 
         try:
             # Make the HTTP POST request to the Healthie API
-            response = requests.post(self.url, json={'query': query, 'variables': variables}, headers=headers)
+            response = requests.post(self.url, json={'query': query, 'variables': variables}, headers=headers, proxies={})
             response.raise_for_status()  # Raise an HTTPError for non-2xx responses
 
             # Parse response data as JSON
