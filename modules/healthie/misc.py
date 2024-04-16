@@ -13,10 +13,13 @@ def extract_user_id_from_url(url):
         str: Extracted user ID.
     """
     # Use regular expression to extract digits (user ID) from the URL
-    match = re.search(r'/users/(\d+)', url)
-    if match:
-        return match.group(1)  # Return the extracted user ID
+    if url is not None:
+        match = re.search(r'/users/(\d+)', url)
+        if match:
+            return match.group(1)  # Return the extracted user ID
+        else:
+            return None  # Return None if user ID is not found
     else:
-        return None  # Return None if user ID is not found
+        return None   # Return None if url is None
 
 
