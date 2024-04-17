@@ -1,0 +1,104 @@
+{
+    "questionBankModules": [
+        {
+            "id": "0",
+            "mod_type": "label",
+            "options": "",
+            "options_array": [],
+            "label": "Title"
+        },
+        {
+            "id": "-1",
+            "mod_type": "text",
+            "options": "",
+            "options_array": [],
+            "label": "Open Answer(Short)"
+        },
+        {
+            "id": "-2",
+            "mod_type": "textarea",
+            "options": "",
+            "options_array": [],
+            "label": "Open Answer(Long)"
+        },
+        {
+            "id": "-3",
+            "mod_type": "checkbox",
+            "options": "a\nb\nc",
+            "options_array": [
+                "a",
+                "b",
+                "c"
+            ],
+            "label": "Multiple Choice(Checkbox)"
+        },
+        {
+            "id": "-4",
+            "mod_type": "radio",
+            "options": "a\nb\nc",
+            "options_array": [
+                "a",
+                "b",
+                "c"
+            ],
+            "label": "Multiple Choice"
+        },
+        {
+            "id": "-5",
+            "mod_type": "horizontal_radio",
+            "options": "a\nb\nc",
+            "options_array": [
+                "a",
+                "b",
+                "c"
+            ],
+            "label": "Multiple Choice(Horizontal)"
+        },
+        {
+            "id": "-6",
+            "mod_type": "matrix",
+            "options": "",
+            "options_array": [],
+            "label": "Matrix"
+        },
+        {
+            "id": "-7",
+            "mod_type": "date",
+            "options": "",
+            "options_array": [],
+            "label": "Date"
+        },
+        {
+            "id": "-8",
+            "mod_type": "date_picker",
+            "options": "",
+            "options_array": [],
+            "label": "Date Picker"
+        },
+        {
+            "id": "-9",
+            "mod_type": "time",
+            "options": "",
+            "options_array": [],
+            "label": "Time"
+        },
+        {
+            "id": "-10",
+            "mod_type": "number",
+            "options": "",
+            "options_array": [],
+            "label": "Number"
+        },
+        {
+            "id": "-11",
+            "mod_type": "dropdown",
+            "options": "a\nb\nc",
+            "options_array": [
+                "a",
+                "b",
+                "c"
+            ],
+            "label": "Dropdown"
+        }
+    ]
+}

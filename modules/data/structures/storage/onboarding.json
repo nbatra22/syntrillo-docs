@@ -1,0 +1,101 @@
+[
+    {
+        "internal_name": "age",
+        "question": "Age (years)",
+        "display": "number",
+        "special_values": "",
+        "values": [],
+        "user_description": "",
+        "type": "Continuous",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "gender",
+        "question": "Sex at birth",
+        "display": "horizontal_radio",
+        "special_values": "",
+        "values": [
+            "Male",
+            "Female"
+        ],
+        "user_description": "",
+        "type": "Nominal",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "stroke_etiology",
+        "question": "Stroke Etiology",
+        "display": "dropdown",
+        "special_values": "",
+        "values": [
+            "Cardioembolic",
+            "Large Vessel",
+            "Small Vessel",
+            "Other",
+            "Cryptogenic"
+        ],
+        "user_description": "",
+        "type": "Nominal",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "stroke_prior__independent_walking",
+        "question": "Independent walking prior to stroke",
+        "display": "horizontal_radio",
+        "special_values": "yes/no",
+        "values": [
+            "yes",
+            "no"
+        ],
+        "user_description": "",
+        "type": "Nominal",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "stroke_prior__use_assistive_device",
+        "question": "Use of assistive devices prior to stroke",
+        "display": "horizontal_radio",
+        "special_values": "yes/no",
+        "values": [
+            "yes",
+            "no"
+        ],
+        "user_description": "",
+        "type": "Nominal",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "health_goal",
+        "question": "What is your most important health goal?",
+        "display": "text",
+        "special_values": "",
+        "values": [],
+        "user_description": "",
+        "type": "",
+        "LLM_prompt": "",
+        "comment": ""
+    },
+    {
+        "internal_name": "stroke_risk_factors",
+        "question": "Which risk factors for stroke do you have or have had in the past? (Select all that apply)",
+        "display": "checkbox",
+        "special_values": "",
+        "values": [
+            "High blood pressure",
+            "Diabetes",
+            "High cholesterol levels",
+            "Smoking",
+            "Family history of stroke",
+            "Heart disease or atrial fibrillation"
+        ],
+        "user_description": "",
+        "type": "Multiple",
+        "LLM_prompt": "",
+        "comment": ""
+    }
+]
