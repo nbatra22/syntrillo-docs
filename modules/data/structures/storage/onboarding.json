@@ -108,5 +108,22 @@
         "type": "Multiple",
         "LLM_prompt": null,
         "comment": null
+    },
+    {
+        "internal_name": "stroke_impact_physical_walking",
+        "question": "Impact of stroke- physical - Difficulty with walking",
+        "display": "radio",
+        "special_values": "LikertAgreement_5values",
+        "values": [
+            "Strongly Disagree",
+            "Disagree",
+            "Neutral",
+            "Agree",
+            "Strongly Agree"
+        ],
+        "user_description": null,
+        "type": "Ordinal",
+        "LLM_prompt": null,
+        "comment": null
     }
 ]

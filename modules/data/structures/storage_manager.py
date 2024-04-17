@@ -63,6 +63,14 @@ class StorageManager:
             # Use ast.literal_eval to transform the cleaned values string into a list
             if row['special_values'] == 'yes/no':
                 values_list = ['yes', 'no']
+            elif row['special_values'] == 'LikertAgreement_3values':
+                values_list = ['Disagree', 'Neutral', 'Agree']
+            elif row['special_values'] == 'LikertAgreement_5values':
+                values_list = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree']
+            elif row['special_values'] == 'LikertLikelihhod_3values':
+                values_list = ['Unlikely', 'Neutral', 'Likely']
+            elif row['special_values'] == 'LikertLikelihood_5values':
+                values_list = ['Very Unlikely', 'Unlikely', 'Neutral', 'Likely', 'Very Likely']
             else:
                 if cleaned_values is not None:
                     values_list = parse_comma_separated_string(cleaned_values)
