@@ -11,37 +11,39 @@ sys.path.append(project_root)
 
 
 from modules.healthie.forms import HealthieAPIForms
+from modules.data.structures.data_structure import DataStructure
+from modules.data.structures.storage_manager import StorageManager
+
+# --------------------------------------------------------
+# initialize Healthie API
 
 # Load environment variables from .env file
 dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../.env")
 
 forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
-# Define the modules to be created within the form
-modules = [
-    {
-        'label': 'Question 1',
-        'mod_type': 'text',
-        'required': True,
-        'sublabel': 'Please answer this question'
-    },
-    {
-        'label': 'Question 2',
-        'mod_type': 'text',
-    },
-    {
-        'label': 'Question 3',
-        'mod_type': 'text',
-    },
-    {
-        'label': 'Question 4',
-        'mod_type': 'radio',
-        'options': 'xxx\nyyy\nzzz',
-    },
-]
+# --------------------------------------------------------
+# Initialize StorageManager
+
+storage_manager = StorageManager()
+
+# Initialize DataStructure
+data_structure = DataStructure(storage_manager)
+
+# Load JSON data from StorageManager
+filename = "onboarding"
+data_structure.load_from_storage(filename)
+
+# Transform JSON data for Healthie API
+modules = data_structure.transform_for_healthie_api()
+
+# Print transformed data (or perform further actions)
+print(json.dumps(modules, indent=4))
+
+
 
 # Call the create_form_wrapper function to create a new form with the specified modules
-form_name = 'Sample Form'
+form_name = 'Sample Form - Onboarding'
 use_for_charting = True
 use_for_program = False
 

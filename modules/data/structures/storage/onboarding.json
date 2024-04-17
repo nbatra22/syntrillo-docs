@@ -1,34 +1,45 @@
 [
     {
+        "internal_name": "form_title",
+        "question": "On boarding questionnaire",
+        "display": "label",
+        "special_values": null,
+        "values": null,
+        "user_description": null,
+        "type": null,
+        "LLM_prompt": null,
+        "comment": null
+    },
+    {
         "internal_name": "age",
         "question": "Age (years)",
         "display": "number",
-        "special_values": "",
-        "values": [],
-        "user_description": "",
+        "special_values": null,
+        "values": null,
+        "user_description": null,
         "type": "Continuous",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "gender",
         "question": "Sex at birth",
         "display": "horizontal_radio",
-        "special_values": "",
+        "special_values": null,
         "values": [
             "Male",
             "Female"
         ],
-        "user_description": "",
+        "user_description": null,
         "type": "Nominal",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "stroke_etiology",
         "question": "Stroke Etiology",
         "display": "dropdown",
-        "special_values": "",
+        "special_values": null,
         "values": [
             "Cardioembolic",
             "Large Vessel",
@@ -36,10 +47,10 @@
             "Other",
             "Cryptogenic"
         ],
-        "user_description": "",
+        "user_description": null,
         "type": "Nominal",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "stroke_prior__independent_walking",
@@ -50,10 +61,10 @@
             "yes",
             "no"
         ],
-        "user_description": "",
+        "user_description": null,
         "type": "Nominal",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "stroke_prior__use_assistive_device",
@@ -64,27 +75,27 @@
             "yes",
             "no"
         ],
-        "user_description": "",
+        "user_description": null,
         "type": "Nominal",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "health_goal",
         "question": "What is your most important health goal?",
         "display": "text",
-        "special_values": "",
-        "values": [],
-        "user_description": "",
-        "type": "",
-        "LLM_prompt": "",
-        "comment": ""
+        "special_values": null,
+        "values": null,
+        "user_description": null,
+        "type": null,
+        "LLM_prompt": null,
+        "comment": null
     },
     {
         "internal_name": "stroke_risk_factors",
         "question": "Which risk factors for stroke do you have or have had in the past? (Select all that apply)",
         "display": "checkbox",
-        "special_values": "",
+        "special_values": null,
         "values": [
             "High blood pressure",
             "Diabetes",
@@ -93,9 +104,9 @@
             "Family history of stroke",
             "Heart disease or atrial fibrillation"
         ],
-        "user_description": "",
+        "user_description": null,
         "type": "Multiple",
-        "LLM_prompt": "",
-        "comment": ""
+        "LLM_prompt": null,
+        "comment": null
     }
 ]

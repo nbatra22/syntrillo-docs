@@ -6,9 +6,25 @@
 #
 
 import pandas as pd
+import math
 import json
 import os
 import ast
+
+def parse_comma_separated_string(s):
+    if "'" in s:
+        # String contains single quotes, use ast.literal_eval
+        return list(ast.literal_eval(s))
+    else:
+        # String does not contain single quotes, split and strip
+        return [part.strip() for part in s.split(',')]
+
+def nan2null(value):
+    """Transform NaN values to null."""
+    if pd.isna(value):  # Check if value is NaN using pandas.isna
+        return None  # Return None (which will be serialized to null in JSON)
+    else:
+        return value  # Return the original value if it's not NaN
 
 class StorageManager:
     def __init__(self):
@@ -24,38 +40,45 @@ class StorageManager:
 
         # Load Excel file
         try:
-            xls_data = pd.read_excel(xls_file_path, sheet_name='variables')
+            xls_data = pd.read_excel(xls_file_path, sheet_name='variables', na_values=['', 'NaN'])
         except FileNotFoundError:
             raise FileNotFoundError(f"Excel file '{xls_file_path}' not found.")
         except Exception as e:
             raise Exception(f"Error reading Excel file: {str(e)}")
 
-        # Replace NaN values with empty strings
-        xls_data.fillna('', inplace=True)
+        # Replace NaN values with None in the DataFrame
+        xls_data = xls_data.where(pd.notnull(xls_data), None)
 
         # Convert Excel data to JSON format
         json_data = []
         for _, row in xls_data.iterrows():
 
-            # Preprocess values string to replace non-standard single quotes
-            cleaned_values = row['values'].replace('‘', "'").replace('’', "'")
+            # Handle None value for 'values'
+            if pd.isna(row['values']):  # Check for NaN (which is equivalent to None in pandas)
+                cleaned_values = None
+            else:
+                # Preprocess values string to replace non-standard single quotes
+                cleaned_values = str(row['values']).replace('‘', "'").replace('’', "'")
 
             # Use ast.literal_eval to transform the cleaned values string into a list
             if row['special_values'] == 'yes/no':
                 values_list = ['yes', 'no']
             else:
-                values_list = ast.literal_eval(f"[{cleaned_values}]")
+                if cleaned_values is not None:
+                    values_list = parse_comma_separated_string(cleaned_values)
+                else:
+                    values_list = None
 
             data = {
-                'internal_name': row['internal_name'],
-                'question': row['question'],
-                'display': row['display'],
-                'special_values': row['special_values'],
+                'internal_name': nan2null(row['internal_name']),
+                'question': nan2null(row['question']),
+                'display': nan2null(row['display']),
+                'special_values': nan2null(row['special_values']),
                 'values': values_list,
-                'user_description': row['user_description'],
-                'type': row['type'],
-                'LLM_prompt': row['LLM_prompt'],
-                'comment': row['comment']
+                'user_description': nan2null(row['user_description']),
+                'type': nan2null(row['type']),
+                'LLM_prompt': nan2null(row['LLM_prompt']),
+                'comment': nan2null(row['comment']),
             }
             json_data.append(data)
 

@@ -299,6 +299,7 @@ class HealthieAPIForms(HealthieAPI):
                         id
                         external_id
                         label
+                        mod_type
                     }
                     messages {
                         field
