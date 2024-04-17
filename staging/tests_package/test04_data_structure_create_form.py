@@ -52,7 +52,8 @@ response = forms_api.create_form_wrapper(
     form_name=form_name,
     use_for_charting=use_for_charting,
     use_for_program=use_for_program,
-    modules=modules
+    modules=modules,
+    external_id="sample_form_onboarding",
 )
 
 # Print the response data containing the form and modules

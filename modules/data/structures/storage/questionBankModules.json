@@ -1,4 +1,13 @@
 {
+    "unlistedModTypes" : {
+        "iframe" : "Embed External Website - url in 'options'",
+        "document_upload": "File Upload",
+        "folder": "folder id in 'options'",
+        "document": "document id in 'options'",
+        "blood_pressure" : "how to retreive values???",
+
+    },
+
     "questionBankModules": [
         {
             "id": "0",

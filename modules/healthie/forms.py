@@ -139,7 +139,7 @@ class HealthieAPIForms(HealthieAPI):
                         sublabel            # The sublabel (description) of the question
                         is_custom           # Whether this module is a custom module
                         mod_type            # The type of question
-                        # options
+                        options
                         options_array       # The default options for this question, broken up into an array
                         position            # The position of the question (the lower the earlier the question is shown)
                         required            # Whether this question is required to be completed before the form it's in can be saved
@@ -394,9 +394,14 @@ class HealthieAPIForms(HealthieAPI):
     def create_form_wrapper(
         self,
         form_name: str,
+        modules: list,
         use_for_charting: bool,
         use_for_program: bool,
-        modules: list
+        external_id: str = None,
+        external_id_type: str = None,
+        is_video: bool = False,
+        on_completion_ifs_tag_id: str = None,
+        prefill: bool = False,
     ):
         """
         Wrapper function to create a new form and its modules.
@@ -407,6 +412,11 @@ class HealthieAPIForms(HealthieAPI):
             use_for_program (bool): Indicates if the form is used for a program.
             modules (list): A list of dictionaries, each representing a CustomModule to be created.
                             Each dictionary should contain at least 'label' and 'mod_type'.
+            external_id (str, optional): External ID for relating form objects with third-party systems.
+            external_id_type (str, optional): Type of external ID.
+            is_video (bool, optional): Indicates if the form is a video module.
+            on_completion_ifs_tag_id (str, optional): Tag ID for on-completion actions.
+            prefill (bool, optional): Indicates if the form should be prefilled.
 
         Returns:
             dict: Response data containing the ID of the created custom module form and messages.
@@ -416,7 +426,12 @@ class HealthieAPIForms(HealthieAPI):
         form_response = self.create_custom_module_form(
             name=form_name,
             use_for_charting=use_for_charting,
-            use_for_program=use_for_program
+            use_for_program=use_for_program,
+            external_id=external_id,
+            external_id_type=external_id_type,
+            is_video=is_video,
+            on_completion_ifs_tag_id=on_completion_ifs_tag_id,
+            prefill=prefill,
         )
 
         # Extract the ID of the created custom module form
@@ -442,7 +457,7 @@ if __name__ == "__main__":
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
     # List all forms
-    response = forms_api.list_forms(sort_by='name_asc', keywords='Scoring')
+    response = forms_api.list_forms(sort_by='name_asc' , keywords='fields test')
     print('==== All forms ====')
     print(json.dumps(response, indent=4))
 
