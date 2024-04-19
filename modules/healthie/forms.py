@@ -450,6 +450,64 @@ class HealthieAPIForms(HealthieAPI):
         # Return the modules_response
         return { "form_response" : form_response, "modules_responses" : modules_responses }
 
+    def get_form_answers_group(
+        self,
+        custom_module_form_id: str = None,
+        user_id: str = None,
+        ):
+        """
+        Retreive form answer group
+        See https://docs.gethealthie.com/docs/#querying-filled-out-forms
+
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm
+            user_id (str): The ID of the User
+
+        Returns:
+            dict:   Returns a formAnswerGroups object, with all FormAnswerGroup objects and FormAnswer
+                    https://docs.gethealthie.com/schema/formanswergroup.doc
+                    https://docs.gethealthie.com/schema/formanswer.doc
+
+                answer:
+                  - null if not completed
+                  - '\n' separated if multichoice module
+        """
+        # Set up the GraphQL query to list custom module forms
+        query = '''
+            query formAnswerGroups(
+                $custom_module_form_id: ID,
+                $user_id: String,
+            ) {
+            formAnswerGroups(
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id,
+                ) {
+                    id
+                    name
+                    created_at
+                    user_id
+                    finished
+                    form_answers {
+                        custom_module_id
+                        label
+                        answer
+                        id
+                    }
+                }
+            }
+        '''
+
+        # Set up the variables for the GraphQL query
+        variables = {
+            'custom_module_form_id': custom_module_form_id,
+            'user_id' : user_id
+            }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
+
+        return response
+
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
@@ -457,7 +515,7 @@ if __name__ == "__main__":
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
     # List all forms
-    response = forms_api.list_forms(sort_by='name_asc' , keywords='fields test')
+    response = forms_api.list_forms(sort_by='name_asc' , keywords='onboarding')
     print('==== All forms ====')
     print(json.dumps(response, indent=4))
 
@@ -467,5 +525,10 @@ if __name__ == "__main__":
     # Retrieve the first form
     print(f"\n==== Details of Form {first_id} and all its custom modules  ====")
     response = forms_api.get_form_by_id(first_id)
+    print(json.dumps(response, indent=4))
+
+    # Retrieve the first form values
+    print(f"\n==== Answer groups of Form {first_id} ====")
+    response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
     print(json.dumps(response, indent=4))
 
