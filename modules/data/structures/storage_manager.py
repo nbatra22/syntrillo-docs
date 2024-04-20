@@ -96,12 +96,22 @@ class StorageManager:
                 else:
                     values_list = None
 
+            if values_list is not None:
+                # TODO : deal with add unknown and add not_applicable
+                if row['add_unknown'] == 'yes':
+                    values_list.append('_unknown_')
+                if row['add_not_applicable'] == 'yes':
+                    values_list.append('_not applicable_')
+
+
             data_variable = {
                 'internal_name': nan2null(row['internal_name']),
                 'question': nan2null(row['question']),
                 'display': nan2null(row['display']),
                 'special_values': nan2null(row['special_values']),
                 'values': values_list,
+                'add_unknown': nan2null(row['add_unknown']),
+                'add_not_applicable': nan2null(row['add_not_applicable']),
                 'user_description': nan2null(row['user_description']),
                 'type': nan2null(row['type']),
                 'LLM_prompt': nan2null(row['LLM_prompt']),

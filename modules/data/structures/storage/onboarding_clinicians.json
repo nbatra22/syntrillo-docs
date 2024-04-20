@@ -12,6 +12,8 @@
             "display": "label",
             "special_values": null,
             "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
             "user_description": null,
             "type": null,
             "LLM_prompt": null,
@@ -23,6 +25,8 @@
             "display": "number",
             "special_values": null,
             "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
             "user_description": null,
             "type": "Continuous",
             "LLM_prompt": null,
@@ -35,8 +39,11 @@
             "special_values": null,
             "values": [
                 "Male",
-                "Female"
+                "Female",
+                "_unknown_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
             "user_description": null,
             "type": "Nominal",
             "LLM_prompt": null,
@@ -52,8 +59,11 @@
                 "Large Vessel",
                 "Small Vessel",
                 "Other",
-                "Cryptogenic"
+                "Cryptogenic",
+                "_unknown_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
             "user_description": null,
             "type": "Nominal",
             "LLM_prompt": null,
@@ -66,8 +76,12 @@
             "special_values": "yes/no",
             "values": [
                 "yes",
-                "no"
+                "no",
+                "_unknown_",
+                "_not applicable_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": "yes",
             "user_description": null,
             "type": "Nominal",
             "LLM_prompt": null,
@@ -80,8 +94,12 @@
             "special_values": "yes/no",
             "values": [
                 "yes",
-                "no"
+                "no",
+                "_unknown_",
+                "_not applicable_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": "yes",
             "user_description": null,
             "type": "Nominal",
             "LLM_prompt": null,
@@ -93,6 +111,8 @@
             "display": "text",
             "special_values": null,
             "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
             "user_description": null,
             "type": null,
             "LLM_prompt": null,
@@ -109,8 +129,11 @@
                 "High cholesterol levels",
                 "Smoking",
                 "Family history of stroke",
-                "Heart disease or atrial fibrillation"
+                "Heart disease or atrial fibrillation",
+                "_unknown_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
             "user_description": null,
             "type": "Multiple",
             "LLM_prompt": null,
@@ -126,8 +149,11 @@
                 "Disagree",
                 "Neutral",
                 "Agree",
-                "Strongly Agree"
+                "Strongly Agree",
+                "_unknown_"
             ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
             "user_description": null,
             "type": "Ordinal",
             "LLM_prompt": null,
