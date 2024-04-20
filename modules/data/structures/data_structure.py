@@ -15,6 +15,10 @@ import json
 from structures.storage_manager import StorageManager
 
 class DataStructure:
+
+    data = []
+    healthie_custom_modules = []
+
     def __init__(self, storage_manager):
         self.storage_manager = storage_manager
         self.data = None
@@ -31,8 +35,8 @@ class DataStructure:
         if self.data is None:
             raise ValueError("No JSON data loaded. Call load_from_storage() first.")
 
-        transformed_data = []
-        for item in self.data:
+        healthie_custom_modules = []
+        for item in self.data['variables']:
 
             if item["values"] is not None:
                 options = "\n".join(item["values"])  # Join values with newline separator
@@ -47,9 +51,12 @@ class DataStructure:
                 # "options_array": item["values"] # not supported by Healthie
                 "options": options  # Use "options" instead of "options_array"
             }
-            transformed_data.append(transformed_item)
+            healthie_custom_modules.append(transformed_item)
 
-        return transformed_data
+        self.healthie_custom_modules = healthie_custom_modules
+
+        return healthie_custom_modules
+
 
 # Example usage:
 if __name__ == "__main__":
@@ -61,11 +68,11 @@ if __name__ == "__main__":
     data_structure = DataStructure(storage_manager)
 
     # Load JSON data from StorageManager
-    filename = "onboarding"
+    filename = "onboarding_clinicians"
     data_structure.load_from_storage(filename)
 
     # Transform JSON data for Healthie API
-    transformed_data = data_structure.transform_for_healthie_api()
+    healthie_custom_modules = data_structure.transform_for_healthie_api()
 
     # Print transformed data (or perform further actions)
-    print(json.dumps(transformed_data, indent=4))
+    print(json.dumps(healthie_custom_modules, indent=4))

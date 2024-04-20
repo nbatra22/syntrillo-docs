@@ -508,7 +508,7 @@ class HealthieAPIForms(HealthieAPI):
         return response
 
 
-    def build_form_from_gaps(
+    def get_modules_with_null_answers(
         self,
         custom_module_form_id : str = None,
         user_id: str = None,
@@ -516,14 +516,17 @@ class HealthieAPIForms(HealthieAPI):
         """
           - Looks for null answers in a FormAnswerGroup
           - gets custom modules from these null answers
-          - build a form with these custom modules
+
+          Can be used to report the number of questions with missing information
+
+          TODO : Have to add ‘not available’ to questionnaires & treat that as a gap
 
         Parameters:
             custom_module_form_id (str): The ID of the CustomModuleForm where to look for answers
             user_id (str): The ID of the User who answered the form
 
         Returns:
-            dict: Response data containing the ID of the created custom module form and messages.
+            dict: list of custom modules with null answers
         """
 
         # Get form structure and modules
@@ -549,11 +552,38 @@ class HealthieAPIForms(HealthieAPI):
                     if fa["answer"] is None
         ]
 
-        # build list of custom modules
-        custom_modules_with_null_answer= []
-        for custom_module in custom_modules:
-            if custom_module['id'] in custom_module_ids_with_null_answer:
-                custom_modules_with_null_answer.append(custom_module)
+        # Build list of custom modules with null answers
+        custom_modules_with_null_answer = [
+            custom_module
+            for custom_module in custom_modules
+                if custom_module['id'] in custom_module_ids_with_null_answer
+        ]
+
+        return custom_modules_with_null_answer
+
+
+    def build_form_from_gaps(
+        self,
+        custom_module_form_id : str = None,
+        user_id: str = None,
+        ):
+        """
+          - Looks for null answers in a FormAnswerGroup
+          - gets custom modules from these null answers
+          - build a form with these custom modules
+
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm where to look for answers
+            user_id (str): The ID of the User who answered the form
+
+        Returns:
+            dict: Response data containing the ID of the created custom module form and messages.
+        """
+
+        custom_modules_with_null_answer = self.get_modules_with_null_answers(
+            custom_module_form_id=custom_module_form_id,
+            user_id=user_id
+        )
 
         return custom_modules_with_null_answer
 
