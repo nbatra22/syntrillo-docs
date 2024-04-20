@@ -40,7 +40,7 @@
             "values": [
                 "Male",
                 "Female",
-                "_unknown_"
+                "unknown"
             ],
             "add_unknown": "yes",
             "add_not_applicable": null,
@@ -60,7 +60,7 @@
                 "Small Vessel",
                 "Other",
                 "Cryptogenic",
-                "_unknown_"
+                "unknown"
             ],
             "add_unknown": "yes",
             "add_not_applicable": null,
@@ -77,8 +77,8 @@
             "values": [
                 "yes",
                 "no",
-                "_unknown_",
-                "_not applicable_"
+                "unknown",
+                "not applicable"
             ],
             "add_unknown": "yes",
             "add_not_applicable": "yes",
@@ -95,8 +95,8 @@
             "values": [
                 "yes",
                 "no",
-                "_unknown_",
-                "_not applicable_"
+                "unknown",
+                "not applicable"
             ],
             "add_unknown": "yes",
             "add_not_applicable": "yes",
@@ -130,7 +130,7 @@
                 "Smoking",
                 "Family history of stroke",
                 "Heart disease or atrial fibrillation",
-                "_unknown_"
+                "unknown"
             ],
             "add_unknown": "yes",
             "add_not_applicable": null,
@@ -150,7 +150,7 @@
                 "Neutral",
                 "Agree",
                 "Strongly Agree",
-                "_unknown_"
+                "unknown"
             ],
             "add_unknown": "yes",
             "add_not_applicable": null,

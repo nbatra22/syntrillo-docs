@@ -507,6 +507,11 @@ class HealthieAPIForms(HealthieAPI):
 
         return response
 
+    def find_mod_type_by_id(self, custom_modules, desired_id):
+        for module in custom_modules:
+            if module['id'] == desired_id:
+                return module['mod_type']
+        return None
 
     def get_modules_with_null_answers(
         self,
@@ -519,7 +524,7 @@ class HealthieAPIForms(HealthieAPI):
 
           Can be used to report the number of questions with missing information
 
-          TODO : Have to add ‘not available’ to questionnaires & treat that as a gap
+          TODO : Have to add ‘not available’ / 'unknown' to questionnaires & treat that as a gap
 
         Parameters:
             custom_module_form_id (str): The ID of the CustomModuleForm where to look for answers
@@ -549,7 +554,9 @@ class HealthieAPIForms(HealthieAPI):
             fa["custom_module_id"]
             for group in answers["formAnswerGroups"]
                 for fa in group["form_answers"]
-                    if fa["answer"] is None
+                    if ( fa["answer"] is None )
+                        or ( fa["answer"] in ['unknown', 'not available'] )
+                        or ( fa["answer"] == "" and self.find_mod_type_by_id(custom_modules, fa['custom_module_id']) in ['text', 'textarea', 'number'] )
         ]
 
         # Build list of custom modules with null answers
@@ -564,8 +571,16 @@ class HealthieAPIForms(HealthieAPI):
 
     def build_form_from_gaps(
         self,
-        custom_module_form_id : str = None,
-        user_id: str = None,
+        custom_module_form_id : str,
+        user_id: str,
+        form_name: str,
+        use_for_charting: bool,
+        use_for_program: bool = False,
+        external_id: str = None,
+        external_id_type: str = None,
+        is_video: bool = False,
+        on_completion_ifs_tag_id: str = None,
+        prefill: bool = False,
         ):
         """
           - Looks for null answers in a FormAnswerGroup
@@ -580,12 +595,28 @@ class HealthieAPIForms(HealthieAPI):
             dict: Response data containing the ID of the created custom module form and messages.
         """
 
+        # Get form structure and modules
+        custom_module_form = self.get_form_by_id(form_id=custom_module_form_id)
+
+        # get modules of the form with a missing or unknown answer
         custom_modules_with_null_answer = self.get_modules_with_null_answers(
             custom_module_form_id=custom_module_form_id,
             user_id=user_id
         )
 
-        return custom_modules_with_null_answer
+        new_form = self.create_form_wrapper(
+            form_name=form_name,
+            modules=custom_modules_with_null_answer,
+            use_for_charting=use_for_charting,
+            use_for_program=use_for_program,
+            external_id=external_id,
+            external_id_type=external_id_type,
+            is_video=is_video,
+            on_completion_ifs_tag_id=on_completion_ifs_tag_id,
+            prefill=prefill,
+        )
+
+        return new_form
 
 
 if __name__ == "__main__":
@@ -613,7 +644,12 @@ if __name__ == "__main__":
 
     # build form from gaps
     print(f"\n==== build form from gaps ====")
-    response = forms_api.build_form_from_gaps(custom_module_form_id=first_id, user_id="1035117")
+    response = forms_api.build_form_from_gaps(
+        custom_module_form_id="1162956", user_id="1035117",
+        form_name='testing gaps',
+        use_for_charting=False,
+        use_for_program=False,
+        )
     print(json.dumps(response, indent=4))
 
 

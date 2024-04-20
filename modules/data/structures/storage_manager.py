@@ -99,9 +99,9 @@ class StorageManager:
             if values_list is not None:
                 # TODO : deal with add unknown and add not_applicable
                 if row['add_unknown'] == 'yes':
-                    values_list.append('_unknown_')
+                    values_list.append('unknown')
                 if row['add_not_applicable'] == 'yes':
-                    values_list.append('_not applicable_')
+                    values_list.append('not applicable')
 
 
             data_variable = {
