@@ -456,8 +456,7 @@ class HealthieAPIForms(HealthieAPI):
         user_id: str = None,
         ):
         """
-        Retreive form answer group
-        See https://docs.gethealthie.com/docs/#querying-filled-out-forms
+        Retreive form answer group. That is “A completed form, with metadata about the completion, and the saved answers”
 
         Parameters:
             custom_module_form_id (str): The ID of the CustomModuleForm
@@ -509,6 +508,56 @@ class HealthieAPIForms(HealthieAPI):
         return response
 
 
+    def build_form_from_gaps(
+        self,
+        custom_module_form_id : str = None,
+        user_id: str = None,
+        ):
+        """
+          - Looks for null answers in a FormAnswerGroup
+          - gets custom modules from these null answers
+          - build a form with these custom modules
+
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm where to look for answers
+            user_id (str): The ID of the User who answered the form
+
+        Returns:
+            dict: Response data containing the ID of the created custom module form and messages.
+        """
+
+        # Get form structure and modules
+        custom_module_form = self.get_form_by_id(form_id=custom_module_form_id)
+
+        # Extract customModuleForm and its custom_modules
+        if 'customModuleForm' in custom_module_form:
+            custom_modules = custom_module_form['customModuleForm'].get('custom_modules', [])
+        else:
+            custom_modules = []
+
+        # Get answers
+        answers = self.get_form_answers_group(
+            custom_module_form_id=custom_module_form_id,
+            user_id=user_id
+            )
+
+        # Extract custom_module_id where answer is null
+        custom_module_ids_with_null_answer = [
+            fa["custom_module_id"]
+            for group in answers["formAnswerGroups"]
+                for fa in group["form_answers"]
+                    if fa["answer"] is None
+        ]
+
+        # build list of custom modules
+        custom_modules_with_null_answer= []
+        for custom_module in custom_modules:
+            if custom_module['id'] in custom_module_ids_with_null_answer:
+                custom_modules_with_null_answer.append(custom_module)
+
+        return custom_modules_with_null_answer
+
+
 if __name__ == "__main__":
     # Example usage of the list_forms function
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
@@ -531,4 +580,11 @@ if __name__ == "__main__":
     print(f"\n==== Answer groups of Form {first_id} ====")
     response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
     print(json.dumps(response, indent=4))
+
+    # build form from gaps
+    print(f"\n==== build form from gaps ====")
+    response = forms_api.build_form_from_gaps(custom_module_form_id=first_id, user_id="1035117")
+    print(json.dumps(response, indent=4))
+
+
 
