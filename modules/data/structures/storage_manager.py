@@ -1,10 +1,3 @@
-#
-#  Create a class (StorageManager) that handles parsing, QCing, storing, versioning, and retrieving DataStructure
-#
-# - parses and validates xls files into JSON structures in ./storage
-# - stores and retreives json structures in ./storage
-#
-
 import pandas as pd
 import math
 import json
@@ -28,14 +21,38 @@ def nan2null(value):
         return value  # Return the original value if it's not NaN
 
 class StorageManager:
+    """
+    A class that handles parsing, QCing, storing, versioning, and retrieving DataStructure
+
+    Data structures are defined in Excel xlsx files that can be handled easily by clinicians
+
+    This class parses and validates xls files into JSON structures in the local ./storage folder of this repository
+
+    These JSON files are used by the Healthie modules to build Charting Notes and Intake Forms
+
+    """
     def __init__(self):
         # Get directory of the script where this class is defined
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # defines the local storage area
         self.storage_path = os.path.join(self.script_dir, "storage")
+
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
     def parse_xlsx_to_json(self, xlsx_file_name):
+        """
+        Excel to JSON parser
+
+        The Excel file is expected to have at least 2 tabs:
+        - metadata : where high level information is defined for this structure
+        - variables : list of variables and their characteristics
+
+        Parameters:
+            xlsx_file_name (str): the Excel filename to be found in ./storage
+
+        """
         # Construct full path to the Excel file
         xlsx_file_path = os.path.join(self.storage_path, xlsx_file_name)
 
@@ -97,7 +114,6 @@ class StorageManager:
                     values_list = None
 
             if values_list is not None:
-                # TODO : deal with add unknown and add not_applicable
                 if row['add_unknown'] == 'yes':
                     values_list.append('unknown')
                 if row['add_not_applicable'] == 'yes':
@@ -145,34 +161,71 @@ class StorageManager:
         else:
             raise FileNotFoundError(f"JSON file '{filename}.json' not found.")
 
-def run_all_xlsx_files():
-    """
-    Will loop through all xlsx files in the ./storage folder and produce JSON structures
-    """
+    def parse_all_xlsx_files(self):
+        """
+        Will loop through all xlsx files in the storage folder and produce JSON structures
+        """
 
-    # Get directory of the script where this class is defined
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    storage_path = os.path.join(script_dir, "storage")
+        # Loop through all .xlsx files in storage_path
+        for filename in glob(os.path.join(self.storage_path, '*.xlsx')):
+            # Parse XLSX file to JSON
+            json_data = self.parse_xlsx_to_json(filename)
 
-    # Initialize StorageManager
-    storage_manager = StorageManager()
+            # Remove .xlsx extension from filename
+            filename_without_extension = os.path.splitext(filename)[0]
 
-    # Loop through all .xlsx files in storage_path
-    for filename in glob(os.path.join(storage_path, '*.xlsx')):
-        # Parse XLSX file to JSON
-        json_data = storage_manager.parse_xlsx_to_json(filename)
+            # Store JSON data
+            self.store_json(json_data, filename=filename_without_extension)
 
-        # Remove .xlsx extension from filename
-        filename_without_extension = os.path.splitext(filename)[0]
+            print(filename)
 
-        # Store JSON data
-        storage_manager.store_json(json_data, filename=filename_without_extension)
+    def list_all_structures(self):
+        """
+        gives a list of all available JSON structures in self.storage_path
+
+        Returns:
+            List[dict]: List of dictionaries with 'filename' (without extension) and 'metadata' of each structure.
+
+        """
+        structure_list = []
+
+        # Loop through all files in storage_path
+        for filename in os.listdir(self.storage_path):
+            if filename.endswith(".json"):  # Check if the file is a JSON file
+                # Remove extension to get the filename
+                structure_name = os.path.splitext(filename)[0]
+
+                # Retrieve metadata from the JSON file
+                try:
+                    json_data = self.retrieve_json(structure_name)
+                    metadata = json_data.get('metadata', {})  # Get metadata from JSON data
+                    structure_list.append(
+                        {
+                            'filename': filename,
+                            'structure_name': structure_name,
+                            'metadata': metadata
+                            }
+                        )
+                except FileNotFoundError:
+                    # Handle the case where the JSON file cannot be found
+                    print(f"Warning: JSON file '{structure_name}.json' not found.")
+
+        return structure_list
+
 
 
 # Example usage:
 if __name__ == "__main__":
 
-    run_all_xlsx_files()
+    # Initialize StorageManager
+    storage_manager = StorageManager()
+
+    storage_manager.parse_all_xlsx_files()
+
+    all_structures = storage_manager.list_all_structures()
+    print(json.dumps(all_structures, indent=4))
+
+
 
     """
     # Initialize StorageManager
