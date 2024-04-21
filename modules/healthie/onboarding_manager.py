@@ -53,6 +53,14 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                             'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
                             'finished': group['finished']
                         }
+
+                        # Get modules with null answers for the current form
+                        modules_with_null_answers = self.get_modules_with_null_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
+
+                        # Add null answer count to the status entry
+                        null_answer_count = sum(module_info['null_answer_count'] for module_info in modules_with_null_answers)
+                        status_entry['null_answer_count'] = null_answer_count
+
                         patient_status.append(status_entry)
 
         return patient_status

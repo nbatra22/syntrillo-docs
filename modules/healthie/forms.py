@@ -652,8 +652,6 @@ class HealthieAPIForms(HealthieAPI):
 
           Can be used to report the number of questions with missing information
 
-          TODO : Have to add ‘not available’ / 'unknown' to questionnaires & treat that as a gap
-
         Parameters:
             custom_module_form_id (str): The ID of the CustomModuleForm where to look for answers
             user_id (str): The ID of the User who answered the form
@@ -687,12 +685,34 @@ class HealthieAPIForms(HealthieAPI):
                         or ( fa["answer"] == "" and self.find_mod_type_by_id(custom_modules, fa['custom_module_id']) in ['text', 'textarea', 'number'] )
         ]
 
+        # Count null answers per custom module
+        custom_module_null_answer_count = {}
+        for custom_module_id in custom_module_ids_with_null_answer:
+            if custom_module_id in custom_module_null_answer_count:
+                custom_module_null_answer_count[custom_module_id] += 1
+            else:
+                custom_module_null_answer_count[custom_module_id] = 1
+
         # Build list of custom modules with null answers
+        """
         custom_modules_with_null_answer = [
             custom_module
             for custom_module in custom_modules
                 if custom_module['id'] in custom_module_ids_with_null_answer
         ]
+        """
+
+        # Build list of custom modules with null answers and their counts
+        custom_modules_with_null_answer = []
+        for custom_module in custom_modules:
+            if custom_module['id'] in custom_module_ids_with_null_answer:
+                null_answer_count = custom_module_null_answer_count.get(custom_module['id'], 0)
+                custom_modules_with_null_answer.append({
+                    'custom_module': custom_module,
+                    'null_answer_count': null_answer_count
+                })
+
+        # TODO : count null answers
 
         return custom_modules_with_null_answer
 
