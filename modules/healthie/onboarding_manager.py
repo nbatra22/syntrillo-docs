@@ -44,9 +44,25 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                 # then need get_form_answers_group and status
                 answers_group_status = self.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
+                if not custom_module_form_ids:
+                    # If custom_module_form_ids is empty, append a status with 'form' and 'status' set to null
+                    form_info = {
+                        'form': form,
+                        'status': None
+                    }
+                    patient_status.append(form_info)
+                    continue
+
                 if answers_group_status and 'formAnswerGroups' in answers_group_status:
+                    # Initialize form information with default values
+                    form_info = {
+                        'form': form,
+                        'status': None
+                    }
+
                     for group in answers_group_status['formAnswerGroups']:
-                        status_entry = {
+                        # Update form status details
+                        form_info['status'] = {
                             'name': group['name'],
                             'created_at': group['created_at'],
                             'user_id': group['user_id'],
@@ -59,9 +75,9 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
                         # Add null answer count to the status entry
                         null_answer_count = sum(module_info['null_answer_count'] for module_info in modules_with_null_answers)
-                        status_entry['null_answer_count'] = null_answer_count
+                        form_info['status']['null_answer_count'] = null_answer_count
 
-                        patient_status.append(status_entry)
+                        patient_status.append(form_info)
 
         return patient_status
 
