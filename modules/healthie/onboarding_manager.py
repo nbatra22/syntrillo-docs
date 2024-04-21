@@ -40,18 +40,18 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             #  : there could be several matches
             custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
 
+            if not custom_module_form_ids:
+                # If custom_module_form_ids is empty, append a status with 'form' and 'status' set to null
+                form_info = {
+                    'form': form,
+                    'status': None
+                }
+                patient_status.append(form_info)
+                continue
+
             for custom_module_form_id in custom_module_form_ids:
                 # then need get_form_answers_group and status
                 answers_group_status = self.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
-
-                if not custom_module_form_ids:
-                    # If custom_module_form_ids is empty, append a status with 'form' and 'status' set to null
-                    form_info = {
-                        'form': form,
-                        'status': None
-                    }
-                    patient_status.append(form_info)
-                    continue
 
                 if answers_group_status and 'formAnswerGroups' in answers_group_status:
                     # Initialize form information with default values
