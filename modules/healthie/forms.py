@@ -95,6 +95,59 @@ class HealthieAPIForms(HealthieAPI):
 
         return response
 
+    def get_form_id_by_external_id(
+        self,
+        external_id: str = None,
+        ):
+        """
+        Reteive a specific form by its id
+        See https://docs.gethealthie.com/docs/#retrieving-a-form
+
+        Parameters:
+            external_id (str, Required): The ID of the Form Template
+
+        Returns:
+            list of customModuleForm ids
+        """
+        # Set up the GraphQL query to list custom module forms
+        query = '''
+            query formTemplates(
+                $include_default_templates: Boolean,
+                $active_status: Boolean,
+                $should_paginate: Boolean,
+                $category: String,
+                $keywords: String,
+                $offset: Int
+            ) {
+                customModuleForms(
+                    include_default_templates: $include_default_templates,
+                    active_status: $active_status,
+                    should_paginate: $should_paginate,
+                    category: $category,
+                    keywords: $keywords,
+                    offset: $offset
+                ) {
+                    id
+                    external_id
+                }
+            }
+            '''
+
+        # Set up the variables for the GraphQL query
+        variables = { }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
+
+        # select ids matching for the specified  external_id
+        ids = []
+        custom_module_forms = response.get("customModuleForms", [])
+        for form in custom_module_forms:
+            if form.get("external_id") == external_id:
+                ids.append(form.get("id"))
+
+        return ids
+
 
     def get_form_by_id(
         self,
@@ -155,6 +208,7 @@ class HealthieAPIForms(HealthieAPI):
         response = self.send_query(query, variables)
 
         return response
+
 
 
     def create_custom_module_form(
@@ -484,13 +538,87 @@ class HealthieAPIForms(HealthieAPI):
                     id
                     name
                     created_at
-                    user_id
-                    finished
+                    user_id                 # returns a Str
+                    filler {                # The user who filled out the form. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    finished                # Whether the filled form has been saved by the user (verse a hidden draft)
+                    locked_at               # The date and time when the charting note was locked
+                    locked_by {             # The provider who have locked the charting note. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    custom_module_form {    # The form template that was filled out
+                        id
+                        name
+                        external_id
+                        use_for_charting
+                        use_for_program
+                    }
                     form_answers {
                         custom_module_id
                         label
                         answer
                         id
+                    }
+                }
+            }
+        '''
+
+        # Set up the variables for the GraphQL query
+        variables = {
+            'custom_module_form_id': custom_module_form_id,
+            'user_id' : user_id
+            }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
+
+        return response
+
+    def get_form_answers_group_status(
+        self,
+        custom_module_form_id: str = None,
+        user_id: str = None,
+        ):
+        """
+        Retreive form answer group. That is “A completed form, with metadata about the completion”
+
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm
+            user_id (str): The ID of the User
+
+        Returns:
+            dict:   Returns a formAnswerGroups object, with all FormAnswerGroup objects and FormAnswer
+                    https://docs.gethealthie.com/schema/formanswergroup.doc
+        """
+        # Set up the GraphQL query to list custom module forms
+        query = '''
+            query formAnswerGroups(
+                $custom_module_form_id: ID,
+                $user_id: String,
+            ) {
+            formAnswerGroups(
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id,
+                ) {
+                    id
+                    name
+                    created_at
+                    user_id                 # returns a Str
+                    filler {                # The user who filled out the form. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    finished                # Whether the filled form has been saved by the user (verse a hidden draft)
+                    locked_at               # The date and time when the charting note was locked
+                    locked_by {             # The provider who have locked the charting note. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    custom_module_form {    # The form template that was filled out
+                        id
+                        name
+                        external_id
+                        use_for_charting
+                        use_for_program
                     }
                 }
             }
@@ -624,33 +752,42 @@ if __name__ == "__main__":
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
-    # List all forms
-    response = forms_api.list_forms(sort_by='name_asc' , keywords='onboarding')
-    print('==== All forms ====')
-    print(json.dumps(response, indent=4))
+    if True:
+        # List all forms
+        response = forms_api.list_forms(sort_by='name_asc' , keywords='onboarding')
+        print('==== All forms ====')
+        print(json.dumps(response, indent=4))
 
-    # Access the first ID in the customModuleForms array
-    first_id = response['customModuleForms'][0]['id']
+        # Access the first ID in the customModuleForms array
+        first_id = response['customModuleForms'][0]['id']
 
-    # Retrieve the first form
-    print(f"\n==== Details of Form {first_id} and all its custom modules  ====")
-    response = forms_api.get_form_by_id(first_id)
-    print(json.dumps(response, indent=4))
+        if False:
+            # Retrieve the first form
+            print(f"\n==== Details of Form {first_id} and all its custom modules  ====")
+            response = forms_api.get_form_by_id(first_id)
+            print(json.dumps(response, indent=4))
 
-    # Retrieve the first form values
-    print(f"\n==== Answer groups of Form {first_id} ====")
-    response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
-    print(json.dumps(response, indent=4))
+        if True:
+            # Retrieve the first form values
+            print(f"\n==== Answer groups of Form {first_id} ====")
+            response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
+            print(json.dumps(response, indent=4))
 
-    # build form from gaps
-    print(f"\n==== build form from gaps ====")
-    response = forms_api.build_form_from_gaps(
-        custom_module_form_id="1162956", user_id="1035117",
-        form_name='testing gaps',
-        use_for_charting=False,
-        use_for_program=False,
-        )
-    print(json.dumps(response, indent=4))
+    if False:
+        # build form from gaps
+        print(f"\n==== build form from gaps ====")
+        response = forms_api.build_form_from_gaps(
+            custom_module_form_id="1162956", user_id="1035117",
+            form_name='testing gaps',
+            use_for_charting=False,
+            use_for_program=False,
+            )
+        print(json.dumps(response, indent=4))
+
+    if False:
+        print(f"\n==== get form by external_id ====")
+        response = forms_api.get_form_id_by_external_id(external_id='onboarding')
+        print(json.dumps(response, indent=4))
 
 
 
