@@ -20,6 +20,8 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
     forms = [
         "onboarding_clinician",
         "onboarding_nurse",
+        "onboarding_patient_personalized_{user_id}",
+        "onboarding_clinician_final",
     ]
 
     def get_user_status(
@@ -34,7 +36,10 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         patient_status = []
 
         # loop forms
-        for form in self.forms:
+        for unformatted_form in self.forms:
+
+            # Replace {user_id} placeholder with actual user_id
+            form = unformatted_form.format(user_id=user_id)
 
             # need custom_module_form_id of custom_module_form.external_id
             #  : there could be several matches
