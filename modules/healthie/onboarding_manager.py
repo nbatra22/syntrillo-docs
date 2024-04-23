@@ -173,10 +173,14 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                 answer1 = form_answers1[external_id]
                 answer2 = form_answers2[external_id]
 
+                # Normalize and order multi-value answers
+                normalized_answer1 = self.normalize_multi_value_answer(answer1)
+                normalized_answer2 = self.normalize_multi_value_answer(answer2)
+
                 print(repr(answer1), repr(answer2))
 
-                # Check if answers are different
-                if answer1 != answer2:
+                # Check if normalized answers are different
+                if normalized_answer1 != normalized_answer2:
 
                     # report blocking discrepancies
                     #  : null or 'unknown' will not be counted as major discrepancies
@@ -194,6 +198,19 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                     discrepancies.append(discrepancy_info)
 
         return discrepancies
+
+    def normalize_multi_value_answer(self, answer):
+        """
+        Normalize a multi-value answer by splitting, stripping, and sorting the values.
+        """
+        if answer is None:
+            return None
+
+        # Split answer by '\n', strip whitespace, and sort the values
+        values = [value.strip() for value in answer.split('\n') if value.strip()]
+        normalized_answer = '\n'.join(sorted(values))
+
+        return normalized_answer
 
     def extract_form_answers(self, answers):
         """
