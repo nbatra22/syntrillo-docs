@@ -761,14 +761,32 @@ class HealthieAPIForms(HealthieAPI):
             )
 
         # Extract custom_module_id where answer is missing
+        """
         custom_module_ids_with_missing_answer = [
             fa["custom_module_id"]
             for group in answers["formAnswerGroups"]
                 for fa in group["form_answers"]
-                    if ( fa["answer"] is None )
+                    if ( fa["answer"] is None and self.find_mod_type_by_id(custom_modules, fa['custom_module_id']) not in ['label'] )
                         or ( fa["answer"] in ['unknown', 'not available'] )
                         or ( fa["answer"] == "" and self.find_mod_type_by_id(custom_modules, fa['custom_module_id']) in ['text', 'textarea', 'number'] )
         ]
+        """
+
+        # Extract custom_module_id where answer is missing
+        custom_module_ids_with_missing_answer = []
+
+        for group in answers["formAnswerGroups"]:
+            for fa in group["form_answers"]:
+                answer = fa["answer"]
+                custom_module_id = fa["custom_module_id"]
+                mod_type = self.find_mod_type_by_id(custom_modules, custom_module_id)
+
+                # Check conditions for missing answers
+                if (answer is None and mod_type not in ['label']) \
+                    or (answer in ['unknown', 'not available']) \
+                        or (answer == "" and mod_type in ['text', 'textarea', 'number']):
+                    custom_module_ids_with_missing_answer.append(custom_module_id)
+
 
         # Count missing answers per custom module
         custom_module_missing_answer_count = {}

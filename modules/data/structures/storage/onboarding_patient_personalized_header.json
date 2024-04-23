@@ -1,9 +1,9 @@
 {
     "metadata": {
         "name": "Onboarding Intake Form",
-        "internal_name": "onboarding_template_patient_personalized",
+        "internal_name": "onboarding_patient_personalized_header",
         "type": "Intake Form (for patients)",
-        "description": "This is the template of the personalized Intake Form for patients. To this template will be added the questions having missing responses"
+        "description": "This is the header of the personalized Intake Form for patients. To this header will be appended the questions having missing responses"
     },
     "variables": [
         {

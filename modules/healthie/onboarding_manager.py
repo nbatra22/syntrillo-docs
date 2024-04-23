@@ -6,6 +6,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from healthie.forms import HealthieAPIForms
+from data.structures.data_structure import DataStructure
+from data.structures.storage_manager import StorageManager
 
 class HealthieAPIOnboardingManager(HealthieAPIForms):
     """
@@ -21,6 +23,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
     #
     personalized_intake_form = "onboarding_patient_personalized_{user_id}"
+    personalized_intake_form_header = "onboarding_patient_personalized_header"
     final_onboarding_form = "onboarding_final"
 
     # forms listed in the status table on the provider tab
@@ -238,20 +241,72 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         ):
 
         """
+            Build a personalized Intake Form made of questions having missing answers
 
-        do this for forms in forms_personalized_build
-
-        exit with error if discrepancies, and list them
-
-        combines unique modules. Consider using external_id_type for grouping
-
-        # get modules of the form with a missing (null or unknown)  answer
-        custom_modules_with_missing_answer = self.get_modules_with_missing_answers(
-            custom_module_form_id=custom_module_form_id,
-            user_id=user_id
-        )
         """
 
+        custom_modules_with_missing_answer = []
+        for form in self.forms_personalized_build:
+
+            custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
+
+            for custom_module_form_id in custom_module_form_ids:
+                missing_answer = self.get_modules_with_missing_answers(
+                    custom_module_form_id=custom_module_form_id,
+                    user_id=user_id
+                )
+
+                custom_modules_with_missing_answer.extend(missing_answer)
+
+        # Remove duplicated modules based on external_id
+        unique_custom_modules_with_missing_answer = []
+        seen_external_ids = set()
+
+        for module_info in custom_modules_with_missing_answer:
+            external_id = module_info['custom_module']['external_id']
+            if external_id not in seen_external_ids:
+                seen_external_ids.add(external_id)
+                unique_custom_modules_with_missing_answer.append(module_info['custom_module'])
+
+        # print(json.dumps(unique_custom_modules_with_missing_answer, indent=4))
+
+        # TODO : use actual patient name in form_name
+        # TODO : *archive* this patient-specific form ASAP (do not delete it)
+
+        # -----------------
+        # append to personalized_intake_form_header
+
+        # Load JSON data from StorageManager
+        storage_manager = StorageManager()
+        data_structure = DataStructure(storage_manager)
+        data_structure.load_from_storage(self.personalized_intake_form_header)
+
+        # Transform JSON data to custom_modules
+        personalized_intake_form_header_custom_modules = data_structure.transform_for_healthie_api()
+
+        # Combine header modules and unique missing modules
+        header_unique_custom_modules_with_missing_answer = personalized_intake_form_header_custom_modules + unique_custom_modules_with_missing_answer
+
+        print(json.dumps(header_unique_custom_modules_with_missing_answer, indent=4))
+
+        # ----------------
+        # Build form from unique modules
+        # Replace {user_id} placeholder with actual user_id
+        parsed_personalized_intake_form = self.personalized_intake_form.format(user_id=user_id)
+
+        new_form = self.create_form_wrapper(
+            form_name=f"Personalized Intake Form for patient {user_id}",
+            modules=header_unique_custom_modules_with_missing_answer,
+            use_for_charting=True,
+            use_for_program=False,
+            external_id=parsed_personalized_intake_form,
+            external_id_type="",
+            is_video=False,
+            # on_completion_ifs_tag_id=on_completion_ifs_tag_id,
+            # prefill=prefill,
+        )
+
+        return new_form
 
     # build final from from gaps
 
@@ -268,9 +323,14 @@ if __name__ == "__main__":
         response = manager_api.get_user_status(user_id="1035117")
         print(json.dumps(response, indent=4))
 
-    if True:
+    if False:
         response = manager_api.get_inconsistencies(user_id="1035117")
         print(json.dumps(response, indent=4))
+
+    if True:
+        response = manager_api.build_personalized_intake_form(user_id="1035117")
+        print(json.dumps(response, indent=4))
+
 
 
 
