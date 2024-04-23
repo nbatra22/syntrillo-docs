@@ -126,16 +126,21 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
         returns a list with internal variable names having different responses
 
-
         """
-        for form1 in self.forms_discrepancies:
+
+        inconsistencies = []
+
+        # Iterate over unique pairs of forms from forms_discrepancies
+        for i in range(len(self.forms_discrepancies)):
+            form1 = self.forms_discrepancies[i]
             custom_module_form1_ids = self.get_form_id_by_external_id(external_id=form1)
 
             for custom_module_form1_id in custom_module_form1_ids:
                 # get_form_answers_group with answers
-                answers_form1 = self.get_form_answers_group(custom_module_form_id=custom_module_form1_id, user_id=user_id)
+                answers_form1 = self.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form1_id, user_id=user_id)
 
-                for form2 in self.forms_discrepancies:
+                for j in range(i + 1, len(self.forms_discrepancies)):  # Start from i + 1 to avoid duplicates
+                    form2 = self.forms_discrepancies[j]
                     if form1 != form2 :
 
                         custom_module_form2_ids = self.get_form_id_by_external_id(external_id=form2)
@@ -143,13 +148,69 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                         for custom_module_form2_id in custom_module_form2_ids:
 
                             # get_form_answers_group with answers
-                            answers_form2 = self.get_form_answers_group(custom_module_form_id=custom_module_form2_id, user_id=user_id)
+                            answers_form2 = self.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form2_id, user_id=user_id)
 
-                            print(json.dumps(answers_form1, indent=4))
-                            print(json.dumps(answers_form2, indent=4))
+                            # Compare answers between form1 and form2
+                            inconsistencies.extend(self.find_answer_discrepancies(answers_form1, answers_form2))
+
+        return inconsistencies
 
 
+    def find_answer_discrepancies(self, answers1, answers2):
+        """
+        Compare answers from two different forms and return discrepancies based on external_id.
+        """
 
+        discrepancies = []
+
+        # Extract form answers from both sets of answers
+        form_answers1 = self.extract_form_answers(answers1)
+        form_answers2 = self.extract_form_answers(answers2)
+
+        # Compare answers and identify discrepancies based on external_id
+        for external_id in form_answers1:
+            if external_id in form_answers2:
+                answer1 = form_answers1[external_id]
+                answer2 = form_answers2[external_id]
+
+                print(repr(answer1), repr(answer2))
+
+                # Check if answers are different
+                if answer1 != answer2:
+
+                    # report blocking discrepancies
+                    #  : null or 'unknown' will not be counted as major discrepancies
+                    blocker = False
+                    if ( answer1 is not None ) and ( answer2 is not None ) \
+                        and (answer1 not in ['unknown']) and (answer2 not in ['unknown']) :
+                        blocker = True
+
+                    discrepancy_info = {
+                    'external_id': external_id,
+                    'answer1': answer1 if answer1 is not None else 'null',  # Handle null
+                    'answer2': answer2 if answer2 is not None else 'null',  # Handle null
+                    'blocker': blocker,
+                    }
+                    discrepancies.append(discrepancy_info)
+
+        return discrepancies
+
+    def extract_form_answers(self, answers):
+        """
+        Extract form answers from the response data using external_id as the key.
+        """
+
+        form_answers = {}
+
+        if 'formAnswerGroups' in answers:
+            for group in answers['formAnswerGroups']:
+                if 'form_answers' in group:
+                    for answer in group['form_answers']:
+                        if 'custom_module' in answer and 'external_id' in answer['custom_module'] and 'answer' in answer:
+                            external_id = answer['custom_module']['external_id']
+                            form_answers[external_id] = answer['answer']
+
+        return form_answers
 
 
     # build final from from gaps
@@ -162,9 +223,14 @@ if __name__ == "__main__":
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
     manager_api = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
 
-    if True:
+    if False:
         response = manager_api.get_user_status(user_id="1035117")
         print(json.dumps(response, indent=4))
+
+    if True:
+        response = manager_api.get_inconsistencies(user_id="1035117")
+        print(json.dumps(response, indent=4))
+
 
 
 

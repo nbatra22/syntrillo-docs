@@ -575,6 +575,91 @@ class HealthieAPIForms(HealthieAPI):
 
         return response
 
+    def get_form_answers_group_and_modules(
+        self,
+        custom_module_form_id: str = None,
+        user_id: str = None,
+        ):
+        """
+        Retreive form answer group. That is “A completed form, with metadata about the completion, and the saved answers”
+
+        Parameters:
+            custom_module_form_id (str): The ID of the CustomModuleForm
+            user_id (str): The ID of the User
+
+        Returns:
+            dict:   Returns a formAnswerGroups object, with all FormAnswerGroup objects and FormAnswer with CustomModule
+                    https://docs.gethealthie.com/schema/formanswergroup.doc
+                    https://docs.gethealthie.com/schema/formanswer.doc
+                    https://docs.gethealthie.com/schema/custommodule.doc
+
+                answer:
+                  - null if not completed
+                  - '\n' separated if multichoice module
+        """
+        # Set up the GraphQL query to list custom module forms
+        query = '''
+            query formAnswerGroups(
+                $custom_module_form_id: ID,
+                $user_id: String,
+            ) {
+            formAnswerGroups(
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id,
+                ) {
+                    id
+                    name
+                    created_at
+                    user_id                 # returns a Str
+                    filler {                # The user who filled out the form. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    finished                # Whether the filled form has been saved by the user (verse a hidden draft)
+                    locked_at               # The date and time when the charting note was locked
+                    locked_by {             # The provider who have locked the charting note. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
+                        id
+                    }
+                    custom_module_form {    # The form template that was filled out
+                        id
+                        name
+                        external_id
+                        use_for_charting
+                        use_for_program
+                    }
+                    form_answers {
+                        custom_module_id
+                        custom_module {
+                            id
+                            external_id         # Custom column used by API users. Used to relate our form objects with objects in third-party systems
+                            external_id_type    # Custom column used by API users. Used to relate our form objects with objects in third-party systems
+                            label               # The label of the question
+                            sublabel            # The sublabel (description) of the question
+                            is_custom           # Whether this module is a custom module
+                            mod_type            # The type of question
+                            options
+                            options_array       # The default options for this question, broken up into an array
+                            position            # The position of the question (the lower the earlier the question is shown)
+                            required            # Whether this question is required to be completed before the form it's in can be saved
+                        }
+                        label
+                        answer
+                        id
+                    }
+                }
+            }
+        '''
+
+        # Set up the variables for the GraphQL query
+        variables = {
+            'custom_module_form_id': custom_module_form_id,
+            'user_id' : user_id
+            }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
+
+        return response
+
     def get_form_answers_group_status(
         self,
         custom_module_form_id: str = None,
@@ -693,15 +778,6 @@ class HealthieAPIForms(HealthieAPI):
             else:
                 custom_module_null_answer_count[custom_module_id] = 1
 
-        # Build list of custom modules with null answers
-        """
-        custom_modules_with_null_answer = [
-            custom_module
-            for custom_module in custom_modules
-                if custom_module['id'] in custom_module_ids_with_null_answer
-        ]
-        """
-
         # Build list of custom modules with null answers and their counts
         custom_modules_with_null_answer = []
         for custom_module in custom_modules:
@@ -711,8 +787,6 @@ class HealthieAPIForms(HealthieAPI):
                     'custom_module': custom_module,
                     'null_answer_count': null_answer_count
                 })
-
-        # TODO : count null answers
 
         return custom_modules_with_null_answer
 
@@ -787,11 +861,19 @@ if __name__ == "__main__":
             response = forms_api.get_form_by_id(first_id)
             print(json.dumps(response, indent=4))
 
-        if True:
+        if False:
             # Retrieve the first form values
             print(f"\n==== Answer groups of Form {first_id} ====")
             response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
             print(json.dumps(response, indent=4))
+
+    if True:
+        # get_modules_with_null_answers
+        print(f"\n==== get_modules_with_null_answers ====")
+        response = forms_api.get_modules_with_null_answers(
+            custom_module_form_id="1164773", user_id="1035117",
+            )
+        print(json.dumps(response, indent=4))
 
     if False:
         # build form from gaps
