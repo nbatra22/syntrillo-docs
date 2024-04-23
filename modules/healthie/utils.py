@@ -175,6 +175,43 @@ class HealthieAPIUtils(HealthieAPI):
 
         return response
 
+    def get_user_from_id(
+        self,
+        user_id : str = None
+        ):
+        """
+        Retrieve a specific patient
+        https://docs.gethealthie.com/docs/#retrieving-a-patient
+
+        Returns:
+            dict: user
+        """
+
+        # Set up the GraphQL query
+        query = '''
+           query getUser($id: ID) {
+                user(id: $id) {
+                    id
+                    first_name
+                    last_name
+                    dob
+                    gender
+                    email
+                    phone_number
+                    next_appt_date
+                }
+            }
+        '''
+
+        # Set up the GraphQL variables
+        variables = {
+            'id': user_id
+        }
+
+        # Send the GraphQL query using the inherited send_query method
+        response = self.send_query(query, variables)
+
+        return response
 
 if __name__ == "__main__":
     # Load environment variables from .env file

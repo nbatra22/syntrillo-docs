@@ -1,3 +1,5 @@
+# modules/healthy/forms.py
+
 import os
 import sys
 import json
@@ -5,12 +7,21 @@ import json
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from healthie.base import HealthieAPI
+from healthie.utils import HealthieAPIUtils
 
-class HealthieAPIForms(HealthieAPI):
+class HealthieAPIForms(HealthieAPIUtils):
     """
-    A class extending HealthieAPI to handle forms-related operations.
+    A class extending HealthieAPIUtils to handle forms-related operations.
     """
+
+    def __init__(
+        self,
+        api_key: str = None,
+        organization: str = 'staging',
+        dotenv_path: str = None,
+    ):
+        super().__init__(api_key, organization, dotenv_path)
+
 
     def list_forms(
         self,

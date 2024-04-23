@@ -1,3 +1,5 @@
+# modules/healthy/onboarding_manager.py
+
 import os
 import sys
 import json
@@ -11,7 +13,7 @@ from data.structures.storage_manager import StorageManager
 
 class HealthieAPIOnboardingManager(HealthieAPIForms):
     """
-    A class extending HealthieAPI to handle onboarding operations.
+    A class extending HealthieAPIForms to handle onboarding operations.
 
     - define here the onboarding, Healthie-specific, Intake Forms and Charting Notes
        : the rationale to place that here (and not in the data module) is that the data module can be used by other app, with specific data structures
@@ -53,7 +55,13 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         personalized_intake_form,
     ]
 
-
+    def __init__(
+        self,
+        api_key: str = None,
+        organization: str = 'staging',
+        dotenv_path: str = None,
+    ):
+        super().__init__(api_key, organization, dotenv_path)
 
 
     # -------------
@@ -270,7 +278,6 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
         # print(json.dumps(unique_custom_modules_with_missing_answer, indent=4))
 
-        # TODO : use actual patient name in form_name
         # TODO : *archive* this patient-specific form ASAP (do not delete it)
 
         # -----------------
@@ -292,14 +299,17 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         # ----------------
         # Build form from unique modules
         # Replace {user_id} placeholder with actual user_id
-        parsed_personalized_intake_form = self.personalized_intake_form.format(user_id=user_id)
+        external_id = self.personalized_intake_form.format(user_id=user_id)
+
+        # get user name
+        user_details = self.get_user_from_id(user_id=user_id)
 
         new_form = self.create_form_wrapper(
-            form_name=f"Personalized Intake Form for patient {user_id}",
+            form_name=f"Personalized Intake Form for patient {user_details['user']['first_name']} {user_details['user']['last_name']}",
             modules=header_unique_custom_modules_with_missing_answer,
             use_for_charting=True,
             use_for_program=False,
-            external_id=parsed_personalized_intake_form,
+            external_id=external_id,
             external_id_type="",
             is_video=False,
             # on_completion_ifs_tag_id=on_completion_ifs_tag_id,
