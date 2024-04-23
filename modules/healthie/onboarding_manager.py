@@ -102,7 +102,8 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                             'created_at': group['created_at'],
                             'user_id': group['user_id'],
                             'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
-                            'finished': group['finished']
+                            'finished': group['finished'],
+                            'locked_at': group['locked_at'],
                         }
 
                         # Get modules with null answers for the current form
