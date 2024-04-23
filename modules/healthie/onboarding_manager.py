@@ -16,14 +16,44 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
     """
 
+    # -------------
     # static variables. These are custom_module_form.external_id
-    forms = [
+
+    #
+    personalized_intake_form = "onboarding_patient_personalized_{user_id}"
+    final_onboarding_form = "onboarding_final"
+
+    # forms listed in the status table on the provider tab
+    forms_status = [
         "onboarding_clinician",
         "onboarding_nurse",
-        "onboarding_patient_personalized_{user_id}",
-        "onboarding_clinician_final",
+        personalized_intake_form,
+        final_onboarding_form,
     ]
 
+    # forms where the code will look for discrepancies
+    forms_discrepancies = [
+        "onboarding_clinician",
+        "onboarding_nurse",
+    ]
+
+    # forms where the code will look for gaps and build the personalized Intake Form
+    forms_personalized_build = [
+        "onboarding_clinician",
+        "onboarding_nurse",
+    ]
+
+    # forms used by the code to build the final onboarding charting note
+    forms_final_build = [
+        "onboarding_clinician",
+        "onboarding_nurse",
+        personalized_intake_form,
+    ]
+
+
+
+
+    # -------------
     def get_user_status(
         self,
         user_id : str = None
@@ -36,7 +66,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         patient_status = []
 
         # loop forms
-        for unformatted_form in self.forms:
+        for unformatted_form in self.forms_status:
 
             # Replace {user_id} placeholder with actual user_id
             form = unformatted_form.format(user_id=user_id)
@@ -87,15 +117,56 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         return patient_status
 
 
+    def get_inconsistencies(
+        self,
+        user_id : str = None
+    ) :
+        """
+        get inconsistencies between forms listed in forms_discrepancies for this user
+
+        returns a list with internal variable names having different responses
+
+
+        """
+        for form1 in self.forms_discrepancies:
+            custom_module_form1_ids = self.get_form_id_by_external_id(external_id=form1)
+
+            for custom_module_form1_id in custom_module_form1_ids:
+                # get_form_answers_group with answers
+                answers_form1 = self.get_form_answers_group(custom_module_form_id=custom_module_form1_id, user_id=user_id)
+
+                for form2 in self.forms_discrepancies:
+                    if form1 != form2 :
+
+                        custom_module_form2_ids = self.get_form_id_by_external_id(external_id=form2)
+
+                        for custom_module_form2_id in custom_module_form2_ids:
+
+                            # get_form_answers_group with answers
+                            answers_form2 = self.get_form_answers_group(custom_module_form_id=custom_module_form2_id, user_id=user_id)
+
+                            print(json.dumps(answers_form1, indent=4))
+                            print(json.dumps(answers_form2, indent=4))
+
+
+
+
+
+    # build final from from gaps
+
+
+
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
     manager_api = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
 
-    response = manager_api.get_user_status(user_id="1035117")
+    if True:
+        response = manager_api.get_user_status(user_id="1035117")
+        print(json.dumps(response, indent=4))
 
-    print(json.dumps(response, indent=4))
+
 
 
 
