@@ -726,14 +726,14 @@ class HealthieAPIForms(HealthieAPI):
                 return module['mod_type']
         return None
 
-    def get_modules_with_null_answers(
+    def get_modules_with_missing_answers(
         self,
         custom_module_form_id : str = None,
         user_id: str = None,
         ):
         """
-          - Looks for null answers in a FormAnswerGroup
-          - gets custom modules from these null answers
+          - Looks for null or unknown answers in a FormAnswerGroup
+          - gets custom modules from these missing answers
 
           Can be used to report the number of questions with missing information
 
@@ -742,7 +742,7 @@ class HealthieAPIForms(HealthieAPI):
             user_id (str): The ID of the User who answered the form
 
         Returns:
-            dict: list of custom modules with null answers
+            dict: list of custom modules with missing answers
         """
 
         # Get form structure and modules
@@ -760,8 +760,8 @@ class HealthieAPIForms(HealthieAPI):
             user_id=user_id
             )
 
-        # Extract custom_module_id where answer is null
-        custom_module_ids_with_null_answer = [
+        # Extract custom_module_id where answer is missing
+        custom_module_ids_with_missing_answer = [
             fa["custom_module_id"]
             for group in answers["formAnswerGroups"]
                 for fa in group["form_answers"]
@@ -770,25 +770,25 @@ class HealthieAPIForms(HealthieAPI):
                         or ( fa["answer"] == "" and self.find_mod_type_by_id(custom_modules, fa['custom_module_id']) in ['text', 'textarea', 'number'] )
         ]
 
-        # Count null answers per custom module
-        custom_module_null_answer_count = {}
-        for custom_module_id in custom_module_ids_with_null_answer:
-            if custom_module_id in custom_module_null_answer_count:
-                custom_module_null_answer_count[custom_module_id] += 1
+        # Count missing answers per custom module
+        custom_module_missing_answer_count = {}
+        for custom_module_id in custom_module_ids_with_missing_answer:
+            if custom_module_id in custom_module_missing_answer_count:
+                custom_module_missing_answer_count[custom_module_id] += 1
             else:
-                custom_module_null_answer_count[custom_module_id] = 1
+                custom_module_missing_answer_count[custom_module_id] = 1
 
-        # Build list of custom modules with null answers and their counts
-        custom_modules_with_null_answer = []
+        # Build list of custom modules with missing answers and their counts
+        custom_modules_with_missing_answer = []
         for custom_module in custom_modules:
-            if custom_module['id'] in custom_module_ids_with_null_answer:
-                null_answer_count = custom_module_null_answer_count.get(custom_module['id'], 0)
-                custom_modules_with_null_answer.append({
+            if custom_module['id'] in custom_module_ids_with_missing_answer:
+                missing_answer_count = custom_module_missing_answer_count.get(custom_module['id'], 0)
+                custom_modules_with_missing_answer.append({
                     'custom_module': custom_module,
-                    'null_answer_count': null_answer_count
+                    'missing_answer_count': missing_answer_count
                 })
 
-        return custom_modules_with_null_answer
+        return custom_modules_with_missing_answer
 
 
     def build_form_from_gaps(
@@ -821,14 +821,14 @@ class HealthieAPIForms(HealthieAPI):
         custom_module_form = self.get_form_by_id(form_id=custom_module_form_id)
 
         # get modules of the form with a missing or unknown answer
-        custom_modules_with_null_answer = self.get_modules_with_null_answers(
+        custom_modules_with_missing_answer = self.get_modules_with_missing_answers(
             custom_module_form_id=custom_module_form_id,
             user_id=user_id
         )
 
         new_form = self.create_form_wrapper(
             form_name=form_name,
-            modules=custom_modules_with_null_answer,
+            modules=custom_modules_with_missing_answer,
             use_for_charting=use_for_charting,
             use_for_program=use_for_program,
             external_id=external_id,
@@ -868,9 +868,9 @@ if __name__ == "__main__":
             print(json.dumps(response, indent=4))
 
     if True:
-        # get_modules_with_null_answers
-        print(f"\n==== get_modules_with_null_answers ====")
-        response = forms_api.get_modules_with_null_answers(
+        # get_modules_with_missing_answers
+        print(f"\n==== get_modules_with_missing_answers ====")
+        response = forms_api.get_modules_with_missing_answers(
             custom_module_form_id="1164773", user_id="1035117",
             )
         print(json.dumps(response, indent=4))

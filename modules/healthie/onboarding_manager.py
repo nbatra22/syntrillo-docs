@@ -106,12 +106,12 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                             'locked_at': group['locked_at'],
                         }
 
-                        # Get modules with null answers for the current form
-                        modules_with_null_answers = self.get_modules_with_null_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
+                        # Get modules with missing answers (null or unknown) for the current form
+                        modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
                         # Add null answer count to the status entry
-                        null_answer_count = sum(module_info['null_answer_count'] for module_info in modules_with_null_answers)
-                        form_info['status']['null_answer_count'] = null_answer_count
+                        missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
+                        form_info['status']['missing_answer_count'] = missing_answer_count
 
                         patient_status.append(form_info)
 
@@ -231,7 +231,30 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         return form_answers
 
 
+    def build_personalized_intake_form(
+        self,
+        user_id : str = None,
+        send_completion_request : bool = False,
+        ):
+
+        """
+
+        do this for forms in forms_personalized_build
+
+        exit with error if discrepancies, and list them
+
+        combines unique modules. Consider using external_id_type for grouping
+
+        # get modules of the form with a missing (null or unknown)  answer
+        custom_modules_with_missing_answer = self.get_modules_with_missing_answers(
+            custom_module_form_id=custom_module_form_id,
+            user_id=user_id
+        )
+        """
+
+
     # build final from from gaps
+
 
 
 
