@@ -68,7 +68,7 @@ if __name__ == "__main__":
     data_structure = DataStructure(storage_manager)
 
     # Load JSON data from StorageManager
-    filename = "onboarding_clinicians"
+    filename = "onboarding_clinician"
     data_structure.load_from_storage(filename)
 
     # Transform JSON data for Healthie API

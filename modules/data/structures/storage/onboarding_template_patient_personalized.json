@@ -1,0 +1,36 @@
+{
+    "metadata": {
+        "name": "Onboarding Intake Form",
+        "internal_name": "onboarding_template_patient_personalized",
+        "type": "Intake Form (for patients)",
+        "description": "This is the template of the personalized Intake Form for patients. To this template will be added the questions having missing responses"
+    },
+    "variables": [
+        {
+            "internal_name": "form_title",
+            "question": "On boarding questionnaire",
+            "display": "label",
+            "special_values": null,
+            "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
+            "user_description": "This form includes some of remaining questions we have for you.",
+            "type": null,
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "feedback",
+            "question": "Leave your feedback on the onboarding process",
+            "display": "textarea",
+            "special_values": null,
+            "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": null,
+            "LLM_prompt": null,
+            "comment": null
+        }
+    ]
+}
