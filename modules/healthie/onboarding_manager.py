@@ -74,6 +74,8 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
         """
 
+        # TODO : look for completion request sent
+
         patient_status = []
 
         # loop forms
@@ -86,6 +88,8 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             #  : there could be several matches
             custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
 
+            print("!!! form: ", form, "  id:", custom_module_form_ids)
+
             if not custom_module_form_ids:
                 # If custom_module_form_ids is empty, append a status with 'form' and 'status' set to null
                 form_info = {
@@ -96,6 +100,8 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                 continue
 
             for custom_module_form_id in custom_module_form_ids:
+                print('custom_module_form_id', custom_module_form_id)
+
                 # then need get_form_answers_group and status
                 answers_group_status = self.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
@@ -106,25 +112,40 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                         'status': None
                     }
 
-                    for group in answers_group_status['formAnswerGroups']:
-                        # Update form status details
-                        form_info['status'] = {
-                            'name': group['name'],
-                            'created_at': group['created_at'],
-                            'user_id': group['user_id'],
-                            'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
-                            'finished': group['finished'],
-                            'locked_at': group['locked_at'],
-                        }
+                    if answers_group_status['formAnswerGroups']:
+                        for group in answers_group_status['formAnswerGroups']:
+                            # Update form status details
+                            form_info['status'] = {
+                                'name': group['name'],
+                                'created_at': group['created_at'],
+                                'user_id': group['user_id'],
+                                'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
+                                'finished': group['finished'],
+                                'locked_at': group['locked_at'],
+                            }
 
-                        # Get modules with missing answers (null or unknown) for the current form
-                        modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
+                            # Get modules with missing answers (null or unknown) for the current form
+                            modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
-                        # Add null answer count to the status entry
-                        missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
-                        form_info['status']['missing_answer_count'] = missing_answer_count
+                            # Add null answer count to the status entry
+                            missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
+                            form_info['status']['missing_answer_count'] = missing_answer_count
 
+                            patient_status.append(form_info)
+                    else:
+                        # append empty entry if form not answered
                         patient_status.append(form_info)
+
+                else:
+                    # add empty entry
+                    form_info = {
+                        'form': form,
+                        'status': None
+                    }
+                    patient_status.append(form_info)
+
+
+        print(json.dumps(patient_status, indent=4))
 
         return patient_status
 
