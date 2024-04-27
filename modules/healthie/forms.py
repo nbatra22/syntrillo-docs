@@ -967,6 +967,95 @@ class HealthieAPIForms(HealthieAPIUtils):
         response = self.send_query(mutation, variables)
         return response
 
+    def list_completion_requests(
+        self,
+        user_id: str = None,
+        status: str = None,
+        keywords: str = None,
+        ):
+        """
+        Retreive a list of completion requests sent to a user
+        See https://docs.gethealthie.com/docs/#form-completion-request-object
+
+        Parameters:
+            user_id (str, Optional): The user id
+            status (str, Optional): Can be either Open or Incomplete
+            keywords (str, Optional): A term to search Requests by. Can be searched by Form Template name.
+
+        Returns:
+            dict:   Returns an array of RequestedFormCompletion objects.
+                    See : https://docs.gethealthie.com/schema/requestedformcompletion.doc
+
+        """
+        # Set up the GraphQL query
+        query = '''
+            query requestedFormCompletions(
+            $userId: ID,
+            $keywords: String,
+            $status: String
+            ) {
+            requestedFormCompletions(
+                user_id: $userId,
+                keywords: $keywords,
+                status: $status
+            ) {
+                id                      # The unique identifier of the request
+                custom_module_form_id   # The ID of the form to fill out
+                date_to_show
+            }
+            }
+        '''
+
+        # Set up the variables for the GraphQL query
+        variables = {
+            'user_id': user_id,
+            'keywords': keywords,
+            'status': status,
+            }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response = self.send_query(query, variables)
+
+        return response
+
+    def was_form_completion_requested(
+        self,
+        user_id: str = None,
+        form_id: str = None,
+        ):
+        """
+        Looks whether a user was asked to complete a form, and when
+
+        Parameters:
+            user_id (str, Required): The user id
+            form_id (str, Required): The form id
+
+        Returns:
+            set :  boolean, date of request
+
+        """
+
+        requests = self.list_completion_requests(user_id=user_id)
+
+         # Initialize variables to store result
+        form_requested = False
+        request_date = None
+
+        # Iterate through the list of completion requests
+        for request in requests['requestedFormCompletions']:
+            # Check if the form ID in the request matches the specified form ID
+            if request['custom_module_form_id'] == form_id:
+                # Set the result variables
+                form_requested = True
+                request_date = request['date_to_show']
+                # No need to continue searching if a match is found
+                break
+
+        # Return the result
+        return form_requested, request_date
+
+
+
 
 if __name__ == "__main__":
     # Example usage of the list_forms function

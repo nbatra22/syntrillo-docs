@@ -74,8 +74,6 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
         """
 
-        # TODO : look for completion request sent
-
         patient_status = []
 
         # loop forms
@@ -88,64 +86,70 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             #  : there could be several matches
             custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
 
-            print("!!! form: ", form, "  id:", custom_module_form_ids)
-
+            # Is this test necessary ??
             if not custom_module_form_ids:
                 # If custom_module_form_ids is empty, append a status with 'form' and 'status' set to null
                 form_info = {
-                    'form': form,
-                    'status': None
+                    'form': form,                   # form name
+                    'is_intake_form' : None,        # Is it an IntakeForm
+                    'completion_request' : None,    # id IntakeForm, was it requested
+                    'status': None                  # status of the answers
                 }
                 patient_status.append(form_info)
                 continue
 
             for custom_module_form_id in custom_module_form_ids:
-                print('custom_module_form_id', custom_module_form_id)
+
+                # get details of this form
+                form_details = self.get_form_by_id(form_id=custom_module_form_id)
 
                 # then need get_form_answers_group and status
                 answers_group_status = self.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
-                if answers_group_status and 'formAnswerGroups' in answers_group_status:
-                    # Initialize form information with default values
-                    form_info = {
-                        'form': form,
-                        'status': None
-                    }
-
-                    if answers_group_status['formAnswerGroups']:
-                        for group in answers_group_status['formAnswerGroups']:
-                            # Update form status details
-                            form_info['status'] = {
-                                'name': group['name'],
-                                'created_at': group['created_at'],
-                                'user_id': group['user_id'],
-                                'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
-                                'finished': group['finished'],
-                                'locked_at': group['locked_at'],
-                            }
-
-                            # Get modules with missing answers (null or unknown) for the current form
-                            modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
-
-                            # Add null answer count to the status entry
-                            missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
-                            form_info['status']['missing_answer_count'] = missing_answer_count
-
-                            patient_status.append(form_info)
-                    else:
-                        # append empty entry if form not answered
-                        patient_status.append(form_info)
-
+                # get completion request if Intake Form
+                if form_details['customModuleForm']['use_for_charting'] == False:
+                    is_intake_form = True
+                    completion_request_status, completion_request_date = self.was_form_completion_requested(user_id=user_id, form_id=custom_module_form_id)
                 else:
-                    # add empty entry
-                    form_info = {
-                        'form': form,
-                        'status': None
-                    }
+                    is_intake_form = False
+                    completion_request_status = None
+                    completion_request_date = None
+
+                # Initialize form information with default values
+                form_info = {
+                    'form': form,
+                    'is_intake_form' : is_intake_form,
+                    'completion_request_status' : completion_request_status,
+                    'completion_request_date' : completion_request_date,
+                    'status': None
+                }
+
+
+                if answers_group_status['formAnswerGroups']:
+                    # add all available answers
+                    for group in answers_group_status['formAnswerGroups']:
+                        # Update form status details
+                        form_info['status'] = {
+                            'name': group['name'],
+                            'created_at': group['created_at'],
+                            'user_id': group['user_id'],
+                            'filler_id': group['filler']['id'] if 'filler' in group else 'N/A',
+                            'finished': group['finished'],
+                            'locked_at': group['locked_at'],
+                        }
+
+                        # Get modules with missing answers (null or unknown) for the current form
+                        modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
+
+                        # Add null answer count to the status entry
+                        missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
+                        form_info['status']['missing_answer_count'] = missing_answer_count
+
+                        patient_status.append(form_info)
+                else:
+                    # append empty entry if form not answered
                     patient_status.append(form_info)
 
-
-        print(json.dumps(patient_status, indent=4))
 
         return patient_status
 
@@ -332,7 +336,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         new_form = self.create_form_wrapper(
             form_name=f"Personalized Intake Form for patient {user_details['user']['first_name']} {user_details['user']['last_name']}",
             modules=header_unique_custom_modules_with_missing_answer,
-            use_for_charting=True,
+            use_for_charting=False, # This is an Intake Form
             use_for_program=False,
             external_id=external_id,
             external_id_type="",
@@ -342,7 +346,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         )
 
         if send_completion_request :
-            # "form_response": {        "createCustomModuleForm": {            "customModuleForm": {                "id": "1171914"
+            # the form that was just built
             new_form_id = new_form['form_response']['createCustomModuleForm']['customModuleForm']['id']
 
             new_form_request_payload = self.create_form_completion_request(
