@@ -320,7 +320,20 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             # prefill=prefill,
         )
 
-        return new_form
+        if send_completion_request :
+            # "form_response": {        "createCustomModuleForm": {            "customModuleForm": {                "id": "1171914"
+            new_form_id = new_form['form_response']['createCustomModuleForm']['customModuleForm']['id']
+
+            new_form_request_payload = self.create_form_completion_request(
+                recipient_ids=user_id,
+                form=new_form_id,
+                is_recurring=False,
+            )
+        else:
+            new_form_request_payload = None
+
+        return { "new_form" : new_form, "new_form_request_payload" : new_form_request_payload }
+
 
     # build final form from gaps
 

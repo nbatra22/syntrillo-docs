@@ -515,7 +515,8 @@ class HealthieAPIForms(HealthieAPIUtils):
         # Return the modules_response
         return { "form_response" : form_response, "modules_responses" : modules_responses }
 
-    # TODO : use our external_id to get answers
+
+    # TODO : use our external_id to get answers ?
     def get_form_answers_group(
         self,
         custom_module_form_id: str = None,
@@ -869,6 +870,102 @@ class HealthieAPIForms(HealthieAPIUtils):
         )
 
         return new_form
+
+
+    def create_form_completion_request(
+        self,
+        recipient_ids: str = "",
+        form: str = "",
+        is_recurring: bool = False,
+        frequency: str = None,
+        period: str = None,
+        minute: str = None,
+        hour: str = None,
+        weekday: str = None,
+        monthday: str = None,
+        recurrence_ends: bool = None,
+        ends_on: str = None,
+    ):
+        """
+        Create a Form Completion Request using the Healthie API.
+            See : - https://docs.gethealthie.com/docs/#creating-a-form-completion-request
+                  - input : https://docs.gethealthie.com/schema/createrequestedforminput.doc
+                  - createRequestedFormCompletion in https://docs.gethealthie.com/schema/mutation.doc
+
+        Parameters:
+            recipient_ids (str): A comma-separated list of user IDs and/or user group IDs.
+            form (str):
+            is_recurring (bool, optional):
+            frequency (str, optional):
+            period (str, optional):
+            minute (str, optional):
+            hour (str, optional):
+            weekday (str, optional):
+            monthday (str, optional):
+            recurrence_ends (bool, optional):
+            ends_on (str, optional):
+
+        Returns:
+            dict: Returns createRequestedFormPayload.
+        """
+        # Set up the GraphQL mutation to create a CustomModule in a Form
+        mutation = '''
+            mutation createRequestedFormCompletion(
+                $recipient_ids: String,
+                $form: String,
+                $is_recurring: Boolean,
+                $frequency: String,
+                $period: String,
+                $minute: String,
+                $hour: String,
+                $weekday: String,
+                $monthday: String,
+                $recurrence_ends: Boolean,
+                $ends_on: String
+            ) {
+            createRequestedFormCompletion(input: {
+                recipient_ids: $recipient_ids,
+                form: $form,
+                is_recurring: $is_recurring,
+                frequency: $frequency,
+                period: $period,
+                minute: $minute,
+                hour: $hour,
+                weekday: $weekday,
+                monthday: $monthday,
+                recurrence_ends: $recurrence_ends,
+                ends_on: $ends_on
+            }) {
+                requestedFormCompletion {
+                id
+                }
+
+                messages {
+                field
+                message
+                }
+            }
+            }
+        '''
+
+        # Set up the variables for the GraphQL mutation
+        variables = {
+            'recipient_ids': recipient_ids,
+            'form': form,
+            'is_recurring': is_recurring,
+            'frequency': frequency,
+            'period': period,
+            'minute': minute,
+            'hour': hour,
+            'weekday': weekday,
+            'monthday': monthday,
+            'recurrence_ends': recurrence_ends,
+            'ends_on': ends_on,
+        }
+
+        # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
+        response = self.send_query(mutation, variables)
+        return response
 
 
 if __name__ == "__main__":
