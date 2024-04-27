@@ -251,6 +251,10 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         """
             Build a personalized Intake Form made of questions having missing answers
 
+            Looks like only the API key owner will see this form.  May need to use the provider API key OR share the form with the provider(s), via their email address
+            => TODO: DB of API keys, so that the systemas acts as the provider ???
+            => TODO: DB of providers emails is sharing
+
         """
 
         custom_modules_with_missing_answer = []
@@ -301,7 +305,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         # Replace {user_id} placeholder with actual user_id
         external_id = self.personalized_intake_form.format(user_id=user_id)
 
-        # get user name
+        # get user name : TODO : compliance with regulations ?
         user_details = self.get_user_from_id(user_id=user_id)
 
         new_form = self.create_form_wrapper(
@@ -318,7 +322,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
         return new_form
 
-    # build final from from gaps
+    # build final form from gaps
 
 
 

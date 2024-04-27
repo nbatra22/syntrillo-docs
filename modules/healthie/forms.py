@@ -515,6 +515,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         # Return the modules_response
         return { "form_response" : form_response, "modules_responses" : modules_responses }
 
+    # TODO : use our external_id to get answers
     def get_form_answers_group(
         self,
         custom_module_form_id: str = None,
@@ -553,7 +554,7 @@ class HealthieAPIForms(HealthieAPIUtils):
                     filler {                # The user who filled out the form. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
                         id
                     }
-                    finished                # Whether the filled form has been saved by the user (verse a hidden draft)
+                    finished                # Whether the filled form has been saved by the user (versus a hidden draft)
                     locked_at               # The date and time when the charting note was locked
                     locked_by {             # The provider who have locked the charting note. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
                         id
