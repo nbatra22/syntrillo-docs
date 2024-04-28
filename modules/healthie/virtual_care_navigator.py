@@ -8,10 +8,22 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from healthie.utils import HealthieAPIUtils
-from healthie.misc import log_this
+from healthie.misc import log_this, transform_to_safe_html
+
+# open AI
+#  - python anywhere : pip3.8 install openai
+#  - Maxwell         : pip install openai in the Syntrillo env (installs in this env), then command palette > clear cache
+
+# Import OpenAI package
+from openai import OpenAI
+
+# Set your OpenAI API key
+#  : keyname : PythonAnywhere
+OPENAI_API_KEY = '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' # FIFTEEN KAY KEY
 
 # the Virtual Care Navigator Healthie id (ie provider id)
 VCN_ID : str ='1108460'
+
 
 class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
     """
@@ -67,6 +79,92 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
 
         return response
 
+    def read_llm_file(file_name):
+        """
+        Read content from a file in the 'llm' directory.
+
+        Parameters:
+        - file_name (str): The name of the file to read.
+
+        Returns:
+        - str: The content of the specified file.
+        """
+        # Get the absolute path to the 'heart1_data' directory
+        config_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../llm/'))
+        file_path = os.path.join(config_dir, file_name)
+
+        # Read and return the content of the file
+        with open(file_path, 'r') as file:
+            return file.read()
+
+
+    def openai_call(
+        self,
+        notes : list,
+    ) :
+        """
+
+        """
+
+        # ---------------
+        # create messages as list of role and content
+
+        conversation_history = notes.copy()
+
+        # Iterate over each note in the notes list
+        for note in conversation_history:
+            # Determine the role based on the user_id
+            if note['user_id'] == VCN_ID :
+                note['role'] = 'assistant'
+            else:
+                note['role'] = 'user'
+
+        # Check if the number of 'assistant' messages is 0 in 'notes'
+        assistant_message_count = sum(1 for note in conversation_history if note['role'] == 'assistant')
+
+        # If there are no 'assistant' messages, add system and user messages to the beginning of the conversation
+        if assistant_message_count == 0:
+            system_content = self.read_llm_file('instructions.txt')
+            user_content = self.read_llm_file('prompt_dummy_context.txt')
+
+            # Add system message with 'system' role
+            conversation_history.insert(0, {'role': 'system', 'content': system_content})
+
+            # Add user message with 'user' role
+            conversation_history.insert(1, {'role': 'user', 'content': user_content})
+
+
+        # ---------------
+        # Separate list for API input with only 'role' and 'content'
+        messages = [{'role': msg['role'], 'content': msg['content']} for msg in conversation_history]
+
+        # --
+        # call openAI API
+        #   ; https://platform.openai.com/docs/api-reference/chat/create
+        openai_client = OpenAI(
+            api_key=OPENAI_API_KEY,
+        )
+
+        model="gpt-3.5-turbo-1106"  # default, 30 times less expensive than gpt 4 : https://openai.com/pricing , 16K context window
+        temperature : float = 0.2
+        seed = 12
+        max_tokens = 100
+
+        response = openai_client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            seed=seed,
+        )
+
+        # debug
+        log_this(messages)
+
+        # Extract the assistant's reply from the new structure
+        assistant_reply = transform_to_safe_html(response.choices[0].message.content.strip())
+
+        return transform_to_safe_html(assistant_reply)
 
     def get_conversation_from_note_id(
         self,
