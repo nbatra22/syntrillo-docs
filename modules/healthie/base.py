@@ -4,6 +4,7 @@ import requests
 import os
 import json
 from dotenv import load_dotenv
+from datetime import datetime
 
 class HealthieAPI:
     """
@@ -99,10 +100,7 @@ class HealthieAPI:
         }
 
         if self.verbose :
-            print("--debug--")
-            print(query)
-            print(json.dumps(variables, indent=4))
-            print("---------")
+            self.log_this( f"send_query\n{query}\n{json.dumps(variables, indent=4)}" )
 
         try:
             # Make the HTTP POST request to the Healthie API
@@ -131,6 +129,7 @@ class HealthieAPI:
         except requests.exceptions.RequestException as err:
             print(f"Request Exception: {err}")
             raise
+
 
 
 if __name__ == "__main__":

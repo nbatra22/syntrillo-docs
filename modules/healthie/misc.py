@@ -1,5 +1,7 @@
 
 import re  # Import regular expression module
+from datetime import datetime
+import json
 
 def extract_user_id_from_url(url):
     """
@@ -23,3 +25,26 @@ def extract_user_id_from_url(url):
         return None   # Return None if url is None
 
 
+def log_this(
+    message : any,
+    filepath : str = None
+):
+    """
+    Stores some logs locally. Default is verbose file.
+    """
+    if filepath is None:
+        filepath = 'ignore_healthie_log_verbose.txt'
+
+    # Check if message is a dictionary
+    if isinstance(message, dict):
+        message = json.dumps(message, indent=4)
+
+    # Get the current date and time
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Format the log entry with the current date and time
+    log_entry = f"\n---- {current_datetime}\n\n{message}\n\n"
+
+    # Write the log entry to the file
+    with open(filepath, 'a') as f:
+        f.write(log_entry)

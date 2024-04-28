@@ -8,6 +8,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from healthie.utils import HealthieAPIUtils
+from healthie.misc import log_this
 
 # the Virtual Care Navigator Healthie id (ie provider id)
 VCN_ID : str ='1108460'
@@ -53,6 +54,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
             )
 
         else:
+            log_this(message=f"VCN: conversation owner not VCN: {owner_id}")
             response = None
 
 
@@ -199,7 +201,7 @@ if __name__ == "__main__":
 
     if True:
         # test endpoint
-        data = {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
+        data = {"resource_id": 260046, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
         response = vcn.endpoint(data=data)
 
         print(json.dumps(response, indent=4))
