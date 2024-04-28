@@ -11,7 +11,8 @@ from healthie.utils import HealthieAPIUtils
 from healthie.misc import log_this, transform_to_safe_html
 
 # open AI
-#  - python anywhere : pip3.8 install openai
+#  - python anywhere US : pip3.8 install openai
+#  - python anywhere EU : pip3.8 install "openai==1.3.8"
 #  - Maxwell         : pip install openai in the Syntrillo env (installs in this env), then command palette > clear cache
 
 # Import OpenAI package
@@ -65,10 +66,12 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
             # get all the content of the conversation
             prompt = self.notes_to_prompt(notes=conversation['conversation']['notes'])
 
+            ai_reply = self.openai_call(notes=conversation['conversation']['notes'])
+
             # send new message
             response = self.create_note(
                 conversation_id=conversation['conversation']['id'],
-                content='blob',
+                content=ai_reply,
                 user_id=VCN_ID,
             )
 
