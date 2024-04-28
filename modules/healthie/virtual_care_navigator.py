@@ -46,6 +46,8 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
     ) :
         """
             {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
+
+            TODO : manage any file sent
         """
 
         # get whole conversation object
@@ -59,6 +61,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         last_note = conversation['conversation']['notes'][-1]
 
         # Extract the user_id from the last note
+        # TODO : do not proceed if the user_id maps to a provider
         last_user_id = last_note['user_id']
 
         if owner_id == VCN_ID and last_user_id != VCN_ID:
@@ -67,6 +70,10 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
             prompt = self.notes_to_prompt(notes=conversation['conversation']['notes'])
 
             ai_reply = self.openai_call(notes=conversation['conversation']['notes'])
+
+            # TODO: retreive the conversation again, and check if the last not is still the same
+            #       do not proceed if not. This means several inputs.
+            #       other endpoint will be trigered.
 
             # send new message
             response = self.create_note(
@@ -107,6 +114,11 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
     ) :
         """
 
+            TODO:
+               - what trigger to look-up new medical data ? Date delta ? Manual trigger in provider tab ?
+                     : compare last assistant message date with latest form, documents, ...
+               - manage the initiation of the conversation when a new patient arrives.
+               - manage waiting time : send new note "Hello, give me a moment to look at your medical record."
         """
 
         # ---------------
@@ -151,7 +163,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         model="gpt-3.5-turbo-1106"  # default, 30 times less expensive than gpt 4 : https://openai.com/pricing , 16K context window
         temperature : float = 0.2
         seed = 12
-        max_tokens = 100
+        max_tokens = 100 # TODO: add a lower number in the instructions to prevent sliced messages.
 
         response = openai_client.chat.completions.create(
             model=model,
