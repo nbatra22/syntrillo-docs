@@ -39,9 +39,16 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         note_id = data['resource_id']
         conversation = self.get_conversation_from_note_id(note_id=note_id)
 
-        # test if owner if VCN account
+        # test if owner if VCN account and if last message not from VCN (to prevent loops)
         owner_id = conversation['conversation']['owner']['id']
-        if owner_id == VCN_ID :
+
+        # Get the last note in the list
+        last_note = conversation['conversation']['notes'][-1]
+
+        # Extract the user_id from the last note
+        last_user_id = last_note['user_id']
+
+        if owner_id == VCN_ID and last_user_id != VCN_ID:
 
             # get all the content of the conversation
             prompt = self.notes_to_prompt(notes=conversation['conversation']['notes'])
@@ -104,6 +111,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
                         patient_id
                         notes {
                             content
+                            user_id
                         }
                     }
                 }
