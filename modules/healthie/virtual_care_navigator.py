@@ -126,7 +126,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         assistant_message_count = sum(1 for note in conversation_history if note['role'] == 'assistant')
 
         # If there are no 'assistant' messages, add system and user messages to the beginning of the conversation
-        if assistant_message_count == 0:
+        if assistant_message_count <= 1:
             system_content = self.read_llm_file('instructions.txt')
             user_content = self.read_llm_file('prompt_dummy_context.txt')
 
