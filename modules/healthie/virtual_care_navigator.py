@@ -82,7 +82,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
 
         return response
 
-    def read_llm_file(file_name):
+    def read_llm_file(self, file_name):
         """
         Read content from a file in the 'llm' directory.
 
@@ -92,8 +92,8 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         Returns:
         - str: The content of the specified file.
         """
-        # Get the absolute path to the 'heart1_data' directory
-        config_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../llm/'))
+        # Get the absolute path to the 'llm' directory
+        config_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), './llm/'))
         file_path = os.path.join(config_dir, file_name)
 
         # Read and return the content of the file
@@ -308,10 +308,15 @@ if __name__ == "__main__":
     dotenv_path = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/.env")
     vcn = HealthieAPIVirtualCareNavigator(dotenv_path=dotenv_path)
 
-    if True:
+    if False:
         # test endpoint
         data = {"resource_id": 260046, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
         response = vcn.endpoint(data=data)
 
         print(json.dumps(response, indent=4))
+
+    if True:
+        system_content = vcn.read_llm_file('instructions.txt')
+        print(system_content)
+
 
