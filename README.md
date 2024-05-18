@@ -1,6 +1,30 @@
-# healthie_dev
+# Healthie App Development Repository
 
-Healthie API development environment
+`healthie_dev` repository hosted by Syntrillo : https://github.com/Syntrillo/healthie_dev
+
+Objectives:
+  - provides an interface to Healthie's API and endpoints
+  - provides an interface to Syntrillo's iFrames displayed in Healthie extra tabs and panel items
+  - provides HTML content to be delivered into Healthie iFrames (currently the SyntrilloPythonAnywhere web-server app)
+  - includes the logic to all Healthie's related events
+  - will have to interact with other repositories: eg care plans, tenovi, virtucal care navigator, ...
+
+## Architecture
+
+```
+.
+|-- modules                 : python modules
+|   |-- data                : management of data structures
+|   |   `-- structures      : clinician-friendly Excel files with list of variables
+|   |                         organized by Intake Forms or Charting Notes
+|   `-- healthie            : communication and analysis logic
+|       `-- llm             : initial test with LLM
+|-- prod                    : code for Healthie production
+`-- staging                 : code for Healthie staging
+```
+
+Note : the data structures are placed in this repository since they are specific to Healthie's Intake Flow and UI.
+
 
 ## Modules
 
