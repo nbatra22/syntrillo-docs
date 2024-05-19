@@ -2,4 +2,5 @@ requests
 python-dotenv
 xlrd
 conda-forge::mysql-connector-python
-
+conda-forge::sshtunnel
+conda-forge::mysqlclient
