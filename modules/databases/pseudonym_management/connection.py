@@ -25,7 +25,13 @@ import sshtunnel
 sshtunnel.SSH_TIMEOUT = 5.0
 sshtunnel.TUNNEL_TIMEOUT = 5.0
 
-# TODO : in AWS : need to move this outside the source code
+
+
+# TODO : need to move this outside the source code : use dotenv at the top level (.env will be look for )
+"""
+the load_dotenv() function from the python-dotenv library will automatically search for a .env file in the directory from which the script is executed, and if it doesn't find one there, it will continue searching in parent directories up to the root directory. This behavior allows for flexibility in locating the .env file without hardcoding its path.
+"""
+
 DB_CONFIG = {
     'user': 'syntrillo',
     'password': 'WbQELeX9nhAkC7jUvfSFyH',
@@ -54,8 +60,6 @@ def create_connection(verbose : bool = False):
                 db_config_ssh=DB_CONFIG.copy()
                 db_config_ssh['host'] = '127.0.0.1'
                 db_config_ssh['port'] = tunnel.local_bind_port
-                if verbose:
-                    print(db_config_ssh)
                 conn = MySQLdb.connect(**db_config_ssh)
                 if verbose:
                     print("remote connection to ",  DB_CONFIG.get('database'), " successful.")
