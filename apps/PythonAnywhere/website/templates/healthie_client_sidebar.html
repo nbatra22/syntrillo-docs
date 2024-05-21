@@ -1,0 +1,37 @@
+<!-- templates/healthie_tab_test.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthie Extra Client Sidebar Item - Syntrillo server</title>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie.css') }}">
+</head>
+<body>
+    <h1>Healthie Extra Client Sidebar Item - Syntrillo server</h1>
+    <p>Extra features and information for this patient, such as chat, care plan traffic lights, ...</p>
+
+    <h2>Patient (you)</h2>
+    <div class="table-container1">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <td>Patient id</td>
+                    <td>{{ patient_id }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!--
+    <h2>GET Parameters:</h2>
+    <ul>
+        {% for key, value in data_get_request.items() %}
+            <li><strong>{{ key }}:</strong> {{ value }}</li>
+        {% endfor %}
+    </ul>
+    -->
+</body>
+</html>

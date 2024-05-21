@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+
+    <!-- Include the mermaid library -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- Initialize Mermaid after the content is rendered -->
+    <script>mermaid.initialize({startOnLoad:true});</script>
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+
+        .content-container {
+            width: 80%;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        p, ul, li {
+            color: #555;
+        }
+
+        li {
+            max-width: 60%;
+        }
+
+        p {
+            margin-bottom: 15px;
+            max-width: 60%;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Display the rendered HTML content -->
+    <div class="content-container">
+        {{ content|safe }}
+    </div>
+</body>
+</html>

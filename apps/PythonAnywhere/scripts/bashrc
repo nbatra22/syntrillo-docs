@@ -1,0 +1,45 @@
+# Load up standard site-wide settings.
+source /etc/bashrc
+
+#remove duplicate entries from history
+export HISTCONTROL=ignoreboth
+
+# Show current git branch in prompt.
+function parse_git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+
+# Function to parse Git repository name and branch
+function parse_git_info {
+    local repo_name
+    local branch_name
+
+    # Check if current directory is inside a Git repository
+    if git rev-parse --is-inside-work-tree &>/dev/null; then
+        # Get repository name from the Git remote URL
+        repo_name=$(git remote -v | awk '/origin.*\(fetch\)/{print $2}' | cut -d':' -f1 | cut -d'-' -f2)
+
+        # Get current Git branch
+        branch_name=$(git branch --show-current 2> /dev/null)
+
+        if [[ -n "$repo_name" && -n "$branch_name" ]]; then
+            echo "($repo_name:$branch_name)"
+        fi
+    fi
+}
+
+RED="\[\033[0;31m\]"
+YELLOW="\[\033[0;33m\]"
+GREEN="\[\033[0;32m\]"
+LIGHT_GREEN="\[\033[1;32m\]"
+RESET_COLOR="\[\033[0;0m\]"
+
+PS1="$RESET_COLOR\$(date +%H:%M) \w$YELLOW \$(parse_git_info)$LIGHT_GREEN\$ $RESET_COLOR"
+
+# Load virtualenvwrapper
+source virtualenvwrapper.sh &> /dev/null
+
+alias ll='ls -al'
+
+
+

@@ -12,15 +12,23 @@ Objectives:
 ## Architecture
 
 ```
-.
-|-- modules                 : python modules
-|   |-- data                : management of data structures
-|   |   `-- structures      : clinician-friendly Excel files with list of variables
-|   |                         organized by Intake Forms or Charting Notes
-|   `-- healthie            : communication and analysis logic
-|       `-- llm             : initial test with LLM
-|-- prod                    : code for Healthie production
-`-- staging                 : code for Healthie staging
+SyntrilloClinic
+|-- apps
+|   |-- AWS
+|   `-- PythonAnywhere
+|       |-- scripts
+|       `-- website
+|-- sources
+|   `-- syntrillo
+|       |-- data
+|       |-- databases
+|       `-- healthie
+`-- tests
+    |-- databases
+    `-- healthie
+        |-- prod
+        `-- staging
+
 ```
 
 Note : the data structures are placed in this repository since they are specific to Healthie's Intake Flow and UI.

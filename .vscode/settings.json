@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "~/apps/anaconda3/envs/syntrillo/bin/python",
+    "python.analysis.extraPaths": [
+        "./sources/"
+    ],
+    "python.autoComplete.extraPaths": [
+        "./sources/"
+    ]
+}

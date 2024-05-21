@@ -1,0 +1,137 @@
+/* static/healthie.css */
+
+body {
+    font-family:  "Avenir",Helvetica,"Arial",sans-serif;
+    font-size: 16px;
+    padding: 20px;
+    color: #4f4f4f;
+}
+
+h1 {
+    font-size: 24px;
+    color: #16284a;
+}
+
+h2 {
+    font-size: 20px;
+    color: #16284a;
+}
+
+h3 {
+    font-size: 18px;
+    color: #16284a;
+    margin-left: 10px;
+}
+
+p {
+    font-style: normal;
+    font-stretch: normal;
+    font-size: 16px;
+    line-height: 21px;
+    color: #16284a;
+}
+
+.table-container1 {
+    margin-left: 10px;
+}
+.table-container1 table {
+    font-size: 16px;
+}
+.table-container1 td {
+    padding: 10px;
+}
+
+.table-container2 {
+    margin-left: 10px;
+}
+.table-container2 table {
+    font-size: 16px;
+}
+.table-container2 td {
+    padding: 10px;
+    vertical-align: top;
+}
+
+/* Add styles for the new table container class that handles complex tables */
+.table-container3 {
+    margin-left: 20px;
+}
+.table-container3 table {
+    font-size: 12px; /* Smaller font size for the table */
+    font-family: "Courier New", Courier, monospace; /* Monospace font */
+    border-collapse: collapse; /* Collapse table borders */
+    /* width: 100%; */
+}
+.table-container3 th,
+.table-container3 td {
+    padding: 8px; /* Smaller padding for table cells */
+    border: 1px solid lightgrey; /* Light grey cell border */
+    text-align: left; /* Left-align table cells */
+}
+
+/* Optional: Style table headers differently */
+.table-container3 th {
+    background-color: #f2f2f2; /* Light grey background for table headers */
+    font-weight: bold; /* Bold font for table headers */
+}
+
+
+.styled-button {
+    height: 50px;
+    border-radius: 10px;
+    background-color: #4a90e2;
+    box-shadow: 0 0 5px 0 rgba(0,0,0,.1);
+    font-family: "Avenir", Helvetica, "Arial", sans-serif;
+    font-size: 16px;
+    line-height: 21px;
+    font-style: normal;
+    font-stretch: normal;
+    letter-spacing: .4px;
+    text-align: left;
+    /* font-weight: 800; */
+    color: #fff;
+    padding: 0 20px;
+    margin: 12px 12px 12px;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border: none; /* Optional: Remove border */
+    outline: none; /* Optional: Remove focus outline */
+}
+
+.styled-button-small {
+    height: 40px;
+    border-radius: 5px;
+    background-color: #4a90e2;
+    box-shadow: 0 0 5px 0 rgba(0,0,0,.1);
+    font-family: "Avenir", Helvetica, "Arial", sans-serif;
+    font-size: 16px;
+    line-height: 18px;
+    font-style: normal;
+    font-stretch: normal;
+    letter-spacing: .4px;
+    text-align: left;
+    /* font-weight: 800; */
+    color: #fff;
+    padding: 0 10px;
+    margin: 12px 12px 12px;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border: none; /* Optional: Remove border */
+    outline: none; /* Optional: Remove focus outline */
+}
+
+.primary-button {
+    background-color: #4a90e2;
+    color: #fff;
+    border-color: #4a90e2;
+}
+
+
+
+body.loading {
+    cursor: wait;
+}
+
+

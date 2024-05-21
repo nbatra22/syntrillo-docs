@@ -1,0 +1,136 @@
+"""
+
+route to healthie_iframe_provider_tab and related actions
+
+"""
+
+from flask import Blueprint, request, jsonify, render_template
+import json
+
+import os
+import sys
+
+# ----- healthie package integration --------------
+
+# python anywhere requirements
+#    pip install python-dotenv
+
+# python.analysis.extraPaths added into .vscode/settings.json
+from syntrillo.healthie.misc import extract_user_id_from_url
+from syntrillo.healthie.onboarding_manager import HealthieAPIOnboardingManager
+
+
+# -------------------------------------------------
+
+healthie_iframe_provider_tab_bp = Blueprint('healthie_iframe_provider_tab', __name__)
+
+
+# =============================================================================================================
+# IFRAME PROVIDER TAB
+
+
+@healthie_iframe_provider_tab_bp.route('/iframe_healthie_provider_tab', methods=['GET'])
+def iframe_healthie_provider_tab():
+    """
+    iframe displayed in :
+
+    Provider portal, client Extra tab:
+        hl_current_user_id: 1033222 # that's the provider ID
+        referrer_url: https://securestaging.gethealthie.com/users/1035117  # that's the patient ID
+
+    """
+
+    # --------------------------------------------------------------------
+    # Retrieve the JSON data from the GET request
+    data_get_request = request.args.to_dict()
+
+    # Log the data to a local file
+    with open('ignore_healthy_iframes_logs.txt', 'a') as f:
+        f.write(json.dumps(data_get_request) + '\n\n')
+
+    # Extract hl_current_user_id from data_get_request
+    # here it is the provider id
+    provider_id = data_get_request.get('hl_current_user_id')
+    if provider_id is None:
+        provider_id = "1033222" # "-1"
+
+    patient_id = extract_user_id_from_url(data_get_request.get('referrer_url'))
+    if patient_id is None:
+        patient_id = "1035117" # "-1"
+
+    # --------------------------------------------------------------------
+    # Load environment variables from .env file
+    dotenv_path = ".env.staging"
+
+    # Fetch patient status using HealthieAPIOnboardingManager
+    onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
+    if patient_id != '-1':
+        patient_status = onboarding_manager.get_user_status(user_id=patient_id)
+        inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
+    else :
+        patient_status = []
+        inconsistencies = []
+
+    # --------------------------------------------------------------------
+
+    # Render the 'healthie_provider_tab.html' template with the provided data
+    return render_template('healthie_provider_tab.html',
+                           data_get_request=data_get_request,
+                           provider_id=provider_id,
+                           patient_id=patient_id,
+                           patient_status=patient_status,
+                           inconsistencies=inconsistencies,
+                           )
+
+
+# =============================================================================================================
+# BUTTONS IN PROVIDER TAB IFRAME
+
+@healthie_iframe_provider_tab_bp.route('/healthie_onboarding_generate_personalized_form', methods=['POST'])
+def healthie_onboarding_generate_personalized_form():
+    """
+    This endpoint generates a personalized Intake Form
+
+    It is located in the Provider client screens - extra tab
+
+    """
+
+    # Retrieve the JSON data from the POST request
+    data_post_request = request.form.to_dict()
+
+    # Log the data to a local file
+    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+        f.write(json.dumps(data_post_request) + '\n\n')
+
+    patient_id = data_post_request.get('patient_id')
+    provider_id = data_post_request.get('provider_id')
+    send_request_to_patient = data_post_request.get('send_request_to_patient')
+
+    # Convert send_request_to_patient to a boolean
+    send_request_to_patient_bool = send_request_to_patient.lower() in ['on', 'true'] if send_request_to_patient else False
+
+    # --------------------------------------------------------------------
+    # Load environment variables from .env file
+    dotenv_path = ".env.staging"
+
+    # new instance of onboarding_manager with the dotenv API key
+    onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
+
+    new_form = onboarding_manager.build_personalized_intake_form(
+        user_id=patient_id,
+        send_completion_request=send_request_to_patient_bool
+    )
+
+    #  : log = generate_from(patient_id)
+    log = 'log produced by function healthie_onboarding_generate_personalized_form'
+
+    # return status
+    log += f"\npatient_id {patient_id}"
+    log += f"\nprovider_id {provider_id}"
+    log += f"\nsend_request_to_patient {send_request_to_patient_bool}"
+    log += f"\n\nnew_form\n " + json.dumps(new_form, indent=4)
+
+
+    # return log as simple basic text, that will be displayed in a HTML textarea
+    return jsonify({'log': log}), 200
+
