@@ -1,6 +1,6 @@
 # SyntrilloClinic Development Repository
 
-**work in progress - ti be updated**
+**work in progress - to be updated**
 
 `SyntrilloClinic` repository hosted by Syntrillo : https://github.com/Syntrillo/SyntrilloClinic
 
