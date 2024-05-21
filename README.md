@@ -1,6 +1,8 @@
-# Healthie App Development Repository
+# SyntrilloClinic Development Repository
 
-`healthie_dev` repository hosted by Syntrillo : https://github.com/Syntrillo/healthie_dev
+**work in progress - ti be updated**
+
+`SyntrilloClinic` repository hosted by Syntrillo : https://github.com/Syntrillo/SyntrilloClinic
 
 Objectives:
   - provides an interface to Healthie's API and endpoints
@@ -34,7 +36,7 @@ SyntrilloClinic
 Note : the data structures are placed in this repository since they are specific to Healthie's Intake Flow and UI.
 
 
-## Modules
+## Modules - To be updated
 
 ### Healthie
 
