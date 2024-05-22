@@ -1,4 +1,4 @@
-# ./website/healthie_endpoint.py
+# ./Syntrillo_Clinic/apps/PythonAnywhere/website/healthie_endpoint.py
 
 """
 

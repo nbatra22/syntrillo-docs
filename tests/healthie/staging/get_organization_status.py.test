@@ -1,4 +1,5 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/get_organization_status.py
+# ./Syntrillo_Clinic/tests/healthie/staging/get_organization_status.py.test
+# staging/get_organization_status.py
 
 import sys
 import os

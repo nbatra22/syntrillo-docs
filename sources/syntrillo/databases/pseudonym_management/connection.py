@@ -1,4 +1,4 @@
-# modules/databases/pseudonym_management/connection.py
+# ./Syntrillo_Clinic/sources/syntrillo/databases/pseudonym_management/connection.py
 
 import sys
 import os
@@ -16,21 +16,43 @@ import sshtunnel
 sshtunnel.SSH_TIMEOUT = 5.0
 sshtunnel.TUNNEL_TIMEOUT = 5.0
 
-load_dotenv(dotenv_path=".env.PA-databases")
+def load_database_credentials():
+    """
+    Load database credentials from .env.PA-databases file.
 
-PA_DB_CONFIG = {
-    'user': os.getenv('PA_DB_CONFIG_USER'),
-    'password': os.getenv('PA_DB_CONFIG_PASSWORD'),
-    'host': os.getenv('PA_DB_CONFIG_HOST'),
-    'database': os.getenv('PA_DB_CONFIG_DATABASE'),
-}
+    Returns:
+        tuple: A tuple containing two dictionaries:
+            - PA_DB_CONFIG: Database configuration parameters.
+            - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
+    """
+    load_dotenv(dotenv_path=".env.PA-databases")
 
-PA_SSH_TUNNEL = {
-    'ssh_username': os.getenv('PA_DB_CONFIG_SSH_USERNAME'),
-    'ssh_password': os.getenv('PA_DB_CONFIG_SSH_PASSWORD'),
-}
+    PA_DB_CONFIG = {
+        'user': os.getenv('PA_DB_CONFIG_USER'),
+        'password': os.getenv('PA_DB_CONFIG_PASSWORD'),
+        'host': os.getenv('PA_DB_CONFIG_HOST'),
+        'database': os.getenv('PA_DB_CONFIG_DATABASE'),
+    }
+
+    PA_SSH_TUNNEL = {
+        'ssh_username': os.getenv('PA_DB_CONFIG_SSH_USERNAME'),
+        'ssh_password': os.getenv('PA_DB_CONFIG_SSH_PASSWORD'),
+    }
+
+    return PA_DB_CONFIG, PA_SSH_TUNNEL
 
 def create_connection(verbose : bool = False):
+    """
+    Creates a connection to the MySQL database. It either connects directly if running on PythonAnywhere, or establishes an SSH tunnel if running locally.
+
+    Args:
+        verbose (bool): If True, prints connection status messages.
+
+    Returns:
+        MySQLdb.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
+
+    """
+    PA_DB_CONFIG, PA_SSH_TUNNEL = load_database_credentials()
     try:
         if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
             # No SSH tunnel required if running inside PythonAnywhere cloud

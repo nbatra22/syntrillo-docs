@@ -1,3 +1,4 @@
+# ./Syntrillo_Clinic/sources/syntrillo/data/structures/data_structure.py
 #
 # Define a class (DataStructure) to represent the data structure with attributes
 #   - get

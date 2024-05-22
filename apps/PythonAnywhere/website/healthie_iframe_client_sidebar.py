@@ -1,3 +1,5 @@
+# ./Syntrillo_Clinic/apps/PythonAnywhere/website/healthie_iframe_client_sidebar.py
+
 """
 
 route to iframe_healthie_client_sidebar and related actions

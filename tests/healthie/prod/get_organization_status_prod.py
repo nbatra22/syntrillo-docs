@@ -1,4 +1,4 @@
-# staging/get_organization_details.py
+# ./Syntrillo_Clinic/tests/healthie/prod/get_organization_status_prod.py
 
 import sys
 import os

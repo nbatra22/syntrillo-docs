@@ -1,3 +1,5 @@
+# ./Syntrillo_Clinic/sources/syntrillo/healthie/app_set-up.py
+
 import os
 import sys
 import json

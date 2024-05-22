@@ -1,4 +1,4 @@
-# modules/healthy/onboarding_manager.py
+# ./Syntrillo_Clinic/sources/syntrillo/healthie/onboarding_manager.py
 
 import os
 import sys

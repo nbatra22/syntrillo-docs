@@ -1,3 +1,5 @@
+# ./Syntrillo_Clinic/tests/healthie/staging/tests_standalone/test04_send_scoring_report.py
+
 # test to send freetext to a scoring report template
 
 # looks like the answer can include html : "form_answers": [ {"label": "report", "answer": "<p>some data here</p>" } ]

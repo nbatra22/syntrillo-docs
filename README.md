@@ -1,17 +1,12 @@
 # SyntrilloClinic Development Repository
 
-**work in progress - to be updated**
-
 `SyntrilloClinic` repository hosted by Syntrillo : https://github.com/Syntrillo/SyntrilloClinic
 
-Objectives:
-  - provides an interface to Healthie's API and endpoints
-  - provides an interface to Syntrillo's iFrames displayed in Healthie extra tabs and panel items
-  - provides HTML content to be delivered into Healthie iFrames (currently the SyntrilloPythonAnywhere web-server app)
-  - includes the logic to all Healthie's related events
-  - will have to interact with other repositories: eg care plans, tenovi, virtucal care navigator, ...
+## Project Overview
 
-## Architecture
+This repository contains the Syntrillo Clinic platform, designed to handle multiple applications with shared modules and configurations. The structure ensures modularity, clarity, and ease of development for various environments, including AWS and PythonAnywhere.
+
+## Directory Structure
 
 ```
 SyntrilloClinic
@@ -28,41 +23,48 @@ SyntrilloClinic
 `-- tests
     |-- databases
     `-- healthie
-        |-- prod
-        `-- staging
 
 ```
 
-Note : the data structures are placed in this repository since they are specific to Healthie's Intake Flow and UI.
+### Directory Descriptions
+
+- **`apps/`**: Contains environment-specific applications:
+  - **`AWS/`**: Placeholder for AWS-specific application configurations and scripts.
+  - **`PythonAnywhere/`**: Contains the Flask-based web application and related scripts for PythonAnywhere deployment.
+    - **`scripts/`**: Contains configuration scripts for the PythonAnywhere environment.
+    - **`website/`**: Contains the Flask app files, static assets, and HTML templates.
+
+- **`sources/`**: Contains shared packages, modules and utilities:
+  - **`syntrillo/`**: Core functionality and data handling.
+    - **`data/`**: Data structures and storage management.
+    - **`databases/`**: Database connection and management modules.
+    - **`healthie/`**: Healthie integration and related utilities.
+
+- **`tests/`**: Contains test cases for various modules and environments:
+  - **`databases/`**: Tests for database connections.
+  - **`healthie/`**: Tests for Healthie integration, separated by production and staging environments.
+
+- **Configuration and Dependencies**:
+  - **`env_template.ini`**: Template for environment-specific variables.
+  - **`environment.yml`**: Conda environment configuration.
+  - **`requirements.txt`**: Python dependencies.
+
+### Usage
+
+1. **Setup Environment**:
+   - Copy `env_template.ini` to `.env` and fill in the required environment variables.
+   - Create and activate the Conda environment using `environment.yml`.
+
+2. **Run Applications**:
+   - Navigate to the desired environment directory under `apps/` and follow the instructions in the respective `README.md` files.
+
+3. **Run Tests**:
+   - Use the `tests/` directory to run unit tests and integration tests for the various modules and applications.
+
+This structure ensures modularity and clear separation of concerns, making it easier to manage and develop the Syntrillo Clinic platform.
 
 
-## Modules - To be updated
-
-### Healthie
-
-Package with functions connecting with Healthie's API and GraphQL
-
-## Organization folders
-
-Each folder include a dot env file `.env` with api keys generated in Healthie > Settings
-
-These files are local files, not stored in the repository.
-
-```
-API_KEY='xxxx'
-ORGANIZATION='staging'  # 'staging' or 'production'
-```
-
-### Staging folder
-
-staging account, organization id 57057
-
-### Production folder
-
-production/enterprise account, organization id 8387
-
-
-## Requirements & Environments
+### Requirements & Environments
 
 Locally, using anaconda development environment, named 'syntrillo'
 

@@ -1,4 +1,4 @@
-# tests/test_db_connections.py
+# ./Syntrillo_Clinic/tests/databases/test_db_connections.py
 
 import sys
 import os
