@@ -137,7 +137,7 @@ class HealthieAPI:
 if __name__ == "__main__":
 
     # Create an instance of HealthieAPI with the provided API key and organization
-    healthie_api = HealthieAPI(dotenv_path=".env.staging")
+    healthie_api = HealthieAPI(dotenv_path=".env.Healthie.staging")
 
     # Example: Send a test query to retrieve organization details
     response = healthie_api.send_query(query='query { organization { id name } }')

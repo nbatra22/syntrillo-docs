@@ -368,7 +368,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
     manager_api = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
 
     if False:

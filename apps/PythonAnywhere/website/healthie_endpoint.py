@@ -67,7 +67,7 @@ def healthie_endpoint_post():
         f.write(json.dumps(data) + '\n\n')
 
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     # Dispatch
     # {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
@@ -102,7 +102,7 @@ def healthie_test_org() :
     Returns organization details as JSON
     """
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     try:
         # Create an instance of HealthieAPI with the provided API key and organization

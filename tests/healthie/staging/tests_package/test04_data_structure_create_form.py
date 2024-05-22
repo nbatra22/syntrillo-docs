@@ -12,7 +12,7 @@ from syntrillo.data.structures.storage_manager import StorageManager
 # initialize Healthie API
 
 # Load environment variables from .env file
-dotenv_path = ".env.staging"
+dotenv_path = ".env.Healthie.staging"
 
 forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 

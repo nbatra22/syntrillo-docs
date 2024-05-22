@@ -317,7 +317,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
     vcn = HealthieAPIVirtualCareNavigator(dotenv_path=dotenv_path)
 
     if False:

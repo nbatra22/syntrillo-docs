@@ -59,7 +59,7 @@ def iframe_healthie_provider_sidebar():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     # Create an instance of HealthieAPI with the provided API key and organization
     utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
@@ -116,7 +116,7 @@ def healthie_build_form_from_data_structure():
     # initialize Healthie API
 
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 

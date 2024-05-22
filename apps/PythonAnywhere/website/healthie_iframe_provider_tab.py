@@ -62,7 +62,7 @@ def iframe_healthie_provider_tab():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     # Fetch patient status using HealthieAPIOnboardingManager
     onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
@@ -113,7 +113,7 @@ def healthie_onboarding_generate_personalized_form():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     # new instance of onboarding_manager with the dotenv API key
     onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)

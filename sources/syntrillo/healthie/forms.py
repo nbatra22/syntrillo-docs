@@ -1059,7 +1059,7 @@ class HealthieAPIForms(HealthieAPIUtils):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
     forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
 
     if True:

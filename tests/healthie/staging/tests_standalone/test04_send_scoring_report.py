@@ -92,7 +92,7 @@ mutation createFormAnswerGroup(
 '''
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path=".env.staging")
+load_dotenv(dotenv_path=".env.Healthie.staging")
 
 # Get the API key from the environment variables
 api_key = os.getenv('API_KEY')

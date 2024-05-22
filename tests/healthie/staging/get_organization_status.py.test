@@ -10,7 +10,7 @@ from syntrillo.healthie.utils import HealthieAPIUtils
 def main():
 
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     try:
         # Create an instance of HealthieAPI with the provided API key and organization

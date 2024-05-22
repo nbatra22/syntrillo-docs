@@ -4,7 +4,7 @@ import sys
 import os
 from dotenv import load_dotenv
 
-# https://help.pythonanywhere.com/pages/AccessingMySQLFromOutsidePythonAnywhere/
+# https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
 # if mysql-connector-python :
 #   conda install -c conda-forge mysql-connector-python
@@ -18,14 +18,14 @@ sshtunnel.TUNNEL_TIMEOUT = 5.0
 
 def load_database_credentials():
     """
-    Load database credentials from .env.PA-databases file.
+    Load database credentials from .env.PythonAnywhere.databases file.
 
     Returns:
         tuple: A tuple containing two dictionaries:
             - PA_DB_CONFIG: Database configuration parameters.
             - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
     """
-    load_dotenv(dotenv_path=".env.PA-databases")
+    load_dotenv(dotenv_path=".env.PythonAnywhere.databases")
 
     PA_DB_CONFIG = {
         'user': os.getenv('PA_DB_CONFIG_USER'),
@@ -55,7 +55,7 @@ def create_connection(verbose : bool = False):
     PA_DB_CONFIG, PA_SSH_TUNNEL = load_database_credentials()
     try:
         if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
-            # No SSH tunnel required if running inside PythonAnywhere cloud
+            # No SSH tunnel required if running inside PythonAnywhere platform
             conn = MySQLdb.connect(**PA_DB_CONFIG)
             if verbose:
                 print("_this_is_PythonAnywhere_ : connection to ",  PA_DB_CONFIG.get('database'), " successful.")
@@ -87,6 +87,10 @@ def create_connection(verbose : bool = False):
 if __name__ == '__main__':
     conn = create_connection(verbose=True)
     if conn:
-            conn.close()
+        print("Connection Successful")
+        conn.close()
+    else:
+        print("Connection Unsuccessful")
+        sys.exit(1)
 
 

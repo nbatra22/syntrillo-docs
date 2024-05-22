@@ -9,7 +9,7 @@ from syntrillo.healthie.utils import HealthieAPIUtils
 def main():
 
     # Load environment variables from .env file
-    dotenv_path = ".env.production"
+    dotenv_path = ".env.Healthie.production"
 
     print(dotenv_path)
 

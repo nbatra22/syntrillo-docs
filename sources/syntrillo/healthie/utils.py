@@ -215,7 +215,7 @@ class HealthieAPIUtils(HealthieAPI):
 
 if __name__ == "__main__":
     # Load environment variables from .env file
-    dotenv_path = ".env.staging"
+    dotenv_path = ".env.Healthie.staging"
 
     # Create an instance of HealthieAPI with the provided API key and organization
     utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
