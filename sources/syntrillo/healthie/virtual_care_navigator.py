@@ -33,6 +33,10 @@ class HealthieVirtualCareNavigator():
         self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
         self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
 
+        # paths have to be hard-coded at PythonAnywhere
+        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
+            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+
         # Load the environment variables from the specified file
         load_dotenv(dotenv_path=dotenv_path)
 

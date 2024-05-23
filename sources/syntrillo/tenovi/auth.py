@@ -5,9 +5,14 @@ import json
 from dotenv import load_dotenv
 
 class TenoviAuth:
-    def __init__(self, env_file='.env'):
+    def __init__(self, dotenv_path='.env'):
+        # paths have to be hard-coded at PythonAnywhere
+        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
+            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+
         # Load the environment variables from the specified file
-        load_dotenv(dotenv_path=env_file)
+        load_dotenv(dotenv_path=dotenv_path)
+
         # Retrieve the API key from environment variables
         self.api_key = os.getenv('TENOVI_API_KEY')
 

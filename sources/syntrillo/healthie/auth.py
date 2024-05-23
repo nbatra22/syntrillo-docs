@@ -42,8 +42,14 @@ class HealthieAuth:
 
         self.organization = organization
 
+        # paths have to be hard-coded at PythonAnywhere
+        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
+            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+
+        # Load the environment variables from the .env file
         load_dotenv(dotenv_path=dotenv_path)
 
+        # Check if the API key is provided
         if api_key is None:
             if organization == 'staging':
                 self.api_key = os.getenv('HEALTHIE_STAGING_API_KEY')

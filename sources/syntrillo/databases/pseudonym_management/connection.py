@@ -16,7 +16,7 @@ import sshtunnel
 sshtunnel.SSH_TIMEOUT = 5.0
 sshtunnel.TUNNEL_TIMEOUT = 5.0
 
-def load_database_credentials():
+def load_database_credentials(dotenv_path=".env"):
     """
     Load database credentials from .env file.
 
@@ -25,7 +25,12 @@ def load_database_credentials():
             - PA_DB_CONFIG: Database configuration parameters.
             - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
     """
-    load_dotenv(dotenv_path=".env")
+
+    # paths have to be hard-coded at PythonAnywhere
+    if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
+        dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+
+    load_dotenv(dotenv_path=dotenv_path)
 
     PA_DB_CONFIG = {
         'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
