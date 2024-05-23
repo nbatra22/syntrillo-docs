@@ -18,25 +18,25 @@ sshtunnel.TUNNEL_TIMEOUT = 5.0
 
 def load_database_credentials():
     """
-    Load database credentials from .env.PythonAnywhere.databases file.
+    Load database credentials from .env file.
 
     Returns:
         tuple: A tuple containing two dictionaries:
             - PA_DB_CONFIG: Database configuration parameters.
             - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
     """
-    load_dotenv(dotenv_path=".env.PythonAnywhere.databases")
+    load_dotenv(dotenv_path=".env")
 
     PA_DB_CONFIG = {
-        'user': os.getenv('PA_DB_CONFIG_USER'),
-        'password': os.getenv('PA_DB_CONFIG_PASSWORD'),
-        'host': os.getenv('PA_DB_CONFIG_HOST'),
-        'database': os.getenv('PA_DB_CONFIG_DATABASE'),
+        'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
+        'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
+        'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
+        'database': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_DATABASE'),
     }
 
     PA_SSH_TUNNEL = {
-        'ssh_username': os.getenv('PA_DB_CONFIG_SSH_USERNAME'),
-        'ssh_password': os.getenv('PA_DB_CONFIG_SSH_PASSWORD'),
+        'ssh_username': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME'),
+        'ssh_password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD'),
     }
 
     return PA_DB_CONFIG, PA_SSH_TUNNEL
