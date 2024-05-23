@@ -18,9 +18,9 @@ import sys
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.utils import HealthieAPIUtils
+from syntrillo.healthie.utils import HealthieUtils
 from syntrillo.healthie.misc import extract_user_id_from_url
-from syntrillo.healthie.forms import HealthieAPIForms
+from syntrillo.healthie.forms import HealthieForms
 
 from syntrillo.data.structures.data_structure import DataStructure
 from syntrillo.data.structures.storage_manager import StorageManager

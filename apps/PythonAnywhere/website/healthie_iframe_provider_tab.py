@@ -19,7 +19,7 @@ import sys
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.healthie.misc import extract_user_id_from_url
-from syntrillo.healthie.onboarding_manager import HealthieAPIOnboardingManager
+from syntrillo.healthie.onboarding_manager import HealthieOnboardingManager
 
 
 # -------------------------------------------------
@@ -62,10 +62,10 @@ def iframe_healthie_provider_tab():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
     # Fetch patient status using HealthieAPIOnboardingManager
-    onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
+    onboarding_manager = HealthieOnboardingManager(dotenv_path=dotenv_path)
     if patient_id != '-1':
         patient_status = onboarding_manager.get_user_status(user_id=patient_id)
         inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
@@ -113,10 +113,10 @@ def healthie_onboarding_generate_personalized_form():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
     # new instance of onboarding_manager with the dotenv API key
-    onboarding_manager = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
+    onboarding_manager = HealthieOnboardingManager(dotenv_path=dotenv_path)
 
     new_form = onboarding_manager.build_personalized_intake_form(
         user_id=patient_id,

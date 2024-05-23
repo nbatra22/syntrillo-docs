@@ -9,17 +9,14 @@ routes to healthy webhooks endpoints
 from flask import Blueprint, request, jsonify, render_template
 import json
 
-import os
-import sys
-
 # ----- healthie package integration --------------
 
 # python anywhere requirements
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.utils import HealthieAPIUtils
-from syntrillo.healthie.virtual_care_navigator import HealthieAPIVirtualCareNavigator
+from syntrillo.healthie.utils import HealthieUtils
+from syntrillo.healthie.virtual_care_navigator import HealthieVirtualCareNavigator
 from syntrillo.healthie.misc import log_this
 
 # -------------------------------------------------
@@ -67,13 +64,13 @@ def healthie_endpoint_post():
         f.write(json.dumps(data) + '\n\n')
 
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
     # Dispatch
     # {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note":
         log_this(message="VCN endpoint")
-        vcn = HealthieAPIVirtualCareNavigator(dotenv_path=dotenv_path)
+        vcn = HealthieVirtualCareNavigator(dotenv_path=dotenv_path)
         vcn.endpoint(data=data)
 
 
@@ -102,11 +99,11 @@ def healthie_test_org() :
     Returns organization details as JSON
     """
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
     try:
         # Create an instance of HealthieAPI with the provided API key and organization
-        utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
+        utils_api = HealthieUtils(dotenv_path=dotenv_path)
 
         # Example: Get organization details
         organization_details = utils_api.get_organization_details()

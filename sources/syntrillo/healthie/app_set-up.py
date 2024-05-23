@@ -1,19 +1,12 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/app_set-up.py
 
-import os
-import sys
-import json
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-sys.path.append(os.path.dirname(SCRIPT_DIR + '/../'))
+from syntrillo.healthie.auth import HealthieAuth
 
-from healthie.base import HealthieAPI
+from syntrillo.data.structures.data_structure import DataStructure
+from syntrillo.data.structures.storage_manager import StorageManager
 
-from data.structures.data_structure import DataStructure
-from data.structures.storage_manager import StorageManager
-
-class HealthieAPIAppSetup(HealthieAPI):
+class HealthieAPIAppSetup():
     """
     A class extending HealthieAPI to handle setting-up operations.
 

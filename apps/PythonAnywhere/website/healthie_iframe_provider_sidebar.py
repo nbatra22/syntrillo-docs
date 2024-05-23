@@ -18,9 +18,9 @@ import sys
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.utils import HealthieAPIUtils
+from syntrillo.healthie.utils import HealthieUtils
 from syntrillo.healthie.misc import extract_user_id_from_url
-from syntrillo.healthie.forms import HealthieAPIForms
+from syntrillo.healthie.forms import HealthieForms
 
 from syntrillo.data.structures.data_structure import DataStructure
 from syntrillo.data.structures.storage_manager import StorageManager
@@ -59,10 +59,10 @@ def iframe_healthie_provider_sidebar():
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
     # Create an instance of HealthieAPI with the provided API key and organization
-    utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
+    utils_api = HealthieUtils(dotenv_path=dotenv_path)
 
     # Example: Get organization details
     organization_details = utils_api.get_organization_details()
@@ -116,9 +116,9 @@ def healthie_build_form_from_data_structure():
     # initialize Healthie API
 
     # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
+    dotenv_path = ".env"
 
-    forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
+    forms_api = HealthieForms(dotenv_path=dotenv_path)
 
     # --------------------------------------------------------
     # Initialize StorageManager

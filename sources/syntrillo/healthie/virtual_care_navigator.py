@@ -3,9 +3,9 @@
 import os
 from dotenv import load_dotenv
 
-from auth import HealthieAuth
-from utils import HealthieUtils
-from misc import log_this, transform_to_safe_html
+from syntrillo.healthie.auth import HealthieAuth
+from syntrillo.healthie.utils import HealthieUtils
+from syntrillo.healthie.misc import log_this, transform_to_safe_html
 
 # open AI
 #  - python anywhere US : pip3.8 install openai

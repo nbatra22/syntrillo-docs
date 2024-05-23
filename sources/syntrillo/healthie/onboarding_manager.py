@@ -1,15 +1,13 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/onboarding_manager.py
 
-import os
-import sys
 import json
 
-from forms import HealthieForms
-from auth import HealthieAuth
-from utils import HealthieUtils
+from syntrillo.healthie.forms import HealthieForms
+from syntrillo.healthie.auth import HealthieAuth
+from syntrillo.healthie.utils import HealthieUtils
 from syntrillo.data.structures.data_structure import DataStructure
 from syntrillo.data.structures.storage_manager import StorageManager
-from misc import *
+from syntrillo.healthie.misc import *
 
 class HealthieOnboardingManager():
     """

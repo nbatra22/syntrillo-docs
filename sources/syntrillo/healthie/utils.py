@@ -1,6 +1,6 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/utils.py
 
-from auth import HealthieAuth
+from syntrillo.healthie.auth import HealthieAuth
 
 class HealthieUtils():
     """

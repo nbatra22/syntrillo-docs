@@ -1,10 +1,6 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/new_patient_set-up.py
 
-import os
-import sys
-import json
-
-from auth import HealthieAuth
+from syntrillo.healthie.auth import HealthieAuth
 
 from data.structures.data_structure import DataStructure
 from data.structures.storage_manager import StorageManager
