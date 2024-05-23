@@ -6,7 +6,7 @@ from syntrillo.healthie.auth import HealthieAuth
 from syntrillo.data.structures.data_structure import DataStructure
 from syntrillo.data.structures.storage_manager import StorageManager
 
-class HealthieAPIAppSetup():
+class HealthieAppSetup():
     """
     A class extending HealthieAPI to handle setting-up operations.
 

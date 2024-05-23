@@ -7,7 +7,7 @@ from data.structures.storage_manager import StorageManager
 
 class HealthieNewPatientSetup():
     """
-    A class extending HealthieAPI to handle initiation procedures when a new patient is included.
+    A class handling initiation procedures when a new patient is included.
 
     - called by some new patient webhook
     - defines providers : clinician, OT, AI

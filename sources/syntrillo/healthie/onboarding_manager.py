@@ -11,7 +11,7 @@ from syntrillo.healthie.misc import *
 
 class HealthieOnboardingManager():
     """
-    A class extending HealthieAPIForms to handle onboarding operations.
+    A class handling onboarding operations.
 
     - define here the onboarding, Healthie-specific, Intake Forms and Charting Notes
        : the rationale to place that here (and not in the data module) is that the data module can be used by other app, with specific data structures

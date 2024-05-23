@@ -21,7 +21,7 @@ VCN_ID : str ='1108460'
 
 class HealthieVirtualCareNavigator():
     """
-    A class extending HealthieAPIUtils to handle virtual care navigator operations.
+    A class handling virtual care navigator operations.
     """
 
     def __init__(

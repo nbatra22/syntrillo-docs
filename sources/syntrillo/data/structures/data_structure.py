@@ -8,12 +8,9 @@
 import sys
 import os
 
-# add this folder to system path so that local modules can be imported
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-
 import json
-from structures.storage_manager import StorageManager
+
+from syntrillo.data.structures.storage_manager import StorageManager
 
 class DataStructure:
 
