@@ -1,17 +1,10 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/forms.py
 
-import os
-import sys
-import json
+from auth import HealthieAuth
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-from healthie.utils import HealthieAPIUtils
-
-class HealthieAPIForms(HealthieAPIUtils):
+class HealthieForms():
     """
-    A class extending HealthieAPIUtils to handle forms-related operations.
+    A class handling forms-related operations.
     """
 
     def __init__(
@@ -20,7 +13,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         organization: str = 'staging',
         dotenv_path: str = None,
     ):
-        super().__init__(api_key, organization, dotenv_path)
+        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
 
 
     def list_forms(
@@ -102,7 +95,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -148,7 +141,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         variables = { }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         # select ids matching for the specified  external_id
         ids = []
@@ -216,7 +209,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         variables = {'id': form_id}
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -296,7 +289,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.send_query(mutation, variables)
+        response = self.auth.send_query(mutation, variables)
         return response
 
     def create_custom_module(
@@ -390,7 +383,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.send_query(mutation, variables)
+        response = self.auth.send_query(mutation, variables)
         return response
 
     def create_custom_modules(
@@ -584,7 +577,7 @@ class HealthieAPIForms(HealthieAPIUtils):
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -669,7 +662,7 @@ class HealthieAPIForms(HealthieAPIUtils):
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -729,7 +722,7 @@ class HealthieAPIForms(HealthieAPIUtils):
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -964,7 +957,7 @@ class HealthieAPIForms(HealthieAPIUtils):
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.send_query(mutation, variables)
+        response = self.auth.send_query(mutation, variables)
         return response
 
     def list_completion_requests(
@@ -1014,7 +1007,7 @@ class HealthieAPIForms(HealthieAPIUtils):
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -1059,53 +1052,52 @@ class HealthieAPIForms(HealthieAPIUtils):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.Healthie.staging"
-    forms_api = HealthieAPIForms(dotenv_path=dotenv_path)
+    forms = HealthieForms(dotenv_path=".env")
 
     if True:
         # List all forms
-        response = forms_api.list_forms(sort_by='name_asc' , keywords='onboarding')
+        response = forms.list_forms(sort_by='name_asc' , keywords='onboarding')
         print('==== All forms ====')
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
         # Access the first ID in the customModuleForms array
         first_id = response['customModuleForms'][0]['id']
 
-        if False:
+        if True:
             # Retrieve the first form
             print(f"\n==== Details of Form {first_id} and all its custom modules  ====")
-            response = forms_api.get_form_by_id(first_id)
-            print(json.dumps(response, indent=4))
+            response = forms.get_form_by_id(first_id)
+            HealthieAuth.print_pretty_json(response)
 
-        if False:
+        if True:
             # Retrieve the first form values
             print(f"\n==== Answer groups of Form {first_id} ====")
-            response = forms_api.get_form_answers_group(custom_module_form_id=first_id)
-            print(json.dumps(response, indent=4))
+            response = forms.get_form_answers_group(custom_module_form_id=first_id)
+            HealthieAuth.print_pretty_json(response)
 
     if True:
         # get_modules_with_missing_answers
         print(f"\n==== get_modules_with_missing_answers ====")
-        response = forms_api.get_modules_with_missing_answers(
+        response = forms.get_modules_with_missing_answers(
             custom_module_form_id="1164773", user_id="1035117",
             )
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
     if False:
         # build form from gaps
         print(f"\n==== build form from gaps ====")
-        response = forms_api.build_form_from_gaps(
+        response = forms.build_form_from_gaps(
             custom_module_form_id="1162956", user_id="1035117",
             form_name='testing gaps',
             use_for_charting=False,
             use_for_program=False,
             )
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
-    if False:
+    if True:
         print(f"\n==== get form by external_id ====")
-        response = forms_api.get_form_id_by_external_id(external_id='onboarding')
-        print(json.dumps(response, indent=4))
+        response = forms.get_form_id_by_external_id(external_id='onboarding')
+        HealthieAuth.print_pretty_json(response)
 
 
 

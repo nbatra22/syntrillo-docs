@@ -1,14 +1,11 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/virtual_care_navigator.py
 
 import os
-import sys
-import json
+from dotenv import load_dotenv
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-from healthie.utils import HealthieAPIUtils
-from healthie.misc import log_this, transform_to_safe_html
+from auth import HealthieAuth
+from utils import HealthieUtils
+from misc import log_this, transform_to_safe_html
 
 # open AI
 #  - python anywhere US : pip3.8 install openai
@@ -18,15 +15,11 @@ from healthie.misc import log_this, transform_to_safe_html
 # Import OpenAI package
 from openai import OpenAI
 
-# Set your OpenAI API key
-#  : keyname : PythonAnywhere
-OPENAI_API_KEY = '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' # FIFTEEN KAY KEY
-
 # the Virtual Care Navigator Healthie id (ie provider id)
 VCN_ID : str ='1108460'
 
 
-class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
+class HealthieVirtualCareNavigator():
     """
     A class extending HealthieAPIUtils to handle virtual care navigator operations.
     """
@@ -35,9 +28,16 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         self,
         api_key: str = None,
         organization: str = 'staging',
-        dotenv_path: str = None,
+        dotenv_path: str = '.env'
     ):
-        super().__init__(api_key, organization, dotenv_path)
+        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+        self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+
+        # Load the environment variables from the specified file
+        load_dotenv(dotenv_path=dotenv_path)
+
+        # Retrieve the API key from environment variables
+        self.openai_api_key = os.getenv('OPENAI_API_KEY')
 
 
     def endpoint(
@@ -157,7 +157,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         # call openAI API
         #   ; https://platform.openai.com/docs/api-reference/chat/create
         openai_client = OpenAI(
-            api_key=OPENAI_API_KEY,
+            api_key=self.openai_api_key,
         )
 
         model="gpt-3.5-turbo-1106"  # default, 30 times less expensive than gpt 4 : https://openai.com/pricing , 16K context window
@@ -193,7 +193,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         """
 
         # get conversation id from note id
-        note = self.send_query(
+        note = self.auth.send_query(
             query="""
                 query note($id: ID) {
                     note(id: $id) {
@@ -206,7 +206,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         conversation_id = note['note']['conversation_id']
 
         # get conversation from its id
-        conversation = self.send_query(
+        conversation = self.auth.send_query(
             query="""
                 query getConversation($id: ID) {
                     conversation(id: $id) {
@@ -270,7 +270,7 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
         """
 
         # get conversation id from note id
-        response = self.send_query(
+        response = self.auth.send_query(
             query="""
                     mutation createNote(
                     $user_id: String
@@ -317,15 +317,14 @@ class HealthieAPIVirtualCareNavigator(HealthieAPIUtils):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.Healthie.staging"
-    vcn = HealthieAPIVirtualCareNavigator(dotenv_path=dotenv_path)
+    vcn = HealthieVirtualCareNavigator()
 
-    if False:
+    if True:
         # test endpoint
         data = {"resource_id": 260046, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
         response = vcn.endpoint(data=data)
 
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
     if True:
         system_content = vcn.read_llm_file('instructions.txt')

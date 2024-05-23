@@ -4,16 +4,12 @@ import os
 import sys
 import json
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-sys.path.append(os.path.dirname(SCRIPT_DIR + '/../'))
-
-from healthie.base import HealthieAPI
+from auth import HealthieAuth
 
 from data.structures.data_structure import DataStructure
 from data.structures.storage_manager import StorageManager
 
-class HealthieAPINewPatientSetup(HealthieAPI):
+class HealthieNewPatientSetup():
     """
     A class extending HealthieAPI to handle initiation procedures when a new patient is included.
 

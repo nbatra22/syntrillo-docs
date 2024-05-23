@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/sources/syntrillo/healthie/base.py
+# ./Syntrillo_Clinic/sources/syntrillo/healthie/auth.py
 
 import requests
 import os
@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 from datetime import datetime
 
-class HealthieAPI:
+class HealthieAuth:
     """
     A class for interacting with the Healthie API.
 
@@ -24,7 +24,7 @@ class HealthieAPI:
         self,
         api_key: str = None,
         organization: str = 'staging',
-        dotenv_path: str = None,
+        dotenv_path: str = ".env",
         verbose=False,
         ):
 
@@ -34,27 +34,27 @@ class HealthieAPI:
         Parameters:
             api_key (str, optional): The API key used for authentication.
             organization (str, optional): The environment organization (default: 'staging').
-            dotenv_path (str, optional): Path to the .env file containing environment variables. If present will suprseed api_key and organization.
             verbose (bool, optional): Whether to print verbose output (default: False).
 
         Raises:
             ValueError: If API key is missing or organization is invalid.
         """
 
-        if dotenv_path is None :
-            self.api_key = api_key
-            self.organization = organization
-        else:
-            # should be found in the root folder
-            load_dotenv(dotenv_path=dotenv_path)
+        self.organization = organization
 
-            # Get the API key and organization from environment variables
-            self.api_key = os.getenv('API_KEY')
-            self.organization = os.getenv('ORGANIZATION')
+        load_dotenv(dotenv_path=dotenv_path)
+
+        if api_key is None:
+            if organization == 'staging':
+                self.api_key = os.getenv('HEALTHIE_STAGING_API_KEY')
+            elif organization == 'production':
+                self.api_key = os.getenv('HEALTHIE_PRODUCTION_API_KEY')
+        else:
+            self.api_key = api_key
+
 
         self.verbose = verbose
         if self.verbose:
-            print(dotenv_path)
             print(self.api_key)
             print(self.organization)
 
@@ -132,15 +132,18 @@ class HealthieAPI:
             print(f"Request Exception: {err}")
             raise
 
+    @staticmethod
+    def print_pretty_json(data):
+        print(json.dumps(data, indent=4, sort_keys=True))
 
 
 if __name__ == "__main__":
 
     # Create an instance of HealthieAPI with the provided API key and organization
-    healthie_api = HealthieAPI(dotenv_path=".env.Healthie.staging")
+    healthie_api = HealthieAuth()
 
     # Example: Send a test query to retrieve organization details
     response = healthie_api.send_query(query='query { organization { id name } }')
-    print(json.dumps(response, indent=4))
+    HealthieAuth.print_pretty_json(response)
 
 

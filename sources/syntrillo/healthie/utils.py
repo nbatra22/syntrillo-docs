@@ -1,17 +1,10 @@
 # ./Syntrillo_Clinic/sources/syntrillo/healthie/utils.py
 
-import os
-import sys
-import json
+from auth import HealthieAuth
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-
-from healthie.base import HealthieAPI
-
-class HealthieAPIUtils(HealthieAPI):
+class HealthieUtils():
     """
-    A utility class extending HealthieAPI for specific Healthie API interactions.
+    A utility class for specific Healthie API interactions.
 
     This class provides methods to retrieve organization details and list patients using GraphQL queries.
 
@@ -34,7 +27,7 @@ class HealthieAPIUtils(HealthieAPI):
             organization (str, optional): The environment organization (default: 'staging').
             dotenv_path (str, optional): Path to the .env file containing environment variables.
         """
-        super().__init__(api_key, organization, dotenv_path)
+        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
 
 
     def get_organization_details(self):
@@ -75,7 +68,7 @@ class HealthieAPIUtils(HealthieAPI):
         }
 
         # Send the GraphQL query using the class method
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
         return response
 
 
@@ -111,7 +104,7 @@ class HealthieAPIUtils(HealthieAPI):
         }
 
         # Send the GraphQL query using the class method
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
         return response
 
 
@@ -171,7 +164,7 @@ class HealthieAPIUtils(HealthieAPI):
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
@@ -209,26 +202,23 @@ class HealthieAPIUtils(HealthieAPI):
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.send_query(query, variables)
+        response = self.auth.send_query(query, variables)
 
         return response
 
 if __name__ == "__main__":
-    # Load environment variables from .env file
-    dotenv_path = ".env.Healthie.staging"
-
     # Create an instance of HealthieAPI with the provided API key and organization
-    utils_api = HealthieAPIUtils(dotenv_path=dotenv_path)
+    utils_api = HealthieUtils()
 
     # Retrieve organization details
     response = utils_api.get_organization_details()
-    print(json.dumps(response, indent=4))
+    HealthieAuth.print_pretty_json(response)
 
     # Retrieve module types
     response = utils_api.get_module_types()
-    print(json.dumps(response, indent=4))
+    HealthieAuth.print_pretty_json(response)
 
     # List patients
     response = utils_api.list_patients()
-    print(json.dumps(response, indent=4))
+    HealthieAuth.print_pretty_json(response)
 

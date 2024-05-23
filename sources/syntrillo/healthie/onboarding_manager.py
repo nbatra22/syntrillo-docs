@@ -4,14 +4,14 @@ import os
 import sys
 import json
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
+from forms import HealthieForms
+from auth import HealthieAuth
+from utils import HealthieUtils
+from syntrillo.data.structures.data_structure import DataStructure
+from syntrillo.data.structures.storage_manager import StorageManager
+from misc import *
 
-from healthie.forms import HealthieAPIForms
-from data.structures.data_structure import DataStructure
-from data.structures.storage_manager import StorageManager
-
-class HealthieAPIOnboardingManager(HealthieAPIForms):
+class HealthieOnboardingManager():
     """
     A class extending HealthieAPIForms to handle onboarding operations.
 
@@ -61,8 +61,9 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         organization: str = 'staging',
         dotenv_path: str = None,
     ):
-        super().__init__(api_key, organization, dotenv_path)
-
+        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+        self.forms = HealthieForms(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+        self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
 
     # -------------
     def get_user_status(
@@ -84,7 +85,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
             # need custom_module_form_id of custom_module_form.external_id
             #  : there could be several matches
-            custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
+            custom_module_form_ids = self.forms.get_form_id_by_external_id(external_id=form)
 
             # Is this test necessary ??
             if not custom_module_form_ids:
@@ -101,15 +102,15 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             for custom_module_form_id in custom_module_form_ids:
 
                 # get details of this form
-                form_details = self.get_form_by_id(form_id=custom_module_form_id)
+                form_details = self.forms.get_form_by_id(form_id=custom_module_form_id)
 
                 # then need get_form_answers_group and status
-                answers_group_status = self.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
+                answers_group_status = self.forms.get_form_answers_group_status(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
                 # get completion request if Intake Form
                 if form_details['customModuleForm']['use_for_charting'] == False:
                     is_intake_form = True
-                    completion_request_status, completion_request_date = self.was_form_completion_requested(user_id=user_id, form_id=custom_module_form_id)
+                    completion_request_status, completion_request_date = self.forms.was_form_completion_requested(user_id=user_id, form_id=custom_module_form_id)
                 else:
                     is_intake_form = False
                     completion_request_status = None
@@ -139,7 +140,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
                         }
 
                         # Get modules with missing answers (null or unknown) for the current form
-                        modules_with_missing_answers = self.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
+                        modules_with_missing_answers = self.forms.get_modules_with_missing_answers(custom_module_form_id=custom_module_form_id, user_id=user_id)
 
                         # Add null answer count to the status entry
                         missing_answer_count = sum(module_info['missing_answer_count'] for module_info in modules_with_missing_answers)
@@ -170,22 +171,22 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         # Iterate over unique pairs of forms from forms_discrepancies
         for i in range(len(self.forms_discrepancies)):
             form1 = self.forms_discrepancies[i]
-            custom_module_form1_ids = self.get_form_id_by_external_id(external_id=form1)
+            custom_module_form1_ids = self.forms.get_form_id_by_external_id(external_id=form1)
 
             for custom_module_form1_id in custom_module_form1_ids:
                 # get_form_answers_group with answers
-                answers_form1 = self.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form1_id, user_id=user_id)
+                answers_form1 = self.forms.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form1_id, user_id=user_id)
 
                 for j in range(i + 1, len(self.forms_discrepancies)):  # Start from i + 1 to avoid duplicates
                     form2 = self.forms_discrepancies[j]
                     if form1 != form2 :
 
-                        custom_module_form2_ids = self.get_form_id_by_external_id(external_id=form2)
+                        custom_module_form2_ids = self.forms.get_form_id_by_external_id(external_id=form2)
 
                         for custom_module_form2_id in custom_module_form2_ids:
 
                             # get_form_answers_group with answers
-                            answers_form2 = self.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form2_id, user_id=user_id)
+                            answers_form2 = self.forms.get_form_answers_group_and_modules(custom_module_form_id=custom_module_form2_id, user_id=user_id)
 
                             # Compare answers between form1 and form2
                             inconsistencies.extend(self.find_answer_discrepancies(answers_form1, answers_form2))
@@ -285,10 +286,10 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         custom_modules_with_missing_answer = []
         for form in self.forms_personalized_build:
 
-            custom_module_form_ids = self.get_form_id_by_external_id(external_id=form)
+            custom_module_form_ids = self.forms.get_form_id_by_external_id(external_id=form)
 
             for custom_module_form_id in custom_module_form_ids:
-                missing_answer = self.get_modules_with_missing_answers(
+                missing_answer = self.forms.get_modules_with_missing_answers(
                     custom_module_form_id=custom_module_form_id,
                     user_id=user_id
                 )
@@ -331,9 +332,9 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
         external_id = self.personalized_intake_form.format(user_id=user_id)
 
         # get user name : TODO : compliance with regulations ?
-        user_details = self.get_user_from_id(user_id=user_id)
+        user_details = self.utils.get_user_from_id(user_id=user_id)
 
-        new_form = self.create_form_wrapper(
+        new_form = self.forms.create_form_wrapper(
             form_name=f"Personalized Intake Form for patient {user_details['user']['first_name']} {user_details['user']['last_name']}",
             modules=header_unique_custom_modules_with_missing_answer,
             use_for_charting=False, # This is an Intake Form
@@ -349,7 +350,7 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
             # the form that was just built
             new_form_id = new_form['form_response']['createCustomModuleForm']['customModuleForm']['id']
 
-            new_form_request_payload = self.create_form_completion_request(
+            new_form_request_payload = self.forms.create_form_completion_request(
                 recipient_ids=user_id,
                 form=new_form_id,
                 is_recurring=False,
@@ -368,20 +369,20 @@ class HealthieAPIOnboardingManager(HealthieAPIForms):
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    dotenv_path = ".env.Healthie.staging"
-    manager_api = HealthieAPIOnboardingManager(dotenv_path=dotenv_path)
+    dotenv_path = ".env"
+    manager_api = HealthieOnboardingManager(dotenv_path=dotenv_path)
 
     if False:
         response = manager_api.get_user_status(user_id="1035117")
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
     if False:
         response = manager_api.get_inconsistencies(user_id="1035117")
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
     if True:
         response = manager_api.build_personalized_intake_form(user_id="1035117")
-        print(json.dumps(response, indent=4))
+        HealthieAuth.print_pretty_json(response)
 
 
 
