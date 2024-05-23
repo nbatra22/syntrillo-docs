@@ -26,10 +26,10 @@ query getOrganization($id: ID) {
 '''
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path=".env.Healthie.staging")
+load_dotenv(dotenv_path=".env")
 
 # Get the API key from the environment variables
-api_key = os.getenv('API_KEY')
+api_key = os.getenv('HEALTHIE_STAGING_API_KEY')
 
 # Check if the API key is available
 if api_key is None:

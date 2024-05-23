@@ -37,11 +37,11 @@ def print_pretty_devices(devices):
     for device in devices:
         print(json.dumps(device, indent=4, sort_keys=True))
 
-# Load the environment variables from the .env.Tenovi file
-load_dotenv(dotenv_path='.env.Tenovi')
+# Load the environment variables from the .env file
+load_dotenv(dotenv_path='.env')
 
 # Retrieve the API key from environment variables
-api_key = os.getenv('API_KEY')
+api_key = os.getenv('TENOVI_API_KEY')
 
 # Check if the API key was loaded successfully
 if api_key:
@@ -51,4 +51,4 @@ if api_key:
         print("Device Types:")
         print_pretty_devices(device_types)
 else:
-    print("API key not found. Please check your .env.Tenovi file.")
+    print("API key not found. Please check your .env file.")
