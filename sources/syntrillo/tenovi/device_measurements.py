@@ -19,7 +19,7 @@ if __name__ == "__main__":
     device_measurements_module = DeviceMeasurements()
 
     # Example HWI device ID, replace with a real ID if needed
-    hwi_device_id = "0585a82e-3f57-4e0e-a91a-317117c48e11"
+    hwi_device_id = "83ca5817-0bb2-4d9c-b131-16eb353ad587"
 
     # Get and print measurements of a specific device
     device_measurements = device_measurements_module.get_device_measurements(hwi_device_id)

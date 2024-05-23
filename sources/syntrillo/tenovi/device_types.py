@@ -16,6 +16,16 @@ class DeviceTypes:
         url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-device-types/"
         return self.auth.make_get_request(url)
 
+    @staticmethod
+    def print_device_names(device_types):
+        """
+        Prints the names of all device types.
+
+        Args:
+            device_types (list): A list of device type dictionaries.
+        """
+        for device_type in device_types:
+            print(device_type["name"], device_type["id"])
 
 # Example usage:
 if __name__ == "__main__":
@@ -26,6 +36,9 @@ if __name__ == "__main__":
     if device_types:
         print("Device Types:")
         device_types_module.auth.print_pretty_json(device_types)
+        print('---------------------')
+        device_types_module.auth.print_pretty_json(DeviceTypes.print_device_names(device_types))
+
 
 
 

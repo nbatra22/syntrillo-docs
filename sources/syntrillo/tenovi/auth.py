@@ -51,6 +51,30 @@ class TenoviAuth:
             print(f"An error occurred: {e}")
             return None
 
+    def make_post_request(self, url, data):
+        """
+        Makes a POST request to the provided URL and handles the response.
+
+        Args:
+            url (str): The URL to make the POST request to.
+            data (dict): The payload to send with the POST request.
+
+        Returns:
+            dict or None: The JSON response if the request was successful, None otherwise.
+        """
+        caller = inspect.stack()[1].function
+        try:
+            response = requests.post(url, headers=self.get_headers(), json=data)
+            if response.status_code == 201:  # Typically, successful POST requests return a 201 status code
+                return response.json()
+            else:
+                print(f"Failed to post data in {caller}: {response.status_code}")
+                print(response.text)
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred in {caller}: {e}")
+            return None
+
     @staticmethod
     def print_pretty_json(data):
         print(json.dumps(data, indent=4, sort_keys=True))
