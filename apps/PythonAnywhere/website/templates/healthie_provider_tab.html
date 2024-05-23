@@ -1,4 +1,4 @@
-<!-- templates/healthie_provider_tab.html -->
+<!-- ./Syntrillo_Clinic/apps/PythonAnywhere/website/templates/healthie_provider_tab.html -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -6,9 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healthie Extra Provider Tab - Syntrillo server</title>
+    <!-- Link to Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Link to external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='healthie.css') }}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         /*  ajax spinners */
         #loadingTextGenerateForm {
@@ -18,128 +21,164 @@
     </style>
 </head>
 <body>
-    <h1>Healthie Extra Provider Tab - Syntrillo server</h1>
-    <p>Patient specific info and actions.</p>
+    <h1>Healthie Patient Specific Extra Provider Tab - Syntrillo server</h1>
+    <p>Patient specific information and actions.</p>
 
-    <h2>Identifiers</h2>
-    <div class="table-container1">
-        <table class="table">
-            <tbody>
-                <tr>
-                    <td>Provider id (you)</td>
-                    <td>{{ provider_id }}</td>
-                </tr>
-                <tr>
-                    <td>Patient id</td>
-                    <td>{{ patient_id }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="identifiers-tab" data-toggle="tab" href="#identifiers" role="tab" aria-controls="identifiers" aria-selected="true">Identifiers</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="onboarding-tab" data-toggle="tab" href="#onboarding" role="tab" aria-controls="onboarding" aria-selected="false">Onboarding</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="care-plan-tab" data-toggle="tab" href="#care-plan" role="tab" aria-controls="care-plan" aria-selected="false">Care Plan</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="cdss-tab" data-toggle="tab" href="#cdss" role="tab" aria-controls="cdss" aria-selected="false">CDSS Prototype</a>
+        </li>
+    </ul>
 
-    <h2>Onboarding</h2>
 
-    <h3>Patient status</h3>
-    <!--
-        - Onboarding Intake Forms and Charting Notes list, number of gaps and completion status
-        (hard coded list of what's expected)
-        - Onboarding completed or not
-    -->
+    <div class="tab-content" id="myTabContent">
 
-    <div class="table-container3">
-        <table>
-            <thead>
-                <tr>
-                    <th>Form Name</th>
-                    <th>User ID</th>
-                    <th>Filler ID</th>
-                    <th>Finished</th>
-                    <th>Missing Answers</th>
-                    <th>Locked at</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in patient_status %}
-                <tr>
-                    <td>{{ entry.form }}</td>
-                    {% if entry.status %}
-                        <td>{{ entry.status.user_id }}</td>
-                        <td>{{ entry.status.filler_id }}</td>
-                        <td>{{ "Yes" if entry.status.finished else "No" }}</td>
-                        <td>{{ entry.status.missing_answer_count }}</td>
-                        <td>{{ entry.status.locked_at }}</td>
-                    {% elif entry.is_intake_form %}
-                        {% if entry.completion_request_status %}
-                            <td colspan="5">InTake Form Completion Requested on {{ entry.completion_request_date }}</td>
-                        {% else %}
-                            <td colspan="5">InTake Form Completion Not Requested</td>
-                        {% endif %}
-                    {% else %}
-                        <td colspan="5">No status available</td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <!-- ///////////////////// IDENTIFIERS /////////////////////////// -->
+        <div class="tab-pane fade show active" id="identifiers" role="tabpanel" aria-labelledby="identifiers-tab">
+            <h2>Identifiers</h2>
+            <div class="table-container1">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>Provider id (you)</td>
+                            <td>{{ provider_id }}</td>
+                        </tr>
+                        <tr>
+                            <td>Patient id</td>
+                            <td>{{ patient_id }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    <h3>Patient data inconsistencies</h3>
-    <div class="table-container3">
-        <table>
-            <thead>
-                <tr>
-                    <th>External ID</th>
-                    <th>Answer 1</th>
-                    <th>Answer 2</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for discrepancy in inconsistencies %}
-                <tr {% if discrepancy.blocker %}style="background-color: lightcoral;"{% endif %}>
-                    <td>{{ discrepancy.external_id }}</td>
-                    <td>{{ discrepancy.answer1 }}</td>
-                    <td>{{ discrepancy.answer2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <!-- ///////////////////// ONBOARDING /////////////////////////// -->
+        <div class="tab-pane fade" id="onboarding" role="tabpanel" aria-labelledby="onboarding-tab">
+            <h2>Onboarding</h2>
 
-    <h3>Actions for this patient</h3>
+            <h3>Patient status</h3>
+            <!--
+                - Onboarding Intake Forms and Charting Notes list, number of gaps and completion status
+                (hard coded list of what's expected)
+                - Onboarding completed or not
+            -->
 
-    <div class="table-container2">
-        <table>
-            <tr>
-                <td align="right">
-                    <form id="generateForm" action="{{ url_for('healthie_iframe_provider_tab.healthie_onboarding_generate_personalized_form') }}" method="POST">
-                        <input type="hidden" name="provider_id" value="{{ provider_id }}">
-                        <input type="hidden" name="patient_id" value="{{ patient_id }}">
-                        <button type="button" id="generateFormButton" class="styled-button-small">Generate Personalized Intake Form</button>
-                        <br>
-                        <label for="sendRequestCheckbox">Also Send Completion Request to Patient</label>
-                        <input type="checkbox" id="sendRequestCheckbox" name="send_request_to_patient">
-                    </form>
-                    <!-- Loading indicator -->
-                    <span id="loadingTextGenerateForm" class="loading">Running ...</span>
-                </td>
-                <td>
-                    <textarea id="generateFormResultTextarea" rows="7" cols="70" readonly></textarea>
-                </td>
-            </tr>
-            <tr>
-                <td align="right">
-                    <form id="generateFinalChartingNote" action="" method="POST">
-                        <input type="hidden" name="provider_id" value="{{ provider_id }}">
-                        <input type="hidden" name="patient_id" value="{{ patient_id }}">
-                        <button type="button" id="generateFinalChartingNoteButton" class="styled-button-small">Generate Final Charting Note</button>
-                    </form>
-                </td>
-                <td>
-                    <textarea id="generateFinalChartingNoteResultTextarea" rows="7" cols="70" readonly></textarea>
-                </td>
-            </tr>
-        </table>
-    </div>
+            <div class="table-container3">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Form Name</th>
+                            <th>User ID</th>
+                            <th>Filler ID</th>
+                            <th>Finished</th>
+                            <th>Missing Answers</th>
+                            <th>Locked at</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in patient_status %}
+                        <tr>
+                            <td>{{ entry.form }}</td>
+                            {% if entry.status %}
+                                <td>{{ entry.status.user_id }}</td>
+                                <td>{{ entry.status.filler_id }}</td>
+                                <td>{{ "Yes" if entry.status.finished else "No" }}</td>
+                                <td>{{ entry.status.missing_answer_count }}</td>
+                                <td>{{ entry.status.locked_at }}</td>
+                            {% elif entry.is_intake_form %}
+                                {% if entry.completion_request_status %}
+                                    <td colspan="5">InTake Form Completion Requested on {{ entry.completion_request_date }}</td>
+                                {% else %}
+                                    <td colspan="5">InTake Form Completion Not Requested</td>
+                                {% endif %}
+                            {% else %}
+                                <td colspan="5">No status available</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Patient data inconsistencies</h3>
+            <div class="table-container3">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>External ID</th>
+                            <th>Answer 1</th>
+                            <th>Answer 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for discrepancy in inconsistencies %}
+                        <tr {% if discrepancy.blocker %}style="background-color: lightcoral;"{% endif %}>
+                            <td>{{ discrepancy.external_id }}</td>
+                            <td>{{ discrepancy.answer1 }}</td>
+                            <td>{{ discrepancy.answer2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Actions for this patient</h3>
+
+            <div class="table-container2">
+                <table>
+                    <tr>
+                        <td align="right">
+                            <form id="generateForm" action="{{ url_for('healthie_iframe_provider_tab.healthie_onboarding_generate_personalized_form') }}" method="POST">
+                                <input type="hidden" name="provider_id" value="{{ provider_id }}">
+                                <input type="hidden" name="patient_id" value="{{ patient_id }}">
+                                <button type="button" id="generateFormButton" class="styled-button-small">Generate Personalized Intake Form</button>
+                                <br>
+                                <label for="sendRequestCheckbox">Also Send Completion Request to Patient</label>
+                                <input type="checkbox" id="sendRequestCheckbox" name="send_request_to_patient">
+                            </form>
+                            <!-- Loading indicator -->
+                            <span id="loadingTextGenerateForm" class="loading">Running ...</span>
+                        </td>
+                        <td>
+                            <textarea id="generateFormResultTextarea" rows="7" cols="70" readonly></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="right">
+                            <form id="generateFinalChartingNote" action="" method="POST">
+                                <input type="hidden" name="provider_id" value="{{ provider_id }}">
+                                <input type="hidden" name="patient_id" value="{{ patient_id }}">
+                                <button type="button" id="generateFinalChartingNoteButton" class="styled-button-small">Generate Final Charting Note</button>
+                            </form>
+                        </td>
+                        <td>
+                            <textarea id="generateFinalChartingNoteResultTextarea" rows="7" cols="70" readonly></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ///////////////////// CARE PLAN /////////////////////////// -->
+        <div class="tab-pane fade" id="care-plan" role="tabpanel" aria-labelledby="care-plan-tab">
+            <h2>Care Plan</h2>
+        </div>
+
+        <!-- ///////////////////// CDSS Prototype /////////////////////////// -->
+        <div class="tab-pane fade" id="cdss" role="tabpanel" aria-labelledby="cdss-tab">
+            <h2>CDSS Prototype</h2>
+        </div>
+
+    </div> <!-- tab-content -->
 
     <script>
         $(document).ready(function() {
