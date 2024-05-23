@@ -18,7 +18,7 @@ class DeviceProperties:
 
 # Example usage:
 if __name__ == "__main__":
-    device_properties_module = DeviceProperties(client_domain="syntrillo")
+    device_properties_module = DeviceProperties()
 
     # Example HWI device ID, replace with a real ID if needed
     hwi_device_id = "0585a82e-3f57-4e0e-a91a-317117c48e11"

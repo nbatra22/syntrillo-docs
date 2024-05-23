@@ -19,7 +19,7 @@ class DeviceTypes:
 
 # Example usage:
 if __name__ == "__main__":
-    device_types_module = DeviceTypes(client_domain="syntrillo")
+    device_types_module = DeviceTypes()
 
     # Get and print device types
     device_types = device_types_module.get_device_types()

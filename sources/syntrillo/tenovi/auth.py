@@ -5,15 +5,15 @@ import json
 from dotenv import load_dotenv
 
 class TenoviAuth:
-    def __init__(self, env_file='.env.Tenovi'):
+    def __init__(self, env_file='.env'):
         # Load the environment variables from the specified file
         load_dotenv(dotenv_path=env_file)
         # Retrieve the API key from environment variables
-        self.api_key = os.getenv('API_KEY')
+        self.api_key = os.getenv('TENOVI_API_KEY')
 
         # Ensure the API key was successfully loaded
         if not self.api_key:
-            raise ValueError("API key not found. Please check your .env.Tenovi file.")
+            raise ValueError("API key not found. Please check your .env file.")
 
     def get_headers(self):
         # Return the headers needed for the API calls

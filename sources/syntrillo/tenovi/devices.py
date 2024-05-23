@@ -30,7 +30,7 @@ class Devices:
 
 # Example usage:
 if __name__ == "__main__":
-    devices_module = Devices(client_domain="syntrillo")
+    devices_module = Devices()
 
     # Get and print all devices or a specific device
     devices = devices_module.get_devices()

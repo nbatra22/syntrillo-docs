@@ -16,7 +16,7 @@ class DeviceMeasurements:
 
 # Example usage:
 if __name__ == "__main__":
-    device_measurements_module = DeviceMeasurements(client_domain="syntrillo")
+    device_measurements_module = DeviceMeasurements()
 
     # Example HWI device ID, replace with a real ID if needed
     hwi_device_id = "0585a82e-3f57-4e0e-a91a-317117c48e11"
