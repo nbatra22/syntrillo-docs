@@ -100,6 +100,17 @@ if __name__ == "__main__":
             }
             """
 
-
+    if True:
+            # Get and print all devices or a specific device
+            query_params = {
+                "properties__key": "pseudo_code_for_tenovi_phi_access",
+                "properties__value": "123456789xx",
+            }
+            devices = devices_module.get_devices(hwi_device_id=None, **query_params)
+            if devices:
+                print("Devices:")
+                devices_module.auth.print_pretty_json(devices)
+            else:
+                print("Devices: None found.")
 
 
