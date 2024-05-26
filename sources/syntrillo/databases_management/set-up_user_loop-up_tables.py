@@ -13,7 +13,7 @@ class UserLookupTablesManager:
         """
         Initialize the UserLookupTablesManager by creating a database connection.
         """
-        self.conn = create_connection(verbose=True)
+        self.conn, self.tunnel = create_connection(verbose=True)
         if not self.conn:
             raise ConnectionError("Failed to connect to the database.")
         self.cursor = self.conn.cursor()
@@ -115,6 +115,7 @@ class UserLookupTablesManager:
         if self.conn:
             self.cursor.close()
             self.conn.close()
+            self.tunnel.stop() if self.tunnel else None
             print("Database connection closed.")
 
 if __name__ == '__main__':
