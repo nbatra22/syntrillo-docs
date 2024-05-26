@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/tests_standalone/test04_send_scoring_report.py
+# Path: ./tests/healthie/staging/tests_standalone/test04_send_scoring_report.py
 
 # test to send freetext to a scoring report template
 

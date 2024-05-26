@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/tests_standalone/test01_list_patients.py
+# Path: ./tests/healthie/staging/tests_standalone/test01_list_patients.py
 
 # using conda 'syntrillo' environment
 

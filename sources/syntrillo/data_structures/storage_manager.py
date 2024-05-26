@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/sources/syntrillo/data/structures/storage_manager.py
+# Path: ./sources/syntrillo/data_structures/storage_manager.py
 
 import pandas as pd
 import math

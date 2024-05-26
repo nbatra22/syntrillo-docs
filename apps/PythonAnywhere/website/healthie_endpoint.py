@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/apps/PythonAnywhere/website/healthie_endpoint.py
+# Path: ./apps/PythonAnywhere/website/healthie_endpoint.py
 
 """
 
@@ -15,9 +15,9 @@ import json
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.utils import HealthieUtils
-from syntrillo.healthie.virtual_care_navigator import HealthieVirtualCareNavigator
-from syntrillo.healthie.misc import log_this
+from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.virtual_care_navigator import HealthieVirtualCareNavigator
+from syntrillo.api_healthie.misc import log_this
 
 # -------------------------------------------------
 

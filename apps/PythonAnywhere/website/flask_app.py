@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/apps/PythonAnywhere/website/flask_app.py
+# Path: ./apps/PythonAnywhere/website/flask_app.py
 
 # ------------------------
 # INSTALL

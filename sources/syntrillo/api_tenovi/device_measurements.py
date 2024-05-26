@@ -1,4 +1,5 @@
-from auth import TenoviAuth
+# Path: ./sources/syntrillo/api_tenovi/device_measurements.py
+from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceMeasurements:
     def __init__(self, client_domain="syntrillo"):

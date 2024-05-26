@@ -5,7 +5,7 @@ import sys
 import os
 import json
 
-from syntrillo.healthie.utils import HealthieAPIUtils
+from syntrillo.api_healthie.utils import HealthieAPIUtils
 
 def main():
 

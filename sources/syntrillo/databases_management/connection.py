@@ -1,7 +1,8 @@
-# ./Syntrillo_Clinic/sources/syntrillo/databases/pseudonym_management/connection.py
+# Path: ./sources/syntrillo/databases_management/connection.py
 
 import sys
 import os
+import time
 from dotenv import load_dotenv
 
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
@@ -13,8 +14,8 @@ from dotenv import load_dotenv
 import MySQLdb
 import sshtunnel
 
-sshtunnel.SSH_TIMEOUT = 5.0
-sshtunnel.TUNNEL_TIMEOUT = 5.0
+sshtunnel.SSH_TIMEOUT = 30.0
+sshtunnel.TUNNEL_TIMEOUT = 30.0
 
 def load_database_credentials(dotenv_path=".env"):
     """
@@ -46,33 +47,39 @@ def load_database_credentials(dotenv_path=".env"):
 
     return PA_DB_CONFIG, PA_SSH_TUNNEL
 
-def create_connection(verbose : bool = False):
+def create_connection(verbose : bool = False, retries=3, delay=5):
     """
     Creates a connection to the MySQL database. It either connects directly if running on PythonAnywhere, or establishes an SSH tunnel if running locally.
 
     Args:
         verbose (bool): If True, prints connection status messages.
+        retries (int): Number of retry attempts if connection fails.
+        delay (int): Delay in seconds between retry attempts.
 
     Returns:
         MySQLdb.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
-
     """
     PA_DB_CONFIG, PA_SSH_TUNNEL = load_database_credentials()
-    try:
-        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
-            # No SSH tunnel required if running inside PythonAnywhere platform
-            conn = MySQLdb.connect(**PA_DB_CONFIG)
-            if verbose:
-                print("_this_is_PythonAnywhere_ : connection to ",  PA_DB_CONFIG.get('database'), " successful.")
-            return conn
-        else:
-            # Create SSH tunnel for local machine
-            with sshtunnel.SSHTunnelForwarder(
-                    ('ssh.pythonanywhere.com'),
-                    ssh_username=PA_SSH_TUNNEL.get('ssh_username'),
-                    ssh_password=PA_SSH_TUNNEL.get('ssh_password'),
-                    remote_bind_address=(PA_DB_CONFIG.get('host'), 3306)
-            ) as tunnel:
+    attempt = 0
+
+    while attempt < retries:
+        try:
+            if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
+                # No SSH tunnel required if running inside PythonAnywhere platform
+                conn = MySQLdb.connect(**PA_DB_CONFIG)
+                if verbose:
+                    print("_this_is_PythonAnywhere_ : connection to ",  PA_DB_CONFIG.get('database'), " successful.")
+                return conn, None
+            else:
+                # Create SSH tunnel for local machine
+                tunnel = sshtunnel.SSHTunnelForwarder(
+                        ('ssh.pythonanywhere.com'),
+                        ssh_username=PA_SSH_TUNNEL.get('ssh_username'),
+                        ssh_password=PA_SSH_TUNNEL.get('ssh_password'),
+                        remote_bind_address=(PA_DB_CONFIG.get('host'), 3306),
+                        allow_agent=False,  # prevents usesage of ssh agents and .ssh/config
+                )
+                tunnel.start()
                 # Tunnel is established, connect to the MySQL database
                 db_config_ssh=PA_DB_CONFIG.copy()
                 db_config_ssh['host'] = '127.0.0.1'
@@ -80,22 +87,28 @@ def create_connection(verbose : bool = False):
                 conn = MySQLdb.connect(**db_config_ssh)
                 if verbose:
                     print("remote connection to ",  PA_DB_CONFIG.get('database'), " successful.")
-                return conn
-    except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
-        print(f"SSH Tunnel Error: {ssh_err}")
-    except MySQLdb.Error as mysql_err:
-        print(f"MySQL Error: {mysql_err}")
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-    return None
+                return conn, tunnel
+
+        except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
+            print(f"SSH Tunnel Error: {ssh_err}")
+        except MySQLdb.Error as mysql_err:
+            print(f"MySQL Error: {mysql_err}")
+        except Exception as e:
+            print(f"Unexpected Error: {e}")
+
+        attempt += 1
+        if attempt < retries:
+            print(f"Retrying in {delay} seconds... ({attempt}/{retries})")
+            time.sleep(delay)
+
+    return None, None
 
 if __name__ == '__main__':
-    conn = create_connection(verbose=True)
+    conn, tunnel = create_connection(verbose=True)
     if conn:
         print("Connection Successful")
         conn.close()
+        tunnel.stop() if tunnel else None
     else:
         print("Connection Unsuccessful")
         sys.exit(1)
-
-

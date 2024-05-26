@@ -1,11 +1,11 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/tests_package/test02_create_form_modules.py
+# Path: ./tests/healthie/staging/tests_package/test02_create_form_modules.py
 
 import sys
 import os
 import json
 
 
-from syntrillo.healthie.forms import HealthieAPIForms
+from syntrillo.api_healthie.forms import HealthieAPIForms
 
 # Load environment variables from .env file
 dotenv_path = ".env.Healthie.staging"

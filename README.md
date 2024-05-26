@@ -26,6 +26,22 @@ SyntrilloClinic
 
 ```
 
+Sources structure to consider
+```
+- databases_management
+- healthie_api
+- tenovi_api
+- llm_api
+
+- pseudo_code_manager
+- accounts_pairing
+- onboarding_manager
+- virtual_care_navigator
+
+```
+
+
+
 ### Directory Descriptions
 
 - **`apps/`**: Contains environment-specific applications:

@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/sources/syntrillo/healthie/auth.py
+# Path: ./sources/syntrillo/api_healthie/auth.py
 
 import requests
 import os

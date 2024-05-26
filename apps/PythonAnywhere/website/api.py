@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/apps/PythonAnywhere/website/api.py
+# Path: ./apps/PythonAnywhere/website/api.py
 # used to deliver Stroke Risk Factors to Scoring and Care Plans algorithms
 
 import random

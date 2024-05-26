@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/apps/PythonAnywhere/website/healthie_iframe_provider_sidebar.py
+# Path: ./apps/PythonAnywhere/website/healthie_iframe_provider_sidebar.py
 
 """
 
@@ -18,12 +18,12 @@ import sys
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.utils import HealthieUtils
-from syntrillo.healthie.misc import extract_user_id_from_url
-from syntrillo.healthie.forms import HealthieForms
+from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.misc import extract_user_id_from_url
+from syntrillo.api_healthie.forms import HealthieForms
 
-from syntrillo.data.structures.data_structure import DataStructure
-from syntrillo.data.structures.storage_manager import StorageManager
+from syntrillo.data_structures.data_structure import DataStructure
+from syntrillo.data_structures.storage_manager import StorageManager
 
 # -------------------------------------------------
 

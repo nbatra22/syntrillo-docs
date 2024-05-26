@@ -1,3 +1,4 @@
+# Path: ./tests/tenovi/tests_standalone/test00_api.py
 import requests
 from dotenv import load_dotenv
 import os

@@ -1,4 +1,5 @@
-from auth import TenoviAuth
+# Path: ./sources/syntrillo/api_tenovi/device_types.py
+from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceTypes:
     def __init__(self, client_domain="syntrillo"):

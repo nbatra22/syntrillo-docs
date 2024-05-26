@@ -1,10 +1,10 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/get_organization_status.py
+# Path: ./tests/healthie/staging/get_organization_status.py
 
 import sys
 import os
 import json
 
-from syntrillo.healthie.utils import HealthieAPIUtils
+from syntrillo.api_healthie.utils import HealthieAPIUtils
 
 def main():
 

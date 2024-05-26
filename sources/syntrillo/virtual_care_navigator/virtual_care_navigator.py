@@ -1,11 +1,11 @@
-# ./Syntrillo_Clinic/sources/syntrillo/healthie/virtual_care_navigator.py
+# Path: ./sources/syntrillo/virtual_care_navigator/virtual_care_navigator.py
 
 import os
 from dotenv import load_dotenv
 
-from syntrillo.healthie.auth import HealthieAuth
-from syntrillo.healthie.utils import HealthieUtils
-from syntrillo.healthie.misc import log_this, transform_to_safe_html
+from syntrillo.api_healthie.auth import HealthieAuth
+from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.misc import log_this, transform_to_safe_html
 
 # open AI
 #  - python anywhere US : pip3.8 install openai

@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/sources/syntrillo/healthie/misc.py
+# Path: ./sources/syntrillo/api_healthie/misc.py
 
 import re  # Import regular expression module
 from datetime import datetime

@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/apps/PythonAnywhere/website/healthie_iframe_provider_tab.py
+# Path: ./apps/PythonAnywhere/website/healthie_iframe_provider_tab.py
 
 """
 
@@ -18,8 +18,8 @@ import sys
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.healthie.misc import extract_user_id_from_url
-from syntrillo.healthie.onboarding_manager import HealthieOnboardingManager
+from syntrillo.api_healthie.misc import extract_user_id_from_url
+from syntrillo.api_healthie.onboarding_manager import HealthieOnboardingManager
 
 
 # -------------------------------------------------

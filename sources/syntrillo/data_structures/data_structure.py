@@ -1,4 +1,4 @@
-# ./Syntrillo_Clinic/sources/syntrillo/data/structures/data_structure.py
+# Path: ./sources/syntrillo/data_structures/data_structure.py
 #
 # Define a class (DataStructure) to represent the data structure with attributes
 #   - get
@@ -10,7 +10,7 @@ import os
 
 import json
 
-from syntrillo.data.structures.storage_manager import StorageManager
+from syntrillo.data_structures.storage_manager import StorageManager
 
 class DataStructure:
 

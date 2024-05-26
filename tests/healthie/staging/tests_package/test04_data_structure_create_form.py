@@ -1,12 +1,12 @@
-# ./Syntrillo_Clinic/tests/healthie/staging/tests_package/test04_data_structure_create_form.py
+# Path: ./tests/healthie/staging/tests_package/test04_data_structure_create_form.py
 
 import sys
 import os
 import json
 
-from syntrillo.healthie.forms import HealthieAPIForms
-from syntrillo.data.structures.data_structure import DataStructure
-from syntrillo.data.structures.storage_manager import StorageManager
+from syntrillo.api_healthie.forms import HealthieAPIForms
+from syntrillo.data_structures.data_structure import DataStructure
+from syntrillo.data_structures.storage_manager import StorageManager
 
 # --------------------------------------------------------
 # initialize Healthie API
