@@ -9,7 +9,7 @@ from syntrillo.data_structures.data_structure import DataStructure
 from syntrillo.data_structures.storage_manager import StorageManager
 from syntrillo.api_healthie.misc import *
 
-class HealthieOnboardingManager():
+class PatientOnboardingManager():
     """
     A class handling onboarding operations.
 
@@ -368,7 +368,7 @@ class HealthieOnboardingManager():
 if __name__ == "__main__":
     # Example usage of the list_forms function
     dotenv_path = ".env"
-    manager_api = HealthieOnboardingManager(dotenv_path=dotenv_path)
+    manager_api = PatientOnboardingManager(dotenv_path=dotenv_path)
 
     if False:
         response = manager_api.get_user_status(user_id="1035117")
