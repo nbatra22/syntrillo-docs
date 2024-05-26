@@ -5,15 +5,14 @@ from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.data_structures.data_structure import DataStructure
 from syntrillo.data_structures.storage_manager import StorageManager
 
-class HealthieNewPatientSetup():
+class CreateNewPatient():
     """
-    A class handling initiation procedures when a new patient is included.
+    A class handling initiation procedures when a new patient is created at HEalthie.
 
-    - called by some new patient webhook
+    - called by some patient webhook
+    - defines ids, keys, codes, pseudonyms, and relationships between them
     - defines providers : clinician, OT, AI
 
 
     """
-
-
 
