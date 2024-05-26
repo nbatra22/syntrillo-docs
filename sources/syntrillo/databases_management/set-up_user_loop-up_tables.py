@@ -47,10 +47,10 @@ class UserLookupTablesManager:
             id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
 
             # Internal key, fixed length for consistency
-            syntrillo_internal_key CHAR(16) UNIQUE,
+            syntrillo_internal_key BINARY(16) UNIQUE DEFAULT (UUID_TO_BIN(UUID())),
 
             # Pseudonymized code for access control
-            pseudo_code_for_tenovi_phi_access CHAR(16) UNIQUE,
+            pseudo_code_for_tenovi_phi_access BINARY(16) UNIQUE DEFAULT (UUID_TO_BIN(UUID())),
 
             # External user ID, fixed length for consistency
             healthy_user_id CHAR(16) UNIQUE,
@@ -68,9 +68,9 @@ class UserLookupTablesManager:
             id INT AUTO_INCREMENT PRIMARY KEY,                  # Auto-increment ID for unique identification
 
             # Internal key, fixed length for consistency
-            syntrillo_internal_key CHAR(16),
+            syntrillo_internal_key BINARY(16),
 
-            # Temporary pseudonymized code for temporary access (many to one relationship with syntrillo_internal_key)
+            # Temporary pseudonymized code for temporary access (many-to-one relationship with syntrillo_internal_key)
             temporary_pseudo_code VARCHAR(255),
 
             # Date of creation for scheduled deletion
@@ -112,6 +112,19 @@ class UserLookupTablesManager:
             else:
                 print(f"Skipping drop for table '{table}'.")
 
+    def report_tables_status(self):
+        """
+        Report if the tables exist and their number of records.
+        """
+        tables = ["user_look_up_codes", "user_look_up_temporary_codes"]
+        for table in tables:
+            try:
+                self.cursor.execute(f"SELECT COUNT(*) FROM {table};")
+                count = self.cursor.fetchone()[0]
+                print(f"Table '{table}' exists with {count} records.")
+            except MySQLdb.Error as e:
+                print(f"Table '{table}' does not exist or cannot be accessed: {e}")
+
     def close_connection(self):
         """
         Close the database connection and cursor.
@@ -125,8 +138,11 @@ class UserLookupTablesManager:
 if __name__ == '__main__':
     manager = UserLookupTablesManager()
 
+    print("\n")
+    manager.report_tables_status()
+
     while True:
-        action = input("Choose an action: 'create' to create tables, 'drop' to drop tables, 'exit' to quit: ").lower()
+        action = input("\nChoose an action: 'create' to create tables, 'drop' to drop tables, 'exit' to quit: ").lower()
         if action == "create":
             manager.create_user_lookup_tables()
         elif action == "drop":
