@@ -13,6 +13,10 @@ class UserLookupTablesManager:
         """
         Initialize the UserLookupTablesManager by creating a database connection.
         """
+
+        if __name__ != "__main__":
+            raise RuntimeError("UserLookupTablesManager class can only be instantiated interactively.")
+
         self.conn, self.tunnel = create_connection(verbose=True)
         if not self.conn:
             raise ConnectionError("Failed to connect to the database.")
