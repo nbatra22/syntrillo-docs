@@ -40,22 +40,26 @@ if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
     print("_this_is_PythonAnywhere_ : connection to ",  PA_DB_CONFIG.get('database'), " successful.")
 else:
     # Create SSH tunnel for local machine
-    with sshtunnel.SSHTunnelForwarder(
+    tunnel = sshtunnel.SSHTunnelForwarder(
             ('ssh.pythonanywhere.com'),
             ssh_username=PA_SSH_TUNNEL.get('ssh_username'),
             ssh_password=PA_SSH_TUNNEL.get('ssh_password'),
-            remote_bind_address=(PA_DB_CONFIG.get('host'), 3306)
-    ) as tunnel:
-        # Tunnel is established, connect to the MySQL database
-        db_config_ssh=PA_DB_CONFIG.copy()
-        db_config_ssh['host'] = '127.0.0.1'
-        db_config_ssh['port'] = tunnel.local_bind_port
-        conn = mysql.connector.connect(**db_config_ssh)
-        print("remote connection to ",  PA_DB_CONFIG.get('database'), " successful.")
+            remote_bind_address=(PA_DB_CONFIG.get('host'), 3306),
+            allow_agent=False,
+    )
+    tunnel.start()
+    print("Tunnel is established on port :", tunnel.local_bind_port)
+    # Tunnel is established, connect to the MySQL database
+    db_config_ssh=PA_DB_CONFIG.copy()
+    db_config_ssh['host'] = '127.0.0.1'
+    db_config_ssh['port'] = tunnel.local_bind_port
+    conn = mysql.connector.connect(**db_config_ssh, ) # stuck here
+    print("remote connection to ",  PA_DB_CONFIG.get('database'), " successful.")
 
 if conn.is_connected():
     print("Connection Successful")
     conn.close()
+    tunnel.stop() if tunnel else None
 else:
     print("Connection Unsuccessful")
     sys.exit(1)
