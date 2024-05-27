@@ -2,5 +2,8 @@ requests
 python-dotenv
 xlrd
 # conda-forge::mysql-connector-python : not working properly
-conda-forge::sshtunnel
+conda-forge::sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel, even if it's not used
 conda-forge::mysqlclient
+
+
+

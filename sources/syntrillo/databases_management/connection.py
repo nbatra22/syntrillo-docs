@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 #   print("mysql.connector.__version__ : ", mysql.connector.__version__) # verify installation and version
 # import mysql-connector : !!! does not work with mysql-connector!!!
 import MySQLdb
-import sshtunnel
+import sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel
 
 sshtunnel.SSH_TIMEOUT = 60.0
 sshtunnel.TUNNEL_TIMEOUT = 60.0

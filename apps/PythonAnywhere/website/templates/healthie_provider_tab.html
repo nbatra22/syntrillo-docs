@@ -45,7 +45,7 @@
 
     <div class="tab-content" id="myTabContent">
 
-        <!-- ///////////////////// OVERALL STATUS /////////////////////////// -->
+        <!-- ///////////////////// OVERALL STATUS AND DEBUGGING /////////////////////////// -->
         <div class="tab-pane fade show active" id="status" role="tabpanel" aria-labelledby="status-tab">
             <h2>Status</h2>
             <p>Some summary and overall status</p>
@@ -58,8 +58,16 @@
                             <td>{{ provider_id }}</td>
                         </tr>
                         <tr>
-                            <td>Patient id</td>
+                            <td>Patient healthie user id</td>
                             <td>{{ patient_id }}</td>
+                        </tr>
+                        <tr>
+                            <td>Syntrillo Internal Key</td>
+                            <td>{{ pseudonyms.syntrillo_internal_key }}</td>
+                        </tr>
+                        <tr>
+                            <td>Pseudo Code for Tenovi PHI Access</td>
+                            <td>{{ pseudonyms.pseudo_code_for_tenovi_phi_access }}</td>
                         </tr>
                     </tbody>
                 </table>

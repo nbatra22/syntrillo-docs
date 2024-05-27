@@ -20,6 +20,8 @@ import sys
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.misc import extract_user_id_from_url
 from syntrillo.patient_onboarding.manager import PatientOnboardingManager
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+
 
 # -------------------------------------------------
 
@@ -65,11 +67,16 @@ def iframe_healthie_provider_tab():
     # Load environment variables from .env file
     dotenv_path = ".env"
 
-    # Fetch patient status using PatientOnboardingManager
-    onboarding_manager = PatientOnboardingManager(dotenv_path=dotenv_path)
     if patient_id != '-1':
+        # Fetch patient status using PatientOnboardingManager
+        onboarding_manager = PatientOnboardingManager(dotenv_path=dotenv_path)
         patient_status = onboarding_manager.get_user_status(user_id=patient_id)
         inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
+
+        # fetch patient pseudonyms : syntirillo_user_id and pseudo_code_for_tenovi_phi_access
+        lookup_manager = LookUpCodesManagement()
+        pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id) if patient_id != '-1' else None
+
     else :
         patient_status = []
         inconsistencies = []
@@ -83,6 +90,7 @@ def iframe_healthie_provider_tab():
                            patient_id=patient_id,
                            patient_status=patient_status,
                            inconsistencies=inconsistencies,
+                           pseudonyms=pseudonyms
                            )
 
 

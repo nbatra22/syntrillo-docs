@@ -35,10 +35,10 @@ p {
 
 .table-container1 {
     margin-left: 10px;
-    width: 20%; /* Set a fixed width for the table container */
-    border: 1px solid #ccc; /* Optional: Add a border for visual clarity */
+    width: 40%; /* Set a fixed width for the table container */
+    border: 0px solid #ccc; /* Optional: Add a border for visual clarity */
     padding: 10px; /* Optional: Add padding inside the container */
-    box-shadow: 0 0 5px rgba(0,0,0,0.1); /* Optional: Add a shadow for a subtle effect */
+    /* box-shadow: 0 0 5px rgba(0,0,0,0.1); */ /* Optional: Add a shadow for a subtle effect */
 }
 .table-container1 table {
     font-size: 16px;
