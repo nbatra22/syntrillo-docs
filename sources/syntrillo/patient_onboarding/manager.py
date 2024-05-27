@@ -1,4 +1,4 @@
-# Path: ./sources/syntrillo/onboarding/manager.py
+# Path: ./sources/syntrillo/patient_onboarding/manager.py
 
 import json
 

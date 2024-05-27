@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 import MySQLdb
 import sshtunnel
 
-sshtunnel.SSH_TIMEOUT = 30.0
-sshtunnel.TUNNEL_TIMEOUT = 30.0
+sshtunnel.SSH_TIMEOUT = 60.0
+sshtunnel.TUNNEL_TIMEOUT = 60.0
 
 def load_database_credentials(dotenv_path=".env"):
     """

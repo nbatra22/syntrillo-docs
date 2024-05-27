@@ -1,3 +1,4 @@
+# Path: ./tests/databases/standalone/tests_mysql_connector.py
 
 
 # local tests

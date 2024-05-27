@@ -53,7 +53,7 @@ class UserLookupTablesManager:
             pseudo_code_for_tenovi_phi_access BINARY(16) UNIQUE DEFAULT (UUID_TO_BIN(UUID())),
 
             # External user ID, fixed length for consistency
-            healthy_user_id CHAR(16) UNIQUE,
+            healthy_user_id CHAR(255) UNIQUE,
 
             # Date of creation for audit purposes
             date DATETIME,
@@ -71,7 +71,7 @@ class UserLookupTablesManager:
             syntrillo_internal_key BINARY(16),
 
             # Temporary pseudonymized code for temporary access (many-to-one relationship with syntrillo_internal_key)
-            temporary_pseudo_code VARCHAR(255),
+            temporary_pseudo_code CHAR(255),
 
             # Date of creation for scheduled deletion
             date DATETIME,
