@@ -29,6 +29,8 @@ healthie_iframe_provider_tab_bp = Blueprint('healthie_iframe_provider_tab', __na
 # =============================================================================================================
 # IFRAME PROVIDER TAB
 
+# TODO : auto select the tab that is making the most sense with aria-selected="true"
+
 
 @healthie_iframe_provider_tab_bp.route('/iframe_healthie_provider_tab', methods=['GET'])
 def iframe_healthie_provider_tab():

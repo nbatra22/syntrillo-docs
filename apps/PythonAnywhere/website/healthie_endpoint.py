@@ -16,8 +16,8 @@ import json
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.api_healthie.virtual_care_navigator import HealthieVirtualCareNavigator
 from syntrillo.api_healthie.misc import log_this
+from syntrillo.virtual_care_navigator.virtual_care_navigator import VirtualCareNavigator
 
 # -------------------------------------------------
 
@@ -70,7 +70,7 @@ def healthie_endpoint_post():
     # {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note":
         log_this(message="VCN endpoint")
-        vcn = HealthieVirtualCareNavigator(dotenv_path=dotenv_path)
+        vcn = VirtualCareNavigator(dotenv_path=dotenv_path)
         vcn.endpoint(data=data)
 
 

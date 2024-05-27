@@ -26,7 +26,10 @@
 
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="identifiers-tab" data-toggle="tab" href="#identifiers" role="tab" aria-controls="identifiers" aria-selected="true">Identifiers</a>
+            <a class="nav-link active" id="status-tab" data-toggle="tab" href="#status" role="tab" aria-controls="status" aria-selected="true">Status</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="devide-pairing-tab" data-toggle="tab" href="#devide-pairing" role="tab" aria-controls="devide-pairing" aria-selected="false">Device Pairing</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="onboarding-tab" data-toggle="tab" href="#onboarding" role="tab" aria-controls="onboarding" aria-selected="false">Onboarding</a>
@@ -42,9 +45,11 @@
 
     <div class="tab-content" id="myTabContent">
 
-        <!-- ///////////////////// IDENTIFIERS /////////////////////////// -->
-        <div class="tab-pane fade show active" id="identifiers" role="tabpanel" aria-labelledby="identifiers-tab">
-            <h2>Identifiers</h2>
+        <!-- ///////////////////// OVERALL STATUS /////////////////////////// -->
+        <div class="tab-pane fade show active" id="status" role="tabpanel" aria-labelledby="status-tab">
+            <h2>Status</h2>
+            <p>Some summary and overall status</p>
+            <h2>Debuging area</h2>
             <div class="table-container1">
                 <table class="table">
                     <tbody>
@@ -59,6 +64,12 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- ///////////////////// DEVICE PAIRING  /////////////////////////// -->
+        <div class="tab-pane fade" id="devide-pairing" role="tabpanel" aria-labelledby="devide-pairing-tab">
+            <h2>Pairing with Tenovi devices</h2>
+            <p>buttons and temporary id</p>
         </div>
 
         <!-- ///////////////////// ONBOARDING /////////////////////////// -->

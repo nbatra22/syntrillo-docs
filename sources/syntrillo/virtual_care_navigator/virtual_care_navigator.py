@@ -19,7 +19,7 @@ from openai import OpenAI
 VCN_ID : str ='1108460'
 
 
-class HealthieVirtualCareNavigator():
+class VirtualCareNavigator():
     """
     A class handling virtual care navigator operations.
     """
