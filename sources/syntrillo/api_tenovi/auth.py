@@ -1,4 +1,5 @@
 # Path: ./sources/syntrillo/api_tenovi/auth.py
+
 import os
 import requests
 import inspect

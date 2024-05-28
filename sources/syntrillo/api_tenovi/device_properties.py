@@ -1,4 +1,5 @@
 # Path: ./sources/syntrillo/api_tenovi/device_properties.py
+
 from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceProperties:

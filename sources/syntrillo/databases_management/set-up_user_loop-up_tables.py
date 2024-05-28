@@ -71,7 +71,11 @@ class UserLookupTablesManager:
             syntrillo_internal_key BINARY(16),
 
             # Temporary pseudonymized code for temporary access (many-to-one relationship with syntrillo_internal_key)
+            # This code is used for temporary identification and is scheduled for deletion
             temporary_pseudo_code CHAR(255),
+
+            # Purpose of this code. For example 'iFrame', 'Tenovi'
+            purpose CHAR(255),
 
             # Date of creation for scheduled deletion
             date DATETIME,

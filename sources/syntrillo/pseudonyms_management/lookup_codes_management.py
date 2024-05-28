@@ -6,16 +6,75 @@ from syntrillo.databases_management.connection import create_connection
 from syntrillo.databases_management.logs import add_log_entry
 
 class LookUpCodesManagement:
+    """
+    A class to manage look-up codes in the Syntrillo database.
+
+    This class provides methods to create, retrieve, and manage entries in the
+    user_look_up_codes table. Each entry links a healthy user ID to a syntrillo
+    internal key and a pseudo code for accessing PHI (Protected Health Information).
+
+    Attributes:
+    -----------
+    conn : MySQLdb.connections.Connection
+        The database connection object.
+    cursor : MySQLdb.cursors.Cursor
+        The cursor object for executing SQL queries.
+    tunnel : sshtunnel.SSHTunnelForwarder
+        The SSH tunnel object for secure database connections.
+    verbose : bool
+        Flag to enable verbose logging and connection details.
+
+    Methods:
+    --------
+    create_entry(healthy_user_id):
+        Creates a new entry for a healthy user ID in the user_look_up_codes table.
+
+    retrieve_entry_by_healthy_user_id(healthy_user_id):
+        Retrieves an entry using the healthy user ID.
+
+    retrieve_entry_by_internal_key(internal_key):
+        Retrieves an entry using the syntrillo internal key.
+
+    retrieve_entry_by_pseudo_code(pseudo_code):
+        Retrieves an entry using the pseudo code for accessing PHI.
+
+    close_connection():
+        Closes the database connection and stops the SSH tunnel if applicable.
+    """
+
     def __init__(self, verbose=False):
+        """
+        Initialize the LookUpCodesManagement class.
+
+        :param verbose: If True, enables verbose mode for detailed logging and connection info.
+        """
+
         self.conn, self.tunnel = create_connection(verbose=verbose)
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
+    def __del__(self):
+        self.cursor.close()
+        self.conn.close()
+        if self.tunnel:
+            self.tunnel.stop()
+        if self.verbose:
+            print("Database connection closed.")
+
+
     def create_entry(self, healthy_user_id):
+        """
+        Create a new entry in the user_look_up_codes table for the specified healthy_user_id.
+
+        :param healthy_user_id: The ID of the healthy user.
+        :return: A dictionary with syntrillo_internal_key and pseudo_code_for_tenovi_phi_access, or None if creation failed.
+        """
+
         create_entry_query = """
         INSERT INTO user_look_up_codes (healthy_user_id, date)
         VALUES (%s, NOW());
         """
+
         try:
             self.cursor.execute(create_entry_query, (healthy_user_id,))
             self.conn.commit()
@@ -46,6 +105,13 @@ class LookUpCodesManagement:
             return None
 
     def retrieve_entry_by_healthy_user_id(self, healthy_user_id):
+        """
+        Retrieve an entry from the user_look_up_codes table using the healthy_user_id.
+
+        :param healthy_user_id: The ID of the healthy user.
+        :return: A dictionary with syntrillo_internal_key and pseudo_code_for_tenovi_phi_access, or None if no entry is found.
+        """
+
         select_query = """
         SELECT
             BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key,
@@ -67,6 +133,13 @@ class LookUpCodesManagement:
             return None
 
     def retrieve_entry_by_internal_key(self, internal_key):
+        """
+        Retrieve an entry from the user_look_up_codes table using the syntrillo_internal_key.
+
+        :param internal_key: The syntrillo internal key (UUID).
+        :return: A dictionary with healthy_user_id and pseudo_code_for_tenovi_phi_access, or None if no entry is found.
+        """
+
         select_query = """
         SELECT
             healthy_user_id,
@@ -88,6 +161,13 @@ class LookUpCodesManagement:
             return None
 
     def retrieve_entry_by_pseudo_code(self, pseudo_code):
+        """
+        Retrieve an entry from the user_look_up_codes table using the pseudo_code_for_tenovi_phi_access.
+
+        :param pseudo_code: The pseudo code (UUID).
+        :return: A dictionary with healthy_user_id and syntrillo_internal_key, or None if no entry is found.
+        """
+
         select_query = """
         SELECT
             healthy_user_id,
@@ -109,6 +189,9 @@ class LookUpCodesManagement:
             return None
 
     def close_connection(self):
+        """
+        Close the database connection and stop the SSH tunnel if applicable.
+        """
         if self.conn:
             self.cursor.close()
             self.conn.close()

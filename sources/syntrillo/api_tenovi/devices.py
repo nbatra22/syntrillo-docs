@@ -1,4 +1,5 @@
 # Path: ./sources/syntrillo/api_tenovi/devices.py
+
 from syntrillo.api_tenovi.auth import TenoviAuth
 
 class Devices:
@@ -26,6 +27,26 @@ class Devices:
             url += f"{hwi_device_id}/"
 
         return self.auth.make_get_request(url, params=kwargs)
+
+    def get_device_by_patient_external_id(self, external_id):
+        """
+        Returns a device by patient external ID
+        """
+        query_params = {
+            "patient__external_id": external_id,
+        }
+        return self.get_devices(**query_params)
+
+    def get_device_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access):
+        """
+        Returns a device by pseudo code
+        """
+        query_params = {
+            "properties__key": "pseudo_code_for_tenovi_phi_access",
+            "properties__value": pseudo_code_for_tenovi_phi_access,
+        }
+        return self.get_devices(**query_params)
+
 
     def create_device(self, payload):
         """

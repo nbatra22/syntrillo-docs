@@ -73,13 +73,14 @@ def iframe_healthie_provider_tab():
         patient_status = onboarding_manager.get_user_status(user_id=patient_id)
         inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
 
-        # fetch patient pseudonyms : syntirillo_user_id and pseudo_code_for_tenovi_phi_access
+        # fetch patient pseudonyms : syntrillo_user_id and pseudo_code_for_tenovi_phi_access
         lookup_manager = LookUpCodesManagement()
-        pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id) if patient_id != '-1' else None
+        pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
 
     else :
         patient_status = []
         inconsistencies = []
+        pseudonyms = None
 
     # --------------------------------------------------------------------
 
@@ -145,3 +146,21 @@ def healthie_onboarding_generate_personalized_form():
     # return log as simple basic text, that will be displayed in a HTML textarea
     return jsonify({'log': log}), 200
 
+@healthie_iframe_provider_tab_bp.route('/tenovi_generate_pairing_code_form', methods=['POST'])
+def tenovi_generate_pairing_code_form():
+    """
+    This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field
+
+    """
+
+    # Retrieve the JSON data from the POST request
+    data_post_request = request.form.to_dict()
+
+    # Log the data to a local file
+    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+        f.write(json.dumps(data_post_request) + '\n\n')
+
+    patient_id = data_post_request.get('patient_id')
+    provider_id = data_post_request.get('provider_id')
+
+    return 'hello', 200

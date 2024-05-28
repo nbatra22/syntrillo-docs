@@ -78,6 +78,29 @@
         <div class="tab-pane fade" id="devide-pairing" role="tabpanel" aria-labelledby="devide-pairing-tab">
             <h2>Pairing with Tenovi devices</h2>
             <p>buttons and temporary id</p>
+
+            <h3>Generate pairing code</h3>
+
+            <div class="table-container2">
+                <table>
+                    <tr>
+                        <td align="right">
+                            <form id="generateTenoviPairingCodeForm" action="{{ url_for('healthie_iframe_provider_tab.tenovi_generate_pairing_code_form') }}" method="POST">
+                                <input type="hidden" name="provider_id" value="{{ provider_id }}">
+                                <input type="hidden" name="patient_id" value="{{ patient_id }}">
+                                <button type="button" id="generateTenoviPairingCodeFormButton" class="styled-button-small">Generate Tenovi Devices Pairing Code</button>
+                            </form>
+                            <!-- Loading indicator -->
+                            <span id="loadingTextGenerateForm" class="loading">Running ...</span>
+                        </td>
+                        <td>
+                            <textarea id="generateTenoviPairingCodeFormTextarea" rows="7" cols="70" readonly></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
         </div>
 
         <!-- ///////////////////// ONBOARDING /////////////////////////// -->
@@ -199,6 +222,7 @@
 
     </div> <!-- tab-content -->
 
+    <!-- //////////////////////////// SCRIPTS //////////////////////////// -->
     <script>
         $(document).ready(function() {
             $('#generateFormButton').click(function() {
@@ -231,6 +255,39 @@
             });
         });
     </script>
+
+<script>
+    $(document).ready(function() {
+        $('#generateTenoviPairingCodeFormButton').click(function() {
+            // Show loading indicator
+            $('#loadingTextGenerateForm').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#generateTenoviPairingCodeForm').attr('action'),
+                type: 'POST',
+                data: $('#generateTenoviPairingCodeForm').serialize(),
+                success: function(response) {
+                    console.log('Success:', response); // Log the response to console (for debugging)
+                    if (response && response.log) {
+                        $('#generateTenoviPairingCodeFormResultTextarea').val(response.log); // Update textarea with log message
+                    } else {
+                        $('#generateTenoviPairingCodeFormResultTextarea').val('Error: Unexpected response format'); // Display error message
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#generateTenoviPairingCodeFormResultTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#loadingTextGenerateForm').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            });
+        });
+    });
+</script>
 
 </body>
 </html>
