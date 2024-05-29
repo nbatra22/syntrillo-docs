@@ -3,33 +3,51 @@
 from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceProperties:
+    """
+
+    Class used to set and get the 'pseudo_code_for_tenovi_phi_access' device property.
+
+    From https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-properties :
+
+    'These properties can be used for controlling device-specific settings (e.g. the Step Goals for the Tenovi Watch), or for adding custom, client-defined tags to individual devices (as long as the keys used do not conflict with a pre-defined Tenovi key). See https://tenovi.com/api-docs for a list of device-specific Properties.
+
+    For device-specific settings, the "synced" field can be used to check if the setting has been successfully applied to the device or not. Note, syncing often requires the device to connect to our network, which, for some devices, only occurs when a measurement is taken).'
+
+
+    """
     def __init__(self, client_domain="syntrillo"):
         self.client_domain = client_domain
         self.auth = TenoviAuth()
 
-    def get_device_properties(self, hwi_device_id):
+    def get_device_properties(self, hwi_device_id : str):
         """
         Lists all or reads a single Property for a given HWI Device.
-
-        These properties can be used for controlling device-specific settings (e.g. the Step Goals for the Tenovi Watch), or for adding custom, client-defined tags to individual devices (as long as the keys used do not conflict with a pre-defined Tenovi key).
-
-        https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-properties
         """
         url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_get_request(url)
 
-    def create_device_property(self, hwi_device_id, payload):
+    def create_device_property(self, hwi_device_id : str, payload : dict):
         """
         Creates a new HWI Device Property with a key-value pair.
 
-        This endpoint can be used to manage any device-specific properties, such as setting the step goal on the Tenovi Watch device. This endpoint can also be used for adding any client-specific properties clients wish to use for internal purposes (for example, to tag devices), as long as the keys used do not conflict with any special use keys described in the Tenovi documentation.
+        from https://api2.tenovi.com/hwi-redoc/#operation/hwi-devices_properties_create :
 
-        Note, keys must be unique for a given device. If you try and create a property with an existing key, the existing key-value pair will simply be updated instead.
+        'Note, keys must be unique for a given device. If you try and create a property with an existing key, the existing key-value pair will simply be updated instead.'
 
-        https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-properties
         """
         url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_post_request(url, payload)
+
+    def create__pseudo_code_for_tenovi_phi_access__property(self, hwi_device_id : str, pseudo_code : str):
+        """
+        Creates a new HWI Device Property with the key 'pseudo_code_for_tenovi_phi_access' and the given pseudo_code value.
+        """
+        payload = {
+            "key": "pseudo_code_for_tenovi_phi_access",
+            "value": pseudo_code,
+            "synced": False
+        }
+        return self.create_device_property(hwi_device_id, payload)
 
 # Example usage:
 if __name__ == "__main__":

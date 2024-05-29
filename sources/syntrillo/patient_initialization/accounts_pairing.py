@@ -32,32 +32,30 @@ class AccountsPairing:
         temp_code = self.temporary_lookup_codes_management.create_temporary_code(self.syntrillo_internal_key, 'Tenovi')
         return temp_code
 
-    def setup_devices_for_patient(self, temp_code):
+    def setup_devices_for_patient(self, temp_code : str):
         """
-        Uses the Tenovi API to
-        - find devices where PatientID matches the temporary code stored in patient_external_id
-        for each device:
-        - sets up a key/value parameter pair with the pseudo_code_for_tenovi_phi_access.
+        Use the Tenovi API to
+        - find devices where PatientID (aka patient_external_id) matches the temporary code entered by the study coordinator in the Tenovi dashboard.
+
+        then, for each device:
+        - set up a key/value parameter pair with the pseudo_code_for_tenovi_phi_access.
         - replace the patient_external_id with the healthy_user_id
+
         """
 
         # get pseudo_code_for_tenovi_phi_access from syntrillo_internal_key
-        pseudo_code_for_tenovi_phi_access = self.lookup_codes_management.retrieve_entry_by_internal_key(self.syntrillo_internal_key)['pseudo_code_for_tenovi_phi_access']
+        entry_by_internal_key = self.lookup_codes_management.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
+        pseudo_code_for_tenovi_phi_access = entry_by_internal_key['pseudo_code_for_tenovi_phi_access']
 
         # loop for devices where PatientID is equal to the temporary code
-        matching_devices = self.devices.get_device_by_patient_external_id(temp_code)
+        matching_devices = self.devices.get_devices_by_patient_external_id(temp_code)
         for device in matching_devices:
             # create a key/value parameter pair with the pseudo_code_for_tenovi_phi_access
             device_id = device.get('id')
             device_properties = DeviceProperties()
-            payload = {
-                "key": "pseudo_code_for_tenovi_phi_access",
-                "value": pseudo_code_for_tenovi_phi_access,
-                "synced": False
-            }
-            device_properties.create_device_property(device_id, payload)
+            device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
 
-
+        # need to return some log information
 
 
 

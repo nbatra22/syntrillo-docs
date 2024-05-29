@@ -149,7 +149,7 @@ def healthie_onboarding_generate_personalized_form():
 @healthie_iframe_provider_tab_bp.route('/tenovi_generate_pairing_code_form', methods=['POST'])
 def tenovi_generate_pairing_code_form():
     """
-    This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field
+    This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field by the study coordinator.
 
     """
 
