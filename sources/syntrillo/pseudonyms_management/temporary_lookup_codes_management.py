@@ -26,11 +26,17 @@ class TemporaryLookUpCodesManagement:
     """
 
     def __init__(self, verbose=False):
+        """
+        Initializes the TemporaryLookUpCodesManagement class, setting up the database connection and cursor.
+        """
         self.conn, self.tunnel = create_connection(verbose=verbose)
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
     def __del__(self):
+        """
+        Destructor for the TemporaryLookUpCodesManagement class, closing the database connection and cursor.
+        """
         self.cursor.close()
         self.conn.close()
         if self.tunnel:
@@ -39,9 +45,21 @@ class TemporaryLookUpCodesManagement:
             print("Database connection closed.")
 
     def generate_uuid_code(self):
+        """
+        Generates a random UUID code.
+
+        Returns:
+            str: A random UUID string.
+        """
         return str(uuid.uuid4())
 
     def generate_word_code(self):
+        """
+        Generates a random code consisting of two capitalized words.
+
+        Returns:
+            str: A random string of two capitalized words concatenated together.
+        """
         words = ["Apple", "Banana", "Cherry", "Date", "Fantastic",
                  "Grape", "Rainbow", "Kiwi", "Lemon", "Mango",
                  "Vacation", "Sunshine", "Snowball", "Watermelon",
@@ -49,7 +67,20 @@ class TemporaryLookUpCodesManagement:
                  ]
         return random.choice(words).capitalize() + random.choice(words).capitalize()
 
-    def create_temporary_code(self, syntrillo_internal_key, purpose):
+    def create_temporary_pseudo_code(self, syntrillo_internal_key, purpose):
+        """
+        Creates a temporary pseudo code for a given syntrillo_internal_key and purpose.
+
+        Args:
+            syntrillo_internal_key (str): The internal key for the Syntrillo system.
+            purpose (str): The purpose of the temporary code ('iFrame' or 'Tenovi').
+
+        Returns:
+            str: The generated temporary pseudo code.
+
+        Raises:
+            ValueError: If the purpose is not 'iFrame' or 'Tenovi'.
+        """
         if purpose == 'iFrame':
             temp_code = self.generate_uuid_code()
         elif purpose == 'Tenovi':
@@ -57,19 +88,55 @@ class TemporaryLookUpCodesManagement:
         else:
             raise ValueError("Invalid purpose specified. Use 'iFrame' or 'Tenovi'.")
 
-        query = """
-            INSERT INTO user_look_up_temporary_codes (syntrillo_internal_key, temporary_pseudo_code, purpose, date)
-            VALUES (UUID_TO_BIN(%s), %s, %s, NOW())
-            ON DUPLICATE KEY UPDATE temporary_pseudo_code = VALUES(temporary_pseudo_code), date = NOW()
-        """
-        self.cursor.execute(query, (syntrillo_internal_key, temp_code, purpose))
-        self.conn.commit()
+        try:
+            # Lock the table
+            self.cursor.execute("LOCK TABLES user_look_up_temporary_codes WRITE")
 
-        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Created temporary code for purpose: {purpose}")
+            while True:
+                # Check if the temporary code already exists
+                query_check = """
+                    SELECT COUNT(*) FROM user_look_up_temporary_codes
+                    WHERE temporary_pseudo_code = %s AND purpose = %s
+                """
+                self.cursor.execute(query_check, (temp_code, purpose))
+                count = self.cursor.fetchone()[0]
+
+                if count == 0:
+                    break
+
+                # Regenerate the code if it already exists
+                if purpose == 'iFrame':
+                    temp_code = self.generate_uuid_code()
+                elif purpose == 'Tenovi':
+                    temp_code = self.generate_word_code()
+
+            # Insert the new temporary code
+            query_insert = """
+                INSERT INTO user_look_up_temporary_codes (syntrillo_internal_key, temporary_pseudo_code, purpose, date)
+                VALUES (UUID_TO_BIN(%s), %s, %s, NOW())
+            """
+            self.cursor.execute(query_insert, (syntrillo_internal_key, temp_code, purpose))
+            self.conn.commit()
+
+            add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Created temporary code for purpose: {purpose}")
+
+        finally:
+            # Always release the lock
+            self.cursor.execute("UNLOCK TABLES")
 
         return temp_code
 
     def retrieve_syntrillo_internal_key(self, temp_code, purpose):
+        """
+        Retrieves the syntrillo internal key using the temporary code and its purpose.
+
+        Args:
+            temp_code (str): The temporary pseudo code.
+            purpose (str): The purpose of the temporary code.
+
+        Returns:
+            str: The syntrillo internal key if found, None otherwise.
+        """
         query = """
             SELECT BIN_TO_UUID(syntrillo_internal_key) FROM user_look_up_temporary_codes
             WHERE temporary_pseudo_code = %s AND purpose = %s
@@ -82,6 +149,13 @@ class TemporaryLookUpCodesManagement:
         return result[0] if result else None
 
     def delete_entry(self, temp_code, purpose):
+        """
+        Deletes an entry using the temporary code and its purpose.
+
+        Args:
+            temp_code (str): The temporary pseudo code.
+            purpose (str): The purpose of the temporary code.
+        """
         query = """
             DELETE FROM user_look_up_temporary_codes
             WHERE temporary_pseudo_code = %s AND purpose = %s
@@ -92,6 +166,9 @@ class TemporaryLookUpCodesManagement:
         add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Deleted entry for temporary code: {temp_code} with purpose: {purpose}")
 
     def delete_old_entries(self):
+        """
+        Deletes entries that are more than 24 hours old.
+        """
         query = """
             DELETE FROM user_look_up_temporary_codes
             WHERE date < NOW() - INTERVAL 24 HOUR
@@ -109,11 +186,11 @@ if __name__ == "__main__":
     syntrillo_internal_key = str(uuid.uuid4())
 
     # Create a temporary code for 'iFrame' purpose
-    temp_code_iframe = manager.create_temporary_code(syntrillo_internal_key, 'iFrame')
+    temp_code_iframe = manager.create_temporary_pseudo_code(syntrillo_internal_key, 'iFrame')
     print(f"Temporary Code for iFrame: {temp_code_iframe}")
 
     # Create a temporary code for 'Tenovi' purpose
-    temp_code_tenovi = manager.create_temporary_code(syntrillo_internal_key, 'Tenovi')
+    temp_code_tenovi = manager.create_temporary_pseudo_code(syntrillo_internal_key, 'Tenovi')
     print(f"Temporary Code for Tenovi: {temp_code_tenovi}")
 
     # Retrieve syntrillo internal key using the temporary code and purpose
