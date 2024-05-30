@@ -68,6 +68,7 @@ class UserLookupTablesManager:
             id INT AUTO_INCREMENT PRIMARY KEY,                  # Auto-increment ID for unique identification
 
             # Internal key, fixed length for consistency
+            # not unique here, as it can have multiple temporary codes
             syntrillo_internal_key BINARY(16),
 
             # Temporary pseudonymized code for temporary access (many-to-one relationship with syntrillo_internal_key)
