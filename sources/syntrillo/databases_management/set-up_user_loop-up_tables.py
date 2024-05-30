@@ -56,7 +56,7 @@ class UserLookupTablesManager:
             healthy_user_id CHAR(255) UNIQUE,
 
             # Date of creation for audit purposes
-            date DATETIME,
+            date DATETIME DEFAULT CURRENT_TIMESTAMP,  # Defaulting to now
 
             # Enforce unique relationships
             UNIQUE(syntrillo_internal_key, healthy_user_id),
@@ -78,7 +78,7 @@ class UserLookupTablesManager:
             purpose CHAR(255),
 
             # Date of creation for scheduled deletion
-            date DATETIME,
+            date DATETIME DEFAULT CURRENT_TIMESTAMP,  # Defaulting to now
 
             INDEX (syntrillo_internal_key),
             INDEX (temporary_pseudo_code)
