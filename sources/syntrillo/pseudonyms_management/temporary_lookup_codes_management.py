@@ -67,7 +67,23 @@ class TemporaryLookUpCodesManagement:
                  ]
         return random.choice(words).capitalize() + random.choice(words).capitalize()
 
-    def create_temporary_pseudo_code(self, syntrillo_internal_key, purpose):
+    def remove_all_temporary_codes_for_syntrillo_internal_key(self, syntrillo_internal_key: str, purpose: str):
+        """
+
+        """
+        query = """
+            DELETE FROM user_look_up_temporary_codes
+            WHERE syntrillo_internal_key = UUID_TO_BIN(%s) AND purpose = %s
+        """
+        self.cursor.execute(query, (syntrillo_internal_key, purpose))
+        self.conn.commit()
+
+        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement",
+                      f"Deleted all entries for syntrillo internal key: {syntrillo_internal_key} with purpose: {purpose}"
+                      )
+
+
+    def create_temporary_pseudo_code(self, syntrillo_internal_key: str, purpose: str):
         """
         Creates a temporary pseudo code for a given syntrillo_internal_key and purpose.
 
@@ -92,19 +108,25 @@ class TemporaryLookUpCodesManagement:
             # Lock the table
             self.cursor.execute("LOCK TABLES user_look_up_temporary_codes WRITE")
 
+            # remove all pseudo codes for this syntrillo_internal_key and Tenovi purpose
+            # only one Tenovi temporary pseudo code should be active at a time
+            if purpose == 'Tenovi':
+                self.remove_all_temporary_codes_for_syntrillo_internal_key(syntrillo_internal_key, purpose)
+
             while True:
                 # Check if the temporary code already exists
                 query_check = """
                     SELECT COUNT(*) FROM user_look_up_temporary_codes
-                    WHERE temporary_pseudo_code = %s AND purpose = %s
+                    WHERE temporary_pseudo_code = %s
                 """
-                self.cursor.execute(query_check, (temp_code, purpose))
+                self.cursor.execute(query_check, (temp_code, ))
                 count = self.cursor.fetchone()[0]
 
+                # break if it doesn't exist
                 if count == 0:
                     break
 
-                # Regenerate the code if it already exists
+                # Regenerate the code if it already exists and loop again
                 if purpose == 'iFrame':
                     temp_code = self.generate_uuid_code()
                 elif purpose == 'Tenovi':
@@ -125,6 +147,29 @@ class TemporaryLookUpCodesManagement:
             self.cursor.execute("UNLOCK TABLES")
 
         return temp_code
+
+    def retrieve_tenovi_temporary_pseudo_code(self, syntrillo_internal_key: str):
+        """
+        Retrieves the Tenovi temporary pseudo code for a given syntrillo_internal_key.
+
+        Args:
+            syntrillo_internal_key (str): The internal key for the Syntrillo system.
+
+        Returns:
+            str: The Tenovi temporary pseudo code if found, None otherwise.
+        """
+        query = """
+            SELECT temporary_pseudo_code FROM user_look_up_temporary_codes
+            WHERE syntrillo_internal_key = UUID_TO_BIN(%s) AND purpose = 'Tenovi'
+        """
+        self.cursor.execute(query, (syntrillo_internal_key,))
+        result = self.cursor.fetchone()
+
+        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement",
+                      f"Retrieved Tenovi temporary pseudo code for syntrillo_internal_key: {syntrillo_internal_key}")
+
+        return result[0] if result else None
+
 
     def retrieve_syntrillo_internal_key(self, temp_code, purpose):
         """

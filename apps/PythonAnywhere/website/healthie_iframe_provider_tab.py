@@ -21,6 +21,7 @@ import sys
 from syntrillo.api_healthie.misc import extract_user_id_from_url
 from syntrillo.patient_onboarding.manager import PatientOnboardingManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
 
 
 # -------------------------------------------------
@@ -61,13 +62,15 @@ def iframe_healthie_provider_tab():
 
     patient_id = extract_user_id_from_url(data_get_request.get('referrer_url'))
     if patient_id is None:
-        patient_id = "1035117" # "-1"
+        # patient_id = '-1'
+        # patient_id = "1035117" # with onboarding forms
+        patient_id = "1209727" # with syntrillo_internal_key
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
     dotenv_path = ".env"
 
-    if patient_id != '-1':
+    if patient_id != '-1' and False:
         # Fetch patient status using PatientOnboardingManager
         onboarding_manager = PatientOnboardingManager(dotenv_path=dotenv_path)
         patient_status = onboarding_manager.get_user_status(user_id=patient_id)
@@ -83,6 +86,8 @@ def iframe_healthie_provider_tab():
         pseudonyms = None
 
     # --------------------------------------------------------------------
+
+    # TODO : get temporary_pseudo_code from the database for this patient_id with the 'iFrame' purpose
 
     # Render the 'healthie_provider_tab.html' template with the provided data
     return render_template('healthie_provider_tab.html',
@@ -146,8 +151,8 @@ def healthie_onboarding_generate_personalized_form():
     # return log as simple basic text, that will be displayed in a HTML textarea
     return jsonify({'log': log}), 200
 
-@healthie_iframe_provider_tab_bp.route('/tenovi_generate_pairing_code_form', methods=['POST'])
-def tenovi_generate_pairing_code_form():
+@healthie_iframe_provider_tab_bp.route('/tenovi_generate_temporary_pairing_code_form', methods=['POST'])
+def tenovi_generate_temporary_pairing_code_form():
     """
     This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field by the study coordinator.
 
@@ -160,7 +165,45 @@ def tenovi_generate_pairing_code_form():
     with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
         f.write(json.dumps(data_post_request) + '\n\n')
 
-    patient_id = data_post_request.get('patient_id')
+    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
     provider_id = data_post_request.get('provider_id')
 
+    # Get syntrillo_internal_key from patient_id
+    lookup_manager = LookUpCodesManagement()
+    patient_entry = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
+    syntrillo_internal_key = patient_entry['syntrillo_internal_key']
+
+    # Call AccountsPairing.create_and_return_unique_temporary_pseudo_code
+    accounts_pairing = AccountsPairing(syntrillo_internal_key)
+    temporary_pseudo_code = accounts_pairing.create_and_return_unique_temporary_pseudo_code()
+
+    # Prepare log information
+    log = f"Temporary Pseudo Code generated: {temporary_pseudo_code}\n"
+    log += f"patient_id: {patient_id}\n"
+    log += f"provider_id: {provider_id}\n"
+
+    return jsonify({'log': log, 'temporary_pseudo_code': temporary_pseudo_code}), 200
+
+@healthie_iframe_provider_tab_bp.route('/tenovi_pair_devices_form', methods=['POST'])
+def tenovi_pair_devices_form():
+    """
+    This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field by the study coordinator.
+
+    """
+
+    # Retrieve the JSON data from the POST request
+    data_post_request = request.form.to_dict()
+
+    # Log the data to a local file
+    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+        f.write(json.dumps(data_post_request) + '\n\n')
+
+    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
+    provider_id = data_post_request.get('provider_id')
+
+    # TODO: need to get syntrillo_internal_key from patient_id from LookUpCodesManagement.retrieve_entry_by_healthy_user_id
+
+    # TODO: call AccountsPairing.pair_devices_using_temporary_pseudo_code
+
+    # TODO: have to return some logs listing the devices paired
     return 'hello', 200

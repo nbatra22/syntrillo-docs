@@ -76,25 +76,46 @@
 
         <!-- ///////////////////// DEVICE PAIRING  /////////////////////////// -->
         <div class="tab-pane fade" id="devide-pairing" role="tabpanel" aria-labelledby="devide-pairing-tab">
-            <h2>Pairing with Tenovi devices</h2>
-            <p>buttons and temporary id</p>
+            <h2>Pairing Tenovi devices with Healthie and Syntrillo accounts</h2>
 
-            <h3>Generate pairing code</h3>
+            <h3>Generate Temporary Pairing Code</h3>
 
             <div class="table-container2">
                 <table>
                     <tr>
                         <td align="right">
-                            <form id="generateTenoviPairingCodeForm" action="{{ url_for('healthie_iframe_provider_tab.tenovi_generate_pairing_code_form') }}" method="POST">
+                            <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_for('healthie_iframe_provider_tab.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
                                 <input type="hidden" name="provider_id" value="{{ provider_id }}">
                                 <input type="hidden" name="patient_id" value="{{ patient_id }}">
-                                <button type="button" id="generateTenoviPairingCodeFormButton" class="styled-button-small">Generate Tenovi Devices Pairing Code</button>
+                                <button type="button" id="generateTenoviTemporaryPairingCodeFormButton" class="styled-button-small">Generate Temporary Pairing Code</button>
+                            </form>
+                            <!-- Loading indicator -->
+                            <span id="loadingTextGenerateForm" class="loading">Running ...</span>
+                        </td>
+                        <p><strong>Temporary Pseudo Code:</strong> <span id="TenoviTemporaryPairingCode"></span></p>
+                        <td>
+                            <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" rows="7" cols="70" readonly>Display some logs here</textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <h3>Pair Tenovi devices</h3>
+
+            <div class="table-container2">
+                <table>
+                    <tr>
+                        <td align="right">
+                            <form id="pairTenoviDevicesForm" action="{{ url_for('healthie_iframe_provider_tab.tenovi_pair_devices_form') }}" method="POST">
+                                <input type="hidden" name="provider_id" value="{{ provider_id }}">
+                                <input type="hidden" name="patient_id" value="{{ patient_id }}">
+                                <button type="button" id="pairTenoviDevicesFormButton" class="styled-button-small">Pair Devices</button>
                             </form>
                             <!-- Loading indicator -->
                             <span id="loadingTextGenerateForm" class="loading">Running ...</span>
                         </td>
                         <td>
-                            <textarea id="generateTenoviPairingCodeFormTextarea" rows="7" cols="70" readonly></textarea>
+                            <textarea id="pairTenoviDevicesFormTextarea" rows="7" cols="70" readonly>Display some logs here</textarea>
                         </td>
                     </tr>
                 </table>
@@ -222,7 +243,7 @@
 
     </div> <!-- tab-content -->
 
-    <!-- //////////////////////////// SCRIPTS //////////////////////////// -->
+    <!-- //////////////////////////// SCRIPTS ONBOARDING //////////////////////////// -->
     <script>
         $(document).ready(function() {
             $('#generateFormButton').click(function() {
@@ -256,38 +277,41 @@
         });
     </script>
 
-<script>
-    $(document).ready(function() {
-        $('#generateTenoviPairingCodeFormButton').click(function() {
-            // Show loading indicator
-            $('#loadingTextGenerateForm').show();
-            $('body').addClass('loading'); // Apply loading cursor
 
-            $.ajax({
-                url: $('#generateTenoviPairingCodeForm').attr('action'),
-                type: 'POST',
-                data: $('#generateTenoviPairingCodeForm').serialize(),
-                success: function(response) {
-                    console.log('Success:', response); // Log the response to console (for debugging)
-                    if (response && response.log) {
-                        $('#generateTenoviPairingCodeFormResultTextarea').val(response.log); // Update textarea with log message
-                    } else {
-                        $('#generateTenoviPairingCodeFormResultTextarea').val('Error: Unexpected response format'); // Display error message
+    <!-- //////////////////////////// SCRIPTS DEVICES PAIRING //////////////////////////// -->
+    <script>
+        $(document).ready(function() {
+            $('#generateTenoviTemporaryPairingCodeFormButton').click(function() {
+                // Show loading indicator
+                $('#loadingTextGenerateForm').show();
+                $('body').addClass('loading'); // Apply loading cursor
+
+                $.ajax({
+                    url: $('#generateTenoviTemporaryPairingCodeForm').attr('action'),
+                    type: 'POST',
+                    data: $('#generateTenoviTemporaryPairingCodeForm').serialize(),
+                    success: function(response) {
+                        console.log('Success:', response); // Log the response to console (for debugging)
+                        if (response && response.log) {
+                            $('#generateTenoviTemporaryPairingCodeFormTextarea').val(response.log); // Update textarea with log message
+                            $('#TenoviTemporaryPairingCode').text(response.temporary_pseudo_code); // Update temporary pairing code in the page
+                        } else {
+                            $('#generateTenoviTemporaryPairingCodeFormTextarea').val('Error: Unexpected response format'); // Display error message
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error); // Log AJAX error to console
+                        $('#generateTenoviTemporaryPairingCodeFormTextarea').val('Error: ' + error); // Display error message in textarea
+                    },
+                    complete: function() {
+                        // Hide loading indicator after AJAX completes (whether success or error)
+                        $('#loadingTextGenerateForm').hide();
+                        $('body').removeClass('loading'); // Remove loading cursor
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error); // Log AJAX error to console
-                    $('#generateTenoviPairingCodeFormResultTextarea').val('Error: ' + error); // Display error message in textarea
-                },
-                complete: function() {
-                    // Hide loading indicator after AJAX completes (whether success or error)
-                    $('#loadingTextGenerateForm').hide();
-                    $('body').removeClass('loading'); // Remove loading cursor
-                }
+                });
             });
         });
-    });
-</script>
+    </script>
 
 </body>
 </html>
