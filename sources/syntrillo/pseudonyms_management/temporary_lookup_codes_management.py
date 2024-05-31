@@ -25,6 +25,9 @@ class TemporaryLookUpCodesManagement:
     Add log entries, similar to the LookUpCodesManagement class.
     """
 
+    PURPOSE_TENOVI_PAIRING = 'TenoviPairing'
+    PURPOSE_HEALTHIE_IFRAME = 'Healthie-iFrame'
+
     def __init__(self, verbose=False):
         """
         Initializes the TemporaryLookUpCodesManagement class, setting up the database connection and cursor.
@@ -89,7 +92,7 @@ class TemporaryLookUpCodesManagement:
 
         Args:
             syntrillo_internal_key (str): The internal key for the Syntrillo system.
-            purpose (str): The purpose of the temporary code ('iFrame' or 'Tenovi').
+            purpose (str): The purpose of the temporary code (PURPOSE_HEALTHIE_IFRAME or PURPOSE_TENOVI_PAIRING).
 
         Returns:
             str: The generated temporary pseudo code.
@@ -97,12 +100,12 @@ class TemporaryLookUpCodesManagement:
         Raises:
             ValueError: If the purpose is not 'iFrame' or 'Tenovi'.
         """
-        if purpose == 'iFrame':
+        if purpose == self.PURPOSE_HEALTHIE_IFRAME:
             temp_code = self.generate_uuid_code()
-        elif purpose == 'Tenovi':
+        elif purpose == self.PURPOSE_TENOVI_PAIRING:
             temp_code = self.generate_word_code()
         else:
-            raise ValueError("Invalid purpose specified. Use 'iFrame' or 'Tenovi'.")
+            raise ValueError("Invalid purpose specified.")
 
         try:
             # Lock the table
@@ -110,7 +113,7 @@ class TemporaryLookUpCodesManagement:
 
             # remove all pseudo codes for this syntrillo_internal_key and Tenovi purpose
             # only one Tenovi temporary pseudo code should be active at a time
-            if purpose == 'Tenovi':
+            if purpose == self.PURPOSE_TENOVI_PAIRING:
                 self.remove_all_temporary_codes_for_syntrillo_internal_key(syntrillo_internal_key, purpose)
 
             while True:
@@ -127,9 +130,9 @@ class TemporaryLookUpCodesManagement:
                     break
 
                 # Regenerate the code if it already exists and loop again
-                if purpose == 'iFrame':
+                if purpose == self.PURPOSE_HEALTHIE_IFRAME:
                     temp_code = self.generate_uuid_code()
-                elif purpose == 'Tenovi':
+                elif purpose == self.PURPOSE_TENOVI_PAIRING:
                     temp_code = self.generate_word_code()
 
             # Insert the new temporary code
@@ -148,7 +151,7 @@ class TemporaryLookUpCodesManagement:
 
         return temp_code
 
-    def retrieve_tenovi_temporary_pseudo_code(self, syntrillo_internal_key: str):
+    def retrieve_tenovi_pairing_temporary_pseudo_code(self, syntrillo_internal_key: str):
         """
         Retrieves the Tenovi temporary pseudo code for a given syntrillo_internal_key.
 
@@ -160,9 +163,9 @@ class TemporaryLookUpCodesManagement:
         """
         query = """
             SELECT temporary_pseudo_code FROM user_look_up_temporary_codes
-            WHERE syntrillo_internal_key = UUID_TO_BIN(%s) AND purpose = 'Tenovi'
+            WHERE syntrillo_internal_key = UUID_TO_BIN(%s) AND purpose = %s
         """
-        self.cursor.execute(query, (syntrillo_internal_key,))
+        self.cursor.execute(query, (syntrillo_internal_key, self.PURPOSE_TENOVI_PAIRING))
         result = self.cursor.fetchone()
 
         add_log_entry(self.cursor, "TemporaryLookUpCodesManagement",
@@ -231,22 +234,22 @@ if __name__ == "__main__":
     syntrillo_internal_key = str(uuid.uuid4())
 
     # Create a temporary code for 'iFrame' purpose
-    temp_code_iframe = manager.create_temporary_pseudo_code(syntrillo_internal_key, 'iFrame')
+    temp_code_iframe = manager.create_temporary_pseudo_code(syntrillo_internal_key, TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME)
     print(f"Temporary Code for iFrame: {temp_code_iframe}")
 
     # Create a temporary code for 'Tenovi' purpose
-    temp_code_tenovi = manager.create_temporary_pseudo_code(syntrillo_internal_key, 'Tenovi')
+    temp_code_tenovi = manager.create_temporary_pseudo_code(syntrillo_internal_key, TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING)
     print(f"Temporary Code for Tenovi: {temp_code_tenovi}")
 
     # Retrieve syntrillo internal key using the temporary code and purpose
-    retrieved_key_iframe = manager.retrieve_syntrillo_internal_key(temp_code_iframe, 'iFrame')
+    retrieved_key_iframe = manager.retrieve_syntrillo_internal_key(temp_code_iframe, TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME)
     print(f"Retrieved Syntrillo Internal Key for iFrame: {retrieved_key_iframe}")
 
-    retrieved_key_tenovi = manager.retrieve_syntrillo_internal_key(temp_code_tenovi, 'Tenovi')
+    retrieved_key_tenovi = manager.retrieve_syntrillo_internal_key(temp_code_tenovi, TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING)
     print(f"Retrieved Syntrillo Internal Key for Tenovi: {retrieved_key_tenovi}")
 
     # Delete an entry using the temporary code and purpose
-    manager.delete_entry(temp_code_iframe, 'iFrame')
+    manager.delete_entry(temp_code_iframe, TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME)
     print(f"Deleted Temporary Code for iFrame: {temp_code_iframe}")
 
     # Delete old entries (older than 24 hours)

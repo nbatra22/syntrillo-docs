@@ -39,7 +39,10 @@ class AccountsPairing:
         Returns:
             str: The temporary code generated.
         """
-        temporary_pseudo_code = self.temporary_lookup_codes_management.create_temporary_pseudo_code(self.syntrillo_internal_key, 'Tenovi')
+        temporary_pseudo_code = self.temporary_lookup_codes_management.create_temporary_pseudo_code(
+            syntrillo_internal_key=self.syntrillo_internal_key,
+            purpose=TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING
+            )
         return temporary_pseudo_code
 
     def pair_devices_using_temporary_pseudo_code(self):
@@ -55,7 +58,7 @@ class AccountsPairing:
 
         # get temporary_pseudo_code for this patient syntrillo_internal_key
         #  : generate some error and log is the temporary_pseudo_code is not found
-        temporary_pseudo_code = self.temporary_lookup_codes_management.retrieve_tenovi_temporary_pseudo_code(self.syntrillo_internal_key)
+        temporary_pseudo_code = self.temporary_lookup_codes_management.retrieve_tenovi_pairing_temporary_pseudo_code(self.syntrillo_internal_key)
 
         # get pseudo_code_for_tenovi_phi_access from syntrillo_internal_key
         entry_by_internal_key = self.lookup_codes_management.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
@@ -70,7 +73,10 @@ class AccountsPairing:
             device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
 
         # remove the temporary_pseudo_code from the database
-        self.temporary_lookup_codes_management.remove_all_temporary_codes_for_syntrillo_internal_key(self.syntrillo_internal_key, 'Tenovi')
+        self.temporary_lookup_codes_management.remove_all_temporary_codes_for_syntrillo_internal_key(
+            syntrillo_internal_key=self.syntrillo_internal_key,
+            purpose=TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING
+            )
 
         # TODO: need to return some log information with the number and types of devices paired
         return 'some log'

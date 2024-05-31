@@ -31,7 +31,7 @@ class TestTemporaryLookUpCodesManagement(unittest.TestCase):
 
     def test_create_temporary_code_iframe(self):
         syntrillo_internal_key = str(uuid.uuid4())
-        temp_code = self.manager.create_temporary_code(syntrillo_internal_key, 'iFrame')
+        temp_code = self.manager.create_temporary_code(syntrillo_internal_key, TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME)
 
         self.mock_cursor.execute.assert_called()
         self.mock_conn.commit.assert_called()
@@ -40,7 +40,7 @@ class TestTemporaryLookUpCodesManagement(unittest.TestCase):
 
     def test_create_temporary_code_tenovi(self):
         syntrillo_internal_key = str(uuid.uuid4())
-        temp_code = self.manager.create_temporary_code(syntrillo_internal_key, 'Tenovi')
+        temp_code = self.manager.create_temporary_code(syntrillo_internal_key, TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING)
         words = re.findall(r'[A-Z][a-z]*', temp_code)
         self.mock_cursor.execute.assert_called()
         self.mock_conn.commit.assert_called()
