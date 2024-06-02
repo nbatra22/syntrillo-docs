@@ -4,6 +4,8 @@ xlrd
 # conda-forge::mysql-connector-python : not working properly
 conda-forge::sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel, even if it's not used
 conda-forge::mysqlclient
-
+statsmodels
+flask
+markdown2
 
 
