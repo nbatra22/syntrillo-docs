@@ -7,5 +7,8 @@ conda-forge::mysqlclient
 statsmodels
 flask
 markdown2
+bleach
+markdown
+openai
 
 
