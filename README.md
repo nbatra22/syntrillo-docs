@@ -97,4 +97,21 @@ source new_env/bin/activate
 pip install -r requirements.txt
 ```
 
+## Installation on PythonAnywhere
+
+```
+   - making use of python 3.9 everywhere : set-up in System Image
+   - need to 'pip3.9 install statsmodels markdown2' in the console.
+      :Make sure to use the right python version !!!
+      : see : https://help.pythonanywhere.com/pages/InstallingNewModules/
+```
+
+## Run and debug Flask app locally
+
+```
+  : in VSCode terminal : flask --app ./flask_app.py run
+
+  : run > Start Debugging  (using .vscode/launch.json ) see : https://code.visualstudio.com/docs/python/tutorial-flask
+```
+
 

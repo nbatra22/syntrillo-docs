@@ -1,22 +1,5 @@
 # Path: ./apps/PythonAnywhere/website/flask_app.py
 
-# ------------------------
-# INSTALL
-
-# Python Anywhere:
-#
-#   - making use of python 3.8 everywhere : set-up in System Image
-#   - need to 'pip3.8 install statsmodels markdown2' in the console.
-#      :Make sure to use the right python version !!!
-#      : see : https://help.pythonanywhere.com/pages/InstallingNewModules/
-
-# Conda
-#   : conda install statsmodels flask
-
-# dev on 15Kay local workstation : VSCode, 'Syntrillo' environment
-#   : in VSCode terminal : flask --app ./flask_app.py run
-#               run > Start Debugging  (using .vscode/launch.json ) see : https://code.visualstudio.com/docs/python/tutorial-flask
-
 import os, sys
 
 import statsmodels.api as sm
