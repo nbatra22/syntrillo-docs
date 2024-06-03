@@ -26,6 +26,8 @@ catboost_info/
 
 **/.ipynb_checkpoints
 
+# VSCode
+.vscode/settings.json
 
 # Environments
 .env

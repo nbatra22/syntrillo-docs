@@ -84,8 +84,8 @@ This structure ensures modularity and clear separation of concerns, making it ea
 
 
 ```
-# Navigate to the project directory
-cd /path/to/project
+# Navigate to the project env directory
+cd /path/to/project_env
 
 # Create a new virtual environment
 python3.9 -m venv new_env
