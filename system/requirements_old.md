@@ -1,3 +1,7 @@
+# packages collected manually during development
+
+
+```
 requests
 python-dotenv
 xlrd
@@ -10,5 +14,6 @@ markdown2
 bleach
 markdown
 openai
+```
 
 

@@ -13,6 +13,7 @@ _**
 
 # files meant to be ignored
 ignore_*
+ignored_*
 
 # ignore jupyter folders
 .ipynb_checkpoints/

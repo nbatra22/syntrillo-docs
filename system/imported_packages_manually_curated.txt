@@ -1,0 +1,18 @@
+mysqlclient		# requires : sudo apt install python3.9-dev libmariadb-dev
+api
+bleach
+datetime
+python-dotenv
+flask
+glob2
+markdown
+markdown2
+markupsafe
+openai
+pandas
+random2
+requests
+sshtunnel
+statsmodels
+uuid
+

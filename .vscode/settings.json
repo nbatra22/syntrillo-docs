@@ -1,5 +1,5 @@
 {
-    "python.defaultInterpreterPath": "~/apps/anaconda3/envs/syntrillo/bin/python",
+    "python.defaultInterpreterPath": "/home/olivier/projects/Syntrillo/python_environments/p3.9_env_test/bin/python3.9",
     "python.analysis.extraPaths": [
         "./sources/"
     ],

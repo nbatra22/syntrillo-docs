@@ -80,54 +80,21 @@ Sources structure to consider
 This structure ensures modularity and clear separation of concerns, making it easier to manage and develop the Syntrillo Clinic platform.
 
 
-### Requirements & Environments
-
-Locally, using anaconda development environment, named 'syntrillo'
-
-`requirement.txt` created & updated manually
-
-`environement.yml` created with `conda env export --name syntrillo --file environment.yml`
-
-#### work in progress : moving to pip
-
-##### Install python 3.10 (needed for openai ?)
-
-```
-# install from source on Debian 11
-# https://computingforgeeks.com/how-to-install-python-on-debian-linux/
-sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
-wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
-tar -xf Python-3.10.*.tgz
-cd Python-3.10.14
-./configure --prefix=/usr/local --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
-make -j 4
-sudo make altinstall
-```
-
-##### pip env set-up
-
-```
-sudo apt install python3.9-venv python3.9-distutils
-# in local syntrillo env dedicated folder:
-python3.9 -m venv p3.9_env_test
-python3.10 -m venv p3.10_env_test
-```
-
-```
-source p3.9_env_test/bin/activate
-which python
-which pip
-pip install pipreqs
-```
-
-dependencies on Debian 11:
-```
-# 'pip install mysqlclient' requires
-sudo apt install python3.9-dev libmariadb-dev
+## Installation of python packages
 
 
 ```
+# Navigate to the project directory
+cd /path/to/project
 
+# Create a new virtual environment
+python3.9 -m venv new_env
 
+# Activate the virtual environment
+source new_env/bin/activate
+
+# Install dependencies from requirements.txt
+pip install -r requirements.txt
+```
 
 
