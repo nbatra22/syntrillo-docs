@@ -229,7 +229,7 @@
         <!-- ///////////////////// SYSTEM /////////////////////////// -->
         <div class="tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
             <h2>System</h2>
-            <div class="table-container1">
+            <div class="table-container-system">
                 <table class="table">
                     <tbody>
                         <tr>
@@ -251,6 +251,33 @@
                     </tbody>
                 </table>
             </div>
+
+            {% if patient_not_registered_at_syntrillo %}
+                <p>&#x26a0; Patient not registered at Syntrillo : Syntrillo Internal Key is not available.&#x26a0; </p>
+                <p>Fix this below</p>
+
+                <div class="table-container2">
+                    <table>
+                        <tr>
+                            <td align="right">
+                                <form id="registerPatientAtSyntrilloForm" action="{{ url_for('healthie_iframe_provider_tab.register_patient_at_syntrillo_form') }}" method="POST">
+                                    <input type="hidden" name="provider_id" value="{{ provider_id }}">
+                                    <input type="hidden" name="patient_id" value="{{ patient_id }}">
+                                    <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button-small">Register patient at Syntrillo</button>
+                                </form>
+                                <!-- Loading indicator -->
+                                <span id="loadingTextGenerateForm" class="loading">Running ...</span>
+                            </td>
+                            <td>
+                                <textarea id="registerPatientAtSyntrilloFormTextarea" rows="7" cols="70" readonly>Display some logs here</textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+
+            {% endif %}
+
         </div>
 
     </div> <!-- tab-content -->
@@ -324,6 +351,40 @@
             });
         });
     </script>
+
+<!-- //////////////////////////// SCRIPTS SYSTEM //////////////////////////// -->
+<script>
+    $(document).ready(function() {
+        $('#registerPatientAtSyntrilloFormButton').click(function() {
+            // Show loading indicator
+            $('#loadingTextGenerateForm').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#registerPatientAtSyntrilloForm').attr('action'),
+                type: 'POST',
+                data: $('#registerPatientAtSyntrilloForm').serialize(),
+                success: function(response) {
+                    console.log('Success:', response); // Log the response to console (for debugging)
+                    if (response && response.log) {
+                        $('#registerPatientAtSyntrilloFormTextarea').val(JSON.stringify(response.log)); // Update textarea with log message
+                    } else {
+                        $('#registerPatientAtSyntrilloFormTextarea').val('Error: Unexpected response format'); // Display error message
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#registerPatientAtSyntrilloFormTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#loadingTextGenerateForm').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            });
+        });
+    });
+</script>
 
 </body>
 </html>
