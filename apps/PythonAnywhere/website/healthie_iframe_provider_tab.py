@@ -61,29 +61,32 @@ def iframe_healthie_provider_tab():
         provider_id = "1033222" # "-1"
 
     patient_id = extract_user_id_from_url(data_get_request.get('referrer_url'))
-    if patient_id is None:
+    if patient_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
         # patient_id = '-1'
-        # patient_id = "1035117" # with onboarding forms
-        patient_id = "1209727" # with syntrillo_internal_key
+        patient_id = "1035117" # with onboarding forms
+        # patient_id = "1209727" # with syntrillo_internal_key
 
     # --------------------------------------------------------------------
     # Load environment variables from .env file
     dotenv_path = ".env"
 
-    if patient_id != '-1' and False:
-        # Fetch patient status using PatientOnboardingManager
-        onboarding_manager = PatientOnboardingManager(dotenv_path=dotenv_path)
-        patient_status = onboarding_manager.get_user_status(user_id=patient_id)
-        inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
+    # inits
+    patient_status = []
+    inconsistencies = []
+    pseudonyms = None
+
+    if patient_id != '-1' :
+        if False: # False to speed things up
+            # Fetch patient status using PatientOnboardingManager
+            onboarding_manager = PatientOnboardingManager(dotenv_path=dotenv_path)
+            patient_status = onboarding_manager.get_user_status(user_id=patient_id)
+            inconsistencies = onboarding_manager.get_inconsistencies(user_id=patient_id)
 
         # fetch patient pseudonyms : syntrillo_user_id and pseudo_code_for_tenovi_phi_access
         lookup_manager = LookUpCodesManagement()
         pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
+        patient_not_registered_at_syntrillo = ( pseudonyms is None )
 
-    else :
-        patient_status = []
-        inconsistencies = []
-        pseudonyms = None
 
     # --------------------------------------------------------------------
 
@@ -96,7 +99,8 @@ def iframe_healthie_provider_tab():
                            patient_id=patient_id,
                            patient_status=patient_status,
                            inconsistencies=inconsistencies,
-                           pseudonyms=pseudonyms
+                           pseudonyms=pseudonyms, # TODO : not to be returned in production
+                           patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
                            )
 
 
@@ -194,10 +198,6 @@ def tenovi_pair_devices_form():
     # Retrieve the JSON data from the POST request
     data_post_request = request.form.to_dict()
 
-    # Log the data to a local file
-    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
-        f.write(json.dumps(data_post_request) + '\n\n')
-
     patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
     provider_id = data_post_request.get('provider_id')
 
@@ -207,3 +207,30 @@ def tenovi_pair_devices_form():
 
     # TODO: have to return some logs listing the devices paired
     return 'hello', 200
+
+@healthie_iframe_provider_tab_bp.route('/register_patient_at_syntrillo_form', methods=['POST'])
+def register_patient_at_syntrillo_form():
+    """
+    This endpoint registers a patient at Syntrillo, and generate his syntrillo_internal_key.
+    """
+
+    # Retrieve the JSON data from the POST request
+    data_post_request = request.form.to_dict()
+
+    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
+    provider_id = data_post_request.get('provider_id')
+
+    # add a new entry in user_look_up_codes
+    lookup_code_management = LookUpCodesManagement()
+    entry_log = lookup_code_management.create_entry(healthy_user_id=patient_id)
+
+    if entry_log is not None:
+        log = { 'log' : {
+                    'message' : "Patient registered at Syntrillo - Reload the page to see the changes.",
+                    'entry_log' : entry_log # TODO : remove in production
+             } }
+    else:
+        log = { 'log' : { 'message' : "Error", 'entry_log' : entry_log } }
+
+    return jsonify( log ), 200
+
