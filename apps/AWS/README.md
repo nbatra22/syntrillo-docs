@@ -39,7 +39,7 @@ $> pip install -r requirements.txt --target .
 
 ```
 $> cd /path/to/your/lambda/layer
-$> mkdir python
+$> mkdir -p python/lib/python3.10/site-packages
 $> cd python
 $> pip install -r requirements.txt --target .
 ```

@@ -44,9 +44,50 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+class UploadQuestionnaireConstruct(Construct):
+    '''
+        This CDK Construct creates a questionnaire bucket and a lambda function 
+        that listens to the bucket.
+        When a questionnaire is uploaded to the bucket, the lambda function
+        will call the healthie platform to upload the file.
+    '''
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+
+        bucket = s3.Bucket(self, "QuestionnaireBucket",
+            bucket_name = "syntrillo-clinic-sandbox.questionnaire-bucket"
+        )
+
+        # Create the Lambda layer
+        pandas_layer = _lambda.LayerVersion(self, "QuestionnaireLayer",
+            code=_lambda.Code.from_asset("lambda-layers/pandas-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9]
+        )
+        
+        upload_questionnaire_function = _lambda.Function(self, "UploadQuestionnaireFunction",
+            function_name="UploadQuestionnaireFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset("lambda-functions/questionnaire-upload-function"),
+            timeout=Duration.seconds(10)
+        )
+
+        # Add the Lambda layer to the Lambda function
+        upload_questionnaire_function.add_layers(pandas_layer)
+        
+        # Grant the lambda function read and write access to the bucket
+        bucket.grant_read_write(upload_questionnaire_function)
+
+        # Add a lambda event trigger to the bucket
+        bucket.add_event_notification(s3.EventType.OBJECT_CREATED,
+            s3_notifications.LambdaDestination(upload_questionnaire_function)
+        )
+
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct")
+
+        UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")

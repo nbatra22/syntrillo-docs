@@ -179,6 +179,7 @@ class HealthieForm():
 
     def push_to_healthie_platform(self):
         # TO implement
+        print('push_to_healthie_platform => This method is not implemented yet')
         pass
 
 # ----------------------------------------------------------------------------------------------------------------
