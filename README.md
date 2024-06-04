@@ -1,4 +1,4 @@
-# SyntrilloClinic Development Repository
+# Syntrillo Clinic Repository
 
 `SyntrilloClinic` repository hosted by Syntrillo : https://github.com/Syntrillo/SyntrilloClinic
 
@@ -45,7 +45,7 @@ SyntrilloClinic
     - **`databases_management/`**: Connection to and setting-up of Syntrillo databases.
     - **`patient_initialization/`**: Initialization procedures for patients at Healthie and Tenovi.
     - **`patient_onboarding/`**: Management of patients onboarding procedures at Healthie.
-    - **`pseudonyms_management/`**: Creation and pairing of look-up codes (identifiers, keys, pseudonyms).
+    - **`pseudonyms_management/`**: HIPAA compliant creation, pairing and management of look-up codes (identifiers, keys, pseudonyms). [See its README.md](./sources/pseudonyms_management/README.md)
     - **`virtual_care_navigator/`**: Interface with LLM.
 
 - **`tests/`**: Contains test cases and unittests for various modules and environments.
