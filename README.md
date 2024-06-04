@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-This repository contains the Syntrillo Clinic platform, designed to handle multiple applications with shared modules and configurations. The structure ensures modularity, clarity, and ease of development for various environments, including AWS and PythonAnywhere.
+This repository contains the Syntrillo Clinic platform, designed to handle multiple applications with shared modules and configurations.
 
 ## Directory Structure
 
@@ -17,30 +17,17 @@ SyntrilloClinic
 |       `-- website
 |-- sources
 |   `-- syntrillo
-|       |-- data
-|       |-- databases
-|       `-- healthie
-`-- tests
-    |-- databases
-    `-- healthie
-
+|       |-- api_healthie
+|       |-- api_tenovi
+|       |-- data_structures
+|       |-- databases_management
+|       |-- patient_initialization
+|       |-- patient_onboarding
+|       |-- pseudonyms_management
+|       `-- virtual_care_navigator
+|-- tests
+`-- system
 ```
-
-Sources structure to consider
-```
-- databases_management
-- healthie_api
-- tenovi_api
-- llm_api
-
-- pseudo_code_manager
-- accounts_pairing
-- onboarding_manager
-- virtual_care_navigator
-
-```
-
-
 
 ### Directory Descriptions
 
@@ -52,40 +39,32 @@ Sources structure to consider
 
 - **`sources/`**: Contains shared packages, modules and utilities:
   - **`syntrillo/`**: Core functionality and data handling.
-    - **`data/`**: Data structures and storage management.
-    - **`databases/`**: Database connection and management modules.
-    - **`healthie/`**: Healthie integration and related utilities.
+    - **`api_healthie/`**: Commnucation with Healthie API.
+    - **`api_tenovi/`**:  Communication with Tenovi API.
+    - **`data_structures/`**: Storage and management of questionnaires.
+    - **`databases_management/`**: Connection to and setting-up of Syntrillo databases.
+    - **`patient_initialization/`**: Initialization procedures for patients at Healthie and Tenovi.
+    - **`patient_onboarding/`**: Management of patients onboarding procedures at Healthie.
+    - **`pseudonyms_management/`**: Creation and pairing of look-up codes (identifiers, keys, pseudonyms).
+    - **`virtual_care_navigator/`**: Interface with LLM.
 
-- **`tests/`**: Contains test cases for various modules and environments:
-  - **`databases/`**: Tests for database connections.
-  - **`healthie/`**: Tests for Healthie integration, separated by production and staging environments.
+- **`tests/`**: Contains test cases and unittests for various modules and environments.
+
+- **`system/`**: Various scripts to manage the code. [system README.md](./system/README.md)
 
 - **Configuration and Dependencies**:
-  - **`env_template.ini`**: Template for environment-specific variables.
-  - **`environment.yml`**: Conda environment configuration.
+  - **`env_template.ini`**: Template for environment-specific variables `env.ini` file.
   - **`requirements.txt`**: Python dependencies.
 
 ### Usage
 
-1. **Setup Environment**:
-   - Copy `env_template.ini` to `.env` and fill in the required environment variables.
-   - Create and activate the Conda environment using `environment.yml`.
-
-2. **Run Applications**:
-   - Navigate to the desired environment directory under `apps/` and follow the instructions in the respective `README.md` files.
-
-3. **Run Tests**:
-   - Use the `tests/` directory to run unit tests and integration tests for the various modules and applications.
-
-This structure ensures modularity and clear separation of concerns, making it easier to manage and develop the Syntrillo Clinic platform.
-
-
-## Installation of python packages
-
+1. **Install python dependencies**:
+   - Create and activate a virtual python environment. It has been tested with python3.9
+   - Install packages listed in `requirements.txt` with 'pip'
 
 ```
-# Navigate to the project env directory
-cd /path/to/project_env
+# Navigate to your python environments
+cd /path/to/python_environments/
 
 # Create a new virtual environment
 python3.9 -m venv new_env
@@ -94,24 +73,23 @@ python3.9 -m venv new_env
 source new_env/bin/activate
 
 # Install dependencies from requirements.txt
+cd /path/to/SyntrilloClinicRootFolder/
 pip install -r requirements.txt
 ```
 
-## Installation on PythonAnywhere
+2. **Setup Environment**:
+   - Copy `env_template.ini` to `.env` and fill in the required environment variables.
 
-```
-   - making use of python 3.9 everywhere : set-up in System Image
-   - need to 'pip3.9 install statsmodels markdown2' in the console.
-      :Make sure to use the right python version !!!
-      : see : https://help.pythonanywhere.com/pages/InstallingNewModules/
-```
+3. **Run Applications**:
+   - Navigate to the desired environment directory under `apps/` and follow the instructions in the respective `README.md` files:
+       - [AWS Application Documentation README.md](./apps/AWS/README.md)
+       - [PythonAnywhere Application Documentation README.md](./apps/PythonAnywhere/README.md)
 
-## Run and debug Flask app locally
+4. **Run Tests**:
+  - Use the `tests/` directory to run unit tests and integration tests for the various modules and applications.
 
-```
-  : in VSCode terminal : flask --app ./flask_app.py run
 
-  : run > Start Debugging  (using .vscode/launch.json ) see : https://code.visualstudio.com/docs/python/tutorial-flask
-```
+
+
 
 
