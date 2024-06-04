@@ -1,4 +1,6 @@
 
+# !!! WORK IN PROGRESS !!!
+
 # Prequisites
 
 If you do a first cdk deployment in an enviroment you must boostap the environement 
@@ -6,7 +8,7 @@ If you do a first cdk deployment in an enviroment you must boostap the environem
 $> cdk bootstrap aws://[ACCOUNT_NUMBER]/us-east-1
 ```
 
-If you want to test lambdas and apis locally, you should install sam (IF NOT INSTALLED YET)
+If you want to test lambdas and apis locally, you should install AWS SAM (IF NOT INSTALLED YET)
 
 source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
 
@@ -18,6 +20,13 @@ $> sudo ./sam-installation/install
 $> sam --version # To test it worked
 $> rm -r aws-sam-cli-linux-x86_64.zip sam-installation/ # To clean your folder
 ```
+
+# How to deploy the CDK app
+
+```
+$> cdk deploy
+```
+
 
 # How to install lambda code dependencies at the lambda root
 
