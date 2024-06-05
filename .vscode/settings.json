@@ -1,9 +1,0 @@
-{
-    "python.defaultInterpreterPath": "/home/olivier/projects/Syntrillo/python_environments/p3.9_Syntrillo_Clinic/bin/python3.9",
-    "python.analysis.extraPaths": [
-        "./sources/"
-    ],
-    "python.autoComplete.extraPaths": [
-        "./sources/"
-    ]
-}
