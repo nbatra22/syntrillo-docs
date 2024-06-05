@@ -1,0 +1,3 @@
+# !! THESE DEPENDENCIES SHOULD BE IN A LAMBDA LAYER
+pandas
+openpyxl
