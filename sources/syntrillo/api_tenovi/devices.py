@@ -106,9 +106,21 @@ class Devices:
 
         See https://api2.tenovi.com/hwi-redoc/#operation/hwi-devices_partial_update
         """
+
+        # get additional device data
+        this_device = self.get_devices(hwi_device_id)
+
         url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/"
         payload = {
             "patient_id": patient_id,
+            "device" : {
+                "name": this_device['device']['name'],
+                "hardware_uuid": this_device['device']['hardware_uuid'],
+            },
+            "patient" : {
+                "external_id": patient_id,
+                "name": this_device['patient']['name'], # to left it unchanged
+            },
         }
         return self.auth.make_patch_request(url, payload)
 
@@ -117,13 +129,37 @@ class Devices:
 if __name__ == "__main__":
     devices_module = Devices()
 
-    # Get and print all devices or a specific device
-    devices = devices_module.get_devices()
-    if devices:
-        print("Devices:")
-        devices_module.auth.print_pretty_json(devices)
-    else:
-        print("Devices: None found.")
+    if False:
+        # Get and print all devices or a specific device
+        devices = devices_module.get_devices()
+        if devices:
+            print("Devices:")
+            devices_module.auth.print_pretty_json(devices)
+        else:
+            print("Devices: None found.")
+
+    if True:
+        hwi_device_id = '83ca5817-0bb2-4d9c-b131-16eb353ad587'
+
+        # devices_module.update_device_patient_id(hwi_device_id, "AnExternalID")
+
+        this_device = devices_module.get_devices(hwi_device_id)
+        devices_module.auth.print_pretty_json(this_device)
+
+        url = f"https://api2.tenovi.com/clients/syntrillo/hwi/hwi-devices/{hwi_device_id}/"
+        payload = {
+            "patient_id": "test123",
+            "device" : {
+                "name": this_device['device']['name'],
+                "hardware_uuid": this_device['device']['hardware_uuid'],
+            },
+            "patient" : {
+                "external_id": "test456",
+                "name": "test789", # this_device['patient']['name'],
+            },
+        }
+        devices_module.auth.print_pretty_json(payload)
+        devices_module.auth.make_patch_request(url, payload)
 
     if False:
         # Example HWI device ID, replace with a real ID if needed

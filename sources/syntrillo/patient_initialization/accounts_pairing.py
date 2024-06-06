@@ -26,11 +26,12 @@ class AccountsPairing:
     - using the Tenovi api, look for devices where PatientID is equal to the temporary pseudo code, and set-up a key/value parameter pair with the permanent pseudo_code_for_tenovi_phi_access
     """
 
-    def __init__(self, syntrillo_internal_key:str):
+    def __init__(self, syntrillo_internal_key:str, verbose=False):
         self.syntrillo_internal_key = syntrillo_internal_key
         self.lookup_codes_management = LookUpCodesManagement()
         self.temporary_lookup_codes_management = TemporaryLookUpCodesManagement()
         self.devices = Devices()
+        self.verbose = verbose
 
     def create_and_return_unique_temporary_pseudo_code(self):
         """
@@ -45,7 +46,11 @@ class AccountsPairing:
             )
         return temporary_pseudo_code
 
-    def pair_devices_using_temporary_pseudo_code(self):
+    def pair_devices_using_temporary_pseudo_code(
+        self,
+        update_patient_id_with_healthie_user_id=True,
+        add_healthie_user_id_to_device_properties=True,
+        ):
         """
         Use the Tenovi API to
         - find devices where PatientID (aka patient_external_id) matches the temporary pseudo code entered by the study coordinator in the Tenovi dashboard.
@@ -64,13 +69,26 @@ class AccountsPairing:
         entry_by_internal_key = self.lookup_codes_management.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
         pseudo_code_for_tenovi_phi_access = entry_by_internal_key['pseudo_code_for_tenovi_phi_access']
 
+        if self.verbose:
+            print(f"temporary_pseudo_code: {temporary_pseudo_code}")
+            print(f"pseudo_code_for_tenovi_phi_access: {pseudo_code_for_tenovi_phi_access}")
+
         # loop for devices where PatientID is equal to the temporary code
         matching_devices = self.devices.get_devices_by_patient_external_id(temporary_pseudo_code)
         for device in matching_devices:
             # create a key/value parameter pair with the pseudo_code_for_tenovi_phi_access
             device_id = device.get('id')
             device_properties = DeviceProperties()
+
             device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
+
+            if add_healthie_user_id_to_device_properties:
+                device_properties.create__healthie_user_id__property(device_id, entry_by_internal_key.get('healthy_user_id'))
+            if update_patient_id_with_healthie_user_id:
+                self.devices.update_device_patient_id(device_id, entry_by_internal_key.get('healthy_user_id'))
+
+            if self.verbose:
+                print(f"Device {device_id} updated with pseudo_code_for_tenovi_phi_access")
 
         # remove the temporary_pseudo_code from the database
         self.temporary_lookup_codes_management.remove_all_temporary_codes_for_syntrillo_internal_key(
@@ -85,4 +103,56 @@ class AccountsPairing:
 
 # Example usage:
 if __name__ == "__main__":
-    pass
+
+    import random
+    import sys
+    from datetime import datetime
+
+    # -----
+    # Generate a new dummy healthy_user_id and create an entry in the user_look_up_codes table
+
+    # Generate a random number and a date stamp
+    random_number = random.randint(1000, 9999)
+    date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    healthy_user_id = f"test_{random_number}_{date_stamp}"
+
+    # Initialize LookUpCodesManagement instance
+    lookup_manager = LookUpCodesManagement(verbose=True)
+
+    # Test create_entry method
+    print(f"Creating entry for healthy_user_id: {healthy_user_id}")
+    create_result = lookup_manager.create_entry(healthy_user_id)
+    print(f"Create entry result: {create_result}")
+
+    # Test retrieve_entry_by_healthy_user_id method
+    if create_result is None:
+        print("Failed to create entry")
+        lookup_manager.close_connection()
+        sys.exit(1)
+
+    print(f"Retrieving entry for healthy_user_id: {healthy_user_id}")
+    retrieve_result = lookup_manager.retrieve_entry_by_healthy_user_id(healthy_user_id)
+    print(f"Retrieve entry result: {retrieve_result}")
+
+    # Close the database connection
+    lookup_manager.close_connection()
+
+    # ---------------
+    # Create a new AccountsPairing instance and generate a temporary pseudo code
+    pair = AccountsPairing(retrieve_result.get('syntrillo_internal_key'), verbose=True)
+    temporary_pseudo_code = pair.create_and_return_unique_temporary_pseudo_code()
+    print(f"Temporary pseudo code generated: {temporary_pseudo_code}")
+
+    # ---------------
+    # Pair devices using the temporary pseudo code
+    print("Please go to the Tenovi dashboard and enter the temporary code in the patient_id field.")
+    confirmation = input("Once you have entered the code, please press enter to continue: ")
+    if confirmation is not None:
+        log = pair.pair_devices_using_temporary_pseudo_code()
+        print("Devices paired successfully.")
+        print(log)
+    else:
+        print("Pairing process cancelled.")
+
+
+

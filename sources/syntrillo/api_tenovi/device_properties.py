@@ -49,6 +49,17 @@ class DeviceProperties:
         }
         return self.create_device_property(hwi_device_id, payload)
 
+    def create__healthie_user_id__property(self, hwi_device_id : str, healthie_user_id : str):
+        """
+        Creates a new HWI Device Property with the key 'healthie_user_id' and the given healthie_user_id value.
+        """
+        payload = {
+            "key": "healthie_user_id",
+            "value": healthie_user_id,
+            "synced": False
+        }
+        return self.create_device_property(hwi_device_id, payload)
+
 # Example usage:
 if __name__ == "__main__":
     device_properties_module = DeviceProperties()
