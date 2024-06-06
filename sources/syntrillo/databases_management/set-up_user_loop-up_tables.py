@@ -1,7 +1,7 @@
 # Path: ./sources/syntrillo/databases_management/set-up_user_loop-up_tables.py
 
 import MySQLdb
-from syntrillo.databases_management.connection import create_connection
+from syntrillo.databases_management.connection import DatabaseConnection
 
 class UserLookupTablesManager:
     """
@@ -17,7 +17,8 @@ class UserLookupTablesManager:
         if __name__ != "__main__":
             raise RuntimeError("UserLookupTablesManager class can only be instantiated interactively.")
 
-        self.conn, self.tunnel = create_connection(verbose=True)
+        db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
+        self.conn, self.tunnel = db_conn.create_connection(verbose=True)
         if not self.conn:
             raise ConnectionError("Failed to connect to the database.")
         self.cursor = self.conn.cursor()

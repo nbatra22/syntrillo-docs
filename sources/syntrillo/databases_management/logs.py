@@ -1,7 +1,7 @@
 # Path: ./sources/syntrillo/databases_management/logs.py
 
 import MySQLdb
-from syntrillo.databases_management.connection import create_connection
+from syntrillo.databases_management.connection import DatabaseConnection
 import json
 
 def add_log_entry(event, json_data, comment):
@@ -13,7 +13,8 @@ def add_log_entry(event, json_data, comment):
         json_data (dict): Additional data associated with the event in dictionary format.
         comment (str): Any additional comments about the log entry.
     """
-    conn, tunnel = create_connection(verbose=True)
+    db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
+    conn, tunnel = db_conn.create_connection(verbose=True)
     if not conn:
         raise ConnectionError("Failed to connect to the database.")
 

@@ -2,12 +2,12 @@
 
 import uuid
 import MySQLdb
-from syntrillo.databases_management.connection import create_connection
+from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
 
 class LookUpCodesManagement:
     """
-    A class to manage look-up codes in the Syntrillo database.
+    A class to manage look-up codes in the Syntrillo Pseudonym Management database.
 
     This class provides methods to create, retrieve, and manage entries in the
     user_look_up_codes table. Each entry links a healthy user ID to a syntrillo
@@ -49,17 +49,24 @@ class LookUpCodesManagement:
         :param verbose: If True, enables verbose mode for detailed logging and connection info.
         """
 
-        self.conn, self.tunnel = create_connection(verbose=verbose)
+        self.db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
+        self.conn, self.tunnel = self.db_conn.create_connection(verbose=verbose)
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
     def __del__(self):
-        self.cursor.close()
-        self.conn.close()
-        if self.tunnel:
-            self.tunnel.stop()
-        if self.verbose:
-            print("Database connection closed.")
+        try:
+            self.cursor.close()
+            if self.conn:
+                self.conn.close()
+                if self.tunnel:
+                    self.tunnel.stop()
+                if self.verbose:
+                    print("Database connection closed.")
+        except MySQLdb.OperationalError as e:
+            print(f"OperationalError during connection close: {e}")
+        except Exception as e:
+            print(f"Unexpected error during connection close: {e}")
 
 
     def create_entry(self, healthy_user_id):
@@ -197,3 +204,31 @@ class LookUpCodesManagement:
             self.conn.close()
             self.tunnel.stop() if self.tunnel else None
             print("Database connection closed.")
+
+
+if __name__ == "__main__":
+    import random
+    from datetime import datetime
+
+    # Generate a random number and a date stamp
+    random_number = random.randint(1000, 9999)
+    date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    healthy_user_id = f"testing_{random_number}_{date_stamp}"
+
+    # Initialize LookUpCodesManagement instance
+    lookup_manager = LookUpCodesManagement(verbose=True)
+
+    # Test create_entry method
+    print(f"Creating entry for healthy_user_id: {healthy_user_id}")
+    create_result = lookup_manager.create_entry(healthy_user_id)
+    print(f"Create entry result: {create_result}")
+
+    # Test retrieve_entry_by_healthy_user_id method
+    if create_result:
+        print(f"Retrieving entry for healthy_user_id: {healthy_user_id}")
+        retrieve_result = lookup_manager.retrieve_entry_by_healthy_user_id(healthy_user_id)
+        print(f"Retrieve entry result: {retrieve_result}")
+
+    # Close the database connection
+    lookup_manager.close_connection()
+

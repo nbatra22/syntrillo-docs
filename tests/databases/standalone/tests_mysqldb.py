@@ -25,7 +25,7 @@ PA_DB_CONFIG = {
     'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
     'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
     'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
-    'database': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_DATABASE'),
+    'database': 'syntrillo$PseudonymManagement',
 }
 
 PA_SSH_TUNNEL = {

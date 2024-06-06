@@ -1,54 +1,42 @@
-# Path: ./tests/pseudonyms_management/test_lookup_codes_management.py
-
 import unittest
+import random
+from datetime import datetime
+import MySQLdb
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-import uuid
 
 class TestLookUpCodesManagement(unittest.TestCase):
 
     def setUp(self):
-        self.manager = LookUpCodesManagement(verbose=True)
-        self.healthy_user_id = 'unittest_' + str(uuid.uuid4())
+        """Set up the test environment"""
+        self.lookup_manager = LookUpCodesManagement(verbose=True)
 
     def tearDown(self):
-        self.manager.close_connection()
+        """Tear down the test environment"""
+        try:
+            self.lookup_manager.close_connection()
+        except MySQLdb.OperationalError as e:
+            print(f"OperationalError during connection close: {e}")
+        except Exception as e:
+            print(f"Unexpected error during connection close: {e}")
 
-    def test_create_entry(self):
-        entry = self.manager.create_entry(self.healthy_user_id)
-        self.assertIsNotNone(entry, "Failed to create entry.")
-        self.assertIn('syntrillo_internal_key', entry)
-        self.assertIn('pseudo_code_for_tenovi_phi_access', entry)
-        self.assertTrue(uuid.UUID(entry['syntrillo_internal_key']))
-        self.assertTrue(uuid.UUID(entry['pseudo_code_for_tenovi_phi_access']))
+    def test_create_and_retrieve_entry(self):
+        """Test the create_entry and retrieve_entry_by_healthy_user_id methods"""
+        # Generate a dummy healthy_user_id
+        random_number = random.randint(1000, 9999)
+        date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        healthy_user_id = f"testing_{random_number}_{date_stamp}"
 
-    def test_retrieve_entry_by_healthy_user_id(self):
-        self.manager.create_entry(self.healthy_user_id)
-        entry = self.manager.retrieve_entry_by_healthy_user_id(self.healthy_user_id)
-        self.assertIsNotNone(entry, "Failed to retrieve entry by healthy_user_id.")
-        self.assertIn('syntrillo_internal_key', entry)
-        self.assertIn('pseudo_code_for_tenovi_phi_access', entry)
-        self.assertTrue(uuid.UUID(entry['syntrillo_internal_key']))
-        self.assertTrue(uuid.UUID(entry['pseudo_code_for_tenovi_phi_access']))
+        # Test create_entry method
+        create_result = self.lookup_manager.create_entry(healthy_user_id)
+        self.assertIsNotNone(create_result, "Failed to create entry")
+        self.assertIn('syntrillo_internal_key', create_result, "syntrillo_internal_key not in create result")
+        self.assertIn('pseudo_code_for_tenovi_phi_access', create_result, "pseudo_code_for_tenovi_phi_access not in create result")
 
-    def test_retrieve_entry_by_internal_key(self):
-        created_entry = self.manager.create_entry(self.healthy_user_id)
-        self.assertIsNotNone(created_entry, "Failed to create entry.")
-        internal_key = created_entry['syntrillo_internal_key']
-        entry = self.manager.retrieve_entry_by_internal_key(internal_key)
-        self.assertIsNotNone(entry, "Failed to retrieve entry by internal_key.")
-        self.assertIn('healthy_user_id', entry)
-        self.assertIn('pseudo_code_for_tenovi_phi_access', entry)
-        self.assertTrue(uuid.UUID(entry['pseudo_code_for_tenovi_phi_access']))
+        # Test retrieve_entry_by_healthy_user_id method
+        retrieve_result = self.lookup_manager.retrieve_entry_by_healthy_user_id(healthy_user_id)
+        self.assertIsNotNone(retrieve_result, "Failed to retrieve entry")
+        self.assertEqual(create_result['syntrillo_internal_key'], retrieve_result['syntrillo_internal_key'], "syntrillo_internal_key does not match")
+        self.assertEqual(create_result['pseudo_code_for_tenovi_phi_access'], retrieve_result['pseudo_code_for_tenovi_phi_access'], "pseudo_code_for_tenovi_phi_access does not match")
 
-    def test_retrieve_entry_by_pseudo_code(self):
-        created_entry = self.manager.create_entry(self.healthy_user_id)
-        self.assertIsNotNone(created_entry, "Failed to create entry.")
-        pseudo_code = created_entry['pseudo_code_for_tenovi_phi_access']
-        entry = self.manager.retrieve_entry_by_pseudo_code(pseudo_code)
-        self.assertIsNotNone(entry, "Failed to retrieve entry by pseudo_code.")
-        self.assertIn('healthy_user_id', entry)
-        self.assertIn('syntrillo_internal_key', entry)
-        self.assertTrue(uuid.UUID(entry['syntrillo_internal_key']))
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

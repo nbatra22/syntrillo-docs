@@ -2,13 +2,12 @@
 
 import uuid
 import random
-import MySQLdb
-from syntrillo.databases_management.connection import create_connection
+from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
 
 class TemporaryLookUpCodesManagement:
     """
-    A class to manage temporary look-up codes in the Syntrillo database.
+    A class to manage temporary look-up codes in the Syntrillo Pseudonym Management database.
 
     Can create, retrieve, and manage entries in the user_look_up_temporary_codes table.
 
@@ -32,7 +31,8 @@ class TemporaryLookUpCodesManagement:
         """
         Initializes the TemporaryLookUpCodesManagement class, setting up the database connection and cursor.
         """
-        self.conn, self.tunnel = create_connection(verbose=verbose)
+        self.db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
+        self.conn, self.tunnel = self.db_conn.create_connection(verbose=verbose)
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
