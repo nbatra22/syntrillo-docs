@@ -17,7 +17,7 @@ LOCAL_PORT=${LOCAL_PORT:-3366}
 
 echo
 echo "If tunnel successful, in a new terminal, connect with:"
-echo "   mysql -h 127.0.0.1 --port ${LOCAL_PORT} -u syntrillo --password='xxxxxxxxxxx'"
+echo "   mysql -h 127.0.0.1 --port ${LOCAL_PORT} -u syntrillo --password='${PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD}' 'syntrillo\$PseudonymManagement'"
 echo
 
 sshpass -p "${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD}" \
