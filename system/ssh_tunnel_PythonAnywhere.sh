@@ -12,8 +12,16 @@ source ../.env
 # echo ${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME}
 # echo ${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD}
 
+read -p "Enter the LOCAL_PORT (default: 3366): " LOCAL_PORT
+LOCAL_PORT=${LOCAL_PORT:-3366}
+
+echo
+echo "If tunnel successful, in a new terminal, connect with:"
+echo "   mysql -h 127.0.0.1 --port ${LOCAL_PORT} -u syntrillo --password='xxxxxxxxxxx'"
+echo
+
 sshpass -p "${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD}" \
-   ssh -N -L 3366:syntrillo.mysql.pythonanywhere-services.com:3306 ${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME}@ssh.pythonanywhere.com
+   ssh -o TCPKeepAlive=no -o ServerAliveInterval=15 -N -L ${LOCAL_PORT}:syntrillo.mysql.pythonanywhere-services.com:3306 ${PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME}@ssh.pythonanywhere.com
 
 
 # VSCode SQLtool JSON connection string
