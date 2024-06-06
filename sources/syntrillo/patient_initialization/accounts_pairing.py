@@ -1,5 +1,7 @@
 # Path: ./sources/syntrillo/patient_initialization/accounts_pairing.py
 
+from pprint import pprint  # Import pprint for pretty printing
+
 from syntrillo.api_tenovi.device_properties import DeviceProperties
 from syntrillo.api_tenovi.devices import Devices
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -27,6 +29,13 @@ class AccountsPairing:
     """
 
     def __init__(self, syntrillo_internal_key:str, verbose=False):
+        """
+        Initialize the AccountsPairing instance.
+
+        Args:
+            syntrillo_internal_key (str): The internal key for the patient's Syntrillo account.
+            verbose (bool): If True, enable verbose logging. Default is False.
+        """
         self.syntrillo_internal_key = syntrillo_internal_key
         self.lookup_codes_management = LookUpCodesManagement()
         self.temporary_lookup_codes_management = TemporaryLookUpCodesManagement()
@@ -51,15 +60,20 @@ class AccountsPairing:
         update_patient_id_with_healthie_user_id=True,
         add_healthie_user_id_to_device_properties=True,
         ):
-        """
-        Use the Tenovi API to
-        - find devices where PatientID (aka patient_external_id) matches the temporary pseudo code entered by the study coordinator in the Tenovi dashboard.
+        """ Use the Tenovi API to:
+        - Find devices where PatientID (aka patient_external_id) matches the temporary pseudo code entered by the study coordinator in the Tenovi dashboard.
+        - For each device, set up a key/value parameter pair with the pseudo_code_for_tenovi_phi_access.
+        - Replace the patient_external_id with the healthy_user_id.
 
-        then, for each device:
-        - set up a key/value parameter pair with the pseudo_code_for_tenovi_phi_access.
-        - replace the patient_external_id with the healthy_user_id
+        Args:
+            update_patient_id_with_healthie_user_id (bool): If True, update the device's patient ID with the healthy_user_id. Default is True.
+            add_healthie_user_id_to_device_properties (bool): If True, add the healthy_user_id to the device's properties. Default is True.
 
+        Returns:
+            dict: A log dictionary containing method name, paired devices count, paired devices list, removal log, and success status.
         """
+
+        method_name = self.pair_devices_using_temporary_pseudo_code.__name__
 
         # get temporary_pseudo_code for this patient syntrillo_internal_key
         #  : generate some error and log is the temporary_pseudo_code is not found
@@ -74,30 +88,44 @@ class AccountsPairing:
             print(f"pseudo_code_for_tenovi_phi_access: {pseudo_code_for_tenovi_phi_access}")
 
         # loop for devices where PatientID is equal to the temporary code
+        paired_devices = []
         matching_devices = self.devices.get_devices_by_patient_external_id(temporary_pseudo_code)
         for device in matching_devices:
             # create a key/value parameter pair with the pseudo_code_for_tenovi_phi_access
             device_id = device.get('id')
+            device_name = device.get('device').get('name')
             device_properties = DeviceProperties()
 
             device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
 
             if add_healthie_user_id_to_device_properties:
                 device_properties.create__healthie_user_id__property(device_id, entry_by_internal_key.get('healthy_user_id'))
+
             if update_patient_id_with_healthie_user_id:
                 self.devices.update_device_patient_id(device_id, entry_by_internal_key.get('healthy_user_id'))
 
             if self.verbose:
-                print(f"Device {device_id} updated with pseudo_code_for_tenovi_phi_access")
+                print(f"Device {device_id} {device_name} updated with pseudo_code_for_tenovi_phi_access")
+
+            paired_devices.append( {
+                'device_name' : device_name,
+                'device_id' : device_id,
+            } )
 
         # remove the temporary_pseudo_code from the database
-        self.temporary_lookup_codes_management.remove_all_temporary_codes_for_syntrillo_internal_key(
+        removal_log = self.temporary_lookup_codes_management.remove_all_temporary_codes_for_syntrillo_internal_key(
             syntrillo_internal_key=self.syntrillo_internal_key,
             purpose=TemporaryLookUpCodesManagement.PURPOSE_TENOVI_PAIRING
             )
 
-        # TODO: need to return some log information with the number and types of devices paired
-        return 'some log'
+        log = {
+            "method": method_name,
+            "paired_devices_count": len(paired_devices),
+            "paired_devices": paired_devices,
+            "removal_log": removal_log,
+            "success": len(paired_devices) > 0
+        }
+        return log
 
 
 
@@ -150,7 +178,7 @@ if __name__ == "__main__":
     if confirmation is not None:
         log = pair.pair_devices_using_temporary_pseudo_code()
         print("Devices paired successfully.")
-        print(log)
+        pprint(log)
     else:
         print("Pairing process cancelled.")
 

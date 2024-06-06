@@ -70,20 +70,47 @@ class TemporaryLookUpCodesManagement:
                  ]
         return random.choice(words).capitalize() + random.choice(words).capitalize()
 
-    def remove_all_temporary_codes_for_syntrillo_internal_key(self, syntrillo_internal_key: str, purpose: str):
+    def remove_all_temporary_codes_for_syntrillo_internal_key(self, syntrillo_internal_key: str, purpose: str) -> dict:
         """
+        Removes all temporary codes for a given syntrillo_internal_key and purpose from the user_look_up_temporary_codes table.
 
+        Args:
+            syntrillo_internal_key (str): The internal key used in Syntrillo.
+            purpose (str): The purpose for which the temporary codes were created.
+
+        Returns:
+            dict: A dictionary with the success status, the number of records deleted, and the method name.
         """
         query = """
             DELETE FROM user_look_up_temporary_codes
             WHERE syntrillo_internal_key = UUID_TO_BIN(%s) AND purpose = %s
         """
-        self.cursor.execute(query, (syntrillo_internal_key, purpose))
-        self.conn.commit()
+        method_name = self.remove_all_temporary_codes_for_syntrillo_internal_key.__name__
 
-        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement",
-                      f"Deleted all entries for syntrillo internal key: {syntrillo_internal_key} with purpose: {purpose}"
-                      )
+        try:
+            self.cursor.execute(query, (syntrillo_internal_key, purpose))
+            deleted_records = self.cursor.rowcount
+            self.conn.commit()
+
+            add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Deleted all entries for syntrillo internal key: {syntrillo_internal_key} with purpose: {purpose}",
+                        )
+
+            return {
+                "method": method_name,
+                "success": True,
+                "deleted_records": deleted_records
+            }
+        except Exception as e:
+            self.conn.rollback()
+            add_log_entry(self.cursor, "TemporaryLookUpCodesManagement_Error",
+                          f"Failed to delete entries for syntrillo internal key: {syntrillo_internal_key} with purpose: {purpose}. Error: {str(e)}",
+                        )
+            return {
+                "method": method_name,
+                "success": False,
+                "error": str(e),
+                "deleted_records": 0
+            }
 
 
     def create_temporary_pseudo_code(self, syntrillo_internal_key: str, purpose: str):
