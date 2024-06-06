@@ -7,18 +7,31 @@ from dotenv import load_dotenv
 
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
-# if mysql-connector-python :
-#   conda install -c conda-forge mysql-connector-python
-#   print("mysql.connector.__version__ : ", mysql.connector.__version__) # verify installation and version
-# import mysql-connector : !!! does not work with mysql-connector!!!
 import MySQLdb
 import sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel
 
 sshtunnel.SSH_TIMEOUT = 60.0
 sshtunnel.TUNNEL_TIMEOUT = 60.0
 
-
 class DatabaseConnection:
+    """
+    A class to manage connections to different databases in the Syntrillo system.
+
+    The Syntrillo system utilizes multiple databases for various purposes, including pseudonym management and health information storage. These databases play a crucial role in ensuring compliance with HIPAA regulations by pseudonymizing and securely storing sensitive patient data.
+
+    The objectives of each database in the context of HIPAA regulations are as follows, these are not implemented in the PythonAnywhere version of the code:
+
+    PSEUDONYM_DB (syntrillo$PseudonymManagement):
+    - Store pseudonymized user data to maintain compliance with HIPAA safe harbor regulations.
+    - Generate and manage internal identifiers linking records across platforms to facilitate re-identification when necessary.
+    - Ensure that pseudonyms and codes are generated programmatically via secure API calls, triggered automatically by specific events, to prevent unauthorized access.
+    - Implement strict access controls to restrict access to the lookup table containing re-identification codes, allowing only authorized personnel to access the data.
+
+    HEALTH_INFO_DB (syntrillo$HealthInformation):
+    - Store health information data securely while maintaining the privacy of participants.
+    - Utilize robust encryption methods for data at rest and in transit to safeguard patient data.
+    - Ensure that only authorized personnel have access to sensitive health information stored in the database.
+    """
     PSEUDONYM_DB = 'syntrillo$PseudonymManagement'
     HEALTH_INFO_DB = 'syntrillo$HealthInformation'
 
