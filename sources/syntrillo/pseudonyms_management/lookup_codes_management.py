@@ -213,7 +213,7 @@ if __name__ == "__main__":
     # Generate a random number and a date stamp
     random_number = random.randint(1000, 9999)
     date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    healthy_user_id = f"testing_{random_number}_{date_stamp}"
+    healthy_user_id = f"test_{random_number}_{date_stamp}"
 
     # Initialize LookUpCodesManagement instance
     lookup_manager = LookUpCodesManagement(verbose=True)

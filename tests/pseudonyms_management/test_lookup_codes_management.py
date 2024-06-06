@@ -24,7 +24,7 @@ class TestLookUpCodesManagement(unittest.TestCase):
         # Generate a dummy healthy_user_id
         random_number = random.randint(1000, 9999)
         date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        healthy_user_id = f"testing_{random_number}_{date_stamp}"
+        healthy_user_id = f"unittest_{random_number}_{date_stamp}"
 
         # Test create_entry method
         create_result = self.lookup_manager.create_entry(healthy_user_id)
