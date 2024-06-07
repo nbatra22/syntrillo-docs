@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/databases_management/set_up_health_information_tables.py
 import MySQLdb
 from syntrillo.databases_management.connection import DatabaseConnection
 
