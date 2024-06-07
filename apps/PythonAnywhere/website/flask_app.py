@@ -40,6 +40,22 @@ app.register_blueprint(tests_ui_index_bp)
 app.register_blueprint(tests_ui_tab1_bp)
 app.register_blueprint(tests_ui_tab2_bp)
 
+# ----------- test healthie routes ---------------------
+from healthie.iframe_provider_tab.index import iframe_healthie_provider_tab_index_bp
+from healthie.iframe_provider_tab.status import iframe_healthie_provider_tab_status_bp
+from healthie.iframe_provider_tab.devices import iframe_healthie_provider_tab_devices_bp
+from healthie.iframe_provider_tab.onboarding import iframe_healthie_provider_tab_onboarding_bp
+from healthie.iframe_provider_tab.care_plan import iframe_healthie_provider_tab_care_plan_bp
+from healthie.iframe_provider_tab.cdss import iframe_healthie_provider_tab_cdss_bp
+from healthie.iframe_provider_tab.system import iframe_healthie_provider_tab_system_bp
+
+app.register_blueprint(iframe_healthie_provider_tab_index_bp)
+app.register_blueprint(iframe_healthie_provider_tab_status_bp)
+app.register_blueprint(iframe_healthie_provider_tab_devices_bp)
+app.register_blueprint(iframe_healthie_provider_tab_onboarding_bp)
+app.register_blueprint(iframe_healthie_provider_tab_care_plan_bp)
+app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
+app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 
 # -------------------------
 # default web site

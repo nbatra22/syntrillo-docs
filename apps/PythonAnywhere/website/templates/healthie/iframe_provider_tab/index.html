@@ -1,0 +1,73 @@
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/index.html -->
+<!-- Path: ./apps/PythonAnywhere/website/templates/tests_ui/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthie Extra Provider Tab - Syntrillo server</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-onboarding-tab" data-toggle="tab" href="#tab-onboarding" role="tab" aria-controls="tab-onboarding" aria-selected="false">Onboarding</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-care-plan-tab" data-toggle="tab" href="#tab-care-plan" role="tab" aria-controls="tab-care-plan" aria-selected="false">Care Plan</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
+        <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
+        <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
+        <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
+        <div class="tab-pane fade" id="tab-cdss" role="tabpanel" aria-labelledby="tab-cdss-tab"></div>
+        <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function(){
+        // Load the content of the status tab immediately
+        $('#tab-status').load('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}');
+
+        // Load the content of the other tabs in the background
+        $.get('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', function(data) {
+            $('#tab-devices').html(data);
+        });
+        $.get('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', function(data) {
+            $('#tab-onboarding').html(data);
+        });
+        $.get('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', function(data) {
+            $('#tab-care-plan').html(data);
+        });
+        $.get('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', function(data) {
+            $('#tab-cdss').html(data);
+        });
+        $.get('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', function(data) {
+            $('#tab-system').html(data);
+        });
+    });
+</script>
+
+</body>
+</html>
+
