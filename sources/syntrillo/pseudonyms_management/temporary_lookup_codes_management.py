@@ -113,7 +113,11 @@ class TemporaryLookUpCodesManagement:
             }
 
 
-    def create_temporary_pseudo_code(self, syntrillo_internal_key: str, purpose: str):
+    def create_temporary_pseudo_code(
+        self,
+        syntrillo_internal_key: str,
+        purpose: str
+        ):
         """
         Creates a temporary pseudo code for a given syntrillo_internal_key and purpose.
 

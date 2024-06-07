@@ -1,5 +1,5 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/index.html -->
-<!-- Path: ./apps/PythonAnywhere/website/templates/tests_ui/index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,6 +11,14 @@
 <body>
 
 <div class="container mt-5">
+    <!-- Display the variables passed to render_template -->
+    <h3>Variables Passed:</h3>
+    <ul>
+        <li>Healthie Provider ID: {{ healthie_provider_id }}</li>
+        <li>Healthie User ID: {{ healthie_user_id }}</li>
+        <li>Temporary Lookup Code: {{ temporary_lookup_code }}</li>
+    </ul>
+    <p> </p>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
@@ -45,26 +53,53 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
+    function sleep(milliseconds) {
+        var start = new Date().getTime();
+        for (var i = 0; i < 1e7; i++) {
+            if ((new Date().getTime() - start) > milliseconds){
+            break;
+            }
+        }
+    }
+
     $(document).ready(function(){
+        // Variables passed from Flask
+        var healthieProviderId = "{{ healthie_provider_id }}";
+        var healthieUserId = "{{ healthie_user_id }}";
+        var temporaryLookupCode = "{{ temporary_lookup_code }}";
+
+        // Function to load content via POST
+        //   : POST prefered over GET to avoid caching sensitive data in the URL
+        function loadTabContent(url, target, delay=2000) {
+            setTimeout(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {
+                        healthie_provider_id: healthieProviderId,
+                        healthie_user_id: healthieUserId,
+                        temporary_lookup_code: temporaryLookupCode
+                    },
+                    success: function(data) {
+                        $(target).html(data);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    }
+                });
+            }, delay); // some delay needed to prevent a server error on PythonAnywhere
+        }
+
+
         // Load the content of the status tab immediately
-        $('#tab-status').load('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 0);
 
         // Load the content of the other tabs in the background
-        $.get('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', function(data) {
-            $('#tab-devices').html(data);
-        });
-        $.get('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', function(data) {
-            $('#tab-onboarding').html(data);
-        });
-        $.get('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', function(data) {
-            $('#tab-care-plan').html(data);
-        });
-        $.get('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', function(data) {
-            $('#tab-cdss').html(data);
-        });
-        $.get('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', function(data) {
-            $('#tab-system').html(data);
-        });
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
     });
 </script>
 

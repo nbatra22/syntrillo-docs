@@ -9,7 +9,7 @@ import bleach
 import markdown
 from markupsafe import Markup
 
-def extract_user_id_from_url(url):
+def extract_healthie_user_id_from_url(url):
     """
     Extracts user ID from the referrer URL.
      : referrer_url: https://securestaging.gethealthie.com/users/1035117  # that's the patient ID

@@ -19,7 +19,7 @@ import sys
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.api_healthie.misc import extract_user_id_from_url
+from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
 from syntrillo.api_healthie.forms import HealthieForms
 
 from syntrillo.data_structures.data_structure import DataStructure

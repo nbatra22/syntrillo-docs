@@ -18,7 +18,7 @@ import sys
 #    pip install python-dotenv
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.api_healthie.misc import extract_user_id_from_url
+from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
 from syntrillo.patient_onboarding.manager import PatientOnboardingManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
@@ -60,7 +60,7 @@ def iframe_healthie_provider_tab():
     if provider_id is None:
         provider_id = "1033222" # "-1"
 
-    patient_id = extract_user_id_from_url(data_get_request.get('referrer_url'))
+    patient_id = extract_healthie_user_id_from_url(data_get_request.get('referrer_url'))
     if patient_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
         # patient_id = '-1'
         patient_id = "1035117" # with onboarding forms
