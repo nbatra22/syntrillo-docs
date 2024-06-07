@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healthie Extra Provider Tab - Syntrillo server</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <!-- Link to Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Link to external CSS file -->
@@ -62,6 +63,35 @@
         <!-- ///////////////////// DEVICE PAIRING  /////////////////////////// -->
         <div class="tab-pane fade" id="devide-pairing" role="tabpanel" aria-labelledby="devide-pairing-tab">
             <h2>Pairing Tenovi devices with Healthie and Syntrillo accounts</h2>
+
+            <h3>Paired Devices</h3>
+
+            <div class="table-container3">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device Name</th>
+                            <th>Device ID</th>
+                            <th>Paired At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if paired_devices %}
+                            {% for device in paired_devices %}
+                                <tr>
+                                    <td>{{ device.device.name }}</td>
+                                    <td>{{ device.id }}</td>
+                                    <td>{{ device.device.created }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3">No devices paired</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
 
             <h3>Generate Temporary Pairing Code</h3>
 
@@ -352,6 +382,35 @@
         });
     </script>
 
+    <script>
+        $(document).ready(function() {
+            $('#pairTenoviDevicesFormButton').click(function() {
+                // Show loading indicator
+                $('#loadingTextGenerateForm').show();
+                $('body').addClass('loading'); // Apply loading cursor
+
+                $.ajax({
+                    url: $('#pairTenoviDevicesForm').attr('action'),
+                    type: 'POST',
+                    data: $('#pairTenoviDevicesForm').serialize(),
+                    success: function(response) {
+                        console.log('Success:', response); // Log the response to console (for debugging)
+                        $('#pairTenoviDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error); // Log AJAX error to console
+                        $('#pairTenoviDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+                    },
+                    complete: function() {
+                        // Hide loading indicator after AJAX completes (whether success or error)
+                        $('#loadingTextGenerateForm').hide();
+                        $('body').removeClass('loading'); // Remove loading cursor
+                    }
+                });
+            });
+        });
+    </script>
+
 <!-- //////////////////////////// SCRIPTS SYSTEM //////////////////////////// -->
 <script>
     $(document).ready(function() {
@@ -367,7 +426,7 @@
                 success: function(response) {
                     console.log('Success:', response); // Log the response to console (for debugging)
                     if (response && response.log) {
-                        $('#registerPatientAtSyntrilloFormTextarea').val(JSON.stringify(response.log)); // Update textarea with log message
+                        $('#registerPatientAtSyntrilloFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                     } else {
                         $('#registerPatientAtSyntrilloFormTextarea').val('Error: Unexpected response format'); // Display error message
                     }

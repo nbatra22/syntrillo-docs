@@ -57,8 +57,8 @@ class AccountsPairing:
 
     def pair_devices_using_temporary_pseudo_code(
         self,
-        update_patient_id_with_healthie_user_id=True,
-        add_healthie_user_id_to_device_properties=True,
+        update_patient_id_with_healthie_user_id:bool = True,
+        add_healthie_user_id_to_device_properties:bool = True,
         ):
         """ Use the Tenovi API to:
         - Find devices where PatientID (aka patient_external_id) matches the temporary pseudo code entered by the study coordinator in the Tenovi dashboard.
@@ -127,6 +127,38 @@ class AccountsPairing:
         }
         return log
 
+    @staticmethod
+    def get_paired_devices(
+        pseudo_code_for_tenovi_phi_access:str = None,
+        healthy_user_id:str = None,
+        syntrillo_internal_key:str = None,
+    ) :
+        """
+        Retrieve the devices paired with the given pseudo_code_for_tenovi_phi_access, healthy_user_id, or syntrillo_internal_key.
+
+        Args:
+            pseudo_code_for_tenovi_phi_access (str): The pseudo code for Tenovi PHI access.
+            healthy_user_id (str): The healthy user ID.
+            syntrillo_internal_key (str): The internal key for the patient's Syntrillo account.
+
+        Returns:
+            list: A list of devices paired with the given pseudo_code_for_tenovi_phi_access, healthy_user_id, or syntrillo_internal_key.
+        """
+        devices = Devices()
+        lookup_manager = LookUpCodesManagement()
+
+        if healthy_user_id is not None:
+            entry = lookup_manager.retrieve_entry_by_healthy_user_id(healthy_user_id)
+            pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
+        elif syntrillo_internal_key is not None:
+            entry = lookup_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+            pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
+        elif pseudo_code_for_tenovi_phi_access is None:
+            return None
+
+        matching_devices = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
+
+        return matching_devices
 
 
 # Example usage:
@@ -179,6 +211,12 @@ if __name__ == "__main__":
         log = pair.pair_devices_using_temporary_pseudo_code()
         print("Devices paired successfully.")
         pprint(log)
+
+        # list devices paired with the pseudo_code_for_tenovi_phi_access
+        matching_devices = pair.get_paired_devices(pseudo_code_for_tenovi_phi_access=retrieve_result.get('pseudo_code_for_tenovi_phi_access'))
+        print('Devices paired with the pseudo_code_for_tenovi_phi_access:')
+        pprint(matching_devices)
+
     else:
         print("Pairing process cancelled.")
 

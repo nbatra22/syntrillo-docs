@@ -87,6 +87,9 @@ def iframe_healthie_provider_tab():
         pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
         patient_not_registered_at_syntrillo = ( pseudonyms is None )
 
+        # get paired devices
+        if not patient_not_registered_at_syntrillo:
+            paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=pseudonyms['syntrillo_internal_key'])
 
     # --------------------------------------------------------------------
 
@@ -99,7 +102,8 @@ def iframe_healthie_provider_tab():
                            patient_id=patient_id,
                            patient_status=patient_status,
                            inconsistencies=inconsistencies,
-                           pseudonyms=pseudonyms, # TODO : not to be returned in production
+                           pseudonyms=pseudonyms,
+                           paired_devices=paired_devices,
                            patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
                            )
 
@@ -191,7 +195,7 @@ def tenovi_generate_temporary_pairing_code_form():
 @healthie_iframe_provider_tab_bp.route('/tenovi_pair_devices_form', methods=['POST'])
 def tenovi_pair_devices_form():
     """
-    This endpoint generates a pairing code to be entered in the Tenovi platform 'Patient ID' field by the study coordinator.
+    This endpoint pairs the devices using the temporary pseudo code.
 
     """
 
@@ -201,12 +205,14 @@ def tenovi_pair_devices_form():
     patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
     provider_id = data_post_request.get('provider_id')
 
-    # TODO: need to get syntrillo_internal_key from patient_id from LookUpCodesManagement.retrieve_entry_by_healthy_user_id
+    # get syntrillo_internal_key from patient_id from LookUpCodesManagement.retrieve_entry_by_healthy_user_id
+    code_manager = LookUpCodesManagement()
+    patient_entry = code_manager.retrieve_entry_by_healthy_user_id(patient_id)
 
-    # TODO: call AccountsPairing.pair_devices_using_temporary_pseudo_code
+    pairing = AccountsPairing(patient_entry['syntrillo_internal_key'])
+    log = pairing.pair_devices_using_temporary_pseudo_code()
 
-    # TODO: have to return some logs listing the devices paired
-    return 'hello', 200
+    return log, 200
 
 @healthie_iframe_provider_tab_bp.route('/register_patient_at_syntrillo_form', methods=['POST'])
 def register_patient_at_syntrillo_form():
