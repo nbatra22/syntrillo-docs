@@ -31,6 +31,16 @@ app.register_blueprint(healthie_iframe_client_sidebar_bp)
 app.register_blueprint(healthie_iframe_provider_sidebar_bp)
 app.register_blueprint(healthie_iframe_provider_tab_bp)
 
+# ---------- tests ui ---------------------
+from tests_ui.index import tests_ui_index_bp
+from tests_ui.tab1 import tests_ui_tab1_bp
+from tests_ui.tab2 import tests_ui_tab2_bp
+
+app.register_blueprint(tests_ui_index_bp)
+app.register_blueprint(tests_ui_tab1_bp)
+app.register_blueprint(tests_ui_tab2_bp)
+
+
 # -------------------------
 # default web site
 @app.route("/")
