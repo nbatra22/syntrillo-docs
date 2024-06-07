@@ -33,6 +33,13 @@ p {
     color: #16284a;
 }
 
+
+/* ------------ for text areas ---------------------------- */
+.monospace-small {
+    font-family: monospace; /* Set the font to monospace */
+    font-size: small; /* Set the font size to small */
+}
+
 /* -------------------------------------------------------- */
 .table-container1 {
     margin-left: 10px;

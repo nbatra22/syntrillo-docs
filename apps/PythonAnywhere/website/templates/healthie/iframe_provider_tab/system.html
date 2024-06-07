@@ -2,11 +2,123 @@
 
 <h2>System</h2>
 
-<h3>Variables Passed:</h3>
-<ul>
-    <li>Healthie Provider ID: {{ healthie_provider_id }}</li>
-    <li>Healthie User ID: {{ healthie_user_id }}</li>
-    <li>Temporary Lookup Code: {{ temporary_lookup_code }}</li>
-</ul>
+<div class="table-container-system">
+    <table class="table">
+        <tbody>
+            <tr>
+                <td>Healthie Provider ID (you)</td>
+                <td>{{ healthie_provider_id }}</td>
+            </tr>
+            <tr>
+                <td>Patient Healthie User ID</td>
+                <td>{{ healthie_user_id }}</td>
+            </tr>
+            <tr>
+                <td>Temporary Lookup Code</td>
+                <td>{{ temporary_lookup_code }}</td>
+            </tr>
+            <tr>
+                <td>Patient Not Registered at Syntrillo</td>
+                <td>{{ patient_not_registered_at_syntrillo }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
+{% if patient_not_registered_at_syntrillo %}
+    <p>&#x26a0; Panic : patient not registered at Syntrillo : Syntrillo Internal Key is not available.&#x26a0; </p>
+    <p>Exceptionaly using Patient Healthie User ID to fix this.</p>
+
+    <style>
+        #registerPatientAtSyntrilloLoading {
+            display: none; /* Initially hide the loading indicator */
+            font-weight: bold;
+        }
+    </style>
+
+    <div class="table-container2">
+        <table>
+            <tr>
+                <td align="left" style="vertical-align: middle;">
+                    <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
+                        <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
+                        <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button-small">Register patient at Syntrillo</button>
+                    </form>
+                </td>
+                <td align="left" style="vertical-align: middle;">
+                    <span id="registerPatientAtSyntrilloLoading" class="loading">Running - Please wait ...</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="left">
+                    <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-small" rows="7" cols="120" readonly wrap="off"></textarea>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="modal fade" id="registerPatientAtSyntrilloSuccessModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="successModalLabel">Success!</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              The page will reload soon to show the updated status.
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#registerPatientAtSyntrilloFormButton').click(function() {
+                // Show loading indicator
+                $('#registerPatientAtSyntrilloLoading').show();
+                $('body').addClass('loading'); // Apply loading cursor
+
+                $.ajax({
+                    url: $('#registerPatientAtSyntrilloForm').attr('action'),
+                    type: 'POST',
+                    data: $('#registerPatientAtSyntrilloForm').serialize(),
+                    success: function(response) {
+                        console.log('Success:', response); // Log the response to console (for debugging)
+                        $('#registerPatientAtSyntrilloTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                        // Check if the registration was successful
+                        if (response.log.success) {
+                            // Reload the page after a delay to allow the user to read the success message
+                            // Show the success modal after a delay
+                            setTimeout(function() {
+                                $('#registerPatientAtSyntrilloSuccessModal').modal('show');
+                            }, 2000);
+
+                            // Hide the modal and reload the page after a delay
+                            setTimeout(function() {
+                                $('#registerPatientAtSyntrilloSuccessModal').modal('hide');
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 2000); // Reload after a delay
+                            }, 6000); // Hide modal after a delay
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error); // Log AJAX error to console
+                        $('#registerPatientAtSyntrilloTextarea').val('Error: ' + error); // Display error message in textarea
+                    },
+                    complete: function() {
+                        // Hide loading indicator after AJAX completes (whether success or error)
+                        $('#registerPatientAtSyntrilloLoading').hide();
+                        $('body').removeClass('loading'); // Remove loading cursor
+                    }
+                });
+            });
+        });
+    </script>
+
+{% endif %}
+
+</div>
 

@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request, jsonify, render_template
 import json
+import random
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
@@ -43,8 +44,10 @@ def iframe_healthie_provider_tab_index():
 
     if healthie_user_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
         # healthie_user_id = '-1'
-        healthie_user_id = "1035117" # with onboarding forms
+        # healthie_user_id = "1035117" # with onboarding forms
         # healthie_user_id = "1209727" # with syntrillo_internal_key
+        healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
+        # healthie_user_id = "dummy456456" # without syntrillo_internal_key
 
     # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
@@ -56,8 +59,10 @@ def iframe_healthie_provider_tab_index():
         # here, we will enter in a panic mode, allowing the 'system' tab to create a new patient
         syntrillo_internal_key = None
 
+    patient_not_registered_at_syntrillo = ( syntrillo_internal_key is None )
+
     # --------------------------------------------------------------------
-    # get temporary look up code for the healthie_user_id
+    # get temporary look up code for the syntrillo_internal_key
     temporary_lookup_codes_management = TemporaryLookUpCodesManagement()
 
     if syntrillo_internal_key is not None:
@@ -69,13 +74,14 @@ def iframe_healthie_provider_tab_index():
         temporary_lookup_code = None
 
     # --------------------------------------------------------------------
-    # if there is no temporary_lookup_code, we pass healthie_user_id
-    if temporary_lookup_code is not None:
-        healthie_user_id = None
+    # We do not pass healthie_user_id if the patient is registered at Syntrillo
+    if syntrillo_internal_key is not None:
+        healthie_user_id = "Not transmitted"
 
     return render_template(
         'healthie/iframe_provider_tab/index.html',
         healthie_provider_id=healthie_provider_id,
+        patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
         healthie_user_id=healthie_user_id,
         temporary_lookup_code=temporary_lookup_code
         )

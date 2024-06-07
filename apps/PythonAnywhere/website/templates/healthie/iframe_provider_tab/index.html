@@ -6,19 +6,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healthie Extra Provider Tab - Syntrillo server</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <!-- Link to Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Link to local CSS - at last position -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie.css') }}">
+    <style>
+        /* space before system tab */
+        .nav-tabs .nav-item.ml-auto {
+            margin-left: auto;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container mt-5">
     <!-- Display the variables passed to render_template -->
+    <!--
     <h3>Variables Passed:</h3>
     <ul>
         <li>Healthie Provider ID: {{ healthie_provider_id }}</li>
         <li>Healthie User ID: {{ healthie_user_id }}</li>
         <li>Temporary Lookup Code: {{ temporary_lookup_code }}</li>
+        <li>Patient Not Registered at Syntrillo: {{ patient_not_registered_at_syntrillo }}</li>
     </ul>
     <p> </p>
+    -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
@@ -35,7 +48,8 @@
         <li class="nav-item">
             <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
         </li>
-        <li class="nav-item">
+        <!-- Large gap -->
+        <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
         </li>
     </ul>
@@ -67,10 +81,11 @@
         var healthieProviderId = "{{ healthie_provider_id }}";
         var healthieUserId = "{{ healthie_user_id }}";
         var temporaryLookupCode = "{{ temporary_lookup_code }}";
+        var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
         // Function to load content via POST
         //   : POST prefered over GET to avoid caching sensitive data in the URL
-        function loadTabContent(url, target, delay=2000) {
+        function loadTabContent(url, target, milliseconds_delay=2000) {
             setTimeout(function() {
                 $.ajax({
                     type: 'POST',
@@ -78,7 +93,8 @@
                     data: {
                         healthie_provider_id: healthieProviderId,
                         healthie_user_id: healthieUserId,
-                        temporary_lookup_code: temporaryLookupCode
+                        temporary_lookup_code: temporaryLookupCode,
+                        patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
                     },
                     success: function(data) {
                         $(target).html(data);
@@ -87,12 +103,12 @@
                         $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
                     }
                 });
-            }, delay); // some delay needed to prevent a server error on PythonAnywhere
+            }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server : TODO : test for server name & adjust delay
         }
 
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 0);
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 500);
 
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
