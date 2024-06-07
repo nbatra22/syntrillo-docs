@@ -59,6 +59,7 @@ cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")";
 # go one level up
 cd ..
 
-find ./ -type f \( -name "*.py" -o -name "*.html" \) | while read -r file; do
+find ./ -type f \( -name "*.py" -o -name "*.html" \) -not -path "./apps/AWS/*" | while read -r file; do
+    # echo "$file"
     add_file_path_comment "$file" true
 done
