@@ -138,7 +138,7 @@ if __name__ == "__main__":
         else:
             print("Devices: None found.")
 
-    if True:
+    if False:
         hwi_device_id = '83ca5817-0bb2-4d9c-b131-16eb353ad587'
 
         # devices_module.update_device_patient_id(hwi_device_id, "AnExternalID")
@@ -174,12 +174,12 @@ if __name__ == "__main__":
         else:
             print("Device not found.")
 
-    if False:
+    if True:
         # Example payload for creating a new device
         payload = {
             "device": {
-                "name": "Tenovi Pulse Ox",      # required
-                 "hardware_uuid": "c26b2b7d-56dc-412b-be89-d302c52717a5",     # required
+                "name": "Tenovi Watch",      # required
+                 "hardware_uuid": "c26b2b7d-56dc-412b-be89-d302c52717a5",     # required : this is the gateway ID
             },
         }
 

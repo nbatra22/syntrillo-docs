@@ -48,7 +48,7 @@
                             <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                 <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
                                     <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
-                                    <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button">Register patient at Syntrillo</button>
+                                    <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button-system">Register patient at Syntrillo</button>
                                 </form>
                             </td>
                             <td align="left" style="vertical-align: middle;">
@@ -64,7 +64,7 @@
                     <table>
                         <tr>
                             <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                                Logs:
+                                <p>Logs:</p>
                             </td>
                             <td align="left">
                                 <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-medium" rows="7" cols="100" readonly wrap="off"></textarea>

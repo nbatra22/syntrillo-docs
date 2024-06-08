@@ -76,39 +76,39 @@
         }
     }
 
-    $(document).ready(function(){
+    // Function to load content via POST
+    //   : POST prefered over GET to avoid caching sensitive data in the URL
+    function loadTabContent(url, target, milliseconds_delay=2000) {
+
+        $(target).html("<h3>Loading content. Please wait...</h3>");
+
         // Variables passed from Flask
         var healthieProviderId = "{{ healthie_provider_id }}";
         var healthieUserId = "{{ healthie_user_id }}";
         var temporaryLookupCode = "{{ temporary_lookup_code }}";
         var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
-        // Function to load content via POST
-        //   : POST prefered over GET to avoid caching sensitive data in the URL
-        function loadTabContent(url, target, milliseconds_delay=2000) {
+        setTimeout(function() {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    healthie_provider_id: healthieProviderId,
+                    healthie_user_id: healthieUserId,
+                    temporary_lookup_code: temporaryLookupCode,
+                    patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
+                },
+                success: function(data) {
+                    $(target).html(data);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                }
+            });
+        }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server : TODO : test for server name & adjust delay
+    }
 
-            $(target).html("<h3>Loading content. Please wait...</h3>");
-
-            setTimeout(function() {
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        healthie_provider_id: healthieProviderId,
-                        healthie_user_id: healthieUserId,
-                        temporary_lookup_code: temporaryLookupCode,
-                        patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
-                    },
-                    success: function(data) {
-                        $(target).html(data);
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
-                    }
-                });
-            }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server : TODO : test for server name & adjust delay
-        }
-
+    $(document).ready(function(){
 
         // Load the content of the status tab immediately
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 500);

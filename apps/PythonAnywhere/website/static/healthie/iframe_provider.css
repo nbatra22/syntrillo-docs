@@ -36,6 +36,10 @@ p {
     padding-left: 20px;
 }
 
+ol {
+    margin-left: 20px;
+    font-size: 0.8em;
+}
 
 /* ------------ for text areas ---------------------------- */
 .monospace-small {
@@ -119,7 +123,7 @@ p {
 
 /* ------------ buttons ---------------------------- */
 
-.styled-button {
+.styled-button-system {
     white-space: nowrap; /* Prevents the text from wrapping */
     display: inline-block; /* Ensures the button size adjusts correctly */
     border-radius: 10px;
@@ -134,7 +138,31 @@ p {
     text-align: center;
     color: #fff;
     padding: 12px 30px; /* vertical padding, horizontal padding */
-    margin: 12px 12px 12px;
+    margin: 12px 12px 12px 12px; /* top, right, bottom, left */
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    border: none; /* Optional: Remove border */
+    outline: none; /* Optional: Remove focus outline */
+}
+
+.styled-button {
+    white-space: nowrap; /* Prevents the text from wrapping */
+    display: inline-block; /* Ensures the button size adjusts correctly */
+    border-radius: 10px;
+    background-color: #4a90e2;
+    box-shadow: 0 0 5px 0 rgba(0,0,0,.1);
+    font-family: "Avenir", Helvetica, "Arial", sans-serif; /* Avenir is Heathie's font */
+    font-size: 14px;
+    line-height: 16px;
+    font-style: normal;
+    font-weight: bold;
+    font-stretch: normal;
+    /* letter-spacing: .8px; */
+    text-align: center;
+    color: #fff;
+    padding: 8px 20px; /* vertical padding, horizontal padding */
+    margin: 6px 6px 6px 6px; /* top, right, bottom, left */
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
