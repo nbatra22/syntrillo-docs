@@ -86,6 +86,9 @@
         // Function to load content via POST
         //   : POST prefered over GET to avoid caching sensitive data in the URL
         function loadTabContent(url, target, milliseconds_delay=2000) {
+
+            $(target).html("<h3>Loading content. Please wait...</h3>");
+
             setTimeout(function() {
                 $.ajax({
                     type: 'POST',

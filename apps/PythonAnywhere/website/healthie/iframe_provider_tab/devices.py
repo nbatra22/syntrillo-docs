@@ -3,6 +3,9 @@ from flask import Blueprint, render_template, request
 
 import time
 
+from .post_management import PostManager
+from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
+
 iframe_healthie_provider_tab_devices_bp = Blueprint('iframe_healthie_provider_tab_devices_bp', __name__)
 
 @iframe_healthie_provider_tab_devices_bp.route('/healthie/iframe_provider_tab/devices', methods=['POST'])
@@ -10,22 +13,17 @@ def iframe_healthie_provider_tab_devices():
     """
     This endpoint is used to display the devices page in the provider tab iframe.
     """
-    # --------------------------------------------------------------------
-    # Retrieve the form data from the POST request
-    #   : these are passed from the healthie_iframe_provider_tab index.html
-    #   : healthie_user_id, is None, unless in panic mode
-    healthie_provider_id = request.form.get('healthie_provider_id')
-    healthie_user_id = request.form.get('healthie_user_id')
-    temporary_lookup_code = request.form.get('temporary_lookup_code')
-    patient_not_registered_at_syntrillo_str = request.form.get('patient_not_registered_at_syntrillo')
-    patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager(request)
 
     # deal with patients not registered at Syntrillo
-    if patient_not_registered_at_syntrillo:
+    if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # --------------------------------------------------------------------
-
+    # get paired devices from Tenovi API
+    paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=post_manager.syntrillo_internal_key)
 
 
     return render_template('healthie/iframe_provider_tab/devices.html')
