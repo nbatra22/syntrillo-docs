@@ -1,7 +1,9 @@
-/* static/healthie/iframe_provider.css */
+/* static/healthie.css */
+
+/* my friend : https://www.w3schools.com/css/tryit.asp */
 
 body {
-    font-family:  "Avenir",Helvetica,"Arial",sans-serif;
+    font-family: "Avenir",Helvetica,"Arial",sans-serif; /* Avenir is Heathie's font */
     font-size: 16px;
     padding: 20px;
     color: #4f4f4f;
@@ -34,13 +36,6 @@ p {
     padding-left: 20px;
 }
 
-/* ------------ buttons ---------------------------- */
-
-.nowrap-button {
-    white-space: nowrap; /* Prevents the text from wrapping */
-    display: inline-block; /* Ensures the button size adjusts correctly */
-    padding: 5px 10px; /* Adjust padding for better button appearance */
-}
 
 /* ------------ for text areas ---------------------------- */
 .monospace-small {
@@ -68,15 +63,15 @@ p {
     padding: 10px;
 }
 
-/* -------------------------------------------------------- */
+/* ---------------- Buttons and logs ---------------------------------- */
 
-.table-container2 {
+.table-container-button {
     margin-left: 10px;
 }
-.table-container2 table {
+.table-container-button table {
     font-size: 16px;
 }
-.table-container2 td {
+.table-container-button td {
     padding: 10px;
     vertical-align: top;
 }
@@ -122,46 +117,23 @@ p {
     white-space: nowrap; /* Prevent line wrapping in table cells */
 }
 
-/* -------------------------------------------------------- */
+/* ------------ buttons ---------------------------- */
 
 .styled-button {
-    height: 50px;
+    white-space: nowrap; /* Prevents the text from wrapping */
+    display: inline-block; /* Ensures the button size adjusts correctly */
     border-radius: 10px;
     background-color: #4a90e2;
     box-shadow: 0 0 5px 0 rgba(0,0,0,.1);
-    font-family: "Avenir", Helvetica, "Arial", sans-serif;
-    font-size: 16px;
-    line-height: 21px;
-    font-style: normal;
-    font-stretch: normal;
-    letter-spacing: .4px;
-    text-align: left;
-    /* font-weight: 800; */
-    color: #fff;
-    padding: 0 20px;
-    margin: 12px 12px 12px;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    border: none; /* Optional: Remove border */
-    outline: none; /* Optional: Remove focus outline */
-}
-
-.styled-button-small {
-    height: 40px;
-    border-radius: 5px;
-    background-color: #4a90e2;
-    box-shadow: 0 0 5px 0 rgba(0,0,0,.1);
-    font-family: "Avenir", Helvetica, "Arial", sans-serif;
+    font-family: "Avenir", Helvetica, "Arial", sans-serif; /* Avenir is Heathie's font */
     font-size: 16px;
     line-height: 18px;
     font-style: normal;
     font-stretch: normal;
-    letter-spacing: .4px;
-    text-align: left;
-    /* font-weight: 800; */
+    letter-spacing: .8px;
+    text-align: center;
     color: #fff;
-    padding: 0 10px;
+    padding: 12px 30px; /* vertical padding, horizontal padding */
     margin: 12px 12px 12px;
     justify-content: space-between;
     align-items: center;
