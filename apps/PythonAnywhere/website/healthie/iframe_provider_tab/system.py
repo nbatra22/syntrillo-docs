@@ -5,6 +5,8 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 
 iframe_healthie_provider_tab_system_bp = Blueprint('iframe_healthie_provider_tab_system_bp', __name__)
 
+# ========================= HTML PAGE ==========================
+
 @iframe_healthie_provider_tab_system_bp.route('/healthie/iframe_provider_tab/system', methods=['POST'])
 def iframe_healthie_provider_tab_system():
     # Retrieve the form data from the POST request
@@ -24,6 +26,7 @@ def iframe_healthie_provider_tab_system():
         patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
     )
 
+# ========================= ENDPOINTS ==========================
 
 @iframe_healthie_provider_tab_system_bp.route('/healthie/iframe_provider_tab/system/register_patient_at_syntrillo_form', methods=['POST'])
 def register_patient_at_syntrillo_form():
@@ -41,17 +44,17 @@ def register_patient_at_syntrillo_form():
     entry_log = lookup_code_management.create_entry(healthy_user_id=healthie_user_id)
 
     # define log object used by the page to display a message and get success status.
-    if entry_log is not None:
-        log = { 'log' : {
-                    'message' : "Patient succesfully registered at Syntrillo - The page will reload to see the changes.",
-                    'success' : True,
-                    'entry_log' : "hidden", # entry_log
-             } }
+    if entry_log is None:
+        log = {
+               'message' : "Error",
+               'success' : False,
+               'entry_log' : entry_log
+               }
     else:
-        log = { 'log' : {
-                    'message' : "Error",
-                    'success' : False,
-                    'entry_log' : entry_log
-                    } }
+        log = {
+            'message' : "Patient succesfully registered at Syntrillo - The page will reload to see the changes.",
+            'success' : True,
+            'entry_log' : "hidden", # entry_log
+            }
 
     return jsonify( log ), 200

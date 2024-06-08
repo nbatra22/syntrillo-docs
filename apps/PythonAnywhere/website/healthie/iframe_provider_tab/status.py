@@ -9,9 +9,12 @@ iframe_healthie_provider_tab_status_bp = Blueprint('iframe_healthie_provider_tab
 def iframe_healthie_provider_tab_status():
     """
     This endpoint is used to display the status page in the provider tab iframe.
+    It is called by the healthie_iframe_provider_tab index.html
     """
+
     # get all pseudonyms from post temporary identifier
-    post_manager = PostManager(request)
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_index_post(request)
 
     # deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:

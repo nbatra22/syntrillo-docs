@@ -6,15 +6,28 @@ from syntrillo.pseudonyms_management.temporary_lookup_codes_management import Te
 
 
 class PostManager:
-    """
-    Retrieve the form data from the POST request
-    : these are passed from the healthie_iframe_provider_tab index.html
-    : healthie_user_id, is None, unless in panic mode
-    """
 
-    def __init__(self, request):
+    # initialize variables
+    request = None
+    healthie_provider_id = None
+    posted_healthie_user_id = None
+    temporary_lookup_code = None
+    patient_not_registered_at_syntrillo = None
+    syntrillo_internal_key = None
+    pseudonyms = None
+
+
+    def __init__(self):
         """
         Initialize the PostManager object
+        """
+        pass
+
+    def get_pseudonyms_from_index_post(self, request):
+        """
+        Retrieve the form data from the POST request
+        : these are passed from the healthie_iframe_provider_tab index.html
+        : healthie_user_id, is None, unless in panic mode
         """
         self.request = request
 
@@ -40,6 +53,33 @@ class PostManager:
         else:
             self.syntrillo_internal_key = None
             self.pseudonyms = None
+
+    def get_pseudonyms_from_tab_post(self, request):
+        """
+        Retrieve the form data from the POST request comming from the tabs.
+        Here only the temporary_lookup_code is passed
+        """
+        self.request = request
+
+        # get what's posted
+        self.temporary_lookup_code = request.form.get('temporary_lookup_code')
+
+        # look up for syntrillo_internal_key
+        if self.temporary_lookup_code is not None:
+            temporary_lookup_codes_manager = TemporaryLookUpCodesManagement()
+            self.syntrillo_internal_key = temporary_lookup_codes_manager.retrieve_syntrillo_internal_key(
+                self.temporary_lookup_code,
+                purpose=TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME
+                )
+
+            # get all pseudonyms
+            lookup_manager = LookUpCodesManagement()
+            self.pseudonyms = lookup_manager.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
+
+        else:
+            self.syntrillo_internal_key = None
+            self.pseudonyms = None
+
 
 
 
