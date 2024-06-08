@@ -79,24 +79,24 @@ p {
 /* -------------------------------------------------------- */
 /* Add styles for the new table container class that handles complex tables */
 
-.table-container3 {
+.table-container-data {
     margin-left: 20px;
 }
-.table-container3 table {
+.table-container-data table {
     font-size: 12px; /* Smaller font size for the table */
     font-family: "Courier New", Courier, monospace; /* Monospace font */
     border-collapse: collapse; /* Collapse table borders */
     /* width: 100%; */
 }
-.table-container3 th,
-.table-container3 td {
+.table-container-data th,
+.table-container-data td {
     padding: 8px; /* Smaller padding for table cells */
     border: 1px solid lightgrey; /* Light grey cell border */
     text-align: left; /* Left-align table cells */
 }
 
 /* Optional: Style table headers differently */
-.table-container3 th {
+.table-container-data th {
     background-color: #f2f2f2; /* Light grey background for table headers */
     font-weight: bold; /* Bold font for table headers */
 }

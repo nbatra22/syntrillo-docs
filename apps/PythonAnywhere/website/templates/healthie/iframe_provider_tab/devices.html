@@ -1,6 +1,191 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/devices.html -->
 
-<h2>Devices</h2>
+<h3>Paired Devices</h3>
 
-<p>blah</p>
+<div class="table-container-data">
+    <table>
+        <thead>
+            <tr>
+                <th>Device Name</th>
+                <th>Device ID</th>
+                <th>Paired At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if paired_devices %}
+                {% for device in paired_devices %}
+                    <tr>
+                        <td>{{ device.device.name }}</td>
+                        <td>{{ device.id }}</td>
+                        <td>{{ device.device.created }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3">No devices paired</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<h3>Generate Temporary Pairing Code</h3>
+
+<style>
+    /* Initially loading indicator and logs */
+    #generateTenoviTemporaryPairingCodeLoading {
+        display: none;
+    }
+    #TenoviTemporaryPairingCode {
+        display: none;
+    }
+    #pairTenoviDevicesFormLoading {
+        display: none;
+    }
+</style>
+
+<div class="table-container-button">
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                            <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
+                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                <button type="button" id="generateTenoviTemporaryPairingCodeFormButton" class="styled-button">Generate Temporary Pairing Code</button>
+                            </form>
+                        </td>
+                        <td align="left" style="vertical-align: middle;">
+                            <span id="generateTenoviTemporaryPairingCodeLoading"><b>Running - Please wait ...</b></span>
+                            <span id="TenoviTemporaryPairingCode"></span></p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                            Logs:
+                        </td>
+                        <td align="left">
+                            <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" class="monospace-medium" rows="7" cols="70" readonly wrap="off"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h3>Pair Tenovi devices</h3>
+
+<p>TODO : should be able to add *new* devices with same pairing codes.</p>
+
+<div class="table-container-button">
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                            <form id="pairTenoviDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_pair_devices_form') }}" method="POST">
+                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                <button type="button" id="pairTenoviDevicesFormButton" class="styled-button">Pair Devices</button>
+                            </form>
+                        </td>
+                        <td align="left" style="vertical-align: middle;">
+                            <span id="pairTenoviDevicesFormLoading"><b>Running - Please wait ...</b></span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                            Logs:
+                        </td>
+                        <td align="left">
+                            <textarea id="pairTenoviDevicesFormTextarea" class="monospace-medium" rows="7" cols="70" readonly wrap="off"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- ========================= SCRIPTS ============================ -->
+
+<script>
+    $(document).ready(function() {
+        $('#generateTenoviTemporaryPairingCodeFormButton').click(function() {
+            // Show loading indicator
+            $('#generateTenoviTemporaryPairingCodeLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#generateTenoviTemporaryPairingCodeForm').attr('action'),
+                type: 'POST',
+                data: $('#generateTenoviTemporaryPairingCodeForm').serialize(),
+                success: function(response) {
+                    $('#generateTenoviTemporaryPairingCodeFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                    if (response.success) {
+                        // Update temporary pairing code in the page and show it
+                        $('#TenoviTemporaryPairingCode').html("<b>Temporary Tenovi Pairing Code: " + response.temporary_tenovi_pseudo_code + "<b>");
+                        $('#TenoviTemporaryPairingCode').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#generateTenoviTemporaryPairingCodeFormTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#generateTenoviTemporaryPairingCodeLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        $('#pairTenoviDevicesFormButton').click(function() {
+            // Show loading indicator
+            $('#pairTenoviDevicesFormLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#pairTenoviDevicesForm').attr('action'),
+                type: 'POST',
+                data: $('#pairTenoviDevicesForm').serialize(),
+                success: function(response) {
+                    console.log('Success:', response); // Log the response to console (for debugging)
+                    $('#pairTenoviDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#pairTenoviDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#pairTenoviDevicesFormLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            });
+        });
+    });
+</script>
+
+
+
+
 

@@ -40,34 +40,40 @@
     </style>
 
     <div class="table-container-button">
-        <table><tr><td>
-            <table>
-                <tr>
-                    <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                        <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
-                            <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
-                            <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button">Register patient at Syntrillo</button>
-                        </form>
-                    </td>
-                    <td align="left" style="vertical-align: middle;">
-                        <span id="registerPatientAtSyntrilloLoading" ><b>Running - Please wait ...</b></span>
-                        <span id="registerPatientAtSyntrilloSuccess" ><b>Success! - The page will reload to show the updated status.</b></span>
-                    </td>
-                </tr>
-            </table>
-        </td></tr></table>
-        <table><tr><td>
-            <table>
-                <tr>
-                    <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                        Logs:
-                    </td>
-                    <td align="left">
-                        <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-medium" rows="7" cols="100" readonly wrap="off"></textarea>
-                    </td>
-                </tr>
-            </table>
-        </td></tr></table>
+        <table>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
+                                    <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
+                                    <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button">Register patient at Syntrillo</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="registerPatientAtSyntrilloLoading" ><b>Running - Please wait ...</b></span>
+                                <span id="registerPatientAtSyntrilloSuccess" ><b>Success! - The page will reload to show the updated status.</b></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                Logs:
+                            </td>
+                            <td align="left">
+                                <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-medium" rows="7" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="modal fade" id="registerPatientAtSyntrilloSuccessModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
@@ -86,6 +92,8 @@
         </div>
     </div>
 
+    <!-- ========================= SCRIPTS ============================ -->
+
     <script>
         $(document).ready(function() {
             $('#registerPatientAtSyntrilloFormButton').click(function() {
@@ -98,10 +106,9 @@
                     type: 'POST',
                     data: $('#registerPatientAtSyntrilloForm').serialize(),
                     success: function(response) {
-                        console.log('Success:', response); // Log the response to console (for debugging)
                         $('#registerPatientAtSyntrilloTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                         // Check if the registration was successful
-                        if (response.log.success) {
+                        if (response.success) {
                             $('#registerPatientAtSyntrilloSuccess').show();
                             // Reload the page after a delay to allow the user to read the success message
                             // Show the success modal after a delay
