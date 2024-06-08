@@ -1,4 +1,4 @@
-/* static/healthie.css */
+/* static/healthie/iframe_provider.css */
 
 body {
     font-family:  "Avenir",Helvetica,"Arial",sans-serif;
@@ -31,13 +31,26 @@ p {
     font-size: 16px;
     line-height: 21px;
     color: #16284a;
+    padding-left: 20px;
 }
 
+/* ------------ buttons ---------------------------- */
+
+.nowrap-button {
+    white-space: nowrap; /* Prevents the text from wrapping */
+    display: inline-block; /* Ensures the button size adjusts correctly */
+    padding: 5px 10px; /* Adjust padding for better button appearance */
+}
 
 /* ------------ for text areas ---------------------------- */
 .monospace-small {
-    font-family: monospace; /* Set the font to monospace */
-    font-size: small; /* Set the font size to small */
+    font-family: monospace;
+    font-size: small;
+}
+
+.monospace-medium {
+    font-family: monospace;
+    font-size: medium;
 }
 
 /* -------------------------------------------------------- */

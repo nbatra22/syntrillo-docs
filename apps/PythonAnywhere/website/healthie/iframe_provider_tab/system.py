@@ -40,6 +40,7 @@ def register_patient_at_syntrillo_form():
     lookup_code_management = LookUpCodesManagement()
     entry_log = lookup_code_management.create_entry(healthy_user_id=healthie_user_id)
 
+    # define log object used by the page to display a message and get success status.
     if entry_log is not None:
         log = { 'log' : {
                     'message' : "Patient succesfully registered at Syntrillo - The page will reload to see the changes.",

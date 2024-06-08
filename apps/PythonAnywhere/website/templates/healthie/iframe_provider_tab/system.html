@@ -26,35 +26,48 @@
 </div>
 
 {% if patient_not_registered_at_syntrillo %}
-    <p>&#x26a0; Panic : patient not registered at Syntrillo : Syntrillo Internal Key is not available.&#x26a0; </p>
-    <p>Exceptionaly using Patient Healthie User ID to fix this.</p>
+    <h3>&#x26a0; Patient not registered at Syntrillo : Syntrillo Internal Key is not available. &#x26a0; </h3>
+    <p>Exceptionally using Patient Healthie User ID to fix this.</p>
 
     <style>
+        /* Initially loading indicator and logs */
         #registerPatientAtSyntrilloLoading {
-            display: none; /* Initially hide the loading indicator */
-            font-weight: bold;
+            display: none;
+        }
+        #registerPatientAtSyntrilloSuccess {
+            display: none;
         }
     </style>
 
     <div class="table-container2">
-        <table>
-            <tr>
-                <td align="left" style="vertical-align: middle;">
-                    <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
-                        <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
-                        <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button-small">Register patient at Syntrillo</button>
-                    </form>
-                </td>
-                <td align="left" style="vertical-align: middle;">
-                    <span id="registerPatientAtSyntrilloLoading" class="loading">Running - Please wait ...</span>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" align="left">
-                    <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-small" rows="7" cols="120" readonly wrap="off"></textarea>
-                </td>
-            </tr>
-        </table>
+        <table><tr><td>
+            <table>
+                <tr>
+                    <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                        <form id="registerPatientAtSyntrilloForm" action="{{ url_for('iframe_healthie_provider_tab_system_bp.register_patient_at_syntrillo_form') }}" method="POST">
+                            <input type="hidden" name="healthie_user_id" value="{{ healthie_user_id }}">
+                            <button type="button" id="registerPatientAtSyntrilloFormButton" class="styled-button-small nowrap-button">Register patient at Syntrillo</button>
+                        </form>
+                    </td>
+                    <td align="left" style="vertical-align: middle;">
+                        <span id="registerPatientAtSyntrilloLoading" ><b>Running - Please wait ...</b></span>
+                        <span id="registerPatientAtSyntrilloSuccess" ><b>Success! - The page will reload to show the updated status.</b></span>
+                    </td>
+                </tr>
+            </table>
+        </td></tr></table>
+        <table><tr><td>
+            <table>
+                <tr>
+                    <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                        Logs:
+                    </td>
+                    <td align="left">
+                        <textarea id="registerPatientAtSyntrilloTextarea" class="monospace-medium" rows="7" cols="100" readonly wrap="off"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </td></tr></table>
     </div>
 
     <div class="modal fade" id="registerPatientAtSyntrilloSuccessModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
@@ -89,6 +102,7 @@
                         $('#registerPatientAtSyntrilloTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                         // Check if the registration was successful
                         if (response.log.success) {
+                            $('#registerPatientAtSyntrilloSuccess').show();
                             // Reload the page after a delay to allow the user to read the success message
                             // Show the success modal after a delay
                             setTimeout(function() {
