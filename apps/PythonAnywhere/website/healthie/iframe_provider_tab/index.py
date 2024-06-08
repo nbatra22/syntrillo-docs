@@ -13,7 +13,7 @@ from syntrillo.pseudonyms_management.temporary_lookup_codes_management import Te
 
 iframe_healthie_provider_tab_index_bp = Blueprint('iframe_healthie_provider_tab_index', __name__)
 
-@iframe_healthie_provider_tab_index_bp.route('/iframe_healthie_provider_tab_index', methods=['GET'])
+@iframe_healthie_provider_tab_index_bp.route('/iframe_healthie_provider_tab', methods=['GET'])
 def iframe_healthie_provider_tab_index():
     """
     iframe displayed in :
