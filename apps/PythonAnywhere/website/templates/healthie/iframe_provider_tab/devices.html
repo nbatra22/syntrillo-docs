@@ -58,7 +58,7 @@
 </style>
 
 <div class="table-container-button">
-    <table>
+    <table class="compact-table">
         <tr>
             <td>
                 <table>
@@ -70,8 +70,8 @@
                             </form>
                         </td>
                         <td align="left" style="vertical-align: middle;">
-                            <span id="generateTenoviTemporaryPairingCodeLoading"><b>Running - Please wait ...</b></span>
-                            <span id="TenoviTemporaryPairingCode"></span></p>
+                            <span id="generateTenoviTemporaryPairingCodeLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                            <span id="TenoviTemporaryPairingCode" class="response-message"></span>
                         </td>
                     </tr>
                 </table>
@@ -82,10 +82,10 @@
                 <table>
                     <tr>
                         <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                            <p>Logs:</p>
+                            <p class="logs">Logs:</p>
                         </td>
                         <td align="left">
-                            <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" class="monospace-small" rows="3" cols="70" readonly wrap="off"></textarea>
+                            <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
                         </td>
                     </tr>
                 </table>
@@ -97,7 +97,7 @@
 <h3>Pair Tenovi devices</h3>
 
 <div class="table-container-button">
-    <table>
+    <table class="compact-table">
         <tr>
             <td>
                 <table>
@@ -109,8 +109,8 @@
                             </form>
                         </td>
                         <td align="left" style="vertical-align: middle;">
-                            <span id="pairTenoviDevicesFormLoading"><b>Running - Please wait ...</b></span>
-                            <span id="pairTenoviDevicesSuccess" ><b>Success! - The page will reload to show the updated status.</b></span>
+                            <span id="pairTenoviDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                            <span id="pairTenoviDevicesSuccess" class="response-message"><b>Success! - The page will reload to show the updated status.</b></span>
                         </td>
                     </tr>
                 </table>
@@ -121,10 +121,10 @@
                 <table>
                     <tr>
                         <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                            <p>Logs:</p>
+                            <p class="logs">Logs:</p>
                         </td>
                         <td align="left">
-                            <textarea id="pairTenoviDevicesFormTextarea" class="monospace-small" rows="3" cols="70" readonly wrap="off"></textarea>
+                            <textarea id="pairTenoviDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
                         </td>
                     </tr>
                 </table>
@@ -150,7 +150,7 @@
                     $('#generateTenoviTemporaryPairingCodeFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                     if (response.success) {
                         // Update temporary pairing code in the page and show it
-                        $('#TenoviTemporaryPairingCode').html("<b>Temporary Tenovi Pairing Code: " + response.temporary_tenovi_pseudo_code + "<b>");
+                        $('#TenoviTemporaryPairingCode').html("Temporary Tenovi Pairing Code: <b>" + response.temporary_tenovi_pseudo_code + "</b>");
                         $('#TenoviTemporaryPairingCode').show();
                     }
                 },

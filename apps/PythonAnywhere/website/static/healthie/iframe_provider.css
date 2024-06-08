@@ -52,6 +52,15 @@ ol {
     font-size: medium;
 }
 
+.logs {
+    font-size: 0.8em;
+}
+
+.response-message {
+    font-size: 0.9em;
+    color: #036824;
+}
+
 /* -------------------------------------------------------- */
 .table-container1 {
     margin-left: 10px;
@@ -70,14 +79,16 @@ ol {
 /* ---------------- Buttons and logs ---------------------------------- */
 
 .table-container-button {
-    margin-left: 10px;
+    margin-left: 30px;
 }
-.table-container-button table {
-    font-size: 16px;
+
+/* compact outer table */
+.compact-table {
+    border-spacing: 0;
+    padding: 0;
 }
-.table-container-button td {
-    padding: 10px;
-    vertical-align: top;
+.compact-table td {
+    padding: 1;
 }
 
 /* -------------------------------------------------------- */
