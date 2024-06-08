@@ -48,10 +48,12 @@ class UserLookupTablesManager:
             id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
 
             # Internal key, fixed length for consistency
-            syntrillo_internal_key BINARY(16) UNIQUE DEFAULT (UUID_TO_BIN(UUID())),
+            #  DEFAULT (UUID_TO_BIN(UUID())) generated a UUID version 1 : not suitable for this use case. Using python uuid4() instead
+            syntrillo_internal_key BINARY(16) UNIQUE ,
 
             # Pseudonymized code for access control
-            pseudo_code_for_tenovi_phi_access BINARY(16) UNIQUE DEFAULT (UUID_TO_BIN(UUID())),
+            #  DEFAULT (UUID_TO_BIN(UUID())) generated a UUID version 1 : not suitable for this use case. Using python uuid4() instead
+            pseudo_code_for_tenovi_phi_access BINARY(16) UNIQUE ,
 
             # External user ID, fixed length for consistency
             healthy_user_id CHAR(255) UNIQUE,
@@ -68,12 +70,13 @@ class UserLookupTablesManager:
         CREATE TABLE IF NOT EXISTS user_look_up_temporary_codes (
             id INT AUTO_INCREMENT PRIMARY KEY,                  # Auto-increment ID for unique identification
 
-            # Internal key, fixed length for consistency
+            # Internal key, fixed length for consistency, UUID version 4 from user_look_up_codes
             # not unique here, as it can have multiple temporary codes
             syntrillo_internal_key BINARY(16),
 
             # Temporary pseudonymized code for temporary access (many-to-one relationship with syntrillo_internal_key)
             # This code is used for temporary identification and is scheduled for deletion
+            # Could be a basic TwoWords code for Tenovi, or a UUID for iFrame => CHAR(255) for flexibility
             temporary_pseudo_code CHAR(255) UNIQUE,
 
             # Purpose of this code. For example 'iFrame', 'Tenovi'

@@ -78,12 +78,15 @@ class LookUpCodesManagement:
         """
 
         create_entry_query = """
-        INSERT INTO user_look_up_codes (healthy_user_id, date)
-        VALUES (%s, NOW());
+        INSERT INTO user_look_up_codes (healthy_user_id, syntrillo_internal_key, pseudo_code_for_tenovi_phi_access, date)
+        VALUES (%s, %s, %s, NOW());
         """
 
         try:
-            self.cursor.execute(create_entry_query, (healthy_user_id,))
+            syntrillo_internal_key = uuid.uuid4().bytes
+            pseudo_code_for_tenovi_phi_access = uuid.uuid4().bytes
+
+            self.cursor.execute(create_entry_query, (healthy_user_id, syntrillo_internal_key, pseudo_code_for_tenovi_phi_access))
             self.conn.commit()
 
             select_query = """
