@@ -9,6 +9,7 @@ body {
     color: #4f4f4f;
 }
 
+
 h1 {
     font-size: 24px;
     color: #16284a;
@@ -187,10 +188,39 @@ ol {
     border-color: #4a90e2;
 }
 
-
-
+/* loading cursor when waiting for a response */
 body.loading {
     cursor: wait;
 }
+
+/* =============== TOOL TIPS ================== */
+
+/* Custom tooltip styling */
+.ui-tooltip {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Arrow customization */
+.ui-tooltip::before {
+    content: "";
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #333;
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+
+
 
 

@@ -33,7 +33,7 @@
 
 <p>The procedure has the following steps:</p>
 <ol>
-    <li>Click on the 'Generate a Temporary Pairing Code' button below. The code is simple, composed of two capitalized words.</li>
+    <li>Click on the 'Generate a Temporary Pairing Code' button below. The code is simple, composed of two capitalized words with no space.</li>
     <li>On the Tenovi portal, edit the 'patient info' value for the device, paste this Temporary Pairing Code as 'External ID', and save your changes. Repeat for all <i>new</i> devices to pair.</li>
     <li>Click the 'Pair Device' button below. The system will replace the Tenovi External ID with the Healthie User ID, and add the Syntrillo code in a hidden device value/pair property.</li>
     <li>When pairing is completed, refresh the Tenovi portal to see the changes.</li>
@@ -54,6 +54,10 @@
     }
     #pairTenoviDevicesSuccess {
         display: none;
+    }
+
+    #temporaryTenoviCode {
+        cursor: pointer;
     }
 </style>
 
@@ -150,8 +154,24 @@
                     $('#generateTenoviTemporaryPairingCodeFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                     if (response.success) {
                         // Update temporary pairing code in the page and show it
-                        $('#TenoviTemporaryPairingCode').html("Temporary Tenovi Pairing Code: <b>" + response.temporary_tenovi_pseudo_code + "</b>");
+                        $('#TenoviTemporaryPairingCode').html("Temporary Tenovi Pairing Code: &nbsp;&nbsp;&nbsp;&nbsp; <b id='temporaryTenoviCode'>" + response.temporary_tenovi_pseudo_code + "</b>");
                         $('#TenoviTemporaryPairingCode').show();
+
+                        // Add CSS for pointer cursor
+                        $('#temporaryTenoviCode').css('cursor', 'pointer');
+
+                        // Add tooltip
+                        $('#temporaryTenoviCode').attr('title', 'Click to copy to clipboard');
+
+                        // Copy to clipboard on click
+                        $('#temporaryTenoviCode').click(function() {
+                            var $temp = $('<input>');
+                            $('body').append($temp);
+                            $temp.val($(this).text()).select();
+                            document.execCommand('copy');
+                            $temp.remove();
+                            alert('Copied to clipboard');
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
@@ -164,6 +184,12 @@
                     $('body').removeClass('loading'); // Remove loading cursor
                 }
             });
+        });
+
+        // Initialize tooltip
+        $(document).tooltip({
+            items: "#temporaryTenoviCode",
+            content: "Click to copy to clipboard"
         });
     });
 </script>
