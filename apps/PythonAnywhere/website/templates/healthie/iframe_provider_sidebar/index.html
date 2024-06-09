@@ -28,16 +28,7 @@
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab-onboarding-tab" data-toggle="tab" href="#tab-onboarding" role="tab" aria-controls="tab-onboarding" aria-selected="false">Onboarding</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab-care-plan-tab" data-toggle="tab" href="#tab-care-plan" role="tab" aria-controls="tab-care-plan" aria-selected="false">Care Plan</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
+            <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaire</a>
         </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
@@ -46,10 +37,7 @@
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
-        <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
-        <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
-        <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
-        <div class="tab-pane fade" id="tab-cdss" role="tabpanel" aria-labelledby="tab-cdss-tab"></div>
+        <div class="tab-pane fade" id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-questionnaire-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
     </div>
 </div>
@@ -69,14 +57,6 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
 <script>
-    function sleep(milliseconds) {
-        var start = new Date().getTime();
-        for (var i = 0; i < 1e7; i++) {
-            if ((new Date().getTime() - start) > milliseconds){
-            break;
-            }
-        }
-    }
 
     // Function to load content via POST
     //   : POST prefered over GET to avoid caching sensitive data in the URL
@@ -86,9 +66,6 @@
 
         // Variables passed from Flask
         var healthieProviderId = "{{ healthie_provider_id }}";
-        var healthieUserId = "{{ healthie_user_id }}";
-        var temporaryLookupCode = "{{ temporary_lookup_code }}";
-        var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
         setTimeout(function() {
             $.ajax({
@@ -96,9 +73,6 @@
                 url: url,
                 data: {
                     healthie_provider_id: healthieProviderId,
-                    healthie_user_id: healthieUserId,
-                    temporary_lookup_code: temporaryLookupCode,
-                    patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
                 },
                 success: function(data) {
                     $(target).html(data);
@@ -113,14 +87,11 @@
     $(document).ready(function(){
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 500);
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status', 500);
 
         // Load the content of the other tabs in the background
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_system_bp.iframe_healthie_provider_sidebar_system") }}', '#tab-system');
     });
 </script>
 

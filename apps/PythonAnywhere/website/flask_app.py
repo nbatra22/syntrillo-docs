@@ -12,7 +12,6 @@ import markdown2
 #  VScode, if not found  : palette > clear cache and reload window
 from api import api_bp
 from healthie_endpoint import healthie_endpoint_bp
-from healthie_iframe_provider_sidebar import healthie_iframe_provider_sidebar_bp
 
 # ------------------------
 
@@ -25,7 +24,6 @@ app.config["DEBUG"] = True
 # Register blueprints
 app.register_blueprint(api_bp)
 app.register_blueprint(healthie_endpoint_bp)
-app.register_blueprint(healthie_iframe_provider_sidebar_bp)
 
 # ---------- tests ui ---------------------
 from tests_ui.index import tests_ui_index_bp
@@ -54,7 +52,15 @@ app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 
 # ----------- healthie routes - provider sidebar ---------------------
+from healthie.iframe_provider_sidebar.index import iframe_healthie_provider_sidebar_index_bp
+from healthie.iframe_provider_sidebar.status import iframe_healthie_provider_sidebar_status_bp
+from healthie.iframe_provider_sidebar.questionnaire import iframe_healthie_provider_sidebar_questionnaire_bp
+from healthie.iframe_provider_sidebar.system import iframe_healthie_provider_sidebar_system_bp
 
+app.register_blueprint(iframe_healthie_provider_sidebar_index_bp)
+app.register_blueprint(iframe_healthie_provider_sidebar_status_bp)
+app.register_blueprint(iframe_healthie_provider_sidebar_questionnaire_bp)
+app.register_blueprint(iframe_healthie_provider_sidebar_system_bp)
 
 # ----------- healthie routes - patient sidebar ---------------------
 from healthie.iframe_patient_sidebar.index import iframe_healthie_patient_sidebar_bp

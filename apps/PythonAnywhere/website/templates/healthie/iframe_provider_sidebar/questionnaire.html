@@ -1,0 +1,116 @@
+<h2>Build questionnaire from a data structure</h2>
+
+
+<style>
+    /* Initially loading indicator and logs */
+    #questionnaireBuildFromDataStructureLoading {
+        display: none;
+    }
+    #questionnaireBuildFromDataStructureSuccess {
+        display: none;
+    }
+</style>
+
+<div class="table-container-button">
+    <table class="compact-table">
+        <tr>
+            <td>
+                <form id="questionnaireBuildFromDataStructure" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_bp.healthie_build_form_from_data_structure') }}" method="POST">
+                    <table>
+                        <tr>
+                            <td colspan="2">
+                                <label for="questionnaireBuildFromDataStructureName" class="styled-label">Select Structure:</label>
+                                    <select name="structure_name" id="questionnaireBuildFromDataStructureName">
+                                        <!-- LIST ALL AVAILABLE STRUCTURES HERE -->
+                                        {% for structure in all_structures %}
+                                            <option value="{{ structure['structure_name'] }}">{{ structure['structure_name'] }}</option>
+                                        {% endfor %}
+                                    </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
+                                <button type="button" id="questionnaireBuildFromDataStructureButton" class="styled-button">Build questionnaire</button>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="questionnaireBuildFromDataStructureLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="questionnaireBuildFromDataStructureSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                            <p class="logs">Logs:</p>
+                        </td>
+                        <td align="left">
+                            <textarea id="questionnaireBuildFromDataStructureTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- ========================= SCRIPTS ============================ -->
+
+<script>
+    $(document).ready(function() {
+
+        // allows to prevent multiple requests from being sent at the same time
+        let isQuestionnaireBuildFromDataStructureRunning = false;
+
+        // ========================= Generate Personalized Form ============================
+
+        $('#questionnaireBuildFromDataStructureButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isQuestionnaireBuildFromDataStructureRunning) return;
+            isQuestionnaireBuildFromDataStructureRunning = true;
+
+            // Hide or erase previous log and show loading indicator
+            $('#questionnaireBuildFromDataStructureTextarea').val('');
+            $('#questionnaireBuildFromDataStructureSuccess').hide();
+            $('#questionnaireBuildFromDataStructureLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#questionnaireBuildFromDataStructure').attr('action'),
+                type: 'POST',
+                data: $('#questionnaireBuildFromDataStructure').serialize(),
+                success: function(response) {
+                    // Update textarea with log message
+                    $('#questionnaireBuildFromDataStructureTextarea').val(JSON.stringify(response, null, 4));
+
+                    if (response.success) {
+                        $('#questionnaireBuildFromDataStructureSuccess').html('Success');
+                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                    } else {
+                        $('#questionnaireBuildFromDataStructureSuccess').html('Error. See logs below.' );
+                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#questionnaireBuildFromDataStructureTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#questionnaireBuildFromDataStructureLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isQuestionnaireBuildFromDataStructureRunning = false;
+
+                }
+            });
+        });
+    });
+</script>
