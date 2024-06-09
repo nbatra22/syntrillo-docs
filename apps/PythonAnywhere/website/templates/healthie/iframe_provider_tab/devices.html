@@ -129,7 +129,7 @@
                         </td>
                         <td align="left" style="vertical-align: middle;">
                             <span id="pairTenoviDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                            <span id="pairTenoviDevicesSuccess" class="response-message"><b>Success! - The page will reload to show the updated status.</b></span>
+                            <span id="pairTenoviDevicesSuccess" class="response-message"></span>
                         </td>
                     </tr>
                 </table>
@@ -158,7 +158,24 @@
 
 <script>
     $(document).ready(function() {
+
+        // allows to prevent multiple requests from being sent at the same time
+        let isDeviceRequestRunning = false;
+
+        // ========================= Generate Temporary Pairing Code ============================
+
+        // Initialize tooltip
+        $(document).tooltip({
+            items: "#temporaryTenoviCode",
+            content: "Click to copy to clipboard"
+        });
+
         $('#generateTenoviTemporaryPairingCodeFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isDeviceRequestRunning) return;
+            isDeviceRequestRunning = true;
+
             // Show loading indicator
             $('#generateTenoviTemporaryPairingCodeLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
@@ -191,6 +208,9 @@
                             // Show transient popup
                             $('#transientPopupTenoviPairingCode').fadeIn(300).delay(1500).fadeOut(300);
                         });
+                    } else {
+                        $('#TenoviTemporaryPairingCode').html("Error. See logs below.");
+                        $('#TenoviTemporaryPairingCode').show();
                     }
                 },
                 error: function(xhr, status, error) {
@@ -201,21 +221,23 @@
                     // Hide loading indicator after AJAX completes (whether success or error)
                     $('#generateTenoviTemporaryPairingCodeLoading').hide();
                     $('body').removeClass('loading'); // Remove loading cursor
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isDeviceRequestRunning = false;
                 }
             });
         });
 
-        // Initialize tooltip
-        $(document).tooltip({
-            items: "#temporaryTenoviCode",
-            content: "Click to copy to clipboard"
-        });
-    });
-</script>
 
-<script>
-    $(document).ready(function() {
+
+        // ========================= Pair Tenovi Devices =========================
+
         $('#pairTenoviDevicesFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isDeviceRequestRunning) return;
+            isDeviceRequestRunning = true;
+
             // Show loading indicator
             $('#pairTenoviDevicesFormLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
@@ -228,22 +250,35 @@
                     console.log('Success:', response); // Log the response to console (for debugging)
                     $('#pairTenoviDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                     if (response.success) {
+                            $('#pairTenoviDevicesSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
                             $('#pairTenoviDevicesSuccess').show();
                             // Reload the page after a delay to allow the user to read the success message
                             setTimeout(function() {
+                                // allows to prevent multiple requests from being sent at the same time
+                                // disabling until timer ends
+                                isDeviceRequestRunning = false;
+
                                 // location.reload();
+                                // reloading only the devices tab. loadTabContent is defined in the index.html
                                 loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
                             }, 5000); // Reload after a delay
+                        } else {
+                            $('#pairTenoviDevicesSuccess').html("Error. See logs below.");
+                            $('#pairTenoviDevicesSuccess').show();
                         }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error); // Log AJAX error to console
                     $('#pairTenoviDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isDeviceRequestRunning = false;
                 },
                 complete: function() {
                     // Hide loading indicator after AJAX completes (whether success or error)
                     $('#pairTenoviDevicesFormLoading').hide();
                     $('body').removeClass('loading'); // Remove loading cursor
+
                 }
             });
         });
