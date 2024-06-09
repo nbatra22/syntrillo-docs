@@ -1,0 +1,38 @@
+/* static/healthie/iframe_patient.css */
+
+/* my friend : https://www.w3schools.com/css/tryit.asp */
+
+body {
+    font-family: "Avenir",Helvetica,"Arial",sans-serif; /* Avenir is Heathie's font */
+    font-size: 16px;
+    padding: 5px;
+    color: #4f4f4f;
+}
+
+
+h1 {
+    font-size: 24px;
+    color: #16284a;
+}
+
+h2 {
+    font-size: 20px;
+    color: #16284a;
+    margin-top: 20px;
+}
+
+h3 {
+    font-size: 18px;
+    color: #16284a;
+    margin-left: 10px;
+    margin-top: 20px;
+}
+
+p {
+    font-style: normal;
+    font-stretch: normal;
+    font-size: 16px;
+    line-height: 21px;
+    color: #16284a;
+    padding-left: 20px;
+}

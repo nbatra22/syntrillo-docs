@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthie Extra Patient Sidebar Item - Syntrillo server</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_patient.css') }}">
+</head>
+<body>
+    <h2>Healthie Extra Patient Sidebar Item - Syntrillo server</h2>
+
+    <p>Extra features and information for this patient</p>
+
+    <p>Patient Healthie User ID: {{ healthie_user_id }}</p>
+
+    <p>Temporary Lookup Code: {{ temporary_lookup_code }}</p>
+
+</body>
+</html>
