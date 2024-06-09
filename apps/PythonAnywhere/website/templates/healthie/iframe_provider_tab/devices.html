@@ -176,7 +176,9 @@
             if (isDeviceRequestRunning) return;
             isDeviceRequestRunning = true;
 
-            // Show loading indicator
+            // Hide or erase previous log and show loading indicator
+            $('#generateTenoviTemporaryPairingCodeFormTextarea').val("");
+            $('#TenoviTemporaryPairingCode').hide();
             $('#generateTenoviTemporaryPairingCodeLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
 
@@ -238,7 +240,9 @@
             if (isDeviceRequestRunning) return;
             isDeviceRequestRunning = true;
 
-            // Show loading indicator
+            // Hide and erase previous log and show loading indicator
+            $('#pairTenoviDevicesFormTextarea').val("");
+            $('#pairTenoviDevicesSuccess').hide();
             $('#pairTenoviDevicesFormLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
 
@@ -247,7 +251,6 @@
                 type: 'POST',
                 data: $('#pairTenoviDevicesForm').serialize(),
                 success: function(response) {
-                    console.log('Success:', response); // Log the response to console (for debugging)
                     $('#pairTenoviDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                     if (response.success) {
                             $('#pairTenoviDevicesSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
@@ -265,6 +268,8 @@
                         } else {
                             $('#pairTenoviDevicesSuccess').html("Error. See logs below.");
                             $('#pairTenoviDevicesSuccess').show();
+                            // enables the button to try again
+                            isDeviceRequestRunning = false;
                         }
                 },
                 error: function(xhr, status, error) {
