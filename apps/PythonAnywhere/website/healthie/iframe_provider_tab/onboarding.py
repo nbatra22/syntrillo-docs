@@ -31,6 +31,7 @@ def iframe_healthie_provider_tab_onboarding():
     inconsistencies = onboarding_manager.get_inconsistencies(user_id=post_manager.pseudonyms['healthie_user_id'])
 
     return render_template('healthie/iframe_provider_tab/onboarding.html',
+                           temporary_lookup_code=post_manager.temporary_lookup_code,
                            patient_status=patient_status,
                            inconsistencies=inconsistencies,
                            )
@@ -49,6 +50,33 @@ def healthie_onboarding_generate_personalized_form():
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
-    log = ""
+    # --------------------------------------------------------------------
+
+    # Convert send_request_to_patient to a boolean
+    send_request_to_patient = request.form.to_dict().get('send_request_to_patient')
+    send_request_to_patient_bool = send_request_to_patient.lower() in ['on', 'true'] if send_request_to_patient else False
+
+    # new instance of onboarding_manager
+    onboarding_manager = PatientOnboardingManager()
+
+    new_form = onboarding_manager.build_personalized_intake_form(
+        user_id=post_manager.pseudonyms['healthie_user_id'],
+        send_completion_request=send_request_to_patient_bool
+    )
+
+    # return status
+    if new_form is None:
+        log = {
+            "success": False,
+            "message": "Error: Personalized Intake Form not generated",
+            'new_form': None
+        }
+    else:
+        log = {
+            "success": True,
+            "message": "Personalized Intake Form generated successfully",
+            'new_form': new_form
+        }
 
     return jsonify( log ), 200
+

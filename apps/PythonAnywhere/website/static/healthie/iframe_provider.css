@@ -77,7 +77,7 @@ ol {
     padding: 10px;
 }
 
-/* ---------------- Buttons and logs ---------------------------------- */
+/* ---------------- Table for buttons and logs ---------------------------------- */
 
 .table-container-button {
     margin-left: 30px;
@@ -186,6 +186,12 @@ ol {
     background-color: #4a90e2;
     color: #fff;
     border-color: #4a90e2;
+}
+
+.styled-label {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.8em;
 }
 
 /* loading cursor when waiting for a response */

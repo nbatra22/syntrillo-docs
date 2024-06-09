@@ -84,23 +84,26 @@
     <table class="compact-table">
         <tr>
             <td>
-                <table>
-                    <tr>
-                        <td align="right">
-                            <form id="onboardingGeneratePersonalizedForm" action="{{ url_for('iframe_healthie_provider_tab_onboarding_bp.healthie_onboarding_generate_personalized_form') }}" method="POST">
+                <form id="onboardingGeneratePersonalizedForm" action="{{ url_for('iframe_healthie_provider_tab_onboarding_bp.healthie_onboarding_generate_personalized_form') }}" method="POST">
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                 <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
-                                <button type="button" id="onboardingGeneratePersonalizedFormButton" class="styled-button-small">Generate Personalized Intake Form</button>
-                                <br>
-                                <label for="onboardingGeneratePersonalizedFormSendRequestCheckbox">Also Send Completion Request to Patient</label>
+                                <button type="button" id="onboardingGeneratePersonalizedFormButton" class="styled-button">Generate Personalized Intake Form</button>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="onboardingGeneratePersonalizedFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="onboardingGeneratePersonalizedFormSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <label for="onboardingGeneratePersonalizedFormSendRequestCheckbox" class="styled-label">Also Send Completion Request to Patient</label>
                                 <input type="checkbox" id="onboardingGeneratePersonalizedFormSendRequestCheckbox" name="send_request_to_patient">
-                            </form>
-                        </td>
-                        <td align="left" style="vertical-align: middle;">
-                            <span id="onboardingGeneratePersonalizedFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                            <span id="onboardingGeneratePersonalizedFormSuccess" class="response-message"></span>
-                        </td>
-                    </tr>
-                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
             </td>
         </tr>
         <tr>
@@ -120,11 +123,15 @@
     </table>
 </div>
 
+<!-- ========================= SCRIPTS ============================ -->
+
 <script>
     $(document).ready(function() {
 
         // allows to prevent multiple requests from being sent at the same time
         let isOnboardingRequestRunning = false;
+
+        // ========================= Generate Personalized Form ============================
 
         $('#onboardingGeneratePersonalizedFormButton').click(function() {
 
@@ -132,7 +139,9 @@
             if (isOnboardingRequestRunning) return;
             isOnboardingRequestRunning = true;
 
-            // Show loading indicator
+            // Hide or erase previous log and show loading indicator
+            $('#onboardingGeneratePersonalizedFormTextarea').val('');
+            $('#onboardingGeneratePersonalizedFormSuccess').hide();
             $('#onboardingGeneratePersonalizedFormLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
 
@@ -142,19 +151,19 @@
                 data: $('#onboardingGeneratePersonalizedForm').serialize(),
                 success: function(response) {
                     // Update textarea with log message
-                    $('#onboardingGeneratePersonalizedFormResultTextarea').val(JSON.stringify(response, null, 4));
+                    $('#onboardingGeneratePersonalizedFormTextarea').val(JSON.stringify(response, null, 4));
 
                     if (response.success) {
                         $('#onboardingGeneratePersonalizedFormSuccess').html('Success');
-                        $('#onboardingGeneratePersonalizedFormSuccess').show
+                        $('#onboardingGeneratePersonalizedFormSuccess').show();
                     } else {
                         $('#onboardingGeneratePersonalizedFormSuccess').html('Error. See logs below.' );
-                        $('#onboardingGeneratePersonalizedFormSuccess').show
+                        $('#onboardingGeneratePersonalizedFormSuccess').show();
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error); // Log AJAX error to console
-                    $('#onboardingGeneratePersonalizedFormResultTextarea').val('Error: ' + error); // Display error message in textarea
+                    $('#onboardingGeneratePersonalizedFormTextarea').val('Error: ' + error); // Display error message in textarea
                 },
                 complete: function() {
                     // Hide loading indicator after AJAX completes (whether success or error)
