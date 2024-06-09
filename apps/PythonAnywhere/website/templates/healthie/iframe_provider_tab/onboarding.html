@@ -2,5 +2,171 @@
 
 <h2>Onboarding</h2>
 
-<p>blah</p>
+<h3>Patient status</h3>
+<!--
+    - Onboarding Intake Forms and Charting Notes list, number of gaps and completion status
+    (hard coded list of what's expected)
+    - Onboarding completed or not
+-->
+
+<div class="table-container-data">
+    <table>
+        <thead>
+            <tr>
+                <th>Form Name</th>
+                <th>User ID</th>
+                <th>Filler ID</th>
+                <th>Finished</th>
+                <th>Missing Answers</th>
+                <th>Locked at</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in patient_status %}
+            <tr>
+                <td>{{ entry.form }}</td>
+                {% if entry.status %}
+                    <td>{{ entry.status.user_id }}</td>
+                    <td>{{ entry.status.filler_id }}</td>
+                    <td>{{ "Yes" if entry.status.finished else "No" }}</td>
+                    <td>{{ entry.status.missing_answer_count }}</td>
+                    <td>{{ entry.status.locked_at }}</td>
+                {% elif entry.is_intake_form %}
+                    {% if entry.completion_request_status %}
+                        <td colspan="5">InTake Form Completion Requested on {{ entry.completion_request_date }}</td>
+                    {% else %}
+                        <td colspan="5">InTake Form Completion Not Requested</td>
+                    {% endif %}
+                {% else %}
+                    <td colspan="5">No status available</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3>Patient data inconsistencies</h3>
+<div class="table-container-data">
+    <table>
+        <thead>
+            <tr>
+                <th>External ID</th>
+                <th>Answer 1</th>
+                <th>Answer 2</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for discrepancy in inconsistencies %}
+            <tr {% if discrepancy.blocker %}style="background-color: lightcoral;"{% endif %}>
+                <td>{{ discrepancy.external_id }}</td>
+                <td>{{ discrepancy.answer1 }}</td>
+                <td>{{ discrepancy.answer2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<h3>Actions for this patient</h3>
+
+<style>
+    /* Initially loading indicator and logs */
+    #onboardingGeneratePersonalizedFormLoading {
+        display: none;
+    }
+    #onboardingGeneratePersonalizedFormSuccess {
+        display: none;
+    }
+</style>
+
+<div class="table-container-button">
+    <table class="compact-table">
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right">
+                            <form id="onboardingGeneratePersonalizedForm" action="{{ url_for('iframe_healthie_provider_tab_onboarding_bp.healthie_onboarding_generate_personalized_form') }}" method="POST">
+                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                <button type="button" id="onboardingGeneratePersonalizedFormButton" class="styled-button-small">Generate Personalized Intake Form</button>
+                                <br>
+                                <label for="onboardingGeneratePersonalizedFormSendRequestCheckbox">Also Send Completion Request to Patient</label>
+                                <input type="checkbox" id="onboardingGeneratePersonalizedFormSendRequestCheckbox" name="send_request_to_patient">
+                            </form>
+                        </td>
+                        <td align="left" style="vertical-align: middle;">
+                            <span id="onboardingGeneratePersonalizedFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                            <span id="onboardingGeneratePersonalizedFormSuccess" class="response-message"></span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                            <p class="logs">Logs:</p>
+                        </td>
+                        <td align="left">
+                            <textarea id="onboardingGeneratePersonalizedFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+
+        // allows to prevent multiple requests from being sent at the same time
+        let isOnboardingRequestRunning = false;
+
+        $('#onboardingGeneratePersonalizedFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isOnboardingRequestRunning) return;
+            isOnboardingRequestRunning = true;
+
+            // Show loading indicator
+            $('#onboardingGeneratePersonalizedFormLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#onboardingGeneratePersonalizedForm').attr('action'),
+                type: 'POST',
+                data: $('#onboardingGeneratePersonalizedForm').serialize(),
+                success: function(response) {
+                    // Update textarea with log message
+                    $('#onboardingGeneratePersonalizedFormResultTextarea').val(JSON.stringify(response, null, 4));
+
+                    if (response.success) {
+                        $('#onboardingGeneratePersonalizedFormSuccess').html('Success');
+                        $('#onboardingGeneratePersonalizedFormSuccess').show
+                    } else {
+                        $('#onboardingGeneratePersonalizedFormSuccess').html('Error. See logs below.' );
+                        $('#onboardingGeneratePersonalizedFormSuccess').show
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#onboardingGeneratePersonalizedFormResultTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#onboardingGeneratePersonalizedFormLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isOnboardingRequestRunning = false;
+
+                }
+            });
+        });
+    });
+</script>
 

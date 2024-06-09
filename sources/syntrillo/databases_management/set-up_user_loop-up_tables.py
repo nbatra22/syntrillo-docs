@@ -56,13 +56,13 @@ class UserLookupTablesManager:
             pseudo_code_for_tenovi_phi_access BINARY(16) UNIQUE ,
 
             # External user ID, fixed length for consistency
-            healthy_user_id CHAR(255) UNIQUE,
+            healthie_user_id CHAR(255) UNIQUE,
 
             # Date of creation for audit purposes
             date DATETIME DEFAULT CURRENT_TIMESTAMP,  # Defaulting to now
 
             # Enforce unique relationships
-            UNIQUE(syntrillo_internal_key, healthy_user_id),
+            UNIQUE(syntrillo_internal_key, healthie_user_id),
             UNIQUE(syntrillo_internal_key, pseudo_code_for_tenovi_phi_access)
         );
         """

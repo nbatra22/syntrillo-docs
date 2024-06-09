@@ -51,7 +51,7 @@ def iframe_healthie_provider_tab():
     data_get_request = request.args.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_iframes_logs.txt', 'a') as f:
+    with open('ignore_healthie_iframes_logs.txt', 'a') as f:
         f.write(json.dumps(data_get_request) + '\n\n')
 
     # Extract hl_current_user_id from data_get_request
@@ -84,7 +84,7 @@ def iframe_healthie_provider_tab():
 
         # fetch patient pseudonyms : syntrillo_user_id and pseudo_code_for_tenovi_phi_access
         lookup_manager = LookUpCodesManagement()
-        pseudonyms = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
+        pseudonyms = lookup_manager.retrieve_entry_by_healthie_user_id(patient_id)
         patient_not_registered_at_syntrillo = ( pseudonyms is None )
 
         # get paired devices
@@ -124,7 +124,7 @@ def healthie_onboarding_generate_personalized_form():
     data_post_request = request.form.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+    with open('ignore_healthie_onboarding_logs.txt', 'a') as f:
         f.write(json.dumps(data_post_request) + '\n\n')
 
     patient_id = data_post_request.get('patient_id')
@@ -170,15 +170,15 @@ def tenovi_generate_temporary_pairing_code_form():
     data_post_request = request.form.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+    with open('ignore_healthie_onboarding_logs.txt', 'a') as f:
         f.write(json.dumps(data_post_request) + '\n\n')
 
-    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
+    patient_id = data_post_request.get('patient_id')  # aka healthie_user_id
     provider_id = data_post_request.get('provider_id')
 
     # Get syntrillo_internal_key from patient_id
     lookup_manager = LookUpCodesManagement()
-    patient_entry = lookup_manager.retrieve_entry_by_healthy_user_id(patient_id)
+    patient_entry = lookup_manager.retrieve_entry_by_healthie_user_id(patient_id)
     syntrillo_internal_key = patient_entry['syntrillo_internal_key']
 
     # Call AccountsPairing.create_and_return_unique_temporary_pseudo_code
@@ -202,12 +202,12 @@ def tenovi_pair_devices_form():
     # Retrieve the JSON data from the POST request
     data_post_request = request.form.to_dict()
 
-    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
+    patient_id = data_post_request.get('patient_id')  # aka healthie_user_id
     provider_id = data_post_request.get('provider_id')
 
-    # get syntrillo_internal_key from patient_id from LookUpCodesManagement.retrieve_entry_by_healthy_user_id
+    # get syntrillo_internal_key from patient_id from LookUpCodesManagement.retrieve_entry_by_healthie_user_id
     code_manager = LookUpCodesManagement()
-    patient_entry = code_manager.retrieve_entry_by_healthy_user_id(patient_id)
+    patient_entry = code_manager.retrieve_entry_by_healthie_user_id(patient_id)
 
     pairing = AccountsPairing(patient_entry['syntrillo_internal_key'])
     log = pairing.pair_devices_using_temporary_pseudo_code()
@@ -223,12 +223,12 @@ def register_patient_at_syntrillo_form():
     # Retrieve the JSON data from the POST request
     data_post_request = request.form.to_dict()
 
-    patient_id = data_post_request.get('patient_id')  # aka healthy_user_id
+    patient_id = data_post_request.get('patient_id')  # aka healthie_user_id
     provider_id = data_post_request.get('provider_id')
 
     # add a new entry in user_look_up_codes
     lookup_code_management = LookUpCodesManagement()
-    entry_log = lookup_code_management.create_entry(healthy_user_id=patient_id)
+    entry_log = lookup_code_management.create_entry(healthie_user_id=patient_id)
 
     if entry_log is not None:
         log = { 'log' : {

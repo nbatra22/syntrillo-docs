@@ -50,7 +50,7 @@ def iframe_healthie_provider_sidebar():
     data_get_request = request.args.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_iframes_logs.txt', 'a') as f:
+    with open('ignore_healthie_iframes_logs.txt', 'a') as f:
         f.write(json.dumps(data_get_request) + '\n\n')
 
     # Extract hl_current_user_id from data_get_request
@@ -96,7 +96,7 @@ def healthie_build_form_from_data_structure():
     data_post_request = request.form.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_onboarding_logs.txt', 'a') as f:
+    with open('ignore_healthie_onboarding_logs.txt', 'a') as f:
         f.write(json.dumps(data_post_request) + '\n\n')
 
     provider_id = data_post_request.get('provider_id')

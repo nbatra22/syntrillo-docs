@@ -64,7 +64,7 @@ class NewPatientCreated():
 
         # add a new entry in user_look_up_codes
         lookup_code_management = LookUpCodesManagement()
-        lookup_code_management.create_entry(healthy_user_id=healthie_user_id)
+        lookup_code_management.create_entry(healthie_user_id=healthie_user_id)
 
 
 

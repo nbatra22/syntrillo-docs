@@ -6,19 +6,19 @@ This repository contains two Python scripts essential for managing pseudonymizat
 
 ### 1. `lookup_codes_management.py`
 
-This script defines the `LookUpCodesManagement` class, responsible for managing look-up codes in the Syntrillo database. Each entry links a healthy user ID to an internal key and a pseudonym for accessing PHI.
+This script defines the `LookUpCodesManagement` class, responsible for managing look-up codes in the Syntrillo database. Each entry links a healthie user ID to an internal key and a pseudonym for accessing PHI.
 
 #### Key Features:
-- **Create Entries**: Adds new entries linking healthy user IDs to internal keys and pseudonyms.
-- **Retrieve Entries**: Allows retrieval of entries using healthy user IDs, internal keys, or pseudonyms.
+- **Create Entries**: Adds new entries linking healthie user IDs to internal keys and pseudonyms.
+- **Retrieve Entries**: Allows retrieval of entries using healthie user IDs, internal keys, or pseudonyms.
 - **Close Connections**: Safely closes database connections and SSH tunnels.
 
 #### Regulatory Objective:
 The primary regulatory objective of this script is to comply with HIPAA's Safe Harbor rules by ensuring that PHI is accessed and managed using pseudonyms. This reduces the risk of unauthorized access and enhances the privacy of health information.
 
 #### Methods:
-- `create_entry(healthy_user_id)`: Creates a new entry for a healthy user ID.
-- `retrieve_entry_by_healthy_user_id(healthy_user_id)`: Retrieves an entry using the healthy user ID.
+- `create_entry(healthie_user_id)`: Creates a new entry for a healthie user ID.
+- `retrieve_entry_by_healthie_user_id(healthie_user_id)`: Retrieves an entry using the healthie user ID.
 - `retrieve_entry_by_internal_key(internal_key)`: Retrieves an entry using the internal key.
 - `retrieve_entry_by_pseudo_code(pseudo_code)`: Retrieves an entry using the pseudonym.
 - `close_connection()`: Closes the database connection.

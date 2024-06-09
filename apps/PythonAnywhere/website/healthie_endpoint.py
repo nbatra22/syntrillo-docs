@@ -2,7 +2,7 @@
 
 """
 
-routes to healthy webhooks endpoints
+routes to healthie webhooks endpoints
 
 """
 

@@ -31,7 +31,7 @@ def iframe_healthie_provider_tab_index():
     data_get_request = request.args.to_dict()
 
     # Log the data to a local file
-    with open('ignore_healthy_iframes_logs.txt', 'a') as f:
+    with open('ignore_healthie_iframes_logs.txt', 'a') as f:
         f.write(json.dumps(data_get_request) + '\n\n')
 
     # Extract hl_current_user_id from data_get_request
@@ -44,15 +44,15 @@ def iframe_healthie_provider_tab_index():
 
     if healthie_user_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
         # healthie_user_id = '-1'
-        # healthie_user_id = "1035117" # with onboarding forms
-        healthie_user_id = "1209727" # with syntrillo_internal_key
+        healthie_user_id = "1035117" # with onboarding forms
+        # healthie_user_id = "1209727" # with syntrillo_internal_key
         # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
         # healthie_user_id = "dummy456456" # without syntrillo_internal_key
 
     # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
     look_up_codes_management = LookUpCodesManagement()
-    entry = look_up_codes_management.retrieve_entry_by_healthy_user_id(healthie_user_id)
+    entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
     if entry is not None:
         syntrillo_internal_key = entry['syntrillo_internal_key']
     else:
