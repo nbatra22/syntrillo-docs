@@ -37,7 +37,7 @@ from routes.healthie.endpoints import healthie_endpoint_bp
 
 app.register_blueprint(healthie_endpoint_bp)
 
-# ================= Healthie Routes and Bluprints ===========================
+# ================= Healthie Routes and Blueprints ===========================
 
 # ----------- provider tab ---------------------
 from routes.healthie.iframe_provider_tab.index import iframe_healthie_provider_tab_index_bp
