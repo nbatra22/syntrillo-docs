@@ -8,22 +8,19 @@ from flask import Flask, jsonify, request, render_template, send_file, url_for
 
 import markdown2
 
-# import local package
-#  VScode, if not found  : palette > clear cache and reload window
-from api import api_bp
-from healthie_endpoint import healthie_endpoint_bp
-
-# ------------------------
-
 app = Flask(__name__)
 
 app.config["DEBUG"] = True
 
-# -------------------------
+# =================== tests ==========================
+
+# ----------- tests api --------------------
+
+# routes
+from api import api_bp
 
 # Register blueprints
 app.register_blueprint(api_bp)
-app.register_blueprint(healthie_endpoint_bp)
 
 # ---------- tests ui ---------------------
 from tests_ui.index import tests_ui_index_bp
@@ -34,7 +31,15 @@ app.register_blueprint(tests_ui_index_bp)
 app.register_blueprint(tests_ui_tab1_bp)
 app.register_blueprint(tests_ui_tab2_bp)
 
-# ----------- healthie routes - provider tab ---------------------
+# ================== Halehtie endpoints ========================
+
+from healthie.endpoints import healthie_endpoint_bp
+
+app.register_blueprint(healthie_endpoint_bp)
+
+# ================= Healthie Routes and Bluprints ===========================
+
+# ----------- provider tab ---------------------
 from healthie.iframe_provider_tab.index import iframe_healthie_provider_tab_index_bp
 from healthie.iframe_provider_tab.status import iframe_healthie_provider_tab_status_bp
 from healthie.iframe_provider_tab.devices import iframe_healthie_provider_tab_devices_bp
@@ -51,7 +56,7 @@ app.register_blueprint(iframe_healthie_provider_tab_care_plan_bp)
 app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 
-# ----------- healthie routes - provider sidebar ---------------------
+# ----------- provider sidebar ---------------------
 from healthie.iframe_provider_sidebar.index import iframe_healthie_provider_sidebar_index_bp
 from healthie.iframe_provider_sidebar.status import iframe_healthie_provider_sidebar_status_bp
 from healthie.iframe_provider_sidebar.questionnaire import iframe_healthie_provider_sidebar_questionnaire_bp
@@ -62,13 +67,14 @@ app.register_blueprint(iframe_healthie_provider_sidebar_status_bp)
 app.register_blueprint(iframe_healthie_provider_sidebar_questionnaire_bp)
 app.register_blueprint(iframe_healthie_provider_sidebar_system_bp)
 
-# ----------- healthie routes - patient sidebar ---------------------
+# ----------- patient sidebar ---------------------
 from healthie.iframe_patient_sidebar.index import iframe_healthie_patient_sidebar_bp
 
 app.register_blueprint(iframe_healthie_patient_sidebar_bp)
 
 
-# -------------------------
+# ==================================================================================================================
+
 # default web site
 @app.route("/")
 def index():
