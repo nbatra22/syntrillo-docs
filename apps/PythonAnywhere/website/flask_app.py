@@ -31,7 +31,7 @@ app.register_blueprint(tests_ui_index_bp)
 app.register_blueprint(tests_ui_tab1_bp)
 app.register_blueprint(tests_ui_tab2_bp)
 
-# ================== Halehtie endpoints ========================
+# ================== Healthie route for webhook endpoints ========================
 
 from routes.healthie.endpoints import healthie_endpoint_bp
 
