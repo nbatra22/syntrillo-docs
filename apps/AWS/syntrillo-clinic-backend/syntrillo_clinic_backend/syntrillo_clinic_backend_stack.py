@@ -11,6 +11,36 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 # SYNTRILLO BACKEND CUSTOM CONSTRUCTS
 # -----------------------------------------------------------------------------
+class LandingPageConstruct(Construct):
+    '''
+        This CDK Construct creates a lambda function that serves the landing page.
+    '''
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+
+        # Create the Lambda layer that contains the required libraries
+        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
+            layer_version_name="FlaskLayer",
+            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        )
+
+        # Create the Lambda function
+        landing_page_function = _lambda.Function(self, "LandingPageFunction",
+            function_name="LandingPageFunction",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset("lambda-functions/landing-page-function"),
+        )
+
+        # Add the Lambda layer to the Lambda function
+        landing_page_function.add_layers(flask_layer)
+
+        # Add the Lambda function as a REST API resource
+        landing_page_api = apigw.RestApi(self, "LandingPageAPI", rest_api_name="LandingPageAPI")
+        landing_page_api_root = landing_page_api.root
+        landing_page_api_root.add_method("GET", apigw.LambdaIntegration(landing_page_function))
+
 class IFrameGeneratorConstruct(Construct):
 
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
@@ -88,6 +118,8 @@ class SyntrilloClinicBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        LandingPageConstruct(self, "LandingPageConstruct")
+        
         IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct")
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
