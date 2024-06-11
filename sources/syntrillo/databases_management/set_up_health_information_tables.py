@@ -30,6 +30,7 @@ class HealthInformationTablesManager:
         CREATE TABLE IF NOT EXISTS misc_health_data (
             id INT AUTO_INCREMENT PRIMARY KEY,
             syntrillo_internal_key BINARY(16) NOT NULL,
+            data_type VARCHAR(255) NOT NULL,
             data JSON NOT NULL,
             date DATETIME DEFAULT CURRENT_TIMESTAMP
         );
