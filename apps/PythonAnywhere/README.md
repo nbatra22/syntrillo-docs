@@ -52,12 +52,38 @@ Incoming endpoint from Healthie webhooks : `/healthie_endpoint_post', methods=['
 
 ## Installation on PythonAnywhere
 
-```
+```txt
    - making use of python 3.9 everywhere : set-up in System Image
    - need to 'pip3.9 install statsmodels markdown2' in the console.
       :Make sure to use the right python version !!!
       : see : https://help.pythonanywhere.com/pages/InstallingNewModules/
 ```
 
+`/var/www/syntrillo_pythonanywhere_com_wsgi.py`
+
+```python
+# This file contains the WSGI configuration required to serve up your
+# web application at http://<your-username>.pythonanywhere.com/
+# It works by setting the variable 'application' to a WSGI handler of some
+# description.
+#
+# The below has been auto-generated for your Flask project
+
+import sys
+
+# add your project directory to the sys.path : where flask_app.py is
+# project_home = '/home/syntrillo/15K_SyntrilloPythonAnywhere/website'
+project_home = '/home/syntrillo/Syntrillo_Clinic/apps/PythonAnywhere/website/'
+if project_home not in sys.path:
+    sys.path = [project_home] + sys.path
+
+# add the sources (similar to PYTHONPATH for VSCode)
+company_packages_home = '/home/syntrillo/Syntrillo_Clinic/sources/'
+if company_packages_home not in sys.path:
+    sys.path = [company_packages_home] + sys.path
+
+# import flask app but need to call it "application" for WSGI to work
+from flask_app import app as application  # noqa
+```
 
 
