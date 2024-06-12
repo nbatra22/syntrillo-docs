@@ -4,7 +4,8 @@ from aws_cdk import (
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
-    aws_apigateway as apigw
+    aws_apigateway as apigw,
+    aws_ssm as ssm,
 )
 from constructs import Construct
 
@@ -48,12 +49,18 @@ class IFrameGeneratorConstruct(Construct):
     
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", rest_api_name="IFramGeneratorAPI")
 
-        # Create the Lambda layer that contains the required libraries
+        # Create the Lambda layers that contains the required libraries
         flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
             layer_version_name="FlaskLayer",
             code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
         )
+
+        # mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
+        #     layer_version_name="MySQLLayer",
+        #     code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
+        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        # )
 
         # Create the Lambda function
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
@@ -63,8 +70,9 @@ class IFrameGeneratorConstruct(Construct):
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
         )
 
-        # Add the Lambda layer to the Lambda function
+        # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
+        # iframe_generator_function.add_layers(mysql_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
@@ -73,6 +81,20 @@ class IFrameGeneratorConstruct(Construct):
             "ANY",
             apigw.LambdaIntegration(iframe_generator_function),
         )
+
+        # # Add the Lambda function as a REST API resource (iframe_healthie_provider_tab)
+        # iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
+        # iframe_healthie_provider_tab.add_method(
+        #     "ANY",
+        #     apigw.LambdaIntegration(iframe_generator_function),
+        # )
+
+        # # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
+        # iframe_healthie_provider_tab_devices = root_resource.add_resource("healthie").add_resource("iframe_provider_tab").add_resource("devices_olemaitre")
+        # iframe_healthie_provider_tab_devices.add_method(
+        #     "ANY",
+        #     apigw.LambdaIntegration(iframe_generator_function),
+        # )
 
 class UploadQuestionnaireConstruct(Construct):
     '''
@@ -84,8 +106,13 @@ class UploadQuestionnaireConstruct(Construct):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
+        environment = ssm.StringParameter.from_string_parameter_attributes(
+            self, "Environment",
+            parameter_name="/environment"
+        )
+
         bucket = s3.Bucket(self, "QuestionnaireBucket",
-            bucket_name = "syntrillo-clinic-sandbox.questionnaire-bucket"
+            bucket_name = f"{environment.string_value}.questionnaire-bucket"
         )
 
         # Create the Lambda layer
