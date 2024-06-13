@@ -56,11 +56,11 @@ class IFrameGeneratorConstruct(Construct):
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
         )
 
-        # mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
-        #     layer_version_name="MySQLLayer",
-        #     code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
-        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        # )
+        mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
+            layer_version_name="MySQLLayer",
+            code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        )
 
         # Create the Lambda function
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
@@ -72,7 +72,7 @@ class IFrameGeneratorConstruct(Construct):
 
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
-        # iframe_generator_function.add_layers(mysql_layer)
+        iframe_generator_function.add_layers(mysql_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
