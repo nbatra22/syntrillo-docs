@@ -76,7 +76,7 @@ class Devices:
         }
         return self.get_devices(**query_params)
 
-    def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access):
+    def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access : str):
         """
         Returns devices matching the pseudo_code_for_tenovi_phi_access key/value propoerty
         """
@@ -123,6 +123,36 @@ class Devices:
             },
         }
         return self.auth.make_patch_request(url, payload)
+
+    def create_set_of_devices_with_pending_orders(
+        self,
+        devices_names : list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'),
+        patient_id : str = "TempCode",
+        sms_opt_in : bool = False, # If you have not obtained the patient's consent to receive SMS messages, please set the sms_opt_in field to False.
+    ):
+        """
+        TODO : document this
+        """
+        devices_created = []
+        for device_name in devices_names:
+            payload = {
+                "patient_id": patient_id,
+                "patient" : {
+                    "external_id": patient_id,
+                    "sms_opt_in": sms_opt_in ,
+                },
+                "device": {
+                    "name": device_name,
+                    "hardware_uuid": None,  # that's the Gateway ID
+                    "fulfillment_request": {
+                        "client_will_fulfill": True,
+                    }
+                },
+            }
+            new_device = self.create_device(payload)
+            devices_created.append(new_device)
+
+        return devices_created
 
 
 # Example usage:
@@ -174,7 +204,7 @@ if __name__ == "__main__":
         else:
             print("Device not found.")
 
-    if True:
+    if False:
         # Example payload for creating a new device
         payload = {
             "device": {
@@ -265,3 +295,39 @@ if __name__ == "__main__":
                 print("Devices: None found.")
 
 
+    if True:
+        # Example payload for creating a new device
+        payload = {
+            "patient_id": "OlivierLemaitre2",
+            "patient" : {
+                    "external_id": "OlivierLemaitre2",
+                    "sms_opt_in": False ,
+                },
+            "device": {
+                "name": "Tenovi Watch",      # required
+                "hardware_uuid": None,       # required : this is the gateway ID
+                "fulfillment_request": {
+                    "client_will_fulfill": False, # False => 'dropship requested'
+                }
+            },
+        }
+
+        # Create and print the new device
+        new_device = devices_module.create_device(payload)
+        if new_device:
+            print("New Device Created:")
+            TenoviAuth.print_pretty_json(new_device)
+
+    if False:
+        # Create a set of devices for pending shipment
+        new_devices = devices_module.create_set_of_devices_with_pending_orders()
+
+        print("New Devices Created:")
+        TenoviAuth.print_pretty_json(new_devices)
+
+        """
+        - will Tenovi ship devices ? 'Note: This shipping information is for internal reference only. Tenovi will not dropship this device.'
+        - in dashboard, can enter shipping address for all devices only once
+        - is gateway shipped with the device ?
+
+        """
