@@ -2,7 +2,7 @@
 import unittest
 import random
 from datetime import datetime
-import MySQLdb
+import pymysql
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 class TestLookUpCodesManagement(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestLookUpCodesManagement(unittest.TestCase):
         """Tear down the test environment"""
         try:
             self.lookup_manager.close_connection()
-        except MySQLdb.OperationalError as e:
+        except pymysql.OperationalError as e:
             print(f"OperationalError during connection close: {e}")
         except Exception as e:
             print(f"Unexpected error during connection close: {e}")

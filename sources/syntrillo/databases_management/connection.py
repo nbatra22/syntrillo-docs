@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
-import MySQLdb
+import pymysql
 import sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel
 
 sshtunnel.SSH_TIMEOUT = 60.0
@@ -80,7 +80,7 @@ class DatabaseConnection:
             delay (int): Delay in seconds between retry attempts.
 
         Returns:
-            MySQLdb.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
+            pymysql.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
         """
         PA_DB_CONFIG, PA_SSH_TUNNEL = self.load_database_credentials()
         attempt = 0
@@ -92,7 +92,7 @@ class DatabaseConnection:
             try:
                 if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
                     # No SSH tunnel required if running inside PythonAnywhere platform
-                    self.conn = MySQLdb.connect(**PA_DB_CONFIG)
+                    self.conn = pymysql.connect(**PA_DB_CONFIG)
                     if verbose:
                         print("_this_is_PythonAnywhere_: connection to", PA_DB_CONFIG.get('database'), "successful.")
                     return self.conn, None
@@ -110,14 +110,14 @@ class DatabaseConnection:
                     db_config_ssh = PA_DB_CONFIG.copy()
                     db_config_ssh['host'] = '127.0.0.1'
                     db_config_ssh['port'] = self.tunnel.local_bind_port
-                    self.conn = MySQLdb.connect(**db_config_ssh)
+                    self.conn = pymysql.connect(**db_config_ssh)
                     if verbose:
                         print("remote connection to", PA_DB_CONFIG.get('database'), "successful.")
                     return self.conn, self.tunnel
 
             except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
                 print(f"SSH Tunnel Error: {ssh_err}")
-            except MySQLdb.Error as mysql_err:
+            except pymysql.MySQLError.Error as mysql_err:
                 print(f"MySQL Error: {mysql_err}")
             except Exception as e:
                 print(f"Unexpected Error: {e}")

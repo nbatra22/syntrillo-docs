@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 # https://help.pythonanywhere.com/pages/AccessingMySQLFromOutsidePythonAnywhere/
 
-import MySQLdb
+import pymysql
 import sshtunnel
 
 sshtunnel.SSH_TIMEOUT = 30.0
@@ -36,7 +36,7 @@ PA_SSH_TUNNEL = {
 def create_connection():
     if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
         # No SSH tunnel required if running inside PythonAnywhere platform
-        conn = MySQLdb.connect(**PA_DB_CONFIG)
+        conn = pymysql.connect(**PA_DB_CONFIG)
         print("_this_is_PythonAnywhere_ : connection to ",  PA_DB_CONFIG.get('database'), " successful.")
         return conn, None
     else:
@@ -54,7 +54,7 @@ def create_connection():
         db_config_ssh=PA_DB_CONFIG.copy()
         db_config_ssh['host'] = '127.0.0.1'
         db_config_ssh['port'] = tunnel.local_bind_port
-        conn = MySQLdb.connect(**db_config_ssh)
+        conn = pymysql.connect(**db_config_ssh)
         print("remote connection to ",  PA_DB_CONFIG.get('database'), " successful.")
         return conn, tunnel
 

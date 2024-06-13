@@ -1,6 +1,6 @@
 # Path: ./sources/syntrillo/databases_management/set-up_user_loop-up_tables.py
 
-import MySQLdb
+import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 
 class UserLookupTablesManager:
@@ -94,7 +94,7 @@ class UserLookupTablesManager:
             self.cursor.execute(create_user_lookup_temporary_codes_table)
             self.conn.commit()
             print("User lookup tables created successfully.")
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             self.conn.rollback()
             print(f"Error creating tables: {e}")
 
@@ -115,7 +115,7 @@ class UserLookupTablesManager:
                     self.cursor.execute(f"DROP TABLE IF EXISTS {table};")
                     self.conn.commit()
                     print(f"Table '{table}' dropped successfully.")
-                except MySQLdb.Error as e:
+                except pymysql.MySQLError as e:
                     self.conn.rollback()
                     print(f"Error dropping table '{table}': {e}")
             else:
@@ -131,7 +131,7 @@ class UserLookupTablesManager:
                 self.cursor.execute(f"SELECT COUNT(*) FROM {table};")
                 count = self.cursor.fetchone()[0]
                 print(f"Table '{table}' exists with {count} records.")
-            except MySQLdb.Error as e:
+            except pymysql.MySQLError as e:
                 print(f"Table '{table}' does not exist or cannot be accessed: {e}")
 
     def close_connection(self):

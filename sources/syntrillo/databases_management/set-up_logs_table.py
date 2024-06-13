@@ -1,6 +1,6 @@
 # Path: ./sources/syntrillo/databases_management/set-up_logs_table.py
 
-import MySQLdb
+import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 
 class LogsTableManager:
@@ -45,7 +45,7 @@ class LogsTableManager:
             self.cursor.execute(create_logs_table)
             self.conn.commit()
             print("Logs table created successfully.")
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             self.conn.rollback()
             print(f"Error creating logs table: {e}")
 
@@ -62,7 +62,7 @@ class LogsTableManager:
                 self.cursor.execute("DROP TABLE IF EXISTS logs;")
                 self.conn.commit()
                 print("Table 'logs' dropped successfully.")
-            except MySQLdb.Error as e:
+            except pymysql.MySQLError as e:
                 self.conn.rollback()
                 print(f"Error dropping table 'logs': {e}")
         else:
