@@ -2,7 +2,7 @@
 
 import unittest
 from syntrillo.databases_management.connection import create_connection
-import MySQLdb
+import pymysql
 
 class TestConnection(unittest.TestCase):
 
@@ -57,9 +57,9 @@ class TestConnection(unittest.TestCase):
             self.cursor.execute(drop_temp_table)
             self.conn.commit()
 
-        except MySQLdb.OperationalError as e:
+        except pymysql.OperationalError as e:
             self.fail(f"OperationalError: {e}")
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             self.fail(f"MySQL Error: {e}")
         except Exception as e:
             self.fail(f"Unexpected Error: {e}")

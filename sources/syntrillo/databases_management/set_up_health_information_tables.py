@@ -1,5 +1,5 @@
 # Path: ./sources/syntrillo/databases_management/set_up_health_information_tables.py
-import MySQLdb
+import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 
 class HealthInformationTablesManager:
@@ -40,7 +40,7 @@ class HealthInformationTablesManager:
             self.cursor.execute(create_table_query)
             self.conn.commit()
             print("Table 'misc_health_data' created successfully.")
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             self.conn.rollback()
             print(f"Error creating table: {e}")
 
@@ -55,7 +55,7 @@ class HealthInformationTablesManager:
                 self.cursor.execute("DROP TABLE IF EXISTS misc_health_data;")
                 self.conn.commit()
                 print("Table 'misc_health_data' dropped successfully.")
-            except MySQLdb.Error as e:
+            except pymysql.MySQLError as e:
                 self.conn.rollback()
                 print(f"Error dropping table: {e}")
         else:
@@ -69,7 +69,7 @@ class HealthInformationTablesManager:
             self.cursor.execute("SELECT COUNT(*) FROM misc_health_data;")
             count = self.cursor.fetchone()[0]
             print(f"Table 'misc_health_data' exists with {count} records.")
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             print(f"Table 'misc_health_data' does not exist or cannot be accessed: {e}")
 
     def close_connection(self):

@@ -89,6 +89,21 @@ pip install -r requirements.txt
   - Use the `tests/` directory to run unit tests and integration tests for the various modules and applications.
 
 
+### Misc
+
+Example of saving requirements with pipreqs, ignoring AWS stuff
+```bash
+pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v2.txt
+```
+
+Move to pymysql:
+   - no available on PythonAnywhere `pip show pymysql`, have to install it: `pip install pymysql`
+   - installs well on `p3.9_Syntrillo_Clinic_v2` @ maxwell
+   - summary of changes:
+        - Replaced `import MySQLdb` with `import pymysql`.
+        - Updated `MySQLdb.connect` to `pymysql.connect`.
+        - Replaced `MySQLdb.Error` with `pymysql.MySQLError`.
+        - Replaced `MySQLdb.OperationalError`with `pymysql.OperationalError`
 
 
 

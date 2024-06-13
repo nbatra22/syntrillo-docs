@@ -1,6 +1,6 @@
 # Path: ./sources/syntrillo/databases_management/logs.py
 
-import MySQLdb
+import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 import json
 
@@ -29,7 +29,7 @@ def add_log_entry(event, json_data, comment):
         cursor.execute(add_log_query, (event, json.dumps(json_data), comment))
         conn.commit()
         print("Log entry added successfully.")
-    except MySQLdb.Error as e:
+    except pymysql.MySQLError as e:
         conn.rollback()
         print(f"Error adding log entry: {e}")
     finally:

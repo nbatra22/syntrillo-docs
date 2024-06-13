@@ -1,7 +1,7 @@
 # Path: ./sources/syntrillo/pseudonyms_management/lookup_codes_management.py
 
 import uuid
-import MySQLdb
+import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
 
@@ -15,7 +15,7 @@ class LookUpCodesManagement:
 
     Attributes:
     -----------
-    conn : MySQLdb.connections.Connection
+    conn : pymysql.connections.Connection
         The database connection object.
     cursor : MySQLdb.cursors.Cursor
         The cursor object for executing SQL queries.
@@ -63,7 +63,7 @@ class LookUpCodesManagement:
                     self.tunnel.stop()
                 if self.verbose:
                     print("Database connection closed.")
-        except MySQLdb.OperationalError as e:
+        except pymysql.OperationalError as e:
             print(f"OperationalError during connection close: {e}")
         except Exception as e:
             print(f"Unexpected error during connection close: {e}")
@@ -109,7 +109,7 @@ class LookUpCodesManagement:
             else:
                 add_log_entry(event='CREATE_ENTRY_FAILED', json_data=str(healthie_user_id), comment="Failed to retrieve the newly created entry.")
                 return None
-        except MySQLdb.Error as e:
+        except pymysql.MySQLError as e:
             self.conn.rollback()
             add_log_entry(event='CREATE_ENTRY_ERROR', json_data=str(healthie_user_id), comment=str(e))
             return None
