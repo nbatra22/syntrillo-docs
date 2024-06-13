@@ -7,8 +7,12 @@
         <thead>
             <tr>
                 <th>Device Name</th>
-                <th>Device ID</th>
-                <th>Paired At</th>
+                <th>Gateway ID</th>
+                <th>Patient Name</th>
+                <th>Patient External ID</th>
+                <th>Patient SMS opt-in</th>
+                <th>Status</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -16,8 +20,13 @@
                 {% for device in paired_devices %}
                     <tr>
                         <td>{{ device.device.name }}</td>
-                        <td>{{ device.id }}</td>
-                        <td>{{ device.device.created }}</td>
+                        <td>{{ device.device.hardware_uuid }}</td>
+                        <td>{{ device.patient.name }}</td>
+                        <td>{{ device.patient.external_id }}</td>
+                        <td>{{ device.patient.sms_opt_in }}</td>
+                        <td>{{ device.status }}</td>
+                        <!-- single quotes in data-device matter here -->
+                        <td><span class="device-info-toggle" data-device='{{ device|tojson|safe }}'>{{ 'info' }}</span></td>
                     </tr>
                 {% endfor %}
             {% else %}
@@ -29,127 +38,144 @@
     </table>
 </div>
 
-<h2>Pair New Devices</h2>
-
-<p>The procedure has the following steps:</p>
-<ol>
-    <li>Click on the 'Generate a Temporary Pairing Code' button below. The code is simple, composed of two capitalized words with no space.</li>
-    <li>On the Tenovi portal, edit the 'patient info' value for the device, paste this Temporary Pairing Code as 'External ID', and save your changes. Repeat for all <i>new</i> devices to pair.</li>
-    <li>Click the 'Pair Device' button below. The system will replace the Tenovi External ID with the Healthie User ID, and add the Syntrillo code in a hidden device value/pair property.</li>
-    <li>When pairing is completed, refresh the Tenovi portal to see the changes.</li>
-</ol>
-
-<h3>Generate Temporary Pairing Code</h3>
-
-<style>
-    /* Initially loading indicator and logs */
-    #generateTenoviTemporaryPairingCodeLoading {
-        display: none;
-    }
-    #TenoviTemporaryPairingCode {
-        display: none;
-    }
-    #pairTenoviDevicesFormLoading {
-        display: none;
-    }
-    #pairTenoviDevicesSuccess {
-        display: none;
-    }
-
-    /* pointer on displayed code */
-    #temporaryTenoviCode {
-        cursor: pointer;
-    }
-
-    /* Custom transient popup styling */
-    #transientPopupTenoviPairingCode {
-        display: none;
-        position: fixed;
-        top: 40px;
-        right: 40px;
-        background: #333;
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 5px;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-    }
-</style>
-
-<div class="table-container-button">
-    <table class="compact-table">
-        <tr>
-            <td>
-                <table>
-                    <tr>
-                        <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                            <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
-                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
-                                <button type="button" id="generateTenoviTemporaryPairingCodeFormButton" class="styled-button">Generate Temporary Pairing Code</button>
-                            </form>
-                        </td>
-                        <td align="left" style="vertical-align: middle;">
-                            <span id="generateTenoviTemporaryPairingCodeLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                            <span id="TenoviTemporaryPairingCode" class="response-message"></span>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <table>
-                    <tr>
-                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                            <p class="logs">Logs:</p>
-                        </td>
-                        <td align="left">
-                            <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<!-- Hidden popup container for device info -->
+<div class="device-info-popup" style="display: none;">
+    <pre id="device-info-content" style="font-size: 0.7em;"></pre>
 </div>
 
-<h3>Pair Tenovi devices</h3>
 
-<div class="table-container-button">
-    <table class="compact-table">
-        <tr>
-            <td>
-                <table>
-                    <tr>
-                        <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                            <form id="pairTenoviDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_pair_devices_form') }}" method="POST">
-                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
-                                <button type="button" id="pairTenoviDevicesFormButton" class="styled-button">Pair Devices</button>
-                            </form>
-                        </td>
-                        <td align="left" style="vertical-align: middle;">
-                            <span id="pairTenoviDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                            <span id="pairTenoviDevicesSuccess" class="response-message"></span>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <table>
-                    <tr>
-                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                            <p class="logs">Logs:</p>
-                        </td>
-                        <td align="left">
-                            <textarea id="pairTenoviDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<!-- ------------------------------------------------------------------------------------- -->
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Pair New Devices
+</h2>
+
+<div class="collapsible-content">
+
+    <p style="color: red;">!!! That's a testing and rescue procedure. Use only if a device is not paired properly.!!!</p>
+
+    <p>The procedure has the following steps:</p>
+    <ol>
+        <li>Click on the 'Generate a Temporary Pairing Code' button below. The code is simple, composed of two capitalized words with no space.</li>
+        <li>On the Tenovi portal, edit the 'patient info' value for the device, paste this Temporary Pairing Code as 'External ID', and save your changes. Repeat for all <i>new</i> devices to pair.</li>
+        <li>Click the 'Pair Device' button below. The system will replace the Tenovi External ID with the Healthie User ID, and add the Syntrillo code in a hidden device value/pair property.</li>
+        <li>When pairing is completed, refresh the Tenovi portal to see the changes.</li>
+    </ol>
+
+    <h3>Generate Temporary Pairing Code</h3>
+
+    <style>
+        /* Initially loading indicator and logs */
+        #generateTenoviTemporaryPairingCodeLoading {
+            display: none;
+        }
+        #TenoviTemporaryPairingCode {
+            display: none;
+        }
+        #pairTenoviDevicesFormLoading {
+            display: none;
+        }
+        #pairTenoviDevicesSuccess {
+            display: none;
+        }
+
+        /* pointer on displayed code */
+        #temporaryTenoviCode {
+            cursor: pointer;
+        }
+
+        /* Custom transient popup styling */
+        #transientPopupTenoviPairingCode {
+            display: none;
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="generateTenoviTemporaryPairingCodeFormButton" class="styled-button">Generate Temporary Pairing Code</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="generateTenoviTemporaryPairingCodeLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="TenoviTemporaryPairingCode" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="generateTenoviTemporaryPairingCodeFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <h3>Pair Tenovi devices</h3>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="pairTenoviDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_pair_devices_form') }}" method="POST">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="pairTenoviDevicesFormButton" class="styled-button">Pair Devices</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="pairTenoviDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="pairTenoviDevicesSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="pairTenoviDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
 </div>
 
 <div id="transientPopupTenoviPairingCode">Temporary Tenovi Pairing Code copied to clipboard.</div>
@@ -288,6 +314,32 @@
                 }
             });
         });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        // Click function to toggle device info on 'info' click
+        $('.device-info-toggle').click(function() {
+            var deviceInfo = JSON.parse($(this).attr('data-device'));
+            toggleDeviceInfo(deviceInfo);
+        });
+
+        function toggleDeviceInfo(deviceInfo) {
+            var popup = $('.device-info-popup');
+            var content = $('#device-info-content');
+
+            // Toggle display of the popup container
+            if (popup.is(':visible')) {
+                popup.hide();
+            } else {
+                // Display the popup container
+                popup.show();
+
+                // Display the device JSON content in the popup
+                content.text(JSON.stringify(deviceInfo, null, 2));
+            }
+        }
     });
 </script>
 

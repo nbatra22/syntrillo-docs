@@ -7,8 +7,10 @@
         <thead>
             <tr>
                 <th>Device Name</th>
-                <th>Device ID</th>
-                <th>Paired At</th>
+                <th>Gateway ID</th>
+                <th>Created At</th>
+                <th>Patient SMS opt-in</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -16,8 +18,10 @@
                 {% for device in paired_devices %}
                     <tr>
                         <td>{{ device.device.name }}</td>
-                        <td>{{ device.id }}</td>
+                        <td>{{ device.device.hardware_uuid }}</td>
                         <td>{{ device.device.created }}</td>
+                        <td>{{ device.patient.sms_opt_in }}</td>
+                        <td>{{ device.status }}</td>
                     </tr>
                 {% endfor %}
             {% else %}
@@ -30,10 +34,12 @@
 </div>
 
 
+
 <h2>Order new device(s)</h2>
 
 <p>will include a form with PII, gateway ID (prefill if any), select boxes for devices (incl L and S BMP), and 'place order' button</p>
 
 
 <!-- ========================= SCRIPTS ============================ -->
+
 
