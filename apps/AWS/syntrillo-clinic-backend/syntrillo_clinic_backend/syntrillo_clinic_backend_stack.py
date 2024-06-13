@@ -1,11 +1,14 @@
 from aws_cdk import (
     Stack,
     Duration,
+    RemovalPolicy,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
     aws_apigateway as apigw,
     aws_ssm as ssm,
+    aws_ec2 as ec2,
+    aws_rds as rds
 )
 from constructs import Construct
 
@@ -44,9 +47,11 @@ class LandingPageConstruct(Construct):
 
 class IFrameGeneratorConstruct(Construct):
 
-    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
+        self.vpc = vpc
+        
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", rest_api_name="IFramGeneratorAPI")
 
         # Create the Lambda layers that contains the required libraries
@@ -68,6 +73,7 @@ class IFrameGeneratorConstruct(Construct):
             runtime=_lambda.Runtime.PYTHON_3_10,
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
+            vpc = self.vpc
         )
 
         # Add the Lambda layers to the Lambda function
@@ -145,8 +151,47 @@ class SyntrilloClinicBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
+            vpc_name = "SyntrilloClinicVPC",
+            nat_gateways = 0
+        )
+
+        db = rds.DatabaseInstance(self, "MySQLDatabase",
+            engine=rds.DatabaseInstanceEngine.MYSQL,
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.SMALL),
+            vpc=self.vpc,
+            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.isolated_subnets),
+            multi_az=False,
+            allocated_storage=20,
+            storage_type=rds.StorageType.GP2,
+            credentials=rds.Credentials.from_generated_secret("admin"),
+            database_name="syntrillo_clinic_db",
+            removal_policy=RemovalPolicy.DESTROY
+        )
+        
+        # Add a rule to the DB security group to allow outbound traffic on all ports
+        db.connections.allow_to(
+            ec2.Peer.any_ipv4(),
+            ec2.Port.tcp(3306),
+            "Allow outbound traffic on all ports"
+        )
+        
+        # Create a bastion host in the public subnet
+        self.bastion_host = ec2.BastionHostLinux(self, "BastionHost",
+            vpc=self.vpc,
+            subnet_selection=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PUBLIC
+            )
+        )
+        
+        # Add a security group rule to allow SSH access to the bastion host
+        self.bastion_host.connections.allow_from_any_ipv4(
+            ec2.Port.tcp(22),
+            "Allow SSH access to the bastion host"
+        )
+
         LandingPageConstruct(self, "LandingPageConstruct")
         
-        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct")
+        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc)
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
