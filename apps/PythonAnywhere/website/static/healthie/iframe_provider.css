@@ -62,6 +62,29 @@ ol {
     color: #036824;
 }
 
+/* ------------- collapsable section ------------------- */
+
+.collapsible {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+.collapsible i {
+    margin-right: 10px;
+}
+.collapsible .icon-container {
+    width: 20px; /* Adjust the width as needed */
+    display: inline-block;
+    text-align: center;
+    font-size: 0.8em;
+}
+.collapsible-content {
+    display: none;
+    margin-top: 10px;
+}
+.collapsible-content.show {
+    display: block;
+}
 /* -------------------------------------------------------- */
 .table-container1 {
     margin-left: 10px;
