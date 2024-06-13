@@ -262,8 +262,9 @@
                                 isDeviceRequestRunning = false;
 
                                 // location.reload();
-                                // reloading only the devices tab. loadTabContent is defined in the index.html
+                                // reloading only the device_s_ tab. loadTabContent is defined in the index.html
                                 loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                                loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
                             }, 5000); // Reload after a delay
                         } else {
                             $('#pairTenoviDevicesSuccess').html("Error. See logs below.");
