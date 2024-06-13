@@ -80,6 +80,14 @@
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
 <script>
+
+    // Global function to format ISO date to US date format (MMM DD, YYYY)
+    function formatDate(isoDate) {
+        var date = new Date(isoDate);
+        var options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
+
     // Function to load content via POST
     //   : POST prefered over GET to avoid caching sensitive data in the URL
     function loadTabContent(url, target, milliseconds_delay=2000) {

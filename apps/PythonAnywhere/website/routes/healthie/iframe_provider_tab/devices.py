@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify
 
 import json
+import datetime
 
 from .post_management import PostManager
 from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
@@ -9,6 +10,11 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 
 iframe_healthie_provider_tab_devices_bp = Blueprint('iframe_healthie_provider_tab_devices_bp', __name__)
+
+# Helper function to format ISO date to US date format (MMM DD, YYYY)
+def format_date(iso_date):
+    date_obj = datetime.datetime.fromisoformat(iso_date.replace('Z', '+00:00'))  # Convert ISO date to datetime object
+    return date_obj.strftime('%b %d, %Y')  # Format date as MMM DD, YYYY
 
 # ========================= HTML PAGE ==========================
 
@@ -31,6 +37,10 @@ def iframe_healthie_provider_tab_devices():
     # get paired devices from Tenovi API
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=post_manager.syntrillo_internal_key)
 
+    # Format dates before passing to template
+    for device in paired_devices:
+        if 'created' in device['device']:
+            device['device']['created_USformat'] = format_date(device['device']['created'])
 
     return render_template('healthie/iframe_provider_tab/devices.html',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
