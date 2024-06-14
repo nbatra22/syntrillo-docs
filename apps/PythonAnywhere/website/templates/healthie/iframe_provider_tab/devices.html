@@ -44,22 +44,68 @@
     <li>Obtain the patient's consent to receive SMS messages.</li>
 </ul>
 
-<hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray;margin-top: 10px;">
-<table class="compact-table-two-columns" style="margin-left: 20px";>
+<table class="compact-table-two-columns" style="margin-left: 20px;">
     <tr>
-        <td class="compact-table-two-columns-col1">Name:</td>
-        <td class="compact-table-two-columns-col2"></td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">Address:</td>
-        <td class="compact-table-two-columns-col2"></td>
+        <td class="compact-table-two-columns-col1" colspan="2">
+            <hr style="height:1px;width:60%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+        </td>
     </tr>
     <tr>
         <td class="compact-table-two-columns-col1">Phone number:</td>
-        <td class="compact-table-two-columns-col2"></td>
+        <td class="compact-table-two-columns-col2">{{ user_pii.phone_number }}</td>
     </tr>
+    {% if n_user_locations > 1 %}
+    <tr>
+        <td class="compact-table-two-columns-col1" colspan="2">
+            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+        </td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1" colspan="2">Several locations available - Use the dropdown below.</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1" colspan="2">
+            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+        </td>
+    </tr>
+    {% endif %}
+    {% if n_user_locations == 0 %}
+    <tr>
+        <td class="compact-table-two-columns-col1">Address:</td>
+        <td class="compact-table-two-columns-col2">No locations available</td>
+    </tr>
+    {% else %}
+    {% for location in user_pii.locations %}
+    <tr>
+        <td class="compact-table-two-columns-col1">Address:</td>
+        <td class="compact-table-two-columns-col2">{{ location.line1 }}<br>{{ location.line2 }}</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">City:</td>
+        <td class="compact-table-two-columns-col2">{{ location.city }}</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">State:</td>
+        <td class="compact-table-two-columns-col2">{{ location.state }}</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">Zip code:</td>
+        <td class="compact-table-two-columns-col2">{{ location.zip }}</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">Country:</td>
+        <td class="compact-table-two-columns-col2">{{ location.country }}</td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1" colspan="2">
+            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+        </td>
+    </tr>
+    {% endfor %}
+    {% endif %}
 </table>
-<hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+
+
 
 <style>
     /* Initially loading indicator and logs */
@@ -75,7 +121,7 @@
     <table class="compact-table">
         <tr>
             <td>
-                <form id="orderNewDevicesForm" action="" method="POST">
+                <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
                     <table>
                         <tr>
                             <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
@@ -87,6 +133,22 @@
                                 <span id="orderNewDevicesFormSuccess" class="response-message"></span>
                             </td>
                         </tr>
+                        {% if n_user_locations > 1 %}
+                        <tr>
+                            <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <label for="locationSelect" class="styled-label">Choose location:</label>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <select name="location_index" id="locationSelect" class="styled-select">
+                                    {% for location in user_pii.locations %}
+                                    <option value="{{ loop.index0 }}">
+                                        {{ location.line1 }}, {{ location.line2 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}, {{ location.country }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                 <input class="styled-input-checkbox" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes">
@@ -108,23 +170,21 @@
                             </td>
                         </tr>
                         <tr>
-                            <fieldset>
-                                <td align="left" style="white-space: nowrap;">
-                                    <input class="styled-input-checkbox" type="checkbox" id="bmpLarge" name="devices" value="BMP Large" checked>
-                                    <label for="bmpLarge" class="styled-label">BMP Large</label><br>
+                            <td align="left" style="white-space: nowrap;">
+                                <input class="styled-input-checkbox" type="checkbox" id="bmpLarge" name="device_bmp_large" value="yes" checked>
+                                <label for="bmpLarge" class="styled-label">BMP Large</label><br>
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="bmpSmall" name="devices" value="BMP Small">
-                                    <label for="bmpSmall" class="styled-label">BMP Small</label><br>
-                                </td>
-                                <td align="left" style="white-space: nowrap;">
+                                <input class="styled-input-checkbox" type="checkbox" id="bmpSmall" name="device_bpm_small" value="yes">
+                                <label for="bmpSmall" class="styled-label">BMP Small</label><br>
+                            </td>
+                            <td align="left" style="white-space: nowrap;">
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="devices" value="Pillbox" checked>
-                                    <label for="pillbox" class="styled-label">Pillbox</label><br>
+                                <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
+                                <label for="pillbox" class="styled-label">Pillbox</label><br>
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="watch" name="devices" value="Watch" checked>
-                                    <label for="watch" class="styled-label">Watch</label><br>
-                                </td>
-                            </fieldset>
+                                <input class="styled-input-checkbox" type="checkbox" id="watch" name="device_watch" value="yes" checked>
+                                <label for="watch" class="styled-label">Watch</label><br>
+                            </td>
                         </tr>
                     </table>
                 </form>
@@ -150,4 +210,68 @@
 
 <!-- ========================= SCRIPTS ============================ -->
 
+<script>
 
+$(document).ready(function() {
+
+    // ========================= Order New Tenovi Devices =========================
+
+    // allows to prevent multiple requests from being sent at the same time
+    let isOrderNewDevicesRunning = false;
+
+    $('#orderNewDevicesFormButton').click(function() {
+
+        // allows to prevent multiple requests from being sent at the same time
+        if (isOrderNewDevicesRunning) return;
+        isOrderNewDevicesRunning = true;
+
+        // Hide and erase previous log and show loading indicator
+        $('#orderNewDevicesFormTextarea').val("");
+        $('#orderNewDevicesFormSuccess').hide();
+        $('#orderNewDevicesFormLoading').show();
+        $('body').addClass('loading'); // Apply loading cursor
+
+        $.ajax({
+            url: $('#orderNewDevicesForm').attr('action'),
+            type: 'POST',
+            data: $('#orderNewDevicesForm').serialize(),
+            success: function(response) {
+                $('#orderNewDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                if (response.success) {
+                        $('#orderNewDevicesFormSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#orderNewDevicesFormSuccess').show();
+                        // Reload the page after a delay to allow the user to read the success message
+                        setTimeout(function() {
+                            // allows to prevent multiple requests from being sent at the same time
+                            // disabling until timer ends
+                            isOrderNewDevicesRunning = false;
+
+                            // location.reload();
+                            // reloading only the device_s_ tab. loadTabContent is defined in the index.html
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                        }, 5000); // Reload after a delay
+                    } else {
+                        $('#orderNewDevicesFormSuccess').html("Error. See logs below.");
+                        $('#orderNewDevicesFormSuccess').show();
+                        // enables the button to try again
+                        isOrderNewDevicesRunning = false;
+                    }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error); // Log AJAX error to console
+                $('#orderNewDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+
+                // allows to prevent multiple requests from being sent at the same time
+                isOrderNewDevicesRunning = false;
+            },
+            complete: function() {
+                // Hide loading indicator after AJAX completes (whether success or error)
+                $('#orderNewDevicesFormLoading').hide();
+                $('body').removeClass('loading'); // Remove loading cursor
+
+            }
+        });
+    });
+});
+</script>

@@ -192,6 +192,14 @@ class HealthieUtils():
                     email
                     phone_number
                     next_appt_date
+                    locations {
+                        city
+                        line1
+                        line2
+                        state
+                        zip
+                        country
+                    }
                 }
             }
         '''
@@ -204,7 +212,11 @@ class HealthieUtils():
         # Send the GraphQL query using the inherited send_query method
         response = self.auth.send_query(query, variables)
 
-        return response
+        if response['user'] is not None:
+            return response['user']
+        else:
+            return None
+
 
 if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization
