@@ -51,7 +51,7 @@ class IFrameGeneratorConstruct(Construct):
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
-        
+
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", rest_api_name="IFramGeneratorAPI")
 
         # Create the Lambda layers that contains the required libraries
@@ -88,19 +88,33 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # # Add the Lambda function as a REST API resource (iframe_healthie_provider_tab)
-        # iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
-        # iframe_healthie_provider_tab.add_method(
-        #     "ANY",
-        #     apigw.LambdaIntegration(iframe_generator_function),
-        # )
+        # Add the Lambda function as a REST API resource (iframe_healthie_provider_tab)
+        iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
-        # # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
-        # iframe_healthie_provider_tab_devices = root_resource.add_resource("healthie").add_resource("iframe_provider_tab").add_resource("devices_olemaitre")
-        # iframe_healthie_provider_tab_devices.add_method(
-        #     "ANY",
-        #     apigw.LambdaIntegration(iframe_generator_function),
-        # )
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
+        iframe_healthie_provider_tab_devices = root_resource.add_resource("healthie").add_resource("iframe_provider_tab").add_resource("devices")
+        iframe_healthie_provider_tab_devices.add_method(
+            "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
+        iframe_healthie_provider_tab_devices_generate_temporary_pairing_code_form = iframe_healthie_provider_tab_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
+        iframe_healthie_provider_tab_devices_generate_temporary_pairing_code_form.add_method(
+            "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
+        iframe_healthie_provider_tab_devices_generate_temporary_pair_device = iframe_healthie_provider_tab_devices.add_resource("tenovi_pair_devices_form")
+        iframe_healthie_provider_tab_devices_generate_temporary_pair_device.add_method(
+            "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
 class UploadQuestionnaireConstruct(Construct):
     '''
@@ -118,7 +132,8 @@ class UploadQuestionnaireConstruct(Construct):
         )
 
         bucket = s3.Bucket(self, "QuestionnaireBucket",
-            bucket_name = f"{environment.string_value}.questionnaire-bucket"
+            bucket_name = f"{environment.string_value}.questionnaire-bucket",
+            removal_policy=RemovalPolicy.DESTROY
         )
 
         # Create the Lambda layer
@@ -151,16 +166,18 @@ class SyntrilloClinicBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Create a VPC with no NAT gateways (Nat gateways are charged)
         self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
             vpc_name = "SyntrilloClinicVPC",
-            nat_gateways = 0
+            nat_gateways=1
         )
 
-        db = rds.DatabaseInstance(self, "MySQLDatabase",
+        # Create db instance
+        self.db = rds.DatabaseInstance(self, "MySQLDatabase",
             engine=rds.DatabaseInstanceEngine.MYSQL,
             instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.SMALL),
             vpc=self.vpc,
-            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.isolated_subnets),
+            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
             multi_az=False,
             allocated_storage=20,
             storage_type=rds.StorageType.GP2,
@@ -169,11 +186,15 @@ class SyntrilloClinicBackendStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
         
-        # Add a rule to the DB security group to allow outbound traffic on all ports
-        db.connections.allow_to(
+        # Get the security group associated with the RDS database instance
+        db_security_group = self.db.connections.security_groups[0]
+
+        # Add an inbound rule to the RDS database security group
+        # to allow traffic from any IP address
+        db_security_group.add_ingress_rule(
             ec2.Peer.any_ipv4(),
             ec2.Port.tcp(3306),
-            "Allow outbound traffic on all ports"
+            "Allow inbound traffic on port 3306 from any IPv4 address"
         )
         
         # Create a bastion host in the public subnet

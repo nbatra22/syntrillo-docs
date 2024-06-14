@@ -35,7 +35,7 @@ class TestSyntrilloClinicBackendAPIs(unittest.TestCase):
         self.assertEqual(status_code, 200, url)
 
     def test_iframe_healthie_provider_tab_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/devices_olemaitre'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/devices'
         device_form_data = {
             'healthie_provider_id': '1173733',
             'healthie_user_id': 'Not+transmitted',
