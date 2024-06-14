@@ -42,6 +42,11 @@ ol {
     font-size: 0.8em;
 }
 
+ul {
+    margin-left: 20px;
+    font-size: 0.8em;
+}
+
 /* ------------ for text areas ---------------------------- */
 .monospace-small {
     font-family: monospace;
@@ -114,6 +119,27 @@ ol {
 .compact-table td {
     padding: 1;
 }
+
+/* ---------------- Table for 2 columns data ---------------------------------- */
+
+/* compact outer table */
+.compact-table-two-columns {
+    border-spacing: 0;
+    padding: 0;
+}
+.compact-table-two-columns td {
+    padding: 1;
+    font-size: 0.8em;
+}
+
+.compact-table-two-columns-col1 {
+    text-align: right;
+}
+
+.compact-table-two-columns-col2 {
+    text-align: left;
+}
+
 
 /* -------------------------------------------------------- */
 /* Add styles for the new table container class that handles complex tables */
@@ -215,6 +241,23 @@ ol {
     display: inline-block;
     margin-top: 10px;
     font-size: 0.8em;
+}
+
+.styled-legend {
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+.styled-input-checkbox {
+    display: inline-block;
+    margin-left: 30px;
+}
+
+.styled-input-text {
+    font-size: 0.8em;
+    margin-left: 10px;
 }
 
 /* loading cursor when waiting for a response */

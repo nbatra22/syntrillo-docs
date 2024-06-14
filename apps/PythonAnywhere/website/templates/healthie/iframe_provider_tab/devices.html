@@ -37,7 +37,115 @@
 
 <h2>Order new device(s)</h2>
 
-<p>will include a form with PII, gateway ID (prefill if any), select boxes for devices (incl L and S BMP), and 'place order' button</p>
+<ul>
+    <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
+    <li>Select the devices for this patient. Make sure a small BMP device is not required.</li>
+    <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
+    <li>Obtain the patient's consent to receive SMS messages.</li>
+</ul>
+
+<hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray;margin-top: 10px;">
+<table class="compact-table-two-columns" style="margin-left: 20px";>
+    <tr>
+        <td class="compact-table-two-columns-col1">Name:</td>
+        <td class="compact-table-two-columns-col2"></td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">Address:</td>
+        <td class="compact-table-two-columns-col2"></td>
+    </tr>
+    <tr>
+        <td class="compact-table-two-columns-col1">Phone number:</td>
+        <td class="compact-table-two-columns-col2"></td>
+    </tr>
+</table>
+<hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+
+<style>
+    /* Initially loading indicator and logs */
+    #orderNewDevicesFormLoading {
+        display: none;
+    }
+    #orderNewDevicesFormSuccess {
+        display: none;
+    }
+</style>
+
+<div class="table-container-button">
+    <table class="compact-table">
+        <tr>
+            <td>
+                <form id="orderNewDevicesForm" action="" method="POST">
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                <button type="button" id="orderNewDevicesFormButton" class="styled-button">Place Order</button>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="orderNewDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="orderNewDevicesFormSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <input class="styled-input-checkbox" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes">
+                                <label for="includeGatewayId" class="styled-label">Include Gateway ID :</label>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <input class="styled-input-text" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <input class="styled-input-checkbox" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
+                                <label for="sms_opt_in" class="styled-label">SMS opt-in</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="left">
+                                <legend class="styled-legend">Select Devices:</legend>
+                            </td>
+                        </tr>
+                        <tr>
+                            <fieldset>
+                                <td align="left" style="white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="bmpLarge" name="devices" value="BMP Large" checked>
+                                    <label for="bmpLarge" class="styled-label">BMP Large</label><br>
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="bmpSmall" name="devices" value="BMP Small">
+                                    <label for="bmpSmall" class="styled-label">BMP Small</label><br>
+                                </td>
+                                <td align="left" style="white-space: nowrap;">
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="devices" value="Pillbox" checked>
+                                    <label for="pillbox" class="styled-label">Pillbox</label><br>
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="watch" name="devices" value="Watch" checked>
+                                    <label for="watch" class="styled-label">Watch</label><br>
+                                </td>
+                            </fieldset>
+                        </tr>
+                    </table>
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                            <p class="logs">Logs:</p>
+                        </td>
+                        <td align="left">
+                            <textarea id="orderNewDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
 
 
 <!-- ========================= SCRIPTS ============================ -->
