@@ -7,13 +7,8 @@ class HealthieForms():
     A class handling forms-related operations.
     """
 
-    def __init__(
-        self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = None,
-    ):
-        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+    def __init__(self):
+        self.auth = HealthieAuth()
 
 
     def list_forms(

@@ -53,15 +53,10 @@ class PatientOnboardingManager():
         personalized_intake_form,
     ]
 
-    def __init__(
-        self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = None,
-    ):
-        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
-        self.forms = HealthieForms(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
-        self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+    def __init__(self):
+        self.auth = HealthieAuth()
+        self.forms = HealthieForms()
+        self.utils = HealthieUtils()
 
     # -------------
     def get_user_status(
@@ -333,7 +328,7 @@ class PatientOnboardingManager():
         user_details = self.utils.get_user_from_id(user_id=user_id)
 
         new_form = self.forms.create_form_wrapper(
-            form_name=f"Personalized Intake Form for patient {user_details['user']['first_name']} {user_details['user']['last_name']}",
+            form_name=f"Personalized Intake Form for patient {user_details['first_name']} {user_details['last_name']}",
             modules=header_unique_custom_modules_with_missing_answer,
             use_for_charting=False, # This is an Intake Form
             use_for_program=False,

@@ -6,6 +6,8 @@ import json
 from dotenv import load_dotenv
 from datetime import datetime
 
+from syntrillo.system.dot_env_loader import DotEnvFileLoader
+
 class HealthieAuth:
     """
     A class for interacting with the Healthie API.
@@ -22,9 +24,6 @@ class HealthieAuth:
 
     def __init__(
         self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = ".env",
         verbose=False,
         ):
 
@@ -32,53 +31,41 @@ class HealthieAuth:
         Initializes the HealthieAPI client.
 
         Parameters:
-            api_key (str, optional): The API key used for authentication.
-            organization (str, optional): The environment organization (default: 'staging').
             verbose (bool, optional): Whether to print verbose output (default: False).
 
         Raises:
             ValueError: If API key is missing or organization is invalid.
         """
 
-        self.organization = organization
+        # Load the .env file based on the environment to retrieve the client domain and API key
+        _ = DotEnvFileLoader()
 
-        # paths have to be hard-coded at PythonAnywhere
-        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
-            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+        # ------------------------------
+        # Retrieve the organization from the environment variables
+        self.organization = os.getenv('HEALTHIE_ORGANIZATION')
 
-        # Load the environment variables from the .env file
-        load_dotenv(dotenv_path=dotenv_path)
+        # Set up the GraphQL endpoint URL based on organization
+        if self.organization == 'staging':
+            self.url = 'https://staging-api.gethealthie.com/graphql'
 
-        # Check if the API key is provided
-        if api_key is None:
-            if organization == 'staging':
-                self.api_key = os.getenv('HEALTHIE_STAGING_API_KEY')
-            elif organization == 'production':
-                self.api_key = os.getenv('HEALTHIE_PRODUCTION_API_KEY')
+        elif self.organization == 'production':
+            self.url = 'https://api.gethealthie.com/graphql'
         else:
-            self.api_key = api_key
+            # raise error if organization is not staging or production
+            raise ValueError("Invalid Healthie organization. Must be 'staging' or 'production'.")
 
-
-        self.verbose = verbose
-        if self.verbose:
-            print(self.api_key)
-            print(self.organization)
+        # ------------------------------
+        # get the API key based
+        self.api_key = os.getenv('HEALTHIE_API_KEY')
 
         # Check if the API key is available
         if self.api_key is None:
             raise ValueError("API key not found. Make sure it's defined in the .env file.")
 
-        # Check if organization is either 'staging' or 'production'
-        if self.organization not in ['staging', 'production']:
-            raise ValueError("Invalid organization. Must be 'staging' or 'production'.")
-
-        # Set up the GraphQL endpoint URL based on organization
-        if self.organization == 'staging':
-            self.url = 'https://staging-api.gethealthie.com/graphql'
-        elif self.organization == 'production':
-            self.url = 'https://api.gethealthie.com/graphql'
-
-
+        # ------------------------------
+        self.verbose = verbose
+        if self.verbose:
+            print(self.organization)
 
     def send_query(
         self,
