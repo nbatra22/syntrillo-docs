@@ -1,4 +1,4 @@
-# Path: ./apps/PythonAnywhere/website/healthie/iframe_provider_tab/devices.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/system_devices.py
 from flask import Blueprint, render_template, request, jsonify
 
 import json

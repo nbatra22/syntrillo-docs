@@ -1,4 +1,4 @@
-# Path: ./apps/PythonAnywhere/website/healthie_endpoint.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/endpoints.py
 
 """
 
