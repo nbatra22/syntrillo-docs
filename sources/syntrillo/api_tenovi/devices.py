@@ -42,8 +42,7 @@ class Devices:
 
 
     """
-    def __init__(self, client_domain="syntrillo"):
-        self.client_domain = client_domain
+    def __init__(self):
         self.auth = TenoviAuth()
 
     def get_devices(self, hwi_device_id  : str = None, **kwargs):
@@ -61,7 +60,7 @@ class Devices:
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-devices
         """
 
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/"
+        url = "/hwi/hwi-devices/"
         if hwi_device_id:
             url += f"{hwi_device_id}/"
 
@@ -97,7 +96,7 @@ class Devices:
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-devices
         """
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/"
+        url = "/hwi/hwi-devices/"
         return self.auth.make_post_request(url, payload)
 
     def update_device_patient_id(self, hwi_device_id : str, patient_id : str):
@@ -110,7 +109,7 @@ class Devices:
         # get additional device data
         this_device = self.get_devices(hwi_device_id)
 
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/"
+        url = f"/hwi/hwi-devices/{hwi_device_id}/"
         payload = {
             "patient_id": patient_id,
             "device" : {
@@ -165,6 +164,10 @@ if __name__ == "__main__":
         if devices:
             print("Devices:")
             devices_module.auth.print_pretty_json(devices)
+            print("--------------")
+            for device in devices:
+                print(f"Device ID: {device['id']}, Patient ID: {device['patient_id']}")
+
         else:
             print("Devices: None found.")
 
@@ -194,13 +197,16 @@ if __name__ == "__main__":
     if False:
         # Example HWI device ID, replace with a real ID if needed
         # hwi_device_id = "0585a82e-3f57-4e0e-a91a-317117c48e11"
-        hwi_device_id = "beb8e7cc-e8fe-4c8c-a273-bc54ac4bf9f1"
+        # hwi_device_id = "c0e0448a-53cd-4c57-997d-ff2ee5d0b76f" # test
+        hwi_device_id = "13a88255-27cb-4766-b316-2caf041de04c"  # Omar New - Demo - Watch
+        # hwi_device_id = "c02fd21c-e50a-40c2-95c5-e0666d8d555d"  # Omar New - Demo - Pillbox
+        # hwi_device_id = "20bfd715-77b1-42a7-9e7e-0da9badaee0f"  # Omar New - Demo - BPM
 
         # Get and print all devices or a specific device
         this_device = devices_module.get_devices(hwi_device_id)
-        if devices:
+        if this_device:
             print(f"This device {hwi_device_id}:")
-            devices_module.auth.print_pretty_json(devices)
+            devices_module.auth.print_pretty_json(this_device)
         else:
             print("Device not found.")
 
@@ -295,7 +301,7 @@ if __name__ == "__main__":
                 print("Devices: None found.")
 
 
-    if True:
+    if False:
         # Example payload for creating a new device
         payload = {
             "patient_id": "OlivierLemaitre2",
@@ -331,3 +337,20 @@ if __name__ == "__main__":
         - is gateway shipped with the device ?
 
         """
+
+    # Omar new devices
+    if True:
+        device_ids = [
+                   "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
+                   "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
+                   "ff7ddf32-1472-450e-89ae-362416765d8b"  # Omar New - HWI - BPM
+                   ]
+
+        # Get and print all devices or a specific device
+        for hwi_device_id in device_ids:
+            this_device = devices_module.get_devices(hwi_device_id)
+            if this_device:
+                print(f"This device {hwi_device_id}:")
+                devices_module.auth.print_pretty_json(this_device)
+            else:
+                print("Device not found.", hwi_device_id)

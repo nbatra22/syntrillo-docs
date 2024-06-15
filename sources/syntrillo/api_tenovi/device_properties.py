@@ -15,15 +15,14 @@ class DeviceProperties:
 
 
     """
-    def __init__(self, client_domain="syntrillo"):
-        self.client_domain = client_domain
+    def __init__(self):
         self.auth = TenoviAuth()
 
     def get_device_properties(self, hwi_device_id : str):
         """
         Lists all or reads a single Property for a given HWI Device.
         """
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
+        url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_get_request(url)
 
     def create_device_property(self, hwi_device_id : str, payload : dict):
@@ -35,7 +34,7 @@ class DeviceProperties:
         'Note, keys must be unique for a given device. If you try and create a property with an existing key, the existing key-value pair will simply be updated instead.'
 
         """
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
+        url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_post_request(url, payload)
 
     def create__pseudo_code_for_tenovi_phi_access__property(self, hwi_device_id : str, pseudo_code : str):
@@ -64,14 +63,15 @@ class DeviceProperties:
 if __name__ == "__main__":
     device_properties_module = DeviceProperties()
 
-    # Example HWI device ID, replace with a real ID if needed
-    hwi_device_id = "83ca5817-0bb2-4d9c-b131-16eb353ad587"
+    hwi_device_id = "e154d35e-4543-4c15-abdd-cbdc8f482654"  # Omar Watch
 
     # Get and print properties of a specific device
     device_properties = device_properties_module.get_device_properties(hwi_device_id)
     if device_properties:
         print(f"Properties for device {hwi_device_id}:")
         TenoviAuth.print_pretty_json(device_properties)
+    else:
+        print(f"No properties found for device {hwi_device_id}.")
 
 
     if False:
