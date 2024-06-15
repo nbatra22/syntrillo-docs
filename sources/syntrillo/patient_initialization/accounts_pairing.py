@@ -65,6 +65,8 @@ class AccountsPairing:
         - For each device, set up a key/value parameter pair with the pseudo_code_for_tenovi_phi_access.
         - Replace the patient_external_id with the healthie_user_id.
 
+        patient_external_id : 'the use of this field is strongly recommended. '
+
         Args:
             update_patient_id_with_healthie_user_id (bool): If True, update the device's patient ID with the healthie_user_id. Default is True.
             add_healthie_user_id_to_device_properties (bool): If True, add the healthie_user_id to the device's properties. Default is True.
