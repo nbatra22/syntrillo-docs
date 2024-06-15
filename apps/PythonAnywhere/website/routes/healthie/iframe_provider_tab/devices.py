@@ -37,8 +37,9 @@ def iframe_healthie_provider_tab_devices():
     # get paired devices from Tenovi API
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=post_manager.syntrillo_internal_key)
 
+    gateway_id = None
     for device in paired_devices:
-        # get gateway id
+        # get gateway id : TODO : manage if several gateways
         gateway_id = device['device']['hardware_uuid']
         # Format dates before passing to template
         if 'created' in device['device']:
