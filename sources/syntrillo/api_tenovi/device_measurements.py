@@ -38,6 +38,16 @@ class DeviceMeasurements:
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-measurements
 
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            timestamp__gte (str): The earliest timestamp to include.
+            timestamp__lte (str): The latest timestamp to include.
+            metric__name (str): The metric name to filter by.
+
+        Returns a tupple:
+            list: A list of device measurement dictionaries.
+            dict: The log of the request.
+
         """
         url = f"/hwi/hwi-devices/{hwi_device_id}/measurements/"
 
@@ -71,7 +81,7 @@ if __name__ == "__main__":
 
         # Get and print all devices or a specific device
         for hwi_device_id in device_ids:
-            measurements = device_measurements._get_device_measurements(hwi_device_id)
+            measurements, log = device_measurements._get_device_measurements(hwi_device_id)
             print(f"\n-----------\nMeasurements for device {hwi_device_id}:")
             TenoviAuth.print_pretty_json(measurements)
 

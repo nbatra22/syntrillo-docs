@@ -52,7 +52,7 @@ class TenoviAuth:
             "Content-Type": "application/json"
         }
 
-    def make_get_request(self, url, params=None):
+    def make_get_request(self, url, params=None, verbose=False):
         """
         Makes a GET request to the provided URL and handles the response.
 
@@ -61,23 +61,41 @@ class TenoviAuth:
             params (dict, optional): Query parameters to include in the request.
 
         Returns:
-            dict or None: The JSON response if the request was successful, None otherwise.
+            tupple:
+               - dict or None: The JSON response if the request was successful, None otherwise.
+               - log of the API call
         """
         full_url = self.base_url + url
         caller = inspect.stack()[1].function
         try:
             response = requests.get(full_url, headers=self.get_headers(), params=params)
             if response.status_code == 200:
-                return response.json()
+                json_output = response.json()
+                log = {
+                    "success": True,
+                    "message": f"Successfully posted data in {caller}"
+                }
+                return json_output, log
             else:
-                print(f"Failed to retrieve data in {caller}: {response.status_code}")
-                print(response.text)
-                return None
+                if verbose:
+                    print(f"Failed to post data in {caller}: {response.status_code}")
+                    print(response.text)
+                log = {
+                    "success": False,
+                    "message": f"Failed to get data in {caller}: {response.status_code}",
+                    "error": response.json() if response.text else None,
+                }
+                return None, log
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
-            return None
+            if verbose:
+                print(f"An error occurred in {caller}: {e}")
+            log = {
+                "success": False,
+                "message": f"An error occurred in {caller}: {e}"
+            }
+            return None, log
 
-    def make_post_request(self, url, data):
+    def make_post_request(self, url, data, verbose=False):
         """
         Makes a POST request to the provided URL and handles the response.
 
@@ -86,23 +104,41 @@ class TenoviAuth:
             data (dict): The payload to send with the POST request.
 
         Returns:
-            dict or None: The JSON response if the request was successful, None otherwise.
+            tupple:
+              - dict : The JSON response if the request was successful or not.
+              - log of the API call
         """
         full_url = self.base_url + url
         caller = inspect.stack()[1].function
         try:
             response = requests.post(full_url, headers=self.get_headers(), json=data)
             if response.status_code == 201:  # Typically, successful POST requests return a 201 status code
-                return response.json()
+                json_output = response.json()
+                log = {
+                    "success": True,
+                    "message": f"Successfully posted data in {caller}"
+                }
+                return json_output, log
             else:
-                print(f"Failed to post data in {caller}: {response.status_code}")
-                print(response.text)
-                return None
+                if verbose:
+                    print(f"Failed to post data in {caller}: {response.status_code}")
+                    print(response.text)
+                log = {
+                    "success": False,
+                    "message": f"Failed to post data in {caller}: {response.status_code}",
+                    "error": response.json() if response.text else None,
+                }
+                return None, log
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred in {caller}: {e}")
-            return None
+            if verbose:
+                print(f"An error occurred in {caller}: {e}")
+            log = {
+                "success": False,
+                "message": f"An error occurred in {caller}: {e}"
+            }
+            return None, log
 
-    def make_patch_request(self, url, data):
+    def make_patch_request(self, url, data, verbose=False):
         """
         Makes a PATCH request to the provided URL and handles the response.
 
@@ -111,21 +147,39 @@ class TenoviAuth:
             data (dict): The payload to send with the PATCH request.
 
         Returns:
-            dict or None: The JSON response if the request was successful, None otherwise.
+            tupple
+              - dict or None: The JSON response if the request was successful, None otherwise.
+              - log of the API call
         """
         full_url = self.base_url + url
         caller = inspect.stack()[1].function
         try:
             response = requests.patch(full_url, headers=self.get_headers(), json=data)
             if response.status_code == 200:
-                return response.json()
+                json_output = response.json()
+                log = {
+                    "success": True,
+                    "message": f"Successfully posted data in {caller}"
+                }
+                return json_output, log
             else:
-                print(f"Failed to patch data in {caller}: {response.status_code}")
-                print(response.text)
-                return None
+                if verbose:
+                    print(f"Failed to path data in {caller}: {response.status_code}")
+                    print(response.text)
+                log = {
+                    "success": False,
+                    "message": f"Failed to get data in {caller}: {response.status_code}",
+                    "error": response.json() if response.text else None,
+                }
+                return None, log
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred in {caller}: {e}")
-            return None
+            if verbose:
+                print(f"An error occurred in {caller}: {e}")
+            log = {
+                "success": False,
+                "message": f"An error occurred in {caller}: {e}"
+            }
+            return None, log
 
     @staticmethod
     def print_pretty_json(data):

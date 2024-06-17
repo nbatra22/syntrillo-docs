@@ -91,20 +91,20 @@ class AccountsPairing:
 
         # loop for devices where PatientID is equal to the temporary code
         paired_devices = []
-        matching_devices = self.devices.get_devices_by_patient_external_id(temporary_pseudo_code)
+        matching_devices, _ = self.devices.get_devices_by_patient_external_id(temporary_pseudo_code)
         for device in matching_devices:
             # create a key/value parameter pair with the pseudo_code_for_tenovi_phi_access
             device_id = device.get('id')
             device_name = device.get('device').get('name')
             device_properties = DeviceProperties()
 
-            device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
+            _, _ = device_properties.create__pseudo_code_for_tenovi_phi_access__property(device_id, pseudo_code_for_tenovi_phi_access)
 
             if add_healthie_user_id_to_device_properties:
-                device_properties.create__healthie_user_id__property(device_id, entry_by_internal_key.get('healthie_user_id'))
+                _, _ = device_properties.create__healthie_user_id__property(device_id, entry_by_internal_key.get('healthie_user_id'))
 
             if update_patient_id_with_healthie_user_id:
-                self.devices.update_device_patient_id(device_id, entry_by_internal_key.get('healthie_user_id'))
+                _, _ = self.devices.update_device_patient_id(device_id, entry_by_internal_key.get('healthie_user_id'))
 
             if self.verbose:
                 print(f"Device {device_id} {device_name} updated with pseudo_code_for_tenovi_phi_access")
@@ -158,7 +158,7 @@ class AccountsPairing:
         elif pseudo_code_for_tenovi_phi_access is None:
             return None
 
-        matching_devices = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
+        matching_devices, _ = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
 
         return matching_devices
 

@@ -1,6 +1,8 @@
 # Path: ./sources/syntrillo/api_tenovi/devices.py
 
 from syntrillo.api_tenovi.auth import TenoviAuth
+from syntrillo.api_tenovi.device_properties import DeviceProperties
+
 
 class Devices:
     """
@@ -45,6 +47,30 @@ class Devices:
     def __init__(self):
         self.auth = TenoviAuth()
 
+    @staticmethod
+    def devices_format_hardware_uuid(devices):
+        """
+        Adds a field 'hardware_uuid_formatted' to each device in the devices list,
+        formatting the 'hardware_uuid' with hyphens every 4 characters.
+
+        Args:
+            devices (list): List of devices, where each device is a dictionary that may contain a 'hardware_uuid' field.
+
+        Returns:
+            list: The updated list of devices with the new 'hardware_uuid_formatted' field added.
+        """
+        for device in devices:
+            if device is not None and 'device' in device and 'hardware_uuid' in device['device']:
+                uuid = device['device']['hardware_uuid']
+                if uuid is None:
+                    formatted_uuid = None
+                else:
+                    formatted_uuid = '-'.join(uuid[i:i+4] for i in range(0, len(uuid), 4))
+                device['device']['hardware_uuid_formatted'] = formatted_uuid
+
+        return devices
+
+
     def get_devices(self, hwi_device_id  : str = None, **kwargs):
         """
         Lists all or reads a single HWI Device. To read a single HWI Device, the ID must be included in the URL.
@@ -58,17 +84,36 @@ class Devices:
             - search: string
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-devices
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            **kwargs: Query parameters.
+
+        Returns a tupple:
+            list: A list of device dictionaries.
+            dict: The log of the request.
+
         """
 
         url = "/hwi/hwi-devices/"
         if hwi_device_id:
             url += f"{hwi_device_id}/"
 
-        return self.auth.make_get_request(url, params=kwargs)
+        devices, log = self.auth.make_get_request(url, params=kwargs)
+
+        return self.devices_format_hardware_uuid(devices), log
+
 
     def get_devices_by_patient_external_id(self, external_id):
         """
         Returns devices matching patient external ID
+
+        Args:
+            external_id (str): The external ID of the patient.
+
+        Returns a tupple:
+            list: A list of device dictionaries.
+            dict: The log of the request.
         """
         query_params = {
             "patient__external_id": external_id,
@@ -78,6 +123,13 @@ class Devices:
     def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access : str):
         """
         Returns devices matching the pseudo_code_for_tenovi_phi_access key/value propoerty
+
+        Args:
+            pseudo_code_for_tenovi_phi_access (str): The pseudo code for Tenovi PHI access.
+
+        Returns a tupple:
+            list: A list of device dictionaries.
+            dict: The log of the request.
         """
         query_params = {
             "properties__key": "pseudo_code_for_tenovi_phi_access",
@@ -95,19 +147,36 @@ class Devices:
         You can also optionally link this Device to a Patient by including a nested Patient object. If you do this, the "external_id" field can be used to uniquely identify this Patient. For example, if you edit the name or phone_number of a Patient, those fields will be updated for all Devices the same Patient external_id. We thus recommend Clients use a unique Patient identifier from their own systems for this field (hence the name "external_id").
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-devices
+
+        Args:
+            payload (dict): The device data.
+
+        Returns a tupple:
+            dict: The created device dictionary.
+            dict: The log of the request.
         """
         url = "/hwi/hwi-devices/"
+
         return self.auth.make_post_request(url, payload)
+
 
     def update_device_patient_id(self, hwi_device_id : str, patient_id : str):
         """
         Updates the patient_id of a device.
 
         See https://api2.tenovi.com/hwi-redoc/#operation/hwi-devices_partial_update
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            patient_id (str): The patient ID.
+
+        Returns a tupple:
+            dict: The updated device dictionary.
+            dict: The log of the request.
         """
 
         # get additional device data
-        this_device = self.get_devices(hwi_device_id)
+        this_device, _ = self.get_devices(hwi_device_id)
 
         url = f"/hwi/hwi-devices/{hwi_device_id}/"
         payload = {
@@ -123,35 +192,168 @@ class Devices:
         }
         return self.auth.make_patch_request(url, payload)
 
-    def create_set_of_devices_with_pending_orders(
+    def create_set_of_devices_with_fulfillment_request(
         self,
+        # devices
         devices_names : list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'),
+
+        # pairing
+        pair_devices : bool = True,
+        healthie_user_id : str = None,
+        pseudo_code_for_tenovi_phi_access : str = None,
+
+        # patient
         patient_id : str = "TempCode",
+        patient_name : str = None,
+        patient_phone_number : str = "",
+        patient_email : str = None,
+
+        # gateway
+        gateway_id : str = None,
+
+        # fulfillment request
+        fullfillment_request : bool = True,
+
+        shipping_name: str = None,
+        shipping_address: str = None,
+        shipping_city: str = None,
+        shipping_state: str = None,
+        shipping_zip_code: str = None,
+        shipped_on_behalf_of: str = None,
+        shipping_tracking_link: str = None,
+        require_signature: bool = True,
+        client_notes: str = None,
+        notify_emails: str = None,
+        client_will_fulfill: bool = False, # False will request a dropship by Tenovi ('Dropship Requested' status in the dashboard)
+        flagged_by_client: bool = None,
+
         sms_opt_in : bool = False, # If you have not obtained the patient's consent to receive SMS messages, please set the sms_opt_in field to False.
     ):
         """
-        TODO : document this
-        """
-        devices_created = []
-        for device_name in devices_names:
-            payload = {
-                "patient_id": patient_id,
-                "patient" : {
-                    "external_id": patient_id,
-                    "sms_opt_in": sms_opt_in ,
-                },
-                "device": {
-                    "name": device_name,
-                    "hardware_uuid": None,  # that's the Gateway ID
-                    "fulfillment_request": {
-                        "client_will_fulfill": True,
-                    }
-                },
-            }
-            new_device = self.create_device(payload)
-            devices_created.append(new_device)
+        Creates a new set of HWI Devices with optional Fulfillment Request for each device.
 
-        return devices_created
+        Args:
+            devices_names (list): List of device names to be created. Default includes 'Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'. None allowed and will be ignored.
+            patient_id (str): The ID of the patient.
+            patient_name (str): The name of the patient.
+            patient_external_id (str): The external ID of the patient. Will be displayed on the Device Dashboard as 'Patient ID'
+            patient_phone_number (str): The phone number of the patient.
+            patient_email (str): The email of the patient.
+
+            gateway_id (str): The gateway ID (if applicable). If None, a new gateway ID will be shipped as well.
+
+            fulfillment_request (bool): Whether to include a fulfillment request. Default is True.
+
+            shipping_name (str): The name for shipping.
+            shipping_address (str): The address for shipping.
+            shipping_city (str): The city for shipping.
+            shipping_state (str): The state for shipping.
+            shipping_zip_code (str): The zip code for shipping.
+            shipped_on_behalf_of (str): The entity on behalf of which the shipment is made.
+            shipping_tracking_link (str): The tracking link for the shipment.
+            require_signature (bool): Whether a signature is required upon delivery. Default is True.
+            client_notes (str): Additional notes from the client.
+            notify_emails (str): Emails to notify.
+            client_will_fulfill (bool): Whether the client will fulfill the request internally. Default is False (Tenovi will dropship the devices).
+            flagged_by_client (bool): Whether the request is flagged by the client.
+
+            sms_opt_in (bool): Whether the patient has opted in for SMS notifications. Default is False.
+
+        Returns a tupple
+            list: List of created devices.
+            log: The log of the request.
+
+        Raises:
+            ValueError: If patient ID or device name is missing.
+        """
+
+        devices_created = []
+        overall_log = {
+            "success": True,
+            "log": [],
+        }
+        for device_name in devices_names:
+            if device_name is not None:
+                payload = {
+                    "patient_id": patient_id,
+                    "patient_phone_number": patient_phone_number,
+                    "patient" : {
+                        "external_id": patient_id, # Will be displayed on the Device Dashboard as 'Patient ID'
+                        "name": patient_name,
+                        "phone_number": patient_phone_number,
+                        "email": patient_email,
+                        "physician": None, # If the physician field is included in the Patient object, this data will be forwarded to our fulfillment team (if dropshipping is requested) to allow for any per-provider shipping customizations (additional charges may apply).
+                        "clinic_name": "Syntrillo Clinic",
+                        "care_manager": None,
+                        "sms_opt_in": sms_opt_in ,
+                    },
+                    "device": {
+                        "name": device_name,
+                        "hardware_uuid": gateway_id,  # that's the Gateway ID
+                    },
+                }
+
+                if fullfillment_request:
+                    payload["device"]["fulfillment_request"] = {
+                        "shipping_name": shipping_name,
+                        "shipping_address": shipping_address,
+                        "shipping_city": shipping_city,
+                        "shipping_state": shipping_state,
+                        "shipping_zip_code": shipping_zip_code,
+                        "shipped_on_behalf_of": shipped_on_behalf_of,
+                        "shipping_tracking_link": shipping_tracking_link,
+                        "require_signature": require_signature,
+                        "client_notes": client_notes,
+                        "notify_emails": notify_emails,
+                        "client_will_fulfill": client_will_fulfill,
+                        "flagged_by_client": flagged_by_client
+                    }
+
+                # add device
+                new_device, log_new_device = self.create_device(payload)
+                devices_created.append(new_device)
+
+                # pair device
+                #  : pairing done with creation to prevent orphaned devices is something goes wrong with creation of next devices
+                if pair_devices:
+
+                    if new_device is None:
+                        log_pairing = {
+                            "success": False,
+                            "error_message": "Device is None",
+                        }
+
+                    elif new_device['id'] is None:
+                        log_pairing = {
+                            "success": False,
+                            "error_message": "Device ID is None",
+                        }
+
+                    device_properties = DeviceProperties()
+
+                    _, log1 = device_properties.create__healthie_user_id__property(
+                        hwi_device_id = new_device['id'],
+                        healthie_user_id = healthie_user_id,
+                    )
+
+                    _, log2 = device_properties.create__pseudo_code_for_tenovi_phi_access__property(
+                        hwi_device_id = new_device['id'],
+                        pseudo_code = pseudo_code_for_tenovi_phi_access,
+                    )
+
+                    log_pairing = {
+                        "success": log1['success'] and log2['success'],
+                        "log1": log1,
+                        "log2": log2
+                    }
+
+                overall_log["log"].append({
+                    "new_device": log_new_device,
+                    "pairing": log_pairing,
+                })
+                overall_log["success"] = overall_log["success"] and log_new_device["success"] and log_pairing["success"]
+
+        return devices_created, overall_log
 
 
 # Example usage:
@@ -160,7 +362,7 @@ if __name__ == "__main__":
 
     if False:
         # Get and print all devices or a specific device
-        devices = devices_module.get_devices()
+        devices, log = devices_module.get_devices()
         if devices:
             print("Devices:")
             devices_module.auth.print_pretty_json(devices)
@@ -170,175 +372,9 @@ if __name__ == "__main__":
 
         else:
             print("Devices: None found.")
+            print(log)
 
-    if False:
-        hwi_device_id = '83ca5817-0bb2-4d9c-b131-16eb353ad587'
-
-        # devices_module.update_device_patient_id(hwi_device_id, "AnExternalID")
-
-        this_device = devices_module.get_devices(hwi_device_id)
-        devices_module.auth.print_pretty_json(this_device)
-
-        url = f"https://api2.tenovi.com/clients/syntrillo/hwi/hwi-devices/{hwi_device_id}/"
-        payload = {
-            "patient_id": "test123",
-            "device" : {
-                "name": this_device['device']['name'],
-                "hardware_uuid": this_device['device']['hardware_uuid'],
-            },
-            "patient" : {
-                "external_id": "test456",
-                "name": "test789", # this_device['patient']['name'],
-            },
-        }
-        devices_module.auth.print_pretty_json(payload)
-        devices_module.auth.make_patch_request(url, payload)
-
-    if False:
-        # Example HWI device ID, replace with a real ID if needed
-        # hwi_device_id = "0585a82e-3f57-4e0e-a91a-317117c48e11"
-        # hwi_device_id = "c0e0448a-53cd-4c57-997d-ff2ee5d0b76f" # test
-        hwi_device_id = "13a88255-27cb-4766-b316-2caf041de04c"  # Omar New - Demo - Watch
-        # hwi_device_id = "c02fd21c-e50a-40c2-95c5-e0666d8d555d"  # Omar New - Demo - Pillbox
-        # hwi_device_id = "20bfd715-77b1-42a7-9e7e-0da9badaee0f"  # Omar New - Demo - BPM
-
-        # Get and print all devices or a specific device
-        this_device = devices_module.get_devices(hwi_device_id)
-        if this_device:
-            print(f"This device {hwi_device_id}:")
-            devices_module.auth.print_pretty_json(this_device)
-        else:
-            print("Device not found.")
-
-    if False:
-        # Example payload for creating a new device
-        payload = {
-            "device": {
-                "name": "Tenovi Watch",      # required
-                 "hardware_uuid": "c26b2b7d-56dc-412b-be89-d302c52717a5",     # required : this is the gateway ID
-            },
-        }
-
-        # Create and print the new device
-        new_device = devices_module.create_device(payload)
-        if new_device:
-            print("New Device Created:")
-            TenoviAuth.print_pretty_json(new_device)
-
-            """ Returns this
-            New Device Created:
-            {
-                "device": {
-                    "created": "2024-05-23T20:51:29.211103Z",
-                    "fulfillment_request": null,
-                    "hardware_uuid": "C26B2B7D56DC412BBE89D302C52717A5",
-                    "id": "f22e0ce6-dd5c-4e38-ba45-aac59d8b985f",
-                    "meta_data": null,
-                    "name": "Tenovi Pulse Ox",
-                    "sensor_code": "11",
-                    "shared_hardware_uuid": false
-                },
-                "id": "83ca5817-0bb2-4d9c-b131-16eb353ad587",
-                "patient": null,
-                "patient_id": "",
-                "patient_phone_number": "",
-                "status": "Unknown Gateway ID"
-            }
-            """
-
-    if False:
-            # Get and print all devices or a specific device
-            query_params = {
-                "properties__key": "pseudo_code_for_tenovi_phi_access",
-                "properties__value": "123456789",
-            }
-            devices = devices_module.get_devices(hwi_device_id=None, **query_params)
-            if devices:
-                print("Devices by key/value property:")
-                devices_module.auth.print_pretty_json(devices)
-            else:
-                print("Devices: None found.")
-
-
-    if False:
-            # Get and print all devices or a specific device
-            devices = devices_module.get_devices(hwi_device_id="83ca5817-0bb2-4d9c-b131-16eb353ad587")
-            if devices:
-                print("Device by id:")
-                devices_module.auth.print_pretty_json(devices)
-            else:
-                print("Devices: None found.")
-
-    if False:
-            # Get and print all devices or a specific device
-            devices = devices_module.get_device_by_patient_external_id("AnExternalID")
-            if devices:
-                print("Devices by patient_external_id :")
-                devices_module.auth.print_pretty_json(devices)
-            else:
-                print("Devices: None found.")
-
-
-    if False:
-            # Get and print all devices or a specific device
-            devices = devices_module.get_device_by_patient_external_id("testOmarExternalPatientID")
-            if devices:
-                print("Devices by patient_external_id :")
-                devices_module.auth.print_pretty_json(devices)
-            else:
-                print("Devices by patient_external_id: None found.")
-
-    if False:
-            # Get and print all devices or a specific device
-            query_params = {
-                "search": "testOmarExternalPatientID",
-            }
-            devices = devices_module.get_devices(hwi_device_id=None, **query_params)
-            if devices:
-                print("Devices by search:")
-                devices_module.auth.print_pretty_json(devices)
-            else:
-                print("Devices: None found.")
-
-
-    if False:
-        # Example payload for creating a new device
-        payload = {
-            "patient_id": "OlivierLemaitre2",
-            "patient" : {
-                    "external_id": "OlivierLemaitre2",
-                    "sms_opt_in": False ,
-                },
-            "device": {
-                "name": "Tenovi Watch",      # required
-                "hardware_uuid": None,       # required : this is the gateway ID
-                "fulfillment_request": {
-                    "client_will_fulfill": False, # False => 'dropship requested'
-                }
-            },
-        }
-
-        # Create and print the new device
-        new_device = devices_module.create_device(payload)
-        if new_device:
-            print("New Device Created:")
-            TenoviAuth.print_pretty_json(new_device)
-
-    if False:
-        # Create a set of devices for pending shipment
-        new_devices = devices_module.create_set_of_devices_with_pending_orders()
-
-        print("New Devices Created:")
-        TenoviAuth.print_pretty_json(new_devices)
-
-        """
-        - will Tenovi ship devices ? 'Note: This shipping information is for internal reference only. Tenovi will not dropship this device.'
-        - in dashboard, can enter shipping address for all devices only once
-        - is gateway shipped with the device ?
-
-        """
-
-    # Omar new devices
+    # List Omar new devices
     if True:
         device_ids = [
                    "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
@@ -348,9 +384,26 @@ if __name__ == "__main__":
 
         # Get and print all devices or a specific device
         for hwi_device_id in device_ids:
-            this_device = devices_module.get_devices(hwi_device_id)
+            this_device, log = devices_module.get_devices(hwi_device_id)
             if this_device:
                 print(f"This device {hwi_device_id}:")
                 devices_module.auth.print_pretty_json(this_device)
             else:
                 print("Device not found.", hwi_device_id)
+                print(log)
+
+    # test create_set_of_devices_with_fulfillment_request
+    if False:
+        created_devices, log = devices_module.create_set_of_devices_with_fulfillment_request(
+            devices_names = ('Tenovi BPM - L', 'Tenovi Watch', 'Tenovi Pillbox'),
+            patient_id = "123456789",
+            patient_name = "Test Patient",
+            gateway_id = "1234-5678-0000",
+            fullfillment_request=False,
+        )
+
+        devices_module.auth.print_pretty_json(created_devices)
+
+        devices_module.auth.print_pretty_json(log)
+
+

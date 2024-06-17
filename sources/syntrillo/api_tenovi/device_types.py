@@ -14,6 +14,11 @@ class DeviceTypes:
         https://api2.tenovi.com/hwi-redoc/#operation/hwi-device-types_list
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-types/
+
+        return:
+            tupple:
+              - list: A list of device type dictionaries.
+              - dict: The log of the request.
         """
         url = "/hwi/hwi-device-types/"
         if device_id is not None:
@@ -39,7 +44,7 @@ if __name__ == "__main__":
 
     # print all devices
     if True:
-        device_types = device_types_module.get_device_types()
+        device_types, log = device_types_module.get_device_types()
         print("Device Types:")
         device_types_module.auth.print_pretty_json(device_types)
         print('---------------------')
@@ -48,7 +53,7 @@ if __name__ == "__main__":
     # print a specific device
     if True:
         device_id = "7ffa3c62-cb7b-48e6-8904-f480cf674b1a"
-        device_types = device_types_module.get_device_types(device_id)
+        device_types, log = device_types_module.get_device_types(device_id)
         print('---------------------')
         print("Device Types:")
         device_types_module.auth.print_pretty_json(device_types)

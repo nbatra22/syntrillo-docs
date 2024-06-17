@@ -18,7 +18,7 @@
                 {% for device in paired_devices %}
                     <tr>
                         <td>{{ device.device.name }}</td>
-                        <td>{{ device.device.hardware_uuid }}</td>
+                        <td>{{ device.device.hardware_uuid_formatted }}</td>
                         <td>{{ device.device.created_USformat }}</td>
                         <td>{{ device.patient.sms_opt_in }}</td>
                         <td>{{ device.status }}</td>
@@ -39,7 +39,7 @@
 
 <ul>
     <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
-    <li>Select the devices for this patient. Make sure a small BMP device is not required.</li>
+    <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
     <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
     <li>Obtain the patient's consent to receive SMS messages.</li>
 </ul>
@@ -171,11 +171,11 @@
                         </tr>
                         <tr>
                             <td align="left" style="white-space: nowrap;">
-                                <input class="styled-input-checkbox" type="checkbox" id="bmpLarge" name="device_bmp_large" value="yes" checked>
-                                <label for="bmpLarge" class="styled-label">BMP Large</label><br>
+                                <input class="styled-input-checkbox" type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
+                                <label for="bpmLarge" class="styled-label">BPM Large</label><br>
 
-                                <input class="styled-input-checkbox" type="checkbox" id="bmpSmall" name="device_bpm_small" value="yes">
-                                <label for="bmpSmall" class="styled-label">BMP Small</label><br>
+                                <input class="styled-input-checkbox" type="checkbox" id="bpmSmall" name="device_bpm_small" value="yes">
+                                <label for="bpmSmall" class="styled-label">BPM Small</label><br>
                             </td>
                             <td align="left" style="white-space: nowrap;">
 

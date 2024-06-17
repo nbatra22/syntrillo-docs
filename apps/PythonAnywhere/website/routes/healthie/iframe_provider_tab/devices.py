@@ -6,6 +6,7 @@ import datetime
 
 from .post_management import PostManager
 from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
+from syntrillo.patient_initialization.order_tenovi_devices import OrderTenoviDevices
 from syntrillo.api_healthie.utils import HealthieUtils
 
 
@@ -40,7 +41,7 @@ def iframe_healthie_provider_tab_devices():
     gateway_id = None
     for device in paired_devices:
         # get gateway id : TODO : manage if several gateways
-        gateway_id = device['device']['hardware_uuid']
+        gateway_id = device['device']['hardware_uuid_formatted']
         # Format dates before passing to template
         if 'created' in device['device']:
             device['device']['created_USformat'] = format_date(device['device']['created'])
@@ -89,8 +90,8 @@ def tenovi_order_new_devices_form():
 
     gateway_id = request.form.get('gateway_id')
 
-    device_bmp_large = _checkbox_to_bool(request.form.get('device_bmp_large'))
-    device_bmp_small = _checkbox_to_bool(request.form.get('device_bmp_small'))
+    device_bpm_large = _checkbox_to_bool(request.form.get('device_bpm_large'))
+    device_bpm_small = _checkbox_to_bool(request.form.get('device_bpm_small'))
     device_pillbox = _checkbox_to_bool(request.form.get('device_pillbox'))
     device_watch = _checkbox_to_bool(request.form.get('device_watch'))
 
@@ -101,25 +102,41 @@ def tenovi_order_new_devices_form():
     sms_opt_in = _checkbox_to_bool(request.form.get('sms_opt_in'))
 
     # --------------------------------------------------------------------
-    # order device
+    # order selected devices and pair them with healthie identifier and our pseudo code
+    order = OrderTenoviDevices(post_manager.syntrillo_internal_key)
 
-
+    log_place_order = order.place_order(
+        devices_names=[
+            'Tenovi BPM - L' if device_bpm_large else None,
+            'Tenovi BPM - S' if device_bpm_small else None,
+            'Tenovi Watch' if device_watch else None,
+            'Tenovi Pillbox' if device_pillbox else None,
+        ],
+        gateway_id=gateway_id if include_gateway_id else None,
+        sms_opt_in=sms_opt_in,
+        healthie_location_index=int(location_index),
+    )
 
     # --------------------------------------------------------------------
     # generate log
     #   : log.success must be provided : used by HTML to display success or error message
+
+    success = log_place_order['success']
+
     if True:
         log = {
             "success": False,
+            "success_temp": success,
             "message": "Error: ",
             "include_gateway_id": include_gateway_id,
             "gateway_id": gateway_id,
-            "device_bmp_large": device_bmp_large,
-            "device_bmp_small": device_bmp_small,
+            "device_bpm_large": device_bpm_large,
+            "device_bpm_small": device_bpm_small,
             "device_pillbox": device_pillbox,
             "device_watch": device_watch,
             "location_index": location_index,
             "sms_opt_in": sms_opt_in,
+            "log_place_order": log_place_order,
         }
     else:
         log = {
