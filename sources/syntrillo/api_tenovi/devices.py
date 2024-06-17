@@ -47,8 +47,28 @@ class Devices:
     def __init__(self):
         self.auth = TenoviAuth()
 
-    @staticmethod
-    def devices_format_hardware_uuid(devices):
+    def device_dict_format_hardware_uuid(self, device):
+        """
+        Adds a field 'hardware_uuid_formatted' to the device dictionary,
+        formatting the 'hardware_uuid' with hyphens every 4 characters.
+
+        Args:
+            device (dict): A dictionary that may contain a 'hardware_uuid' field.
+
+        Returns:
+            dict: The updated device dictionary with the new 'hardware_uuid_formatted' field added.
+        """
+        if device is not None and 'device' in device and 'hardware_uuid' in device['device']:
+            uuid = device['device']['hardware_uuid']
+            if uuid is None:
+                formatted_uuid = None
+            else:
+                formatted_uuid = '-'.join(uuid[i:i+4] for i in range(0, len(uuid), 4))
+            device['device']['hardware_uuid_formatted'] = formatted_uuid
+
+        return device
+
+    def devices_format_hardware_uuid(self, devices):
         """
         Adds a field 'hardware_uuid_formatted' to each device in the devices list,
         formatting the 'hardware_uuid' with hyphens every 4 characters.
@@ -59,14 +79,14 @@ class Devices:
         Returns:
             list: The updated list of devices with the new 'hardware_uuid_formatted' field added.
         """
-        for device in devices:
-            if device is not None and 'device' in device and 'hardware_uuid' in device['device']:
-                uuid = device['device']['hardware_uuid']
-                if uuid is None:
-                    formatted_uuid = None
-                else:
-                    formatted_uuid = '-'.join(uuid[i:i+4] for i in range(0, len(uuid), 4))
-                device['device']['hardware_uuid_formatted'] = formatted_uuid
+        if type(devices) is dict:
+            devices = self.device_dict_format_hardware_uuid(devices)
+
+        elif type(devices) is list:
+            for device in devices:
+                device = self.device_dict_format_hardware_uuid(device)
+        else:
+            raise ValueError(f"devices must be a list or dict, not {type(devices)}")
 
         return devices
 
@@ -274,84 +294,105 @@ class Devices:
         }
         for device_name in devices_names:
             if device_name is not None:
-                payload = {
-                    "patient_id": patient_id,
-                    "patient_phone_number": patient_phone_number,
-                    "patient" : {
-                        "external_id": patient_id, # Will be displayed on the Device Dashboard as 'Patient ID'
-                        "name": patient_name,
-                        "phone_number": patient_phone_number,
-                        "email": patient_email,
-                        "physician": None, # If the physician field is included in the Patient object, this data will be forwarded to our fulfillment team (if dropshipping is requested) to allow for any per-provider shipping customizations (additional charges may apply).
-                        "clinic_name": "Syntrillo Clinic",
-                        "care_manager": None,
-                        "sms_opt_in": sms_opt_in ,
-                    },
-                    "device": {
-                        "name": device_name,
-                        "hardware_uuid": gateway_id,  # that's the Gateway ID
-                    },
-                }
 
-                if fullfillment_request:
-                    payload["device"]["fulfillment_request"] = {
-                        "shipping_name": shipping_name,
-                        "shipping_address": shipping_address,
-                        "shipping_city": shipping_city,
-                        "shipping_state": shipping_state,
-                        "shipping_zip_code": shipping_zip_code,
-                        "shipped_on_behalf_of": shipped_on_behalf_of,
-                        "shipping_tracking_link": shipping_tracking_link,
-                        "require_signature": require_signature,
-                        "client_notes": client_notes,
-                        "notify_emails": notify_emails,
-                        "client_will_fulfill": client_will_fulfill,
-                        "flagged_by_client": flagged_by_client
+                # Check this device does not exist already
+                #  : same patient_id, same device_name, same gateway_id
+                current_patient_devices, _ = self.get_devices_by_patient_external_id(patient_id)
+                duplicated_device = False
+                for device in current_patient_devices:
+                    if device['device']['name'] == device_name  and device['device']['hardware_uuid'] == gateway_id:
+                        duplicated_device = True
+                        break
+
+                if duplicated_device:
+                    overall_log["log"].append({
+                        "new_device": {
+                            "device_name": device_name,
+                            "error_message": "Device and gateway already exists for this patient",
+                        },
+                        "pairing": None,
+                    })
+                    overall_log["success"] = False
+                else:
+                    # all fine, let's create the device and pair it
+                    payload = {
+                        "patient_id": patient_id,
+                        "patient_phone_number": patient_phone_number,
+                        "patient" : {
+                            "external_id": patient_id, # Will be displayed on the Device Dashboard as 'Patient ID'
+                            "name": patient_name,
+                            "phone_number": patient_phone_number,
+                            "email": patient_email,
+                            "physician": None, # If the physician field is included in the Patient object, this data will be forwarded to our fulfillment team (if dropshipping is requested) to allow for any per-provider shipping customizations (additional charges may apply).
+                            "clinic_name": "Syntrillo Clinic",
+                            "care_manager": None,
+                            "sms_opt_in": sms_opt_in ,
+                        },
+                        "device": {
+                            "name": device_name,
+                            "hardware_uuid": gateway_id,  # that's the Gateway ID
+                        },
                     }
 
-                # add device
-                new_device, log_new_device = self.create_device(payload)
-                devices_created.append(new_device)
-
-                # pair device
-                #  : pairing done with creation to prevent orphaned devices is something goes wrong with creation of next devices
-                if pair_devices:
-
-                    if new_device is None:
-                        log_pairing = {
-                            "success": False,
-                            "error_message": "Device is None",
+                    if fullfillment_request:
+                        payload["device"]["fulfillment_request"] = {
+                            "shipping_name": shipping_name,
+                            "shipping_address": shipping_address,
+                            "shipping_city": shipping_city,
+                            "shipping_state": shipping_state,
+                            "shipping_zip_code": shipping_zip_code,
+                            "shipped_on_behalf_of": shipped_on_behalf_of,
+                            "shipping_tracking_link": shipping_tracking_link,
+                            "require_signature": require_signature,
+                            "client_notes": client_notes,
+                            "notify_emails": notify_emails,
+                            "client_will_fulfill": client_will_fulfill,
+                            "flagged_by_client": flagged_by_client
                         }
 
-                    elif new_device['id'] is None:
+                    # add device
+                    new_device, log_new_device = self.create_device(payload)
+                    devices_created.append(new_device)
+
+                    # pair device
+                    #  : pairing done with creation to prevent orphaned devices is something goes wrong with creation of next devices
+                    if pair_devices:
+
+                        if new_device is None:
+                            log_pairing = {
+                                "success": False,
+                                "error_message": "Device is None",
+                            }
+
+                        elif new_device['id'] is None:
+                            log_pairing = {
+                                "success": False,
+                                "error_message": "Device ID is None",
+                            }
+
+                        device_properties = DeviceProperties()
+
+                        _, log1 = device_properties.create__healthie_user_id__property(
+                            hwi_device_id = new_device['id'],
+                            healthie_user_id = healthie_user_id,
+                        )
+
+                        _, log2 = device_properties.create__pseudo_code_for_tenovi_phi_access__property(
+                            hwi_device_id = new_device['id'],
+                            pseudo_code = pseudo_code_for_tenovi_phi_access,
+                        )
+
                         log_pairing = {
-                            "success": False,
-                            "error_message": "Device ID is None",
+                            "success": log1['success'] and log2['success'],
+                            "log1": log1,
+                            "log2": log2
                         }
 
-                    device_properties = DeviceProperties()
-
-                    _, log1 = device_properties.create__healthie_user_id__property(
-                        hwi_device_id = new_device['id'],
-                        healthie_user_id = healthie_user_id,
-                    )
-
-                    _, log2 = device_properties.create__pseudo_code_for_tenovi_phi_access__property(
-                        hwi_device_id = new_device['id'],
-                        pseudo_code = pseudo_code_for_tenovi_phi_access,
-                    )
-
-                    log_pairing = {
-                        "success": log1['success'] and log2['success'],
-                        "log1": log1,
-                        "log2": log2
-                    }
-
-                overall_log["log"].append({
-                    "new_device": log_new_device,
-                    "pairing": log_pairing,
-                })
-                overall_log["success"] = overall_log["success"] and log_new_device["success"] and log_pairing["success"]
+                    overall_log["log"].append({
+                        "new_device": log_new_device,
+                        "pairing": log_pairing,
+                    })
+                    overall_log["success"] = overall_log["success"] and log_new_device["success"] and log_pairing["success"]
 
         return devices_created, overall_log
 
@@ -377,9 +418,11 @@ if __name__ == "__main__":
     # List Omar new devices
     if True:
         device_ids = [
-                   "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
-                   "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
-                   "ff7ddf32-1472-450e-89ae-362416765d8b"  # Omar New - HWI - BPM
+                   # "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
+                   # "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
+                   # "ff7ddf32-1472-450e-89ae-362416765d8b",  # Omar New - HWI - BPM
+                   "425ed808-4144-4c86-aa7f-921c5b16a5f8",  # test 1
+                   "8b9d1441-eadd-42c6-a491-34192526bb04", # test 2
                    ]
 
         # Get and print all devices or a specific device

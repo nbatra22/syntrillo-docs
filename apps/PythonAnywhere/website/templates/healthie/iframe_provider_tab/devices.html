@@ -1,6 +1,6 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/devices.html -->
 
-<h2>Paired Devices</h2>
+<h2>Devices in use</h2>
 
 <div class="table-container-data">
     <table>
@@ -21,192 +21,214 @@
                         <td>{{ device.device.hardware_uuid_formatted }}</td>
                         <td>{{ device.device.created_USformat }}</td>
                         <td>{{ device.patient.sms_opt_in }}</td>
-                        <td>{{ device.status }}</td>
+                        <td>
+                            {% if device.status == 'Dropship Requested' %}
+                                {% if device.device.fulfillment_request and device.device.fulfillment_request.flagged_by_client %}
+                                    Flagged (dropship pending)
+                                {% else %}
+                                    {{ device.status }}
+                                {% endif %}
+                            {% else %}
+                                {{ device.status }}
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="5">No devices paired</td>
+                    <td colspan="5">No device available</td>
                 </tr>
             {% endif %}
         </tbody>
     </table>
 </div>
 
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas {% if unroll_order_new_devices_form %}fa-chevron-down{% else %}fa-chevron-right{% endif %}"></i>
+    </span>
+    Order new Tenovi device(s)
+</h2>
+<div class="collapsible-content {% if unroll_order_new_devices_form %}show{% else %}collapsed{% endif %}">
 
+    <ul>
+        <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
+        <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
+        <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
+        <li>Obtain the patient's consent to receive SMS messages.</li>
+        <li>Flagged devices will be on hold. You can review them on the Tenovi portal and validate the dropship order.</li>
+    </ul>
 
-<h2>Order new device(s)</h2>
-
-<ul>
-    <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
-    <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
-    <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
-    <li>Obtain the patient's consent to receive SMS messages.</li>
-</ul>
-
-<table class="compact-table-two-columns" style="margin-left: 20px;">
-    <tr>
-        <td class="compact-table-two-columns-col1" colspan="2">
-            <hr style="height:1px;width:60%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-        </td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">Phone number:</td>
-        <td class="compact-table-two-columns-col2">{{ user_pii.phone_number }}</td>
-    </tr>
-    {% if n_user_locations > 1 %}
-    <tr>
-        <td class="compact-table-two-columns-col1" colspan="2">
-            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-        </td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1" colspan="2">Several locations available - Use the dropdown below.</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1" colspan="2">
-            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-        </td>
-    </tr>
-    {% endif %}
-    {% if n_user_locations == 0 %}
-    <tr>
-        <td class="compact-table-two-columns-col1">Address:</td>
-        <td class="compact-table-two-columns-col2">No locations available</td>
-    </tr>
-    {% else %}
-    {% for location in user_pii.locations %}
-    <tr>
-        <td class="compact-table-two-columns-col1">Address:</td>
-        <td class="compact-table-two-columns-col2">{{ location.line1 }}<br>{{ location.line2 }}</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">City:</td>
-        <td class="compact-table-two-columns-col2">{{ location.city }}</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">State:</td>
-        <td class="compact-table-two-columns-col2">{{ location.state }}</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">Zip code:</td>
-        <td class="compact-table-two-columns-col2">{{ location.zip }}</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1">Country:</td>
-        <td class="compact-table-two-columns-col2">{{ location.country }}</td>
-    </tr>
-    <tr>
-        <td class="compact-table-two-columns-col1" colspan="2">
-            <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-        </td>
-    </tr>
-    {% endfor %}
-    {% endif %}
-</table>
-
-
-
-<style>
-    /* Initially loading indicator and logs */
-    #orderNewDevicesFormLoading {
-        display: none;
-    }
-    #orderNewDevicesFormSuccess {
-        display: none;
-    }
-</style>
-
-<div class="table-container-button">
-    <table class="compact-table">
+    <table class="compact-table-two-columns" style="margin-left: 20px;">
         <tr>
-            <td>
-                <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
+            <td class="compact-table-two-columns-col1" colspan="2">
+                <hr style="height:1px;width:60%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+            </td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1">Phone number:</td>
+            <td class="compact-table-two-columns-col2">{{ user_pii.phone_number }}</td>
+        </tr>
+        {% if n_user_locations > 1 %}
+        <tr>
+            <td class="compact-table-two-columns-col1" colspan="2">
+                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+            </td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1" colspan="2">Several locations available - Use the dropdown below.</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1" colspan="2">
+                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+            </td>
+        </tr>
+        {% endif %}
+        {% if n_user_locations == 0 %}
+        <tr>
+            <td class="compact-table-two-columns-col1">Address:</td>
+            <td class="compact-table-two-columns-col2">No locations available</td>
+        </tr>
+        {% else %}
+        {% for location in user_pii.locations %}
+        <tr>
+            <td class="compact-table-two-columns-col1">Address:</td>
+            <td class="compact-table-two-columns-col2">{{ location.line1 }}<br>{{ location.line2 }}</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1">City:</td>
+            <td class="compact-table-two-columns-col2">{{ location.city }}</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1">State:</td>
+            <td class="compact-table-two-columns-col2">{{ location.state }}</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1">Zip code:</td>
+            <td class="compact-table-two-columns-col2">{{ location.zip }}</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1">Country:</td>
+            <td class="compact-table-two-columns-col2">{{ location.country }}</td>
+        </tr>
+        <tr>
+            <td class="compact-table-two-columns-col1" colspan="2">
+                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
+            </td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+    </table>
+
+
+
+    <style>
+        /* Initially loading indicator and logs */
+        #orderNewDevicesFormLoading {
+            display: none;
+        }
+        #orderNewDevicesFormSuccess {
+            display: none;
+        }
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
+                        <table>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="orderNewDevicesFormButton" class="styled-button">Place Order</button>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <span id="orderNewDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="orderNewDevicesFormSuccess" class="response-message"></span>
+                                </td>
+                            </tr>
+                            {% if n_user_locations > 1 %}
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <label for="locationSelect" class="styled-label">Choose location:</label>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <select name="location_index" id="locationSelect" class="styled-select">
+                                        {% for location in user_pii.locations %}
+                                        <option value="{{ loop.index0 }}">
+                                            {{ location.line1 }}, {{ location.line2 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}, {{ location.country }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes" {{ gateway_checked }}>
+                                    <label for="includeGatewayId" class="styled-label">Include Gateway ID :</label>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <input class="styled-input-text" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;" colspan="2">
+                                    <input class="styled-input-checkbox" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
+                                    <label for="sms_opt_in" class="styled-label">SMS opt-in [if patient gave consent]</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;" colspan="2">
+                                    <input class="styled-input-checkbox" type="checkbox" id="FlagDevices" name="flag_devices" value="yes">
+                                    <label for="flag_devices" class="styled-label">Flag devices for review</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" align="left">
+                                    <legend class="styled-legend">Select Devices:</legend>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
+                                    <label for="bpmLarge" class="styled-label">BPM Large</label><br>
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="bpmSmall" name="device_bpm_small" value="yes">
+                                    <label for="bpmSmall" class="styled-label">BPM Small</label><br>
+                                </td>
+                                <td align="left" style="white-space: nowrap;">
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
+                                    <label for="pillbox" class="styled-label">Pillbox</label><br>
+
+                                    <input class="styled-input-checkbox" type="checkbox" id="watch" name="device_watch" value="yes" checked>
+                                    <label for="watch" class="styled-label">Watch</label><br>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>
                     <table>
                         <tr>
-                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
-                                <button type="button" id="orderNewDevicesFormButton" class="styled-button">Place Order</button>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
                             </td>
-                            <td align="left" style="vertical-align: middle;">
-                                <span id="orderNewDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                                <span id="orderNewDevicesFormSuccess" class="response-message"></span>
-                            </td>
-                        </tr>
-                        {% if n_user_locations > 1 %}
-                        <tr>
-                            <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <label for="locationSelect" class="styled-label">Choose location:</label>
-                            </td>
-                            <td align="left" style="vertical-align: middle;">
-                                <select name="location_index" id="locationSelect" class="styled-select">
-                                    {% for location in user_pii.locations %}
-                                    <option value="{{ loop.index0 }}">
-                                        {{ location.line1 }}, {{ location.line2 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}, {{ location.country }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                        </tr>
-                        {% endif %}
-                        <tr>
-                            <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <input class="styled-input-checkbox" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes">
-                                <label for="includeGatewayId" class="styled-label">Include Gateway ID :</label>
-                            </td>
-                            <td align="left" style="vertical-align: middle;">
-                                <input class="styled-input-text" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <input class="styled-input-checkbox" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
-                                <label for="sms_opt_in" class="styled-label">SMS opt-in</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" align="left">
-                                <legend class="styled-legend">Select Devices:</legend>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="left" style="white-space: nowrap;">
-                                <input class="styled-input-checkbox" type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
-                                <label for="bpmLarge" class="styled-label">BPM Large</label><br>
-
-                                <input class="styled-input-checkbox" type="checkbox" id="bpmSmall" name="device_bpm_small" value="yes">
-                                <label for="bpmSmall" class="styled-label">BPM Small</label><br>
-                            </td>
-                            <td align="left" style="white-space: nowrap;">
-
-                                <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
-                                <label for="pillbox" class="styled-label">Pillbox</label><br>
-
-                                <input class="styled-input-checkbox" type="checkbox" id="watch" name="device_watch" value="yes" checked>
-                                <label for="watch" class="styled-label">Watch</label><br>
+                            <td align="left">
+                                <textarea id="orderNewDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
                             </td>
                         </tr>
                     </table>
-                </form>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <table>
-                    <tr>
-                        <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                            <p class="logs">Logs:</p>
-                        </td>
-                        <td align="left">
-                            <textarea id="orderNewDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</div>
+                </td>
+            </tr>
+        </table>
+    </div> <!-- table-container-button -->
 
+</div> <!-- collapsible-content -->
 
 <!-- ========================= SCRIPTS ============================ -->
 

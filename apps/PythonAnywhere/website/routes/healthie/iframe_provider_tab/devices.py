@@ -46,6 +46,17 @@ def iframe_healthie_provider_tab_devices():
         if 'created' in device['device']:
             device['device']['created_USformat'] = format_date(device['device']['created'])
 
+    if gateway_id is None:
+        gateway_checked = ""
+    else:
+        gateway_checked = "checked"
+
+    # unroll order new devices form if it looks everything is in order
+    if len(paired_devices) >= 3 :
+        unroll_order_new_devices_form = False
+    else:
+        unroll_order_new_devices_form = True
+
     # --------------------------------------------------------------------
     # get user PII
     healthie_utils = HealthieUtils()
@@ -60,8 +71,10 @@ def iframe_healthie_provider_tab_devices():
                            healthie_provider_id=post_manager.healthie_provider_id,
                            paired_devices=paired_devices,
                            gateway_id=gateway_id,
+                           gateway_checked=gateway_checked,
                            user_pii=user_pii,
                            n_user_locations=n_user_locations,
+                           unroll_order_new_devices_form=unroll_order_new_devices_form,
                            )
 
 # ========================= ENDPOINTS ==========================
@@ -95,6 +108,8 @@ def tenovi_order_new_devices_form():
     device_pillbox = _checkbox_to_bool(request.form.get('device_pillbox'))
     device_watch = _checkbox_to_bool(request.form.get('device_watch'))
 
+    flag_devices = _checkbox_to_bool(request.form.get('flag_devices'))
+
     location_index = request.form.get('location_index')
     if location_index is None:
         location_index = 0
@@ -115,6 +130,7 @@ def tenovi_order_new_devices_form():
         gateway_id=gateway_id if include_gateway_id else None,
         sms_opt_in=sms_opt_in,
         healthie_location_index=int(location_index),
+        flag_devices=flag_devices,
     )
 
     # --------------------------------------------------------------------
@@ -123,26 +139,31 @@ def tenovi_order_new_devices_form():
 
     success = log_place_order['success']
 
-    if True:
+    log_form = {
+        "include_gateway_id": include_gateway_id,
+        "gateway_id": gateway_id,
+        "device_bpm_large": device_bpm_large,
+        "device_bpm_small": device_bpm_small,
+        "device_pillbox": device_pillbox,
+        "device_watch": device_watch,
+        "location_index": location_index,
+        "sms_opt_in": sms_opt_in,
+    }
+
+    if success:
         log = {
-            "success": False,
-            "success_temp": success,
-            "message": "Error: ",
-            "include_gateway_id": include_gateway_id,
-            "gateway_id": gateway_id,
-            "device_bpm_large": device_bpm_large,
-            "device_bpm_small": device_bpm_small,
-            "device_pillbox": device_pillbox,
-            "device_watch": device_watch,
-            "location_index": location_index,
-            "sms_opt_in": sms_opt_in,
+            "success": True,
+            "message": "Devices ordered successfully",
+            "log_form": log_form,
             "log_place_order": log_place_order,
         }
     else:
         log = {
-            "success": True,
-            "message": "New devices ordered successfully",
+            "success": False,
+            "message": "Error while ordering devices",
             "request": request.form,
+            "log_form": log_form,
+            "log_place_order": log_place_order,
         }
 
     return jsonify( log ), 200

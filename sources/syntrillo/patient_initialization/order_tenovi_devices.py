@@ -36,6 +36,7 @@ class OrderTenoviDevices:
         sms_opt_in: bool = False,
         healthie_location_index: int = 0,
         pair_devices: bool = True,
+        flag_devices: bool = False,
     ):
         """
         This method creates devices with a fulfillment request.
@@ -46,6 +47,7 @@ class OrderTenoviDevices:
             sms_opt_in (bool): SMS opt-in.
             healthie_location_index (int): The index of the location in the user's locations.
             pair_devices (bool): Pair devices with identifiers and pseudonyms. Default is True.
+            flag_devices (bool): Flagged devices are on hold for review. Flag can be removed on the Tenovi portal. Default is False.
         """
 
         # get user PII
@@ -97,7 +99,7 @@ class OrderTenoviDevices:
                 gateway_id = gateway_id,
 
                 # pairing
-                pair_devices= True,
+                pair_devices= pair_devices,
                 healthie_user_id= self.healthie_user_id,
                 pseudo_code_for_tenovi_phi_access= self.pseudo_code_for_tenovi_phi_access,
 
@@ -122,7 +124,7 @@ class OrderTenoviDevices:
                 client_notes = "",
                 notify_emails = "",
                 client_will_fulfill = False, # must be False for Tenovi to fulfill and dropship
-                flagged_by_client = False,
+                flagged_by_client = flag_devices,
             )
 
             self.created_devices = created_devices
