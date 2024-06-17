@@ -418,11 +418,11 @@ if __name__ == "__main__":
     # List Omar new devices
     if True:
         device_ids = [
-                   # "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
-                   # "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
-                   # "ff7ddf32-1472-450e-89ae-362416765d8b",  # Omar New - HWI - BPM
-                   "425ed808-4144-4c86-aa7f-921c5b16a5f8",  # test 1
-                   "8b9d1441-eadd-42c6-a491-34192526bb04", # test 2
+                   "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
+                   "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
+                   "ff7ddf32-1472-450e-89ae-362416765d8b",  # Omar New - HWI - BPM
+                   # "425ed808-4144-4c86-aa7f-921c5b16a5f8",  # test 1
+                   # "8b9d1441-eadd-42c6-a491-34192526bb04", # test 2
                    ]
 
         # Get and print all devices or a specific device
