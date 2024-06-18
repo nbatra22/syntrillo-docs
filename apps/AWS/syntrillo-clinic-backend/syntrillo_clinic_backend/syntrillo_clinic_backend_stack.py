@@ -175,7 +175,7 @@ class SyntrilloClinicBackendStack(Stack):
         # Create db instance
         self.db = rds.DatabaseInstance(self, "MySQLDatabase",
             engine=rds.DatabaseInstanceEngine.MYSQL,
-            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.SMALL),
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
             vpc=self.vpc,
             vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
             multi_az=False,
