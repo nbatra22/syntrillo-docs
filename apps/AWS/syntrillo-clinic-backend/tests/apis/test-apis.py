@@ -35,8 +35,13 @@ class TestCheckingAPIs(unittest.TestCase):
         status_code = requests.get(url).status_code
         self.assertEqual(status_code, 200, url)    
 
+    def test_register_patient_devices(self):
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url += 'register_patient_devices'
+        status_code = requests.get(url).status_code
+        self.assertEqual(status_code, 200, url)    
 
-class TestSyntrilloClinicBackendAPIs(unittest.TestCase):
+class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
 
     def test_landing_page(self):
         url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/prod/'

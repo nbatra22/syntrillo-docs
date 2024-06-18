@@ -30,12 +30,16 @@ def iframe_healthie_provider_tab_index():
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
     syntrillo_internal_key = entry['syntrillo_internal_key']
 
+    print(f"IFrameGeneratorFunction - /iframe_healthie_provider_tab - New Syntrillo Patient ID Created {syntrillo_internal_key}, for Healthie Client {healthie_user_id}" )
+
     # create temp code
     temporary_lookup_codes_management = TemporaryLookUpCodesManagement()
     temporary_lookup_code = temporary_lookup_codes_management.create_temporary_pseudo_code(
         syntrillo_internal_key=syntrillo_internal_key,
         purpose=TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME
     )
+
+    print(f"IFrameGeneratorFunction - /iframe_healthie_provider_tab - New Syntrillo Patient Temporary ID Created {temporary_lookup_code}" )
     
     return render_template("healthie/iframe_provider_tab/index.html",
                             temporary_lookup_code=temporary_lookup_code,
@@ -43,6 +47,5 @@ def iframe_healthie_provider_tab_index():
                            )
 
 def handler(event, context):
-    print(event)
-    print(json.dumps(event))
+    print("IFrameGeneratorFunction - Handler Event:", json.dumps(event))
     return awsgi.response(app, event, context)

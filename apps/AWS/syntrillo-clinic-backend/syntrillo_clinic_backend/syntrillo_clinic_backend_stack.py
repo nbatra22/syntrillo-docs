@@ -96,6 +96,12 @@ class CheckingConstruct(Construct):
             apigw.LambdaIntegration(checking_function),
         )
 
+        iframe_healthie_provider_tab = root_resource.add_resource("register_patient_devices")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(checking_function),
+        )
+
 class IFrameGeneratorConstruct(Construct):
 
     def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
@@ -221,7 +227,7 @@ class SyntrilloClinicBackendStack(Stack):
         # Create a VPC with no NAT gateways (Nat gateways are charged)
         self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
             vpc_name = "SyntrilloClinicVPC",
-            nat_gateways=2
+            nat_gateways=1
         )
 
         # Create db instance
