@@ -45,6 +45,57 @@ class LandingPageConstruct(Construct):
         landing_page_api_root = landing_page_api.root
         landing_page_api_root.add_method("GET", apigw.LambdaIntegration(landing_page_function))
 
+class CheckingConstruct(Construct):
+
+    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+    
+        self.vpc = vpc
+
+        checking_api = apigw.RestApi(self, "CheckingAPI", rest_api_name="CheckingAPI")
+
+        # Create the Lambda layers that contains the required libraries
+        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
+            layer_version_name="FlaskLayer",
+            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        )
+
+        mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
+            layer_version_name="MySQLLayer",
+            code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        )
+
+        # Create the Lambda function
+        checking_function = _lambda.Function(self, "CheckingFunction",
+            function_name="CheckingFunction",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset("lambda-functions/checking-function"),
+            vpc = self.vpc,
+            timeout=Duration.seconds(5)
+        )
+
+        # Add the Lambda layers to the Lambda function
+        checking_function.add_layers(flask_layer)
+        checking_function.add_layers(mysql_layer)
+
+        # Add the Lambda function as a REST API resource
+        root_resource = checking_api.root
+
+        any_method = root_resource.add_method(
+            "ANY",
+            apigw.LambdaIntegration(checking_function),
+        )
+
+        # Add resources for tests
+        iframe_healthie_provider_tab = root_resource.add_resource("test_network_outside_connectivity")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(checking_function),
+        )
+
 class IFrameGeneratorConstruct(Construct):
 
     def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
@@ -73,7 +124,8 @@ class IFrameGeneratorConstruct(Construct):
             runtime=_lambda.Runtime.PYTHON_3_10,
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
-            vpc = self.vpc
+            vpc = self.vpc,
+            timeout=Duration.seconds(5)
         )
 
         # Add the Lambda layers to the Lambda function
@@ -169,7 +221,7 @@ class SyntrilloClinicBackendStack(Stack):
         # Create a VPC with no NAT gateways (Nat gateways are charged)
         self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
             vpc_name = "SyntrilloClinicVPC",
-            nat_gateways=1
+            nat_gateways=2
         )
 
         # Create db instance
@@ -216,3 +268,5 @@ class SyntrilloClinicBackendStack(Stack):
         IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc)
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
+
+        CheckingConstruct(self, "CheckingConstruct", self.vpc)
