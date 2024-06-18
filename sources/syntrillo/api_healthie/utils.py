@@ -54,7 +54,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the class method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
         return response
 
 
@@ -90,7 +90,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the class method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
         return response
 
 
@@ -150,7 +150,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -196,7 +196,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         if response['user'] is not None:
             return response['user']

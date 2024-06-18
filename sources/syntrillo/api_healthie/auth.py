@@ -79,8 +79,9 @@ class HealthieAuth:
             query (str): The GraphQL query string.
             variables (dict, optional): Variables to be passed with the query (default: {}).
 
-        Returns:
+        Returns a tupple:
             dict: The JSON response 'data' from the API.
+            dict: The log of the request.
 
         Raises:
             requests.exceptions.HTTPError: If the API request fails.
@@ -94,9 +95,6 @@ class HealthieAuth:
             'AuthorizationSource': 'API'
         }
 
-        if self.verbose :
-            self.log_this( f"send_query\n{query}\n{json.dumps(variables, indent=4)}" )
-
         try:
             # Make the HTTP POST request to the Healthie API
             response = requests.post(self.url, json={'query': query, 'variables': variables}, headers=headers, proxies={})
@@ -107,23 +105,44 @@ class HealthieAuth:
 
             # Check if response contains 'errors' field
             if 'errors' in response_json:
-                error_messages = ', '.join([error['message'] for error in response_json['errors']])
-                raise Exception(f"GraphQL query returned errors: {error_messages}")
-
+                response_to_return = None
+                log = {
+                    'success': False,
+                    'message': 'GraphQL query returned errors',
+                    'response': response_json
+                }
             # Check if response contains 'data' field
-            if 'data' not in response_json:
-                raise Exception("GraphQL query did not return valid data")
-
-            # Return the 'data' from the response
-            return response_json['data']
+            elif 'data' not in response_json:
+                response_to_return = None
+                log = {
+                    'success': False,
+                    'message': 'GraphQL query did not return valid data',
+                    'response': response_json
+                }
+            # successful response
+            else:
+                # Return the 'data' from the response
+                response_to_return = response_json['data']
+                log = {
+                    'success': True,
+                    'message': 'GraphQL query successful',
+                }
 
         except requests.exceptions.HTTPError as errh:
-            print(f"HTTP Error: {errh}")
-            raise
+            response_to_return = None
+            log = {
+                'success': False,
+                'message': f"HTTP Error: {errh}",
+            }
 
         except requests.exceptions.RequestException as err:
-            print(f"Request Exception: {err}")
-            raise
+            response_to_return = None
+            log = {
+                'success': False,
+                'message': f"Request Exception: {err}",
+            }
+
+        return response_to_return, log
 
     @staticmethod
     def print_pretty_json(data):
@@ -136,7 +155,8 @@ if __name__ == "__main__":
     healthie_api = HealthieAuth()
 
     # Example: Send a test query to retrieve organization details
-    response = healthie_api.send_query(query='query { organization { id name } }')
+    response, log = healthie_api.send_query(query='query { organization { id name } }')
     HealthieAuth.print_pretty_json(response)
+    HealthieAuth.print_pretty_json(log)
 
 

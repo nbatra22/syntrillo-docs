@@ -12,7 +12,7 @@ class DeviceMeasurements:
         # get devices for this user
         if pseudo_code_for_tenovi_phi_access is not None:
             devices_module = Devices()
-            self.user_devices = devices_module.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
+            self.user_devices, _ = devices_module.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
         else:
             self.user_devices = None
 
@@ -21,7 +21,7 @@ class DeviceMeasurements:
         # get devices for this user
         if external_id is not None:
             devices_module = Devices()
-            self.user_devices = devices_module.get_devices_by_patient_external_id(external_id)
+            self.user_devices, _ = devices_module.get_devices_by_patient_external_id(external_id)
         else:
             self.user_devices = None
 
