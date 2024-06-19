@@ -7,13 +7,8 @@ class HealthieForms():
     A class handling forms-related operations.
     """
 
-    def __init__(
-        self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = None,
-    ):
-        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+    def __init__(self):
+        self.auth = HealthieAuth()
 
 
     def list_forms(
@@ -95,7 +90,7 @@ class HealthieForms():
         }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -141,7 +136,7 @@ class HealthieForms():
         variables = { }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         # select ids matching for the specified  external_id
         ids = []
@@ -209,7 +204,7 @@ class HealthieForms():
         variables = {'id': form_id}
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -289,8 +284,10 @@ class HealthieForms():
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(mutation, variables)
+        response, log = self.auth.send_query(mutation, variables)
+
         return response
+
 
     def create_custom_module(
         self,
@@ -383,7 +380,7 @@ class HealthieForms():
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(mutation, variables)
+        response, log = self.auth.send_query(mutation, variables)
         return response
 
     def create_custom_modules(
@@ -577,7 +574,7 @@ class HealthieForms():
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -662,7 +659,7 @@ class HealthieForms():
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -722,7 +719,7 @@ class HealthieForms():
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -957,7 +954,7 @@ class HealthieForms():
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(mutation, variables)
+        response, log = self.auth.send_query(mutation, variables)
         return response
 
     def list_completion_requests(
@@ -1007,7 +1004,7 @@ class HealthieForms():
             }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 

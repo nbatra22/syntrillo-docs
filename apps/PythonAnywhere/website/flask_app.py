@@ -47,6 +47,7 @@ from routes.healthie.iframe_provider_tab.onboarding import iframe_healthie_provi
 from routes.healthie.iframe_provider_tab.care_plan import iframe_healthie_provider_tab_care_plan_bp
 from routes.healthie.iframe_provider_tab.cdss import iframe_healthie_provider_tab_cdss_bp
 from routes.healthie.iframe_provider_tab.system import iframe_healthie_provider_tab_system_bp
+from routes.healthie.iframe_provider_tab.system_devices import iframe_healthie_provider_tab_system_devices_bp
 
 app.register_blueprint(iframe_healthie_provider_tab_index_bp)
 app.register_blueprint(iframe_healthie_provider_tab_status_bp)
@@ -55,6 +56,7 @@ app.register_blueprint(iframe_healthie_provider_tab_onboarding_bp)
 app.register_blueprint(iframe_healthie_provider_tab_care_plan_bp)
 app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_bp)
+app.register_blueprint(iframe_healthie_provider_tab_system_devices_bp)
 
 # ----------- provider sidebar ---------------------
 from routes.healthie.iframe_provider_sidebar.index import iframe_healthie_provider_sidebar_index_bp

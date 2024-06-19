@@ -15,15 +15,21 @@ class DeviceProperties:
 
 
     """
-    def __init__(self, client_domain="syntrillo"):
-        self.client_domain = client_domain
+    def __init__(self):
         self.auth = TenoviAuth()
 
     def get_device_properties(self, hwi_device_id : str):
         """
         Lists all or reads a single Property for a given HWI Device.
+
+        Arg:
+            hwi_device_id (str): The HWI Device ID.
+
+        Returns a tupple:
+            list: A list of device property dictionaries.
+            dict: The log of the request.
         """
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
+        url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_get_request(url)
 
     def create_device_property(self, hwi_device_id : str, payload : dict):
@@ -34,13 +40,28 @@ class DeviceProperties:
 
         'Note, keys must be unique for a given device. If you try and create a property with an existing key, the existing key-value pair will simply be updated instead.'
 
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            payload (dict): The key-value pair to create.
+
+        Returns a tupple:
+            dict: The created device property dictionary.
+            dict: The log of the request.
         """
-        url = f"https://api2.tenovi.com/clients/{self.client_domain}/hwi/hwi-devices/{hwi_device_id}/properties/"
+        url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_post_request(url, payload)
 
     def create__pseudo_code_for_tenovi_phi_access__property(self, hwi_device_id : str, pseudo_code : str):
         """
         Creates a new HWI Device Property with the key 'pseudo_code_for_tenovi_phi_access' and the given pseudo_code value.
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            pseudo_code (str): The pseudo code to set.
+
+        Returns a tupple:
+            dict: The created device property dictionary.
+            dict: The log of the request.
         """
         payload = {
             "key": "pseudo_code_for_tenovi_phi_access",
@@ -52,6 +73,14 @@ class DeviceProperties:
     def create__healthie_user_id__property(self, hwi_device_id : str, healthie_user_id : str):
         """
         Creates a new HWI Device Property with the key 'healthie_user_id' and the given healthie_user_id value.
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+            healthie_user_id (str): The healthie user ID to set.
+
+        Returns a tupple:
+            dict: The created device property dictionary.
+            dict: The log of the request.
         """
         payload = {
             "key": "healthie_user_id",
@@ -64,14 +93,17 @@ class DeviceProperties:
 if __name__ == "__main__":
     device_properties_module = DeviceProperties()
 
-    # Example HWI device ID, replace with a real ID if needed
-    hwi_device_id = "83ca5817-0bb2-4d9c-b131-16eb353ad587"
+    # hwi_device_id = "e154d35e-4543-4c15-abdd-cbdc8f482654"  # Omar Watch
+    hwi_device_id = "6d92777f-8ef3-463d-b8e2-d5fcb7d303ec"  # test watch
 
     # Get and print properties of a specific device
-    device_properties = device_properties_module.get_device_properties(hwi_device_id)
+    device_properties, log = device_properties_module.get_device_properties(hwi_device_id)
     if device_properties:
         print(f"Properties for device {hwi_device_id}:")
         TenoviAuth.print_pretty_json(device_properties)
+    else:
+        print(f"No properties found for device {hwi_device_id}.")
+        print(log)
 
 
     if False:
@@ -83,7 +115,7 @@ if __name__ == "__main__":
         }
 
         # Create a new device property
-        new_property_response = device_properties_module.create_device_property(hwi_device_id, payload)
+        new_property_response, log = device_properties_module.create_device_property(hwi_device_id, payload)
         if new_property_response:
             print("New Property Created:")
             TenoviAuth.print_pretty_json(new_property_response)

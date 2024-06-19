@@ -1,4 +1,4 @@
-# Path: ./apps/PythonAnywhere/website/healthie/iframe_provider_tab/system.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/system.py
 from flask import Blueprint, render_template, request, jsonify
 
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement

@@ -1,4 +1,4 @@
-# Path: ./tests/databases/standalone/tests_mysqldb.py
+# Path: ./tests/databases/standalone/tests_pysql.py
 
 
 # local tests

@@ -8,26 +8,12 @@ class HealthieUtils():
 
     This class provides methods to retrieve organization details and list patients using GraphQL queries.
 
-    Attributes:
-        api_key (str): The API key used for authentication.
-        organization (str): The environment organization (default: 'staging').
-        dotenv_path (str): Path to the .env file containing environment variables.
     """
-    def __init__(
-        self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = None,
-        ):
+    def __init__(self):
         """
         Initializes the HealthieAPIUtils instance.
-
-        Parameters:
-            api_key (str, optional): The API key used for authentication.
-            organization (str, optional): The environment organization (default: 'staging').
-            dotenv_path (str, optional): Path to the .env file containing environment variables.
         """
-        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+        self.auth = HealthieAuth()
 
 
     def get_organization_details(self):
@@ -68,7 +54,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the class method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
         return response
 
 
@@ -104,7 +90,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the class method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
         return response
 
 
@@ -164,7 +150,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
         return response
 
@@ -192,6 +178,14 @@ class HealthieUtils():
                     email
                     phone_number
                     next_appt_date
+                    locations {
+                        city
+                        line1
+                        line2
+                        state
+                        zip
+                        country
+                    }
                 }
             }
         '''
@@ -202,9 +196,13 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response = self.auth.send_query(query, variables)
+        response, log = self.auth.send_query(query, variables)
 
-        return response
+        if response['user'] is not None:
+            return response['user']
+        else:
+            return None
+
 
 if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization

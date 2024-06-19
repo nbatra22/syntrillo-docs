@@ -1,4 +1,4 @@
-# Path: ./apps/PythonAnywhere/website/healthie/iframe_provider_tab/cdss.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/cdss.py
 from flask import Blueprint, render_template, request, jsonify
 
 from .post_management import PostManager

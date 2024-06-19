@@ -1,3 +1,4 @@
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/system.py
 from flask import Blueprint, render_template, request, jsonify
 
 # python.analysis.extraPaths added into .vscode/settings.json

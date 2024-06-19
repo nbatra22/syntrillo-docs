@@ -1,4 +1,4 @@
-# Path: ./apps/PythonAnywhere/website/healthie/iframe_provider_tab/index.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/index.py
 
 from flask import Blueprint, request, jsonify, render_template
 import json
