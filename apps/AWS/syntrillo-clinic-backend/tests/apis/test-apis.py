@@ -64,27 +64,27 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         status_code = requests.get(url).status_code
         self.assertEqual(status_code, 200, url)
 
-    def test_iframe_healthie_provider_tab_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/devices'
+    def test_iframe_healthie_provider_tab_system_devices(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices'
         device_form_data = {
             'healthie_provider_id': '1173733',
             'healthie_user_id': 'Not+transmitted',
-            'temporary_lookup_code': '16823a6c-9ad0-4cbb-b5bb-498fa324287c',
+            'temporary_lookup_code': '9b6feb98-8603-4a0d-9bd8-eaec74413172',
             'patient_not_registered_at_syntrillo': 'False'
         }
         status_code = requests.post(url, data=device_form_data).status_code
         self.assertEqual(status_code, 200, url)
 
-    def test_iframe_healthie_provider_tab_devices_generate_temporary_pairing_code(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form'
+    def test_iframe_healthie_provider_tab_system_devices_generate_temporary_pairing_code(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices/tenovi_generate_temporary_pairing_code_form'
         device_form_data = {
             'temporary_lookup_code': '69c70ff8-6589-42b2-8b54-1501079441e2',
         }
         status_code = requests.post(url, data=device_form_data).status_code
         self.assertEqual(status_code, 200, url)
 
-    def test_iframe_healthie_provider_tab_devices_pair_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/devices/tenovi_pair_devices_form'
+    def test_iframe_healthie_provider_tab_system_devices_pair_devices(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
         device_form_data = {
             'temporary_lookup_code': '467c3431-aac8-4307-948d-0d92a3f06a2d',
         }
@@ -92,5 +92,5 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         self.assertEqual(status_code, 200, url)
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
 

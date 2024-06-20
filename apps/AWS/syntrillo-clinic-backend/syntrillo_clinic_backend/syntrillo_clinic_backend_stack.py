@@ -117,6 +117,16 @@ class IFrameGeneratorConstruct(Construct):
 
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", rest_api_name="IFramGeneratorAPI")
 
+        # # Add a new stage
+        # deployment = apigw.Deployment(self, "SandboxDeployment",
+        #     api = iframe_generator_api
+        # )
+
+        # sandbox_stage = apigw.Stage(self, "SandBoxStage",
+        #     stage_name="sandbox",
+        #     deployment=deployment
+        # )
+
         # Create the Lambda layers that contains the required libraries
         flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
             layer_version_name="FlaskLayer",
@@ -200,20 +210,6 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form)
-        healthie_iframe_provider_tab_devices_tenovi_generate_temporary_pairing_code_form = healthie_iframe_provider_tab_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
-        healthie_iframe_provider_tab_devices_tenovi_generate_temporary_pairing_code_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_pair_devices_form)
-        healthie_iframe_provider_tab_devices_tenovi_pair_devices_form = healthie_iframe_provider_tab_devices.add_resource("tenovi_pair_devices_form")
-        healthie_iframe_provider_tab_devices_tenovi_pair_devices_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
         # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/onboarding)
         healthie_iframe_provider_tab_care_plan = healthie_iframe_provider_tab.add_resource("onboarding")
         healthie_iframe_provider_tab_care_plan.add_method(
@@ -247,7 +243,21 @@ class IFrameGeneratorConstruct(Construct):
         healthie_iframe_provider_tab_system_devices.add_method(
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
-        )    
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form)
+        healthie_iframe_provider_tab_system_devices_tenovi_generate_temporary_pairing_code_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
+        healthie_iframe_provider_tab_system_devices_tenovi_generate_temporary_pairing_code_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_pair_devices_form)
+        healthie_iframe_provider_tab_system_devices_tenovi_pair_devices_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_pair_devices_form")
+        healthie_iframe_provider_tab_system_devices_tenovi_pair_devices_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        ) 
 
 class UploadQuestionnaireConstruct(Construct):
     '''
