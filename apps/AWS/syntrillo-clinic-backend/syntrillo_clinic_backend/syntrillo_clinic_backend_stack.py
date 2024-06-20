@@ -150,12 +150,29 @@ class IFrameGeneratorConstruct(Construct):
         iframe_generator_function.add_layers(flask_layer)
         iframe_generator_function.add_layers(mysql_layer)
         iframe_generator_function.add_layers(pandas_layer)
-        
+
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
 
         any_method = root_resource.add_method(
             "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add static resources
+        static = root_resource.add_resource("static")
+
+        # Add the Lambda function as a REST API resource (/static/healthie/iframe_provider.css)
+        static_healthie_iframe_provider_css = static.add_resource("healthie").add_resource("iframe_provider.css")
+        static_healthie_iframe_provider_css.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/static/favicon.ico)
+        static_favicon_ico = static.add_resource("favicon.ico")
+        static_favicon_ico.add_method(
+            "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
