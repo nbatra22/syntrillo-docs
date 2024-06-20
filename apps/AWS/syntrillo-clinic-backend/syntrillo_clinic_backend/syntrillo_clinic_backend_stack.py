@@ -130,6 +130,12 @@ class IFrameGeneratorConstruct(Construct):
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
         )
 
+        pandas_layer = _lambda.LayerVersion(self, "PandasLayer",
+            layer_version_name="PandasLayer",
+            code=_lambda.Code.from_asset("lambda-layers/pandas-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
+        )
+
         # Create the Lambda function
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
             function_name="IFrameGeneratorFunction",
@@ -143,7 +149,8 @@ class IFrameGeneratorConstruct(Construct):
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
         iframe_generator_function.add_layers(mysql_layer)
-
+        iframe_generator_function.add_layers(pandas_layer)
+        
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
 
@@ -159,26 +166,71 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
-        iframe_healthie_provider_tab_devices = root_resource.add_resource("healthie").add_resource("iframe_provider_tab").add_resource("devices")
-        iframe_healthie_provider_tab_devices.add_method(
-            "ANY",
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab)
+        healthie_iframe_provider_tab = root_resource.add_resource("healthie").add_resource("iframe_provider_tab")
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/status)
+        healthie_iframe_provider_tab_status = healthie_iframe_provider_tab.add_resource("status")
+        healthie_iframe_provider_tab_status.add_method(
+            "POST",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
         # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
-        iframe_healthie_provider_tab_devices_generate_temporary_pairing_code_form = iframe_healthie_provider_tab_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
-        iframe_healthie_provider_tab_devices_generate_temporary_pairing_code_form.add_method(
-            "ANY",
+        healthie_iframe_provider_tab_devices = healthie_iframe_provider_tab.add_resource("devices")
+        healthie_iframe_provider_tab_devices.add_method(
+            "POST",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices)
-        iframe_healthie_provider_tab_devices_generate_temporary_pair_device = iframe_healthie_provider_tab_devices.add_resource("tenovi_pair_devices_form")
-        iframe_healthie_provider_tab_devices_generate_temporary_pair_device.add_method(
-            "ANY",
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form)
+        healthie_iframe_provider_tab_devices_tenovi_generate_temporary_pairing_code_form = healthie_iframe_provider_tab_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
+        healthie_iframe_provider_tab_devices_tenovi_generate_temporary_pairing_code_form.add_method(
+            "POST",
             apigw.LambdaIntegration(iframe_generator_function),
         )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/devices/tenovi_pair_devices_form)
+        healthie_iframe_provider_tab_devices_tenovi_pair_devices_form = healthie_iframe_provider_tab_devices.add_resource("tenovi_pair_devices_form")
+        healthie_iframe_provider_tab_devices_tenovi_pair_devices_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/onboarding)
+        healthie_iframe_provider_tab_care_plan = healthie_iframe_provider_tab.add_resource("onboarding")
+        healthie_iframe_provider_tab_care_plan.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/care_plan)
+        healthie_iframe_provider_tab_care_plan = healthie_iframe_provider_tab.add_resource("care_plan")
+        healthie_iframe_provider_tab_care_plan.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/cdss)
+        healthie_iframe_provider_tab_cdss = healthie_iframe_provider_tab.add_resource("cdss")
+        healthie_iframe_provider_tab_cdss.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/system)
+        healthie_iframe_provider_tab_system = healthie_iframe_provider_tab.add_resource("system")
+        healthie_iframe_provider_tab_system.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )     
+
+        # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/system_devices)
+        healthie_iframe_provider_tab_system_devices = healthie_iframe_provider_tab.add_resource("system_devices")
+        healthie_iframe_provider_tab_system_devices.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )    
 
 class UploadQuestionnaireConstruct(Construct):
     '''
