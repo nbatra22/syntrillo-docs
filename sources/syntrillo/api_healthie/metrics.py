@@ -101,7 +101,7 @@ class HealthieMetrics():
         # Send the GraphQL query using the inherited send_query method
         response, log = self.auth.send_query(query, variables)
 
-        return response
+        return response, log
 
 
     def store_metric_data(
@@ -209,13 +209,13 @@ class HealthieMetrics():
         # Set up the GraphQL mutation to create an entry with two subentries for systolic and diastolic blood pressure
         mutation = '''
             mutation createEntry (
-            $systolic_metric_stat: String,
-            $diastolic_metric_stat: String,
-            $category: String,
-            $type: String,
-            $user_id: String
-            $created_at: String,
-            $description: String
+                $systolic_metric_stat: String,
+                $diastolic_metric_stat: String,
+                $category: String,
+                $type: String,
+                $user_id: String
+                $created_at: String,
+                $description: String
             ) {
             createEntry (input:{
                 category: $category,
@@ -238,12 +238,12 @@ class HealthieMetrics():
             })
             {
                 entry {
-                id
+                    id
                 }
                 messages
                 {
-                field
-                message
+                    field
+                    message
                 }
             }
             }
@@ -266,11 +266,216 @@ class HealthieMetrics():
 
         return response, log
 
+    def get_metric_data(
+        self,
+        user_id: str,
+        category: str,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        ):
+        """
+        Retrieve metric data for a user within a date range.
+
+        Using OFFSET method, only one available in entries query, unfortunately not 100% reliable
+
+        https://docs.gethealthie.com/docs/#storing-metric-data
+
+        args:
+            user_id (str): The user ID.
+            category (str): The category of the metric data.
+            start_date (datetime, optional): The start date of the date range.
+            end_date (datetime, optional): The end date of the date range.
+
+        returns a tuple:
+            list: A list of metric data dictionaries.
+            dict: The log of the request.
+        """
+
+        query = '''
+            query entries(
+                    $offset: Int,
+                    $type: String,
+                    $category: String,
+                    $client_id: String,
+                    $is_org: Boolean,
+                    $end_range: String,
+                    $start_range: String,
+                    $end_datetime_range: String,
+                    $start_datetime_range: String,
+                ) {
+                    entries(
+                        offset: $offset,
+                        type: $type,
+                        category: $category,
+                        client_id: $client_id,
+                        is_org: $is_org,
+                        end_range: $end_range,
+                        start_range: $start_range,
+                        end_datetime_range: $end_datetime_range,
+                        start_datetime_range: $start_datetime_range,
+                    ) {
+                        id
+                        type
+                        category
+                        name
+                        description
+                        metric_stat
+                        metric_stat_string
+                        created_at
+                    }
+                }
+        '''
+
+        all_entries = []
+        offset = 0
+        success = True
+
+        while True:
+            variables = {
+                'type': "MetricEntry",
+                'client_id': user_id,
+                'category': category,
+                'offset': offset,
+                'start_range': start_date.isoformat() if start_date else None,
+                'end_range': end_date.isoformat() if end_date else None
+            }
+
+            response, log = self.auth.send_query(query, variables)
+            if log['success'] and response and 'entries' in response:
+                entries = response['entries']
+                if not entries:
+                    break
+                all_entries.extend(entries)
+                offset += len(entries) # documentation says 10, but may be subject to change: hence using len(entries)
+            else:
+                success = False
+                break
+
+        combined_log = {
+            'success': success,
+            'message': 'Metric data retrieval completed' if success else 'Metric data retrieval failed',
+            'total_entries': len(all_entries)
+        }
+
+        return all_entries, combined_log
+
+
+    def get_metric_data__with_cursor(
+        self,
+        user_id: str,
+        category: str,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        ):
+        """
+        CURSOR PAGINATION NOT AVAILABLE IN entries QUERY
+        https://docs.gethealthie.com/docs/#cursor-pagination
+
+        Retrieve metric data for a user within a date range.
+
+        https://docs.gethealthie.com/docs/#storing-metric-data
+
+        args:
+            user_id (str): The user ID.
+            category (str): The category of the metric data.
+            start_date (datetime, optional): The start date of the date range.
+            end_date (datetime, optional): The end date of the date range.
+
+        returns a tuple:
+            list: A list of metric data dictionaries.
+            dict: The log of the request.
+        """
+
+        query = '''
+            query entries(
+                    $after: Cursor,
+                    $should_paginate: Boolean,
+                    $page_size: Int,
+                    $type: String,
+                    $category: String,
+                    $client_id: String,
+                    $is_org: Boolean,
+                    $end_range: String,
+                    $start_range: String,
+                    $end_datetime_range: String,
+                    $start_datetime_range: String,
+                ) {
+                    entries(
+                        should_paginate: $should_paginate,
+                        after: $after,
+                        page_size: $page_size,
+                        type: $type,
+                        category: $category,
+                        client_id: $client_id,
+                        is_org: $is_org,
+                        end_range: $end_range,
+                        start_range: $start_range,
+                        end_datetime_range: $end_datetime_range,
+                        start_datetime_range: $start_datetime_range,
+                    ) {
+                        id
+                        type
+                        category
+                        name
+                        description
+                        metric_stat
+                        metric_stat_string
+                        created_at
+                        cursor
+                    }
+                }
+        '''
+
+        all_entries = []
+        cursor = None
+        success = True
+
+        while True:
+            variables = {
+                'after': cursor,
+                'should_paginate': True,
+                'page_size': 10,  # 10 is the maximum page size
+                'type': "MetricEntry",
+                'client_id': user_id,
+                'category': category,
+                'start_range': start_date.isoformat() if start_date else None,
+                'end_range': end_date.isoformat() if end_date else None
+            }
+
+            response, log = self.auth.send_query(query, variables)
+            if log['success'] and response and 'entries' in response:
+                entries = response['entries']
+                if not entries:
+                    break
+                all_entries.extend(entries)
+                cursor = entries[-1]['cursor']  # Update cursor to the last entry's cursor for the next fetch
+            else:
+                success = False
+                break
+
+        combined_log = {
+            'success': success,
+            'message': 'Metric data retrieval completed' if success else 'Metric data retrieval failed',
+            'total_entries': len(all_entries)
+        }
+
+        return all_entries, combined_log
+
+
+    def get_blood_pressure_data(self):
+        pass
+
+    def get_metric_latest_timestamp(self):
+        pass
+
+    def get_blood_pressure_latest_timestamp(self):
+        pass
+
 
 
 if __name__ == "__main__":
     metrics = HealthieMetrics()
-    entries = metrics.list_journal_entries()
+    entries, log = metrics.list_journal_entries()
     # HealthieAuth.print_pretty_json(entries)
 
     # Generate a random date within a range of today +/- 10 days
@@ -279,23 +484,30 @@ if __name__ == "__main__":
     end_date = today + datetime.timedelta(days=10)
     random_date = start_date + datetime.timedelta(days=random.randint(0, (end_date - start_date).days))
 
-    if True:
+    if False:
         user_id = "1035117"
-        metric_stat = str(random.randint(50, 120))
-        entry_category = "Heart Rate"
-        created_at = None
-        response, log = metrics.store_metric_data(
-            user_id=user_id,
-            metric_stat=metric_stat,
-            entry_category=entry_category,
-            created_at=random_date,
-            )
+        for i in range(100):
+            # Generate a random date within a range of today +/- 10 days
+            today = datetime.date.today()
+            start_date = today - datetime.timedelta(days=10)
+            end_date = today + datetime.timedelta(days=10)
+            random_date = start_date + datetime.timedelta(days=random.randint(0, (end_date - start_date).days))
+
+            metric_stat = str(random.randint(50, 120))
+            entry_category = "Heart Rate"
+            created_at = None
+            response, log = metrics.store_metric_data(
+                user_id=user_id,
+                metric_stat=metric_stat,
+                entry_category=entry_category,
+                created_at=random_date,
+                )
         HealthieAuth.print_pretty_json(log)
 
-    if True:
+    if False:
         user_id = "1035117"
         metric_stat = str(random.randint(0, 20))
-        entry_category = "StrokeRiskScore"
+        entry_category = "test Larry metric"
         created_at = None
         response, log = metrics.store_metric_data(
             user_id=user_id,
@@ -304,8 +516,9 @@ if __name__ == "__main__":
             created_at=random_date,
             )
         HealthieAuth.print_pretty_json(log)
+        HealthieAuth.print_pretty_json(response)
 
-    if True:
+    if False:
         user_id = "1035117"
         systolic = str(random.randint(100, 200))
         diastolic = str(random.randint(50, 90))
@@ -318,3 +531,12 @@ if __name__ == "__main__":
             )
         HealthieAuth.print_pretty_json(log)
 
+    if True:
+        user_id = "1035117"
+        category = "Heart Rate"
+        response, log = metrics.get_metric_data(
+            user_id=user_id,
+            category=category,
+            )
+        HealthieAuth.print_pretty_json(response)
+        HealthieAuth.print_pretty_json(log)
