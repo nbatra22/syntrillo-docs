@@ -6,6 +6,8 @@ from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
+    
+from syntrillo.api_tenovi.devices import Devices
 
 class Database:
     def __init__(self):
@@ -46,6 +48,10 @@ def call_external_url():
 
 def clean_database():
     Database().delete_tables_content()
+
+def call_tenovi():
+    devices = Devices()
+    print(devices.get_devices_by_pseudo_code('564c8031-da06-4f7e-9057-44c4b790547d'))
 
 def register_patient_devices():
 

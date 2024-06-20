@@ -96,6 +96,12 @@ class CheckingConstruct(Construct):
             apigw.LambdaIntegration(checking_function),
         )
 
+        iframe_healthie_provider_tab = root_resource.add_resource("test_tenovi_access")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(checking_function),
+        )
+
         iframe_healthie_provider_tab = root_resource.add_resource("register_patient_devices")
         iframe_healthie_provider_tab.add_method(
             "ANY",
