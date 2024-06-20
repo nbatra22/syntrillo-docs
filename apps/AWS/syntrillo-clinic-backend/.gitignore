@@ -8,3 +8,6 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# do not ignore lambda /lib, it is part of the lambda package
+!lib/
