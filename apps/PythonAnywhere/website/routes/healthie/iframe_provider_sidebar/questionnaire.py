@@ -58,15 +58,13 @@ def healthie_build_form_from_data_structure():
     log += f"\healthie_provider_id {healthie_provider_id}"
     log += f"\structure_name {structure_name}"
 
-    # TODO : create a function from what's below
-
     # --------------------------------------------------------
     # initialize Healthie API
 
     # Load environment variables from .env file
     dotenv_path = ".env"
 
-    forms_api = HealthieForms(dotenv_path=dotenv_path)
+    forms_api = HealthieForms(dotenv_path=dotenv_path) # FIXME
 
     # --------------------------------------------------------
     # Initialize StorageManager
