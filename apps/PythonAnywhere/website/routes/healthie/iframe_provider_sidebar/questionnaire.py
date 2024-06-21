@@ -61,10 +61,7 @@ def healthie_build_form_from_data_structure():
     # --------------------------------------------------------
     # initialize Healthie API
 
-    # Load environment variables from .env file
-    dotenv_path = ".env"
-
-    forms_api = HealthieForms(dotenv_path=dotenv_path) # FIXME
+    forms_api = HealthieForms()
 
     # --------------------------------------------------------
     # Initialize StorageManager
