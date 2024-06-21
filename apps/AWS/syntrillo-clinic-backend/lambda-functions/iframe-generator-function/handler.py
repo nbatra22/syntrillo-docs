@@ -4,6 +4,14 @@ import awsgi
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import correlation_paths
+
+logger = Logger(service="PROVIDER_TAB", level="DEBUG")
+
+from aws_xray_sdk.core import patch_all, xray_recorder
+patch_all()
+
 from flask import (
     Flask,
     jsonify,
@@ -37,6 +45,7 @@ app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_devices_bp)
 
 @app.route('/iframe_healthie_provider_tab')
+@xray_recorder.capture('iframe_healthie_provider_tab_index')
 def iframe_healthie_provider_tab_index():
     healthie_user_id = "1035117"
 
@@ -62,6 +71,8 @@ def iframe_healthie_provider_tab_index():
                             iframe_healthie_provider_tab_devices = '/prod' + url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices")
                            )
 
+@logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST, log_event=True)
 def handler(event, context):
-    # print("IFrameGeneratorFunction - Handler Event:", json.dumps(event))
+    logger.info(f"&&&&& INFO LEVEL LOG")
+    logger.debug(f"%%%% DEBUG LEVEL LOG")
     return awsgi.response(app, event, context)

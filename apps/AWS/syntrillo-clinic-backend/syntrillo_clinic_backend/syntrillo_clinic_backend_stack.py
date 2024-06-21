@@ -115,7 +115,12 @@ class IFrameGeneratorConstruct(Construct):
     
         self.vpc = vpc
 
-        iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", rest_api_name="IFramGeneratorAPI")
+        iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
+            rest_api_name="IFramGeneratorAPI",
+            deploy_options= apigw.StageOptions(
+                tracing_enabled=True
+            )
+        )
 
         # # Add a new stage
         # deployment = apigw.Deployment(self, "SandboxDeployment",
@@ -146,6 +151,12 @@ class IFrameGeneratorConstruct(Construct):
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
         )
 
+        monitoring_layer = _lambda.LayerVersion(self, "MonitoringLayer",
+            layer_version_name="MonitoringLayer",
+            code=_lambda.Code.from_asset("lambda-layers/monitoring-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
+        )
+
         # Create the Lambda function
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
             function_name="IFrameGeneratorFunction",
@@ -153,13 +164,15 @@ class IFrameGeneratorConstruct(Construct):
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
             vpc = self.vpc,
-            timeout=Duration.seconds(5)
+            timeout=Duration.seconds(5),
+            tracing=_lambda.Tracing.ACTIVE
         )
 
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
         iframe_generator_function.add_layers(mysql_layer)
         iframe_generator_function.add_layers(pandas_layer)
+        iframe_generator_function.add_layers(monitoring_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
