@@ -165,7 +165,10 @@ class IFrameGeneratorConstruct(Construct):
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
             vpc = self.vpc,
             timeout=Duration.seconds(5),
-            tracing=_lambda.Tracing.ACTIVE
+            tracing=_lambda.Tracing.ACTIVE,
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG"
+            }
         )
 
         # Add the Lambda layers to the Lambda function
