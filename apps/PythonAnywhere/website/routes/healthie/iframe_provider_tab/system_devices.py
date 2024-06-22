@@ -31,7 +31,6 @@ def iframe_healthie_provider_tab_system_devices():
 
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
-                           url_prefix='/prod',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
                            healthie_provider_id=post_manager.healthie_provider_id,
                            paired_devices=paired_devices,

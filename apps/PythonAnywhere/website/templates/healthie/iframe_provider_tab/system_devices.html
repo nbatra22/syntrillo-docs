@@ -109,7 +109,7 @@
                     <table>
                         <tr>
                             <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_prefix + url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
+                                <form id="generateTenoviTemporaryPairingCodeForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_generate_temporary_pairing_code_form') }}" method="POST">
                                     <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
                                     <button type="button" id="generateTenoviTemporaryPairingCodeFormButton" class="styled-button">Generate Temporary Pairing Code</button>
                                 </form>
@@ -148,7 +148,7 @@
                     <table>
                         <tr>
                             <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <form id="pairTenoviDevicesForm" action="{{ url_prefix + url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_pair_devices_form') }}" method="POST">
+                                <form id="pairTenoviDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.tenovi_pair_devices_form') }}" method="POST">
                                     <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
                                     <button type="button" id="pairTenoviDevicesFormButton" class="styled-button">Pair Devices</button>
                                 </form>
@@ -290,8 +290,8 @@
 
                                 // location.reload();
                                 // reloading only the device_s_ tab. loadTabContent is defined in the index.html
-                                loadTabContent('{{ url_prefix + url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
-                                loadTabContent('{{ url_prefix + url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                                loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                                loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
                             }, 5000); // Reload after a delay
                         } else {
                             $('#pairTenoviDevicesSuccess').html("Error. See logs below.");

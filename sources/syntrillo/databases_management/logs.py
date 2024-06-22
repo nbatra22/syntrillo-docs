@@ -28,16 +28,16 @@ def add_log_entry(event, json_data, comment):
     try:
         cursor.execute(add_log_query, (event, json.dumps(json_data), comment))
         conn.commit()
-        # print("Log entry added successfully.")
+        print("Log entry added successfully.")
     except pymysql.MySQLError as e:
         conn.rollback()
-        # print(f"Error adding log entry: {e}")
+        print(f"Error adding log entry: {e}")
     finally:
         cursor.close()
         conn.close()
         if tunnel:
             tunnel.stop()
-        # print("Database connection closed.")
+        print("Database connection closed.")
 
 if __name__ == '__main__':
     # Example usage:

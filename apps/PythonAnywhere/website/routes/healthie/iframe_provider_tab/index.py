@@ -76,7 +76,6 @@ def iframe_healthie_provider_tab_index():
 
     return render_template(
         'healthie/iframe_provider_tab/index.html',
-        url_prefix='/prod',
         healthie_provider_id=healthie_provider_id,
         patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
         healthie_user_id=healthie_user_id,
