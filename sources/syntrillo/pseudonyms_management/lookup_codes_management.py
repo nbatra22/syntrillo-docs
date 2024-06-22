@@ -5,6 +5,9 @@ import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="PROVIDER_TAB")
+
 class LookUpCodesManagement:
     """
     A class to manage look-up codes in the Syntrillo Pseudonym Management database.
@@ -53,6 +56,8 @@ class LookUpCodesManagement:
         self.conn, self.tunnel = self.db_conn.create_connection(verbose=verbose)
         self.cursor = self.conn.cursor()
         self.verbose = verbose
+
+        logger.debug(f"=====% INIT LOOKUP CODES MANAGEMENT")
 
     def __del__(self):
         try:
