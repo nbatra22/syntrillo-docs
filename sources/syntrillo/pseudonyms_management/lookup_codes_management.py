@@ -5,8 +5,8 @@ import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
 
-from aws_lambda_powertools import Logger
-logger = Logger(service="PROVIDER_TAB")
+# from aws_lambda_powertools import Logger
+# logger = Logger(service="PROVIDER_TAB")
 
 class LookUpCodesManagement:
     """
@@ -57,7 +57,7 @@ class LookUpCodesManagement:
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
-        logger.debug(f"=====% INIT LOOKUP CODES MANAGEMENT")
+        # logger.debug(f"=====% INIT LOOKUP CODES MANAGEMENT")
 
     def __del__(self):
         try:
