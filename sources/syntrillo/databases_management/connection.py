@@ -40,10 +40,9 @@ class DatabaseConnection:
         self.conn = None
         self.tunnel = None
 
-    @staticmethod
-    def load_database_credentials(dotenv_path=".env"):
+    def select_database_and_load_credentials(self):
         """
-        Load database credentials from .env file.
+        Load database credentials based on environment variables stored in a .env file
 
         Returns:
             tuple: A tuple containing two dictionaries:
@@ -52,23 +51,36 @@ class DatabaseConnection:
         """
 
         # paths have to be hard-coded at PythonAnywhere
-        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
+        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
             dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+        else:
+            dotenv_path = ".env"
 
         load_dotenv(dotenv_path=dotenv_path)
 
-        PA_DB_CONFIG = {
-            'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
-            'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
-            'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
-        }
+        # select database to use
+        self.database_server = os.getenv('DATABASE_SERVER')
 
-        PA_SSH_TUNNEL = {
-            'ssh_username': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME'),
-            'ssh_password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD'),
-        }
+        if self.database_server == 'AWS':
+            self.AWS_DB_CONFIG = {
+                'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
+                'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
+                'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
+            }
 
-        return PA_DB_CONFIG, PA_SSH_TUNNEL
+        elif self.database_server == 'PythonAnywhere':
+            self.PA_DB_CONFIG = {
+                'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
+                'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
+                'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
+            }
+
+            self.PA_SSH_TUNNEL = {
+                'ssh_username': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME'),
+                'ssh_password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD'),
+            }
+        else:
+            raise ValueError("Invalid database server configuration")
 
     def create_connection(self, verbose=False, retries=3, delay=5):
         """
@@ -82,50 +94,66 @@ class DatabaseConnection:
         Returns:
             pymysql.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
         """
-        PA_DB_CONFIG, PA_SSH_TUNNEL = self.load_database_credentials()
-        attempt = 0
 
-        # update with requested database name
-        PA_DB_CONFIG['database'] = self.database_name
+        self.select_database_and_load_credentials()
 
-        while attempt < retries:
-            try:
-                if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
-                    # No SSH tunnel required if running inside PythonAnywhere platform
-                    self.conn = pymysql.connect(**PA_DB_CONFIG)
-                    if verbose:
-                        print("_this_is_PythonAnywhere_: connection to", PA_DB_CONFIG.get('database'), "successful.")
-                    return self.conn, None
-                else:
-                    # Create SSH tunnel for local machine
-                    self.tunnel = sshtunnel.SSHTunnelForwarder(
-                        ('ssh.pythonanywhere.com'),
-                        ssh_username=PA_SSH_TUNNEL.get('ssh_username'),
-                        ssh_password=PA_SSH_TUNNEL.get('ssh_password'),
-                        remote_bind_address=(PA_DB_CONFIG.get('host'), 3306),
-                        allow_agent=False,  # prevents usage of ssh agents and .ssh/config
-                    )
-                    self.tunnel.start()
-                    # Tunnel is established, connect to the MySQL database
-                    db_config_ssh = PA_DB_CONFIG.copy()
-                    db_config_ssh['host'] = '127.0.0.1'
-                    db_config_ssh['port'] = self.tunnel.local_bind_port
-                    self.conn = pymysql.connect(**db_config_ssh)
-                    if verbose:
-                        print("remote connection to", PA_DB_CONFIG.get('database'), "successful.")
-                    return self.conn, self.tunnel
+        if self.database_server == 'AWS':
+            aws_db_config = self.AWS_DB_CONFIG
+            self.conn = pymysql.connect(**aws_db_config)
+            if verbose:
+                print("connection to", aws_db_config.get('host'), "successful.")
 
-            except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
-                print(f"SSH Tunnel Error: {ssh_err}")
-            except pymysql.MySQLError.Error as mysql_err:
-                print(f"MySQL Error: {mysql_err}")
-            except Exception as e:
-                print(f"Unexpected Error: {e}")
+        elif self.database_server == 'PythonAnywhere':
 
-            attempt += 1
-            if attempt < retries:
-                print(f"Retrying in {delay} seconds... ({attempt}/{retries})")
-                time.sleep(delay)
+            pa_db_config = self.PA_DB_CONFIG
+            ps_ssh_tunnel = self.PA_SSH_TUNNEL
+
+            attempt = 0
+
+            # update with requested database name
+            pa_db_config['database'] = self.database_name
+
+            while attempt < retries:
+                try:
+                    if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
+                        # No SSH tunnel required if running inside PythonAnywhere platform
+                        self.conn = pymysql.connect(**pa_db_config)
+                        if verbose:
+                            print("_this_is_PythonAnywhere_: connection to", pa_db_config.get('database'), "successful.")
+                        return self.conn, None
+                    else:
+                        # Create SSH tunnel for local machine
+                        self.tunnel = sshtunnel.SSHTunnelForwarder(
+                            ('ssh.pythonanywhere.com'),
+                            ssh_username=ps_ssh_tunnel.get('ssh_username'),
+                            ssh_password=ps_ssh_tunnel.get('ssh_password'),
+                            remote_bind_address=(pa_db_config.get('host'), 3306),
+                            allow_agent=False,  # prevents usage of ssh agents and .ssh/config
+                        )
+                        self.tunnel.start()
+                        # Tunnel is established, connect to the MySQL database
+                        db_config_ssh = pa_db_config.copy()
+                        db_config_ssh['host'] = '127.0.0.1'
+                        db_config_ssh['port'] = self.tunnel.local_bind_port
+                        self.conn = pymysql.connect(**db_config_ssh)
+                        if verbose:
+                            print("remote connection to", pa_db_config.get('database'), "successful.")
+                        return self.conn, self.tunnel
+
+                except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
+                    print(f"SSH Tunnel Error: {ssh_err}")
+                except pymysql.MySQLError.Error as mysql_err:
+                    print(f"MySQL Error: {mysql_err}")
+                except Exception as e:
+                    print(f"Unexpected Error: {e}")
+
+                attempt += 1
+                if attempt < retries:
+                    print(f"Retrying in {delay} seconds... ({attempt}/{retries})")
+                    time.sleep(delay)
+
+        else:
+            print("Invalid database server configuration")
 
         return None, None
 
