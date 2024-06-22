@@ -2,6 +2,7 @@
 import uuid
 import json
 import pymysql
+from typing import Tuple
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -31,12 +32,20 @@ class SyntrilloDatabaseManager:
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
         self.conn, _ = db_conn.create_connection()
 
-    def get_latest_timestamp_for_tenovi_device(
+    def get_latest_record_for_tenovi_device(
         self,
         device_name: str
-        ):
+        ) -> Tuple[dict, dict]:
         """
             Get the latest timestamp for a given device
+
+            Args:
+                device_name (str): The name of the device
+
+            Returns a tuple:
+                record (dict): The latest record for the device
+                log (dict): The log of the request
+
         """
 
        # Check if device_name is valid
@@ -48,7 +57,7 @@ class SyntrilloDatabaseManager:
             return None, log
 
         try:
-            with self.conn.cursor() as cursor:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 cursor.execute(
                     "SELECT * FROM tenovi_raw_measurements WHERE device_name = %s ORDER BY timestamp_zulu DESC LIMIT 1",
                     (device_name,)
@@ -69,6 +78,9 @@ class SyntrilloDatabaseManager:
     def insert_tenovi_raw_measurement(
         self,
         device_name: str,
+        metric_name: str,
+        value_1: str,
+        value_2: str,
         timestamp_zulu: str,
         data_json: str
         ):
@@ -87,8 +99,10 @@ class SyntrilloDatabaseManager:
         try:
             with self.conn.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO tenovi_raw_measurements (syntrillo_internal_key, device_name, timestamp_zulu, data_json) VALUES (%s, %s, %s, %s)",
-                    (self.syntrillo_internal_key, device_name, timestamp_zulu, data_json)
+                    """INSERT INTO tenovi_raw_measurements
+                    (syntrillo_internal_key, device_name, metric_name, value_1, value_2, timestamp_zulu, data_json)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                    (self.syntrillo_internal_key, device_name, metric_name, value_1, value_2, timestamp_zulu, data_json)
                 )
                 self.conn.commit()
                 log = {
@@ -108,9 +122,9 @@ if __name__ == '__main__':
     lookup_codes = LookUpCodesManagement()
     entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One"
 
-    data_manager = SyntrilloDatabaseAccess(entry['syntrillo_internal_key'])
+    data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
 
-    record, log = data_manager.get_latest_timestamp_for_tenovi_device("Tenovi Watch")
+    record, log = data_manager.get_latest_record_for_tenovi_device("Tenovi Watch")
 
     print(record, log)
 

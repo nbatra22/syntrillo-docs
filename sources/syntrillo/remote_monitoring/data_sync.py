@@ -106,7 +106,7 @@ class RemoteMonitoringDataSync:
         # Loop over devices
         for device in self.user_devices:
             # Get latest timestamp for this device
-            latest_timestamp, log = self.syntrillo_database_manager.get_latest_timestamp_for_tenovi_device(device['device']['name'])
+            latest_record, log = self.syntrillo_database_manager.get_latest_record_for_tenovi_device(device['device']['name'])
             if not log["success"]:
                 overall_log["logs"].append(log)
                 overall_log["success"] = False
@@ -115,7 +115,7 @@ class RemoteMonitoringDataSync:
             # Get data from Tenovi device measurements class
             measurements, log = self.device_measurements.get_device_measurements(
                 hwi_device_id=device['id'],
-                timestamp__gte=latest_timestamp,
+                timestamp__gte=latest_record['timestamp_zulu'] if latest_record else None,
             )
             if not log["success"]:
                 overall_log["logs"].append(log)
@@ -128,7 +128,10 @@ class RemoteMonitoringDataSync:
                 log = self.syntrillo_database_manager.insert_tenovi_raw_measurement(
                     device_name=measurement['device_name'],
                     timestamp_zulu=measurement['timestamp'],
-                    data_json=json.dumps(measurement)
+                    data_json=json.dumps(measurement),
+                    metric_name=measurement['metric'],
+                    value_1=measurement['value_1'],
+                    value_2=measurement['value_2']
                 )
                 if not log["success"]:
                     overall_log["logs"].append(log)
