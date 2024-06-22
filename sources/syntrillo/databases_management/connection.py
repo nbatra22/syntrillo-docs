@@ -99,6 +99,10 @@ class DatabaseConnection:
 
         if self.database_server == 'AWS':
             aws_db_config = self.AWS_DB_CONFIG
+
+            # update with requested database name
+            aws_db_config['database'] = self.database_name
+
             self.conn = pymysql.connect(**aws_db_config)
             if verbose:
                 print("connection to", aws_db_config.get('host'), "successful.")

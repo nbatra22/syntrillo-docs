@@ -54,11 +54,8 @@ class LookUpCodesManagement:
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
-<<<<<<< HEAD
-=======
         # logger.debug(f"=====% INIT LOOKUP CODES MANAGEMENT")
 
->>>>>>> 919b308c90bbe603412603fea35c39a07ddb8679
     def __del__(self):
         try:
             self.cursor.close()
