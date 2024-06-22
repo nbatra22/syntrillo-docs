@@ -171,6 +171,24 @@ class IFrameGeneratorConstruct(Construct):
             }
         )
 
+        # test_ = _lambda.LayerVersion(
+        #     self,
+        #     "Function",
+        #     layer_version_name="Function",
+        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        #     code=_lambda.Code.from_asset(
+        #         "lambda-functions/iframe-generator-function",
+        #         bundling={
+        #             "image": _lambda.Runtime.PYTHON_3_10.bundling_image,
+        #             "command": [
+        #                 "bash",
+        #                 "-c",
+        #                 "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output",
+        #             ],
+        #         },
+        #     ),
+        # )
+
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
         iframe_generator_function.add_layers(mysql_layer)
