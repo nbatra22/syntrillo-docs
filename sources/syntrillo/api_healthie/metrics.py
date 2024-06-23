@@ -531,8 +531,7 @@ class HealthieMetrics():
 
 
         """
-        today = datetime.date.today()
-        end_date = today - datetime.timedelta(days=7)
+        end_date = datetime.date.today()
         start_date = end_date - datetime.timedelta(days=7)
         i=0
         while True:
