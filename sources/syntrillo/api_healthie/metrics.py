@@ -546,6 +546,78 @@ class HealthieMetrics():
                 return start_date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+    def remove_metric_data(
+        self,
+        user_id: str,
+        category: str,
+        start_date: datetime,
+        end_date: datetime,
+        ) -> Tuple[dict, dict]:
+        """
+        Remove metric data entries for a user within a date range.
+
+        Args:
+            user_id (str): The user ID.
+            category (str): The category of the metric data.
+            start_date (datetime): The start date of the date range.
+            end_date (datetime): The end date of the date range.
+
+        Returns:
+            log (dict): The log of the request.
+
+        """
+
+        overall_log = {
+            "success": True,
+            "number_of_records_deleted": 0,
+            "logs": []
+        }
+
+        # have to get metric data first
+        all_metrics, log = self.get_metric_data(user_id, category, start_date, end_date)
+
+        overall_log['logs'].append(log)
+
+        # then loop over entries and remove them
+        number_of_records_deleted = 0
+        for metric in all_metrics:
+            entry_id = metric['id']
+            mutation = '''
+                mutation deleteEntry (
+                    $id: ID
+                ) {
+                    deleteEntry (input:{
+                        id: $id
+                    })
+                    {
+                        entry {
+                            id
+                        }
+                        messages
+                        {
+                            field
+                            message
+                        }
+                    }
+                }
+                '''
+            variables = {
+                'id': entry_id
+            }
+            response, log = self.auth.send_query(mutation, variables)
+
+            if not log['success']:
+                overall_log['logs'].append(log)
+                overall_log['success'] = False
+                break
+
+            number_of_records_deleted += 1
+
+        overall_log['number_of_records_deleted'] = number_of_records_deleted
+
+        return overall_log
+
+
 
 
 if __name__ == "__main__":
@@ -616,12 +688,25 @@ if __name__ == "__main__":
         HealthieAuth.print_pretty_json(response)
         HealthieAuth.print_pretty_json(log)
 
-    if True:
+    if False:
         user_id = "1051529"
         category = HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
         # find latest timestamp
         latest_timestamp = metrics.get_metric_latest_timestamp(user_id, category)
         print(latest_timestamp)
+
+    if True:
+        user_id = "1051529"
+        category = HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
+        log = metrics.remove_metric_data(
+            user_id=user_id,
+            category=category,
+            start_date=today - datetime.timedelta(days=7),
+            end_date=today
+        )
+        HealthieAuth.print_pretty_json(log)
+
+
 
 
 
