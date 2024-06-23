@@ -167,8 +167,8 @@ class SyntrilloDatabaseManager:
                     """
                     SELECT
                         device_name,
-                        COUNT(*) as number_of_data_points,
-                        MAX(timestamp_zulu) as latest_timestamp
+                        COUNT(*) as number_of_data_points_in_syntrillo_database,
+                        MAX(timestamp_zulu) as latest_zulu_timestamp_in_syntrillo_database
                         FROM tenovi_raw_measurements
                         WHERE syntrillo_internal_key = %s
                         GROUP BY device_name
@@ -247,11 +247,11 @@ if __name__ == '__main__':
 
     data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
 
-    if True:
+    if False:
         record, log = data_manager.get_latest_record_for_tenovi_device("Tenovi Watch")
         print(record, log)
 
-    if False:
+    if True:
         report, log = data_manager.get_summary_devices_report()
         # Pretty print the report
         print(log)
