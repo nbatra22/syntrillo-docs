@@ -107,25 +107,7 @@ class CheckingConstruct(Construct):
         )
 
         # Add resources for tests
-        iframe_healthie_provider_tab = root_resource.add_resource("test_network_outside_connectivity")
-        iframe_healthie_provider_tab.add_method(
-            "ANY",
-            apigw.LambdaIntegration(checking_function),
-        )
-
-        iframe_healthie_provider_tab = root_resource.add_resource("test_tenovi_access")
-        iframe_healthie_provider_tab.add_method(
-            "ANY",
-            apigw.LambdaIntegration(checking_function),
-        )
-
-        iframe_healthie_provider_tab = root_resource.add_resource("test_database_access")
-        iframe_healthie_provider_tab.add_method(
-            "ANY",
-            apigw.LambdaIntegration(checking_function),
-        )
-
-        iframe_healthie_provider_tab = root_resource.add_resource("register_patient_devices")
+        iframe_healthie_provider_tab = root_resource.add_resource("{id}")
         iframe_healthie_provider_tab.add_method(
             "ANY",
             apigw.LambdaIntegration(checking_function),
@@ -145,16 +127,6 @@ class IFrameGeneratorConstruct(Construct):
                 stage_name="sandbox"
             )
         )
-
-        # # Add a new stage
-        # deployment = apigw.Deployment(self, "SandboxDeployment",
-        #     api = iframe_generator_api
-        # )
-
-        # sandbox_stage = apigw.Stage(self, "SandBoxStage",
-        #     stage_name="sandbox",
-        #     deployment=deployment
-        # )
 
         # Create the Lambda layers that contains the required libraries
         flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
