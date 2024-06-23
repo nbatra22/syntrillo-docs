@@ -1,11 +1,13 @@
 
 import json
 import uuid
+from datetime import datetime
 
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.devices import Devices
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
+from syntrillo.api_healthie.metrics import HealthieMetrics
 
 class RemoteMonitoringDataSync:
 
@@ -44,6 +46,10 @@ class RemoteMonitoringDataSync:
         # ---------------
         # instantiate Tenovi device measurements class
         self.device_measurements = DeviceMeasurements()
+
+        # ---------------
+        # instantiate Healthie API metrics class
+        self.healthie_metrics = HealthieMetrics()
 
         """ user devices:
             {
@@ -142,6 +148,46 @@ class RemoteMonitoringDataSync:
         return overall_log
 
 
+    def sync_syntrillo_to_healthie(self):
+        """
+        Sync data from Syntrillo PHI database to Healthie.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "logs": []
+        }
+
+        # -------------------
+        # Blood pressure
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
+        )
+
+        # get all records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_blood_pressure_records_after_timestamp(latest_timestamp)
+
+        # loop over records, and store using Healthie API store_blood_pressure_data
+        for record in records:
+            response, log = self.healthie_metrics.store_blood_pressure_data(
+                self.healthie_user_id,
+                created_at=datetime.strptime(record['timestamp_zulu'], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                systolic=record['value_1'],
+                diastolic=record['value_2'],
+            )
+            if not log["success"]:
+                overall_log["logs"].append(log)
+                overall_log["success"] = False
+            else:
+                overall_log["number_of_records_inserted"] += 1
+
+        # -------------------
+        return overall_log
+
+
 
 if __name__ == '__main__':
 
@@ -158,9 +204,15 @@ if __name__ == '__main__':
         # Pretty print user devices
         print(json.dumps(sync.user_devices, indent=4))
 
-    if True:
+    if False:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
         print(json.dumps(overall_log, indent=4))
+
+    if True:
+        overall_log = sync.sync_syntrillo_to_healthie()
+
+        print(json.dumps(overall_log, indent=4))
+
 
 

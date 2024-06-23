@@ -122,6 +122,9 @@ class LookUpCodesManagement:
 
         :param healthie_user_id: The ID of the healthie user.
         :return: A dictionary with syntrillo_internal_key and pseudo_code_for_tenovi_phi_access, or None if no entry is found.
+
+        values returned as strings : str(uuid.UUID(entry[x]))
+
         """
 
         select_query = """

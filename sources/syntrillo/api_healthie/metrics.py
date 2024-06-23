@@ -1,8 +1,11 @@
 # Path: ./sources/syntrillo/api_healthie/metrics.py
 
-from syntrillo.api_healthie.auth import HealthieAuth
 import datetime
 import random
+from typing import Tuple
+
+from syntrillo.api_healthie.auth import HealthieAuth
+
 
 class HealthieMetrics():
     """
@@ -10,6 +13,10 @@ class HealthieMetrics():
 
 
     """
+
+    HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY = "Blood Pressure"
+
+
     def __init__(self):
         """
         Initializes the HealthieMetrics instance.
@@ -110,7 +117,7 @@ class HealthieMetrics():
         metric_stat : str,
         entry_category : str,
         created_at : datetime,
-    ):
+    ) -> Tuple[dict, dict]:
         """
 
         This is just a peculiar Journal Entry type that stores a single metric value.
@@ -120,6 +127,17 @@ class HealthieMetrics():
         https://docs.gethealthie.com/schema/createentryinput.doc
 
         https://docs.gethealthie.com/docs/#storing-metric-data
+
+        Args:
+            user_id (str): The user ID.
+            metric_stat (str): The metric value.
+            entry_category (str): The category of the metric data.
+            created_at (datetime): The date and time the metric data was created.
+
+        Returns a tupple:
+            response (dict): The response from the API.
+            log (dict): The log of the request.
+
 
         """
         # Set up the GraphQL mutation to create a CustomModule in a Form
@@ -173,7 +191,7 @@ class HealthieMetrics():
         diastolic : str,
         created_at : datetime  , # will be formated to string "2021-09-23 15:27:01 -0400"
         description : str = None,
-    ):
+    ) -> Tuple[dict, dict]:
         """
 
         https://docs.gethealthie.com/schema/subentryinput.doc
@@ -188,10 +206,41 @@ class HealthieMetrics():
                     "messages": null
                 }
             }
+
+        Args:
+            user_id (str): The user ID.
+            systolic (str): The systolic blood pressure value.
+            diastolic (str): The diastolic blood pressure value.
+            created_at (datetime): The date and time the metric data was created.
+            description (str, optional): The description of the metric data.
+
+        Returns a tupple:
+            response (dict): The response from the API.
+            log (dict): The log of the request.
         """
 
+        # Convert systolic to a float if possible
+        try:
+            systolic_float = float(systolic)
+        except ValueError:
+            log = {
+                'success': False,
+                'error': "Systolic value must be a valid number."
+            }
+            return None, log
+
+        # Convert diastolic to a float if possible
+        try:
+            diastolic_float = float(diastolic)
+        except ValueError:
+            log = {
+                'success': False,
+                'error': "Diastolic value must be a valid number."
+            }
+            return None, log
+
         # return an error if systolic or diastolic values are in not proper ranges : 10-300
-        if not (10 <= int(systolic) <= 300) or not (10 <= int(diastolic) <= 300):
+        if not (10 <= systolic_float <= 300) or not (10 <= diastolic_float <= 300):
             log = {
                 'success': False,
                 'error': "Systolic and diastolic values must be between 10 and 300."
@@ -199,7 +248,7 @@ class HealthieMetrics():
             return None, log
 
         # return an error if systolic is less than diastolic
-        if int(systolic) < int(diastolic):
+        if systolic_float <= diastolic_float:
             log = {
                 'success': False,
                 'error': "Systolic value must be greater than diastolic value."
@@ -250,14 +299,13 @@ class HealthieMetrics():
         '''
 
         # Set up the variables for the GraphQL mutation
-        created_at_str = created_at.strftime("%Y-%m-%d %H:%M:%S %z")
         variables = {
             'type' : "MetricEntry",  # raises an internal server error if not set properly
             'category': "Blood Pressure",
             'user_id': user_id,
             'systolic_metric_stat': systolic,
             'diastolic_metric_stat': diastolic,
-            'created_at': created_at_str,
+            'created_at': created_at.strftime("%Y-%m-%d %H:%M:%S %z"),
             'description': description
         }
 
@@ -272,7 +320,7 @@ class HealthieMetrics():
         category: str,
         start_date: datetime = None,
         end_date: datetime = None,
-        ):
+        ) -> Tuple[list, dict]:
         """
         Retrieve metric data for a user within a date range.
 
@@ -366,7 +414,7 @@ class HealthieMetrics():
         category: str,
         start_date: datetime = None,
         end_date: datetime = None,
-        ):
+        ) -> Tuple[list, dict]:
         """
         CURSOR PAGINATION NOT AVAILABLE IN entries QUERY
         https://docs.gethealthie.com/docs/#cursor-pagination
@@ -381,7 +429,7 @@ class HealthieMetrics():
             start_date (datetime, optional): The start date of the date range.
             end_date (datetime, optional): The end date of the date range.
 
-        returns a tuple:
+        returns a tupple:
             list: A list of metric data dictionaries.
             dict: The log of the request.
         """
@@ -462,14 +510,42 @@ class HealthieMetrics():
         return all_entries, combined_log
 
 
-    def get_blood_pressure_data(self):
-        pass
+    def get_metric_latest_timestamp(
+        self,
+        user_id: str,
+        category: str,
+        ) -> datetime.datetime:
+        """
+        Using the get_metric_data function, retrieve the latest timestamp of the metric data.
 
-    def get_metric_latest_timestamp(self):
-        pass
+        This function moves back in time by 1 week until it finds the latest timestamp.
 
-    def get_blood_pressure_latest_timestamp(self):
-        pass
+        It returns the latest timestamp of the metric data.
+
+        Args:
+            user_id (str): The user ID.
+            category (str): The category of the metric data.
+
+        Returns:
+            latest_timestamp (datetime): The latest timestamp of the metric data, zulu time.
+
+
+        """
+        today = datetime.date.today()
+        end_date = today - datetime.timedelta(days=7)
+        start_date = end_date - datetime.timedelta(days=7)
+        i=0
+        while True:
+            entries, log = self.get_metric_data(user_id, category, start_date, end_date)
+            if entries:
+                latest_timestamp = max(entry['created_at'] for entry in entries)
+                return datetime.datetime.strptime(latest_timestamp, "%Y-%m-%d %H:%M:%S %z").strftime("%Y-%m-%dT%H:%M:%SZ")
+            end_date = start_date
+            start_date -= datetime.timedelta(days=7)
+            i += 1
+            if i > 50:
+                return start_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 
 
@@ -531,7 +607,7 @@ if __name__ == "__main__":
             )
         HealthieAuth.print_pretty_json(log)
 
-    if True:
+    if False:
         user_id = "1035117"
         category = "Heart Rate"
         response, log = metrics.get_metric_data(
@@ -540,3 +616,14 @@ if __name__ == "__main__":
             )
         HealthieAuth.print_pretty_json(response)
         HealthieAuth.print_pretty_json(log)
+
+    if True:
+        user_id = "1051529"
+        category = HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
+        # find latest timestamp
+        latest_timestamp = metrics.get_metric_latest_timestamp(user_id, category)
+        print(latest_timestamp)
+
+
+
+
