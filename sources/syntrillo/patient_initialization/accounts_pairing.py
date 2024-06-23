@@ -185,7 +185,8 @@ class AccountsPairing:
                     if add_tenovi_latest_record_timestamp:
                         record, log = data_manager.get_latest_record_for_tenovi_device(device_name)
                         device['device'].update({
-                            'latest_record_zulu_timestamp_at_tenovi': record.get('timestamp_zulu')
+                            'latest_record_zulu_timestamp_at_tenovi': record.get('timestamp_zulu'),
+                            'needs_syncing': ( record.get('timestamp_zulu') > device['device']['latest_zulu_timestamp_in_syntrillo_database'] )
                         })
 
 

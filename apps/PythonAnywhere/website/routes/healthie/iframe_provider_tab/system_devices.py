@@ -27,7 +27,11 @@ def iframe_healthie_provider_tab_system_devices():
 
     # --------------------------------------------------------------------
     # get paired devices from Tenovi API
-    paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=post_manager.syntrillo_internal_key)
+    paired_devices = AccountsPairing.get_paired_devices(
+        syntrillo_internal_key=post_manager.syntrillo_internal_key,
+        add_syntrillo_database_stats=True,
+        add_tenovi_latest_record_timestamp=True,
+        )
 
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',

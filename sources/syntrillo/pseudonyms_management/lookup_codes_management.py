@@ -146,7 +146,8 @@ class LookUpCodesManagement:
         if entry:
             result = {
                 'syntrillo_internal_key': uuid.UUID(entry[0]),
-                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1])
+                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1]),
+                'healthie_user_id': healthie_user_id
             }
             add_log_entry(event='RETRIEVE_ENTRY_BY_healthie_USER_ID', json_data=str(result), comment=f"Entry retrieved for healthie_user_id {healthie_user_id}")
             return result
@@ -178,7 +179,8 @@ class LookUpCodesManagement:
         if entry:
             result = {
                 'healthie_user_id': str(entry[0]),
-                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1])
+                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1]),
+                'syntrillo_internal_key': syntrillo_internal_key
             }
             add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY', json_data=str(result), comment=f"Entry retrieved for syntrillo_internal_key {syntrillo_internal_key}")
             return result
@@ -210,7 +212,8 @@ class LookUpCodesManagement:
         if entry:
             result = {
                 'healthie_user_id': str(entry[0]),
-                'syntrillo_internal_key': uuid.UUID(entry[1])
+                'syntrillo_internal_key': uuid.UUID(entry[1]),
+                'pseudo_code_for_tenovi_phi_access': pseudo_code_for_tenovi_phi_access
             }
             add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE', json_data=str(result), comment=f"Entry retrieved for pseudo_code_for_tenovi_phi_access {pseudo_code_for_tenovi_phi_access}")
             return result
