@@ -1,4 +1,22 @@
+"""
+This script is run on PythonAnywhere to sync data between Tenovi and Syntrillo, at regular intervals.
+"""
+
 import json
+import sys
+import os
+
+# -------------------------------------------------
+# Add the project directory to the sys.path
+
+if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
+
+    # add the sources directory to the sys.path
+    company_packages_home = '/home/syntrillo/Syntrillo_Clinic/sources/'
+    if company_packages_home not in sys.path:
+        sys.path = [company_packages_home] + sys.path
+
+# -------------------------------------------------
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
