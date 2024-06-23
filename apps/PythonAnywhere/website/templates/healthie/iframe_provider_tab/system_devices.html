@@ -23,7 +23,7 @@
                 {% for device in paired_devices %}
                     <tr>
                         <td>{{ device.device.name }}</td>
-                        <td>{{ device.device.hardware_uuid }}</td>
+                        <td>{{ device.device.hardware_uuid_formatted }}</td>
                         <td>{{ device.patient.name }}</td>
                         <td>{{ device.patient.external_id }}</td>
                         <td>{{ device.patient.sms_opt_in }}</td>
