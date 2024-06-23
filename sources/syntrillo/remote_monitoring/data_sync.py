@@ -1,7 +1,7 @@
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
@@ -118,10 +118,17 @@ class RemoteMonitoringDataSync:
                 overall_log["success"] = False
                 continue
 
+            # adding a tiny amount of time to the latest timestamp to avoid duplicates (since it is greater than or equal to)
+            latest_timestamp_zulu_updated_str = None
+            if latest_record:
+                latest_timestamp_zulu_updated = datetime.strptime(latest_record['timestamp_zulu'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                latest_timestamp_zulu_updated += timedelta(microseconds=1)
+                latest_timestamp_zulu_updated_str = latest_timestamp_zulu_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
             # Get data from Tenovi device measurements class
             measurements, log = self.device_measurements.get_device_measurements(
                 hwi_device_id=device['id'],
-                timestamp__gte=latest_record['timestamp_zulu'] if latest_record else None,
+                timestamp__gte=latest_timestamp_zulu_updated_str,
             )
             if not log["success"]:
                 overall_log["logs"].append(log)

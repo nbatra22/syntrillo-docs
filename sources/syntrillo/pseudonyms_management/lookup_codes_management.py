@@ -54,8 +54,6 @@ class LookUpCodesManagement:
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
-        # logger.debug(f"=====% INIT LOOKUP CODES MANAGEMENT")
-
     def __del__(self):
         try:
             self.cursor.close()
@@ -65,10 +63,9 @@ class LookUpCodesManagement:
                     self.tunnel.stop()
                 if self.verbose:
                     print("Database connection closed.")
-        except pymysql.OperationalError as e:
-            print(f"OperationalError during connection close: {e}")
         except Exception as e:
-            print(f"Unexpected error during connection close: {e}")
+            print(f"class LookUpCodesManagement - __del__ : Unexpected error during connection close: {e}")
+            pass
 
 
     def create_entry(self, healthie_user_id: str):
