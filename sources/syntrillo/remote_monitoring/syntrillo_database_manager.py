@@ -28,13 +28,16 @@ class SyntrilloDatabaseManager:
 
     def __init__(
         self,
-        syntrillo_internal_key : str,
+        syntrillo_internal_key: uuid.UUID,
         ):
         """
             For a given patient, manage data located in our Syntrillo PHI database
+
+            Args:
+                syntrillo_internal_key (uuid.UUID): The internal key for the patient
         """
 
-        self.syntrillo_internal_key_uuid = uuid.UUID(syntrillo_internal_key)
+        self.syntrillo_internal_key = syntrillo_internal_key
 
         # connect to our database
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
@@ -73,7 +76,7 @@ class SyntrilloDatabaseManager:
                     FROM tenovi_raw_measurements
                     WHERE syntrillo_internal_key = %s AND device_name = %s
                     ORDER BY timestamp_zulu DESC LIMIT 1""",
-                    (self.syntrillo_internal_key_uuid.bytes, device_name)
+                    (self.syntrillo_internal_key.bytes, device_name)
                 )
                 record = cursor.fetchone()
                 log = {
@@ -127,7 +130,7 @@ class SyntrilloDatabaseManager:
                     """INSERT INTO tenovi_raw_measurements
                     (syntrillo_internal_key, device_name, metric_name, value_1, value_2, timestamp_zulu, data_json)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-                    (self.syntrillo_internal_key_uuid.bytes, device_name, metric_name, value_1, value_2, timestamp_zulu, data_json)
+                    (self.syntrillo_internal_key.bytes, device_name, metric_name, value_1, value_2, timestamp_zulu, data_json)
                 )
                 self.conn.commit()
                 log = {
@@ -170,7 +173,7 @@ class SyntrilloDatabaseManager:
                         WHERE syntrillo_internal_key = %s
                         GROUP BY device_name
                     """,
-                    (self.syntrillo_internal_key_uuid.bytes,)
+                    (self.syntrillo_internal_key.bytes,)
                 )
                 report = cursor.fetchall()
 
@@ -210,7 +213,7 @@ class SyntrilloDatabaseManager:
                         AND syntrillo_internal_key = %s
                         ORDER BY timestamp_zulu ASC
                         """,
-                        (self.syntrillo_internal_key_uuid.bytes,)
+                        (self.syntrillo_internal_key.bytes,)
                     )
                 else:
                     cursor.execute(
@@ -221,7 +224,7 @@ class SyntrilloDatabaseManager:
                         AND timestamp_zulu > %s
                         ORDER BY timestamp_zulu ASC
                         """,
-                        (self.syntrillo_internal_key_uuid.bytes, timestamp_zulu)
+                        (self.syntrillo_internal_key.bytes, timestamp_zulu)
                     )
                 records = cursor.fetchall()
                 log = {

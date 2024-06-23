@@ -71,12 +71,16 @@ class LookUpCodesManagement:
             print(f"Unexpected error during connection close: {e}")
 
 
-    def create_entry(self, healthie_user_id):
+    def create_entry(self, healthie_user_id: str):
         """
         Create a new entry in the user_look_up_codes table for the specified healthie_user_id.
 
-        :param healthie_user_id: The ID of the healthie user.
-        :return: A dictionary with syntrillo_internal_key and pseudo_code_for_tenovi_phi_access, or None if creation failed.
+        Args:
+            healthie_user_id (str): The ID of the healthie user.
+
+        Returns:
+            dict: A dictionary with syntrillo_internal_key (uuid) and pseudo_code_for_tenovi_phi_access (uuid), or None if creation failed.
+
         """
 
         create_entry_query = """
@@ -103,8 +107,8 @@ class LookUpCodesManagement:
 
             if entry:
                 result = {
-                    'syntrillo_internal_key': str(uuid.UUID(entry[0])),
-                    'pseudo_code_for_tenovi_phi_access': str(uuid.UUID(entry[1]))
+                    'syntrillo_internal_key': uuid.UUID(entry[0]),
+                    'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1])
                 }
                 add_log_entry(event='CREATE_ENTRY', json_data=str(result), comment=f"Entry created for healthie_user_id {healthie_user_id}")
                 return result
@@ -116,14 +120,17 @@ class LookUpCodesManagement:
             add_log_entry(event='CREATE_ENTRY_ERROR', json_data=str(healthie_user_id), comment=str(e))
             return None
 
-    def retrieve_entry_by_healthie_user_id(self, healthie_user_id):
+    def retrieve_entry_by_healthie_user_id(self, healthie_user_id: str):
         """
         Retrieve an entry from the user_look_up_codes table using the healthie_user_id.
 
-        :param healthie_user_id: The ID of the healthie user.
-        :return: A dictionary with syntrillo_internal_key and pseudo_code_for_tenovi_phi_access, or None if no entry is found.
+        Note: values returned as UUID : uuid.UUID(entry[x])
 
-        values returned as strings : str(uuid.UUID(entry[x]))
+        Args:
+            healthie_user_id (str): The ID of the healthie user.
+
+        Returns:
+            dict: A dictionary with syntrillo_internal_key (uuid) and pseudo_code_for_tenovi_phi_access (uuid), or None if no entry is found.
 
         """
 
@@ -138,8 +145,8 @@ class LookUpCodesManagement:
         entry = self.cursor.fetchone()
         if entry:
             result = {
-                'syntrillo_internal_key': str(uuid.UUID(entry[0])),
-                'pseudo_code_for_tenovi_phi_access': str(uuid.UUID(entry[1]))
+                'syntrillo_internal_key': uuid.UUID(entry[0]),
+                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1])
             }
             add_log_entry(event='RETRIEVE_ENTRY_BY_healthie_USER_ID', json_data=str(result), comment=f"Entry retrieved for healthie_user_id {healthie_user_id}")
             return result
@@ -147,12 +154,16 @@ class LookUpCodesManagement:
             add_log_entry(event='RETRIEVE_ENTRY_BY_healthie_USER_ID_FAILED', json_data=str(healthie_user_id), comment="No entry found.")
             return None
 
-    def retrieve_entry_by_internal_key(self, internal_key):
+    def retrieve_entry_by_internal_key(self, syntrillo_internal_key: uuid.UUID):
         """
         Retrieve an entry from the user_look_up_codes table using the syntrillo_internal_key.
 
-        :param internal_key: The syntrillo internal key (UUID).
-        :return: A dictionary with healthie_user_id and pseudo_code_for_tenovi_phi_access, or None if no entry is found.
+        Args:
+            syntrillo_internal_key (uuid.UUID): The syntrillo internal key.
+
+        Returns:
+            dict: A dictionary with healthie_user_id (str) and pseudo_code_for_tenovi_phi_access (uuid.UUID), or None if no entry is found.
+
         """
 
         select_query = """
@@ -162,25 +173,29 @@ class LookUpCodesManagement:
         FROM user_look_up_codes
         WHERE syntrillo_internal_key = UUID_TO_BIN(%s);
         """
-        self.cursor.execute(select_query, (internal_key,))
+        self.cursor.execute(select_query, (syntrillo_internal_key,))
         entry = self.cursor.fetchone()
         if entry:
             result = {
-                'healthie_user_id': entry[0],
-                'pseudo_code_for_tenovi_phi_access': str(uuid.UUID(entry[1]))
+                'healthie_user_id': str(entry[0]),
+                'pseudo_code_for_tenovi_phi_access': uuid.UUID(entry[1])
             }
-            add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY', json_data=str(result), comment=f"Entry retrieved for syntrillo_internal_key {internal_key}")
+            add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY', json_data=str(result), comment=f"Entry retrieved for syntrillo_internal_key {syntrillo_internal_key}")
             return result
         else:
-            add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY_FAILED', json_data=str(internal_key), comment="No entry found.")
+            add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY_FAILED', json_data=str(syntrillo_internal_key), comment="No entry found.")
             return None
 
-    def retrieve_entry_by_pseudo_code(self, pseudo_code):
+    def retrieve_entry_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access: uuid.UUID):
         """
         Retrieve an entry from the user_look_up_codes table using the pseudo_code_for_tenovi_phi_access.
 
-        :param pseudo_code: The pseudo code (UUID).
-        :return: A dictionary with healthie_user_id and syntrillo_internal_key, or None if no entry is found.
+        Args:
+            pseudo_code_for_tenovi_phi_access (uuid.UUID): The pseudo code for accessing PHI.
+
+        Returns:
+            dict: A dictionary with healthie_user_id (str) and syntrillo_internal_key (uuid), or None if no entry is found.
+
         """
 
         select_query = """
@@ -190,17 +205,17 @@ class LookUpCodesManagement:
         FROM user_look_up_codes
         WHERE pseudo_code_for_tenovi_phi_access = UUID_TO_BIN(%s);
         """
-        self.cursor.execute(select_query, (pseudo_code,))
+        self.cursor.execute(select_query, (pseudo_code_for_tenovi_phi_access,))
         entry = self.cursor.fetchone()
         if entry:
             result = {
-                'healthie_user_id': entry[0],
-                'syntrillo_internal_key': str(uuid.UUID(entry[1]))
+                'healthie_user_id': str(entry[0]),
+                'syntrillo_internal_key': uuid.UUID(entry[1])
             }
-            add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE', json_data=str(result), comment=f"Entry retrieved for pseudo_code_for_tenovi_phi_access {pseudo_code}")
+            add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE', json_data=str(result), comment=f"Entry retrieved for pseudo_code_for_tenovi_phi_access {pseudo_code_for_tenovi_phi_access}")
             return result
         else:
-            add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE_FAILED', json_data=str(pseudo_code), comment="No entry found.")
+            add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE_FAILED', json_data=str(pseudo_code_for_tenovi_phi_access), comment="No entry found.")
             return None
 
     def close_connection(self):
