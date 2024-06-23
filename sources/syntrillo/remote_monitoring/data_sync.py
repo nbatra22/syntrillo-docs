@@ -155,6 +155,7 @@ class RemoteMonitoringDataSync:
         overall_log = {
             "success": True,
             "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
             "logs": []
         }
 
@@ -166,6 +167,8 @@ class RemoteMonitoringDataSync:
             self.healthie_user_id,
             HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
         )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
 
         # get all records from syntrillo database for this category after the latest timestamp
         records, log = self.syntrillo_database_manager.get_blood_pressure_records_after_timestamp(latest_timestamp)
