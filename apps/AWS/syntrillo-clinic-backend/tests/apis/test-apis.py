@@ -64,10 +64,10 @@ def display_error_context(url, request):
     error_context += "\n" + ("<"*80)
     return error_context
 
-class TestFondation(unittest.TestCase):
+class TestFoundation(unittest.TestCase):
 
     def test_root(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
@@ -77,21 +77,21 @@ class TestFondation(unittest.TestCase):
         # you should then increase the lambda timeout in the cdk stack
     
     def test_network_outside_connectivity(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         url += 'test_network_outside_connectivity'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_tenovi_access(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         url += 'test_tenovi_access'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_database_access(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         url += 'test_database_access'
         request = requests.get(url)
         status_code = request.status_code
@@ -100,7 +100,7 @@ class TestFondation(unittest.TestCase):
 class TestProcesses(unittest.TestCase):
     
     def test_register_patient_devices(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         url += 'register_patient_devices'
         request = requests.get(url)
         status_code = request.status_code
@@ -109,25 +109,25 @@ class TestProcesses(unittest.TestCase):
 class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
 
     def test_landing_page(self):
-        url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_flask_playground(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_iframe_healthie_provider_tab(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/iframe_healthie_provider_tab'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/iframe_healthie_provider_tab'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_iframe_healthie_provider_tab_system_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices'
         device_form_data = {
             'healthie_provider_id': '1173733',
             'healthie_user_id': 'Not+transmitted',
@@ -139,7 +139,7 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_iframe_healthie_provider_tab_system_devices_generate_temporary_pairing_code(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices/tenovi_generate_temporary_pairing_code_form'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_generate_temporary_pairing_code_form'
         device_form_data = {
             'temporary_lookup_code': '69c70ff8-6589-42b2-8b54-1501079441e2',
         }
@@ -148,7 +148,7 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
     def test_iframe_healthie_provider_tab_system_devices_pair_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/prod/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
         device_form_data = {
             'temporary_lookup_code': '467c3431-aac8-4307-948d-0d92a3f06a2d',
         }

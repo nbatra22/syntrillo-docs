@@ -41,7 +41,12 @@ class LandingPageConstruct(Construct):
         landing_page_function.add_layers(flask_layer)
 
         # Add the Lambda function as a REST API resource
-        landing_page_api = apigw.RestApi(self, "LandingPageAPI", rest_api_name="LandingPageAPI")
+        landing_page_api = apigw.RestApi(self, "LandingPageAPI", 
+            rest_api_name="LandingPageAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
+        )
         landing_page_api_root = landing_page_api.root
         landing_page_api_root.add_method("GET", apigw.LambdaIntegration(landing_page_function))
 
@@ -52,7 +57,12 @@ class CheckingConstruct(Construct):
     
         self.vpc = vpc
 
-        checking_api = apigw.RestApi(self, "CheckingAPI", rest_api_name="CheckingAPI")
+        checking_api = apigw.RestApi(self, "CheckingAPI", 
+            rest_api_name="CheckingAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
+        )
 
         # Create the Lambda layers that contains the required libraries
         flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
@@ -131,7 +141,8 @@ class IFrameGeneratorConstruct(Construct):
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
             rest_api_name="IFramGeneratorAPI",
             deploy_options= apigw.StageOptions(
-                tracing_enabled=True
+                tracing_enabled=True,
+                stage_name="sandbox"
             )
         )
 
