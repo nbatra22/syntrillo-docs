@@ -241,6 +241,13 @@ def handler(event, context):
             'statusCode': 200,
             'body': 'Called example.com'
         }
+
+    if resource_path == "/test_database_access":
+        initiate_database_connection()
+        return {
+            'statusCode': 200,
+            'body': 'Called example.com'
+        }
     
     if resource_path == "/register_patient_devices":
         Database().delete_tables_content()

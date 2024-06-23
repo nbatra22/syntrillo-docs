@@ -67,6 +67,12 @@ class CheckingConstruct(Construct):
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
         )
 
+        monitoring_layer = _lambda.LayerVersion(self, "MonitoringLayer",
+            layer_version_name="MonitoringLayer",
+            code=_lambda.Code.from_asset("lambda-layers/monitoring-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
+        )
+
         # Create the Lambda function
         checking_function = _lambda.Function(self, "CheckingFunction",
             function_name="CheckingFunction",
@@ -80,6 +86,7 @@ class CheckingConstruct(Construct):
         # Add the Lambda layers to the Lambda function
         checking_function.add_layers(flask_layer)
         checking_function.add_layers(mysql_layer)
+        checking_function.add_layers(monitoring_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = checking_api.root
@@ -97,6 +104,12 @@ class CheckingConstruct(Construct):
         )
 
         iframe_healthie_provider_tab = root_resource.add_resource("test_tenovi_access")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(checking_function),
+        )
+
+        iframe_healthie_provider_tab = root_resource.add_resource("test_database_access")
         iframe_healthie_provider_tab.add_method(
             "ANY",
             apigw.LambdaIntegration(checking_function),
