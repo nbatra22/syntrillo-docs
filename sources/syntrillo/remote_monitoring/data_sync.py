@@ -118,13 +118,13 @@ class RemoteMonitoringDataSync:
                 overall_log["success"] = False
                 continue
 
-            # adding a tiny amount of time to the latest timestamp to avoid duplicates (since it is greater than or equal to)
+            # adding a tiny amount of time to the latest created server time to avoid duplicates (since it is greater than or equal to)
             latest_server_created_zulutime_updated_str = None
             if latest_record:
                 data_json_dict = json.loads(latest_record['data_json'])
-                latest_timestamp_zulu_updated = datetime.strptime(data_json_dict['created'], "%Y-%m-%dT%H:%M:%S.%fZ")
-                latest_timestamp_zulu_updated += timedelta(microseconds=1)
-                latest_server_created_zulutime_updated_str = latest_timestamp_zulu_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                latest_server_created_zulutime_updated = datetime.strptime(data_json_dict['created'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                latest_server_created_zulutime_updated += timedelta(microseconds=1)
+                latest_server_created_zulutime_updated_str = latest_server_created_zulutime_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
             # Get data from Tenovi device measurements class
             measurements, log = self.device_measurements.get_device_measurements(
