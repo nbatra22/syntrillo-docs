@@ -44,10 +44,10 @@ class HealthInformationTablesManager:
             id                          INT AUTO_INCREMENT PRIMARY KEY,
             syntrillo_internal_key      BINARY(16) NOT NULL,
             device_name                 VARCHAR(255) NOT NULL,
-            metric_name                 VARCHAR(255) NOT NULL,
+            metric_name                 VARCHAR(255) NOT NULL,      -- json data copied here to speed-up access
             value_1                     VARCHAR(255) DEFAULT NULL,
             value_2                     VARCHAR(255) DEFAULT NULL,
-            timestamp_zulu              VARCHAR(255) NOT NULL,  -- this is timestamp (zulu time) from the device
+            timestamp_local             VARCHAR(255) NOT NULL,  -- this is timestamp isoformat: patient local time + timezone_offset from the device
             data_json                   JSON NOT NULL,
             date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
             INDEX (syntrillo_internal_key),

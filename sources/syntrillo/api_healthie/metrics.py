@@ -1,6 +1,6 @@
 # Path: ./sources/syntrillo/api_healthie/metrics.py
 
-import datetime
+from datetime import datetime, timedelta
 import random
 from typing import Tuple
 
@@ -189,7 +189,7 @@ class HealthieMetrics():
         user_id : str,
         systolic : str,
         diastolic : str,
-        created_at : datetime  , # will be formated to string "2021-09-23 15:27:01 -0400"
+        created_at : str  , # will be formated to string "2021-09-23 15:27:01 -0400"
         description : str = None,
     ) -> Tuple[dict, dict]:
         """
@@ -305,7 +305,7 @@ class HealthieMetrics():
             'user_id': user_id,
             'systolic_metric_stat': systolic,
             'diastolic_metric_stat': diastolic,
-            'created_at': created_at.strftime("%Y-%m-%d %H:%M:%S %z"),
+            'created_at': created_at,
             'description': description
         }
 
@@ -514,7 +514,7 @@ class HealthieMetrics():
         self,
         user_id: str,
         category: str,
-        ) -> datetime.datetime:
+        ) -> datetime:
         """
         Using the get_metric_data function, retrieve the latest timestamp of the metric data.
 
@@ -531,16 +531,16 @@ class HealthieMetrics():
 
 
         """
-        end_date = datetime.date.today()
-        start_date = end_date - datetime.timedelta(days=7)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
         i=0
         while True:
             entries, log = self.get_metric_data(user_id, category, start_date, end_date)
             if entries:
                 latest_timestamp = max(entry['created_at'] for entry in entries)
-                return datetime.datetime.strptime(latest_timestamp, "%Y-%m-%d %H:%M:%S %z").strftime("%Y-%m-%dT%H:%M:%SZ")
+                return datetime.strptime(latest_timestamp, "%Y-%m-%d %H:%M:%S %z").strftime("%Y-%m-%dT%H:%M:%SZ")
             end_date = start_date
-            start_date -= datetime.timedelta(days=7)
+            start_date -= timedelta(days=7)
             i += 1
             if i > 50:
                 return start_date.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -626,19 +626,29 @@ if __name__ == "__main__":
     # HealthieAuth.print_pretty_json(entries)
 
     # Generate a random date within a range of today +/- 10 days
-    today = datetime.date.today()
-    start_date = today - datetime.timedelta(days=10)
-    end_date = today + datetime.timedelta(days=10)
-    random_date = start_date + datetime.timedelta(days=random.randint(0, (end_date - start_date).days))
+    today = datetime.now()
+    start_date = today - timedelta(days=10)
+    end_date = today + timedelta(days=10)
+    random_date = start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
 
     if False:
         user_id = "1035117"
         for i in range(100):
             # Generate a random date within a range of today +/- 10 days
-            today = datetime.date.today()
-            start_date = today - datetime.timedelta(days=10)
-            end_date = today + datetime.timedelta(days=10)
-            random_date = start_date + datetime.timedelta(days=random.randint(0, (end_date - start_date).days))
+            # Get today's date
+            today = datetime.now()
+
+            # Generate a random number of days between -10 and 10
+            random_days = random.randint(-10, 10)
+
+            # Generate a random number of seconds within a day
+            random_seconds = random.randint(0, 24*3600 - 1)
+
+            # Calculate the random date by adding/subtracting the random number of days
+            random_date = today + timedelta(days=random_days)
+
+            # Calculate the random time within the day
+            random_datetime = random_date + timedelta(seconds=random_seconds)
 
             metric_stat = str(random.randint(50, 120))
             entry_category = "Heart Rate"
@@ -647,7 +657,7 @@ if __name__ == "__main__":
                 user_id=user_id,
                 metric_stat=metric_stat,
                 entry_category=entry_category,
-                created_at=random_date,
+                created_at=random_datetime,
                 )
         HealthieAuth.print_pretty_json(log)
 
@@ -689,6 +699,20 @@ if __name__ == "__main__":
         HealthieAuth.print_pretty_json(log)
 
     if False:
+        user_id = "1035117"
+        category = "Heart Rate"
+        log = metrics.remove_metric_data(
+            user_id=user_id,
+            category=category,
+            start_date=today - timedelta(days=60),
+            end_date=today
+        )
+        HealthieAuth.print_pretty_json(log)
+
+
+    # --------------------
+
+    if False:
         user_id = "1051529"
         category = HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
         # find latest timestamp
@@ -701,7 +725,7 @@ if __name__ == "__main__":
         log = metrics.remove_metric_data(
             user_id=user_id,
             category=category,
-            start_date=today - datetime.timedelta(days=7),
+            start_date=today - timedelta(days=7),
             end_date=today
         )
         HealthieAuth.print_pretty_json(log)

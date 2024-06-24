@@ -119,16 +119,17 @@ class RemoteMonitoringDataSync:
                 continue
 
             # adding a tiny amount of time to the latest timestamp to avoid duplicates (since it is greater than or equal to)
-            latest_timestamp_zulu_updated_str = None
+            latest_server_created_zulutime_updated_str = None
             if latest_record:
-                latest_timestamp_zulu_updated = datetime.strptime(latest_record['timestamp_zulu'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                data_json_dict = json.loads(latest_record['data_json'])
+                latest_timestamp_zulu_updated = datetime.strptime(data_json_dict['created'], "%Y-%m-%dT%H:%M:%S.%fZ")
                 latest_timestamp_zulu_updated += timedelta(microseconds=1)
-                latest_timestamp_zulu_updated_str = latest_timestamp_zulu_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                latest_server_created_zulutime_updated_str = latest_timestamp_zulu_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
             # Get data from Tenovi device measurements class
             measurements, log = self.device_measurements.get_device_measurements(
                 hwi_device_id=device['id'],
-                timestamp__gte=latest_timestamp_zulu_updated_str,
+                created__gte=latest_server_created_zulutime_updated_str,
             )
             if not log["success"]:
                 overall_log["logs"].append(log)
@@ -141,6 +142,7 @@ class RemoteMonitoringDataSync:
                 log = self.syntrillo_database_manager.insert_tenovi_raw_measurement(
                     device_name=measurement['device_name'],
                     timestamp_zulu=measurement['timestamp'],
+                    timezone_offset=measurement['timezone_offset'],
                     data_json=json.dumps(measurement),
                     metric_name=measurement['metric'],
                     value_1=measurement['value_1'],
@@ -169,7 +171,7 @@ class RemoteMonitoringDataSync:
         # -------------------
         # Blood pressure
 
-        # get latest timestamp from Healthie
+        # get latest timestamp from Healthie : TODO : is it patient's local time or UTC time?
         latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
             self.healthie_user_id,
             HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
@@ -178,21 +180,23 @@ class RemoteMonitoringDataSync:
         overall_log["lastest_timestamp"] = latest_timestamp
 
         # get all records from syntrillo database for this category after the latest timestamp
-        records, log = self.syntrillo_database_manager.get_blood_pressure_records_after_timestamp(latest_timestamp)
+        records, log = self.syntrillo_database_manager.get_blood_pressure_records_after_local_timestamp(latest_timestamp)
 
-        # loop over records, and store using Healthie API store_blood_pressure_data
-        for record in records:
-            response, log = self.healthie_metrics.store_blood_pressure_data(
-                self.healthie_user_id,
-                created_at=datetime.strptime(record['timestamp_zulu'], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                systolic=record['value_1'],
-                diastolic=record['value_2'],
-            )
-            if not log["success"]:
-                overall_log["logs"].append(log)
-                overall_log["success"] = False
-            else:
-                overall_log["number_of_records_inserted"] += 1
+        if records is not None:
+
+            # loop over records, and store using Healthie API store_blood_pressure_data
+            for record in records:
+                response, log = self.healthie_metrics.store_blood_pressure_data(
+                    self.healthie_user_id,
+                    created_at=record['timestamp_local'],
+                    systolic=record['value_1'],
+                    diastolic=record['value_2'],
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
 
         # -------------------
         return overall_log
@@ -214,7 +218,7 @@ if __name__ == '__main__':
         # Pretty print user devices
         print(json.dumps(sync.user_devices, indent=4))
 
-    if False:
+    if True:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
         print(json.dumps(overall_log, indent=4))
