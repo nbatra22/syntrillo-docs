@@ -15,6 +15,11 @@ class HealthieMetrics():
     """
 
     HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY = "Blood Pressure"
+    HEALTHIE_METRICS_PULSE_CATEGORY = "Pulse"
+
+    HEALTHIE_METRICS_HOURS_OF_SLEEP_CATEGORY = "Hours of Sleep"
+    HEALTHIE_METRICS_AVERAGE_PULSE_CATEGORY = "Average Pulse"
+    HEALTHIE_METRICS_TOTAL_STEPS_PER_DAY_CATEGORY = "Total Steps Per Day"
 
 
     def __init__(self):
@@ -116,7 +121,7 @@ class HealthieMetrics():
         user_id : str,
         metric_stat : str,
         entry_category : str,
-        created_at : datetime,
+        created_at : str,
     ) -> Tuple[dict, dict]:
         """
 
@@ -171,12 +176,11 @@ class HealthieMetrics():
         '''
 
         # Set up the variables for the GraphQL mutation
-        created_at_str = created_at.strftime("%Y-%m-%d %H:%M:%S %z")
         variables = {
             'type' : "MetricEntry",
             'category': entry_category,
             'metric_stat': metric_stat,
-            'created_at': created_at_str,
+            'created_at': created_at,
             'user_id': user_id
         }
 

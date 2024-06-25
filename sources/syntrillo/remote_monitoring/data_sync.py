@@ -99,9 +99,12 @@ class RemoteMonitoringDataSync:
 
         """
 
-    def sync_tenovi_to_syntrillo(self):
+    def sync_tenovi_to_syntrillo(self) -> dict:
         """
         Sync data from Tenovi to Syntrillo PHI database.
+
+        Returns:
+            dict: Overall log.
         """
         overall_log = {
             "success": True,
@@ -157,9 +160,12 @@ class RemoteMonitoringDataSync:
         return overall_log
 
 
-    def sync_syntrillo_to_healthie(self):
+    def sync_syntrillo_to_healthie__bmp_blood_pressure(self) -> dict:
         """
-        Sync data from Syntrillo PHI database to Healthie.
+        Sync raw BMP device Blood Pressure data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
         """
         overall_log = {
             "success": True,
@@ -168,10 +174,7 @@ class RemoteMonitoringDataSync:
             "logs": []
         }
 
-        # -------------------
-        # Blood pressure
-
-        # get latest timestamp from Healthie : TODO : is it patient's local time or UTC time?
+        # get latest timestamp from Healthie
         latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
             self.healthie_user_id,
             HealthieMetrics.HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY
@@ -180,7 +183,10 @@ class RemoteMonitoringDataSync:
         overall_log["lastest_timestamp"] = latest_timestamp
 
         # get all records from syntrillo database for this category after the latest timestamp
-        records, log = self.syntrillo_database_manager.get_blood_pressure_records_after_local_timestamp(latest_timestamp)
+        records, log = self.syntrillo_database_manager.get_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BMP_BLOOD_PRESSURE
+            )
 
         if records is not None:
 
@@ -198,7 +204,71 @@ class RemoteMonitoringDataSync:
                 else:
                     overall_log["number_of_records_inserted"] += 1
 
-        # -------------------
+        return overall_log
+
+    def sync_syntrillo_to_healthie__bmp_pulse(self) -> dict:
+        """
+        Sync raw BMP device Pulse data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
+            "logs": []
+        }
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_PULSE_CATEGORY
+        )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
+
+        # get all records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BMP_PULSE
+            )
+
+        if records is not None:
+
+            # loop over records, and store using Healthie API store_blood_pressure_data
+            for record in records:
+                response, log = self.healthie_metrics.store_metric_data(
+                    self.healthie_user_id,
+                    created_at=record['timestamp_local'],
+                    metric_stat=record['value_1'],
+                    entry_category=HealthieMetrics.HEALTHIE_METRICS_PULSE_CATEGORY
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
+
+        return overall_log
+
+
+    def sync_syntrillo_to_healthie(
+        self
+    ) -> dict:
+        """
+        Sync all category data from Syntrillo PHI database to Healthie.
+        """
+
+        overall_log1 = self.sync_syntrillo_to_healthie__bmp_blood_pressure()
+        overall_log2 = self.sync_syntrillo_to_healthie__bmp_pulse()
+
+        overall_log = {
+            "success": overall_log1["success"] and overall_log2["success"],
+            "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"],
+            "logs": overall_log1["logs"] + overall_log2["logs"]
+        }
+
         return overall_log
 
 
@@ -218,7 +288,7 @@ if __name__ == '__main__':
         # Pretty print user devices
         print(json.dumps(sync.user_devices, indent=4))
 
-    if True:
+    if False:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
         print(json.dumps(overall_log, indent=4))

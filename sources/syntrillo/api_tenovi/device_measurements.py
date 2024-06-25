@@ -4,6 +4,12 @@ from syntrillo.api_tenovi.auth import TenoviAuth
 from syntrillo.api_tenovi.devices import Devices
 
 class DeviceMeasurements:
+
+
+    TENOVI_METRICS_BMP_BLOOD_PRESSURE = "blood_pressure"
+    TENOVI_METRICS_BMP_PULSE = "pulse"
+
+
     def __init__(self):
         self.auth = TenoviAuth()
 

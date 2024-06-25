@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-import json
+
 
 class SyntrilloDatabaseManager:
     """
@@ -201,16 +201,17 @@ class SyntrilloDatabaseManager:
 
         return report, log
 
-    def get_blood_pressure_records_after_local_timestamp(
+    def get_metric_records_after_local_timestamp(
         self,
-        timestamp_local: str
+        timestamp_local: str,
+        metric_name: str
         ) -> Tuple[dict, dict]:
         """
-            Get all records for a device after a given local timestamp.
+            Get all records for a device metric after a given local timestamp.
 
             Args:
-                device_name (str): The name of the device
                 timestamp_local (str): The timestamp (local patient time) to filter by
+                metric_name (str): The name of the metric
 
             Returns a tuple:
                 records (dict): The records for the device
@@ -222,9 +223,9 @@ class SyntrilloDatabaseManager:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 if timestamp_local is None:
                     cursor.execute(
-                        """
+                        f"""
                         SELECT * FROM tenovi_raw_measurements
-                        WHERE metric_name = 'blood_pressure'
+                        WHERE metric_name = '{metric_name}'
                         AND syntrillo_internal_key = %s
                         ORDER BY timestamp_local ASC
                         """,
@@ -232,9 +233,9 @@ class SyntrilloDatabaseManager:
                     )
                 else:
                     cursor.execute(
-                        """
+                        f"""
                         SELECT * FROM tenovi_raw_measurements
-                        WHERE metric_name = 'blood_pressure'
+                        WHERE metric_name = '{metric_name}'
                         AND syntrillo_internal_key = %s
                         AND timestamp_local > %s
                         ORDER BY timestamp_local ASC
@@ -253,6 +254,8 @@ class SyntrilloDatabaseManager:
             records = None
 
         return records, log
+
+
 
     def delete_records(
         self,
