@@ -214,7 +214,7 @@ class SyntrilloDatabaseManager:
                 metric_name (str): The name of the metric
 
             Returns a tuple:
-                records (dict): The records for the device
+                records (dict): The records for the metric
                 log (dict): The log of the request
 
         """
@@ -243,6 +243,107 @@ class SyntrilloDatabaseManager:
                         (self.syntrillo_internal_key.bytes, timestamp_local)
                     )
                 records = cursor.fetchall()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        return records, log
+
+    def get_daily_stats_metric_records_after_local_timestamp(
+        self,
+        timestamp_local: str,
+        metric_name: str
+        ) -> Tuple[dict, dict]:
+        """
+            Get daily stats records for a device metric after a given local timestamp, and one day before the latest data point available.
+
+            TODO : use pandas and numpy to calculate the daily stats
+
+            Args:
+                timestamp_local (str): The timestamp (local patient time) to filter by
+                metric_name (str): The name of the metric
+
+            Returns a tuple:
+                records (dict): The records for the metric
+                log (dict): The log of the request
+
+        """
+
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                if timestamp_local is None:
+                    query = f"""
+                        SELECT
+                            DATE(timestamp_local) as day,
+                            MIN(CAST(value_1 AS DECIMAL(10, 2))) as min_value_1,
+                            MIN(CAST(value_2 AS DECIMAL(10, 2))) as min_value_2,
+                            MAX(CAST(value_1 AS DECIMAL(10, 2))) as max_value_1,
+                            MAX(CAST(value_2 AS DECIMAL(10, 2))) as max_value_2,
+                            SUM(CAST(value_1 AS DECIMAL(10, 2))) as sum_value_1,
+                            SUM(CAST(value_2 AS DECIMAL(10, 2))) as sum_value_2,
+                            AVG(CAST(value_1 AS DECIMAL(10, 2))) as avg_value_1,
+                            AVG(CAST(value_2 AS DECIMAL(10, 2))) as avg_value_2
+                        FROM
+                            tenovi_raw_measurements
+                        WHERE
+                            metric_name = '{metric_name}'
+                            AND syntrillo_internal_key = %s
+                        GROUP BY
+                            DATE(timestamp_local)
+                        HAVING
+                            day < (
+                                SELECT DATE_SUB(MAX(DATE(timestamp_local)), INTERVAL 1 DAY)
+                                FROM tenovi_raw_measurements
+                                WHERE
+                                    metric_name = '{metric_name}'
+                                    AND syntrillo_internal_key = %s
+                            )
+                        ORDER BY
+                            day ASC
+                    """
+                    cursor.execute(query, (self.syntrillo_internal_key.bytes, self.syntrillo_internal_key.bytes,))
+                else:
+                    query = f"""
+                        SELECT
+                            DATE(timestamp_local) as day,
+                            MIN(CAST(value_1 AS DECIMAL(10, 2))) as min_value_1,
+                            MIN(CAST(value_2 AS DECIMAL(10, 2))) as min_value_2,
+                            MAX(CAST(value_1 AS DECIMAL(10, 2))) as max_value_1,
+                            MAX(CAST(value_2 AS DECIMAL(10, 2))) as max_value_2,
+                            SUM(CAST(value_1 AS DECIMAL(10, 2))) as sum_value_1,
+                            SUM(CAST(value_2 AS DECIMAL(10, 2))) as sum_value_2,
+                            AVG(CAST(value_1 AS DECIMAL(10, 2))) as avg_value_1,
+                            AVG(CAST(value_2 AS DECIMAL(10, 2))) as avg_value_2
+
+                        FROM
+                            tenovi_raw_measurements
+                        WHERE
+                            metric_name = '{metric_name}'
+                            AND syntrillo_internal_key = %s
+                            AND DATE(timestamp_local) > DATE(%s)
+                        GROUP BY
+                            DATE(timestamp_local)
+                        HAVING
+                            day < (
+                                SELECT DATE_SUB(MAX(DATE(timestamp_local)), INTERVAL 1 DAY)
+                                FROM tenovi_raw_measurements
+                                WHERE
+                                    metric_name = '{metric_name}'
+                                    AND syntrillo_internal_key = %s
+                            )
+                        ORDER BY
+                            day ASC
+                    """
+                    cursor.execute(query, (self.syntrillo_internal_key.bytes, timestamp_local, self.syntrillo_internal_key.bytes))
+
+                records = cursor.fetchall()
+
                 log = {
                     "success": True,
                 }
@@ -321,8 +422,14 @@ if __name__ == '__main__':
         print(log)
         print(records)
 
-    if True:
+    if False:
         log = data_manager.delete_records(None)
         print(log)
+
+    if True:
+        records, log = data_manager.get_daily_stats_metric_records_after_local_timestamp(None, "steps")
+        # Pretty print the records
+        print(log)
+        print(json.dumps(records, indent=4, default=str))
 
 

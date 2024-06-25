@@ -14,11 +14,13 @@ class HealthieMetrics():
 
     """
 
+    # names of the categories in Healthie > Settings > Journal Entries
     HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY = "Blood Pressure"
     HEALTHIE_METRICS_PULSE_CATEGORY = "Pulse"
 
     HEALTHIE_METRICS_HOURS_OF_SLEEP_CATEGORY = "Hours of Sleep"
     HEALTHIE_METRICS_AVERAGE_PULSE_CATEGORY = "Average Pulse"
+    HEALTHIE_METRICS_MAXIMUM_PULSE_CATEGORY = "Maximum Pulse"
     HEALTHIE_METRICS_TOTAL_STEPS_PER_DAY_CATEGORY = "Total Steps Per Day"
 
 

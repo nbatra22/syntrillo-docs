@@ -252,21 +252,166 @@ class RemoteMonitoringDataSync:
 
         return overall_log
 
+    def sync_syntrillo_to_healthie__watch_daily_sum_steps(self) -> dict:
+        """
+        Sync Tenovi Watch sum of steps data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
+            "logs": []
+        }
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_TOTAL_STEPS_PER_DAY_CATEGORY
+        )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
+
+        # get all stats records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_daily_stats_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_STEPS
+            )
+
+        if records is not None:
+
+            # loop over records, and store using Healthie API store_blood_pressure_data
+            for record in records:
+                response, log = self.healthie_metrics.store_metric_data(
+                    self.healthie_user_id,
+                    created_at=str(record['day']), # TODO : need to use patient's timezone
+                    metric_stat=str(record['sum_value_1']),
+                    entry_category=HealthieMetrics.HEALTHIE_METRICS_TOTAL_STEPS_PER_DAY_CATEGORY
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
+
+        return overall_log
+
+    def sync_syntrillo_to_healthie__watch_daily_average_pulse(self) -> dict:
+        """
+        Sync Tenovi Watch average pulse data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
+            "logs": []
+        }
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_AVERAGE_PULSE_CATEGORY
+        )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
+
+        # get all stats records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_daily_stats_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS
+            )
+
+        if records is not None:
+
+            # loop over records, and store using Healthie API store_blood_pressure_data
+            for record in records:
+                response, log = self.healthie_metrics.store_metric_data(
+                    self.healthie_user_id,
+                    created_at=str(record['day']), # TODO : need to use patient's timezone
+                    metric_stat=str(record['avg_value_1']),
+                    entry_category=HealthieMetrics.HEALTHIE_METRICS_AVERAGE_PULSE_CATEGORY
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
+
+        return overall_log
+
+    def sync_syntrillo_to_healthie__watch_daily_maximum_pulse(self) -> dict:
+        """
+        Sync Tenovi Watch maximum pulse data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
+            "logs": []
+        }
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_MAXIMUM_PULSE_CATEGORY
+        )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
+
+        # get all stats records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_daily_stats_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS
+            )
+
+        if records is not None:
+
+            # loop over records, and store using Healthie API store_blood_pressure_data
+            for record in records:
+                response, log = self.healthie_metrics.store_metric_data(
+                    self.healthie_user_id,
+                    created_at=str(record['day']), # TODO : need to use patient's timezone
+                    metric_stat=str(record['max_value_2']),
+                    entry_category=HealthieMetrics.HEALTHIE_METRICS_MAXIMUM_PULSE_CATEGORY
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
+
+        return overall_log
+
 
     def sync_syntrillo_to_healthie(
         self
     ) -> dict:
         """
         Sync all category data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+
         """
 
         overall_log1 = self.sync_syntrillo_to_healthie__bmp_blood_pressure()
         overall_log2 = self.sync_syntrillo_to_healthie__bmp_pulse()
+        overall_log3 = self.sync_syntrillo_to_healthie__watch_daily_sum_steps()
+        overall_log4 = self.sync_syntrillo_to_healthie__watch_daily_average_pulse()
+        overall_log5 = self.sync_syntrillo_to_healthie__watch_daily_maximum_pulse()
 
         overall_log = {
-            "success": overall_log1["success"] and overall_log2["success"],
-            "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"],
-            "logs": overall_log1["logs"] + overall_log2["logs"]
+            "success": overall_log1["success"] and overall_log2["success"] and overall_log3["success"] and overall_log4["success"] and overall_log5["success"],
+            "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"] + overall_log3["number_of_records_inserted"] + overall_log4["number_of_records_inserted"] + overall_log5["number_of_records_inserted"],
+            "logs": overall_log1["logs"] + overall_log2["logs"] + overall_log3["logs"] + overall_log4["logs"] + overall_log5["logs"]
         }
 
         return overall_log
@@ -296,7 +441,7 @@ if __name__ == '__main__':
     if True:
         overall_log = sync.sync_syntrillo_to_healthie()
 
-        print(json.dumps(overall_log, indent=4))
+        print(json.dumps(overall_log, indent=4, default=str))
 
 
 
