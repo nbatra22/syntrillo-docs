@@ -8,7 +8,10 @@ from aws_cdk import (
     aws_apigateway as apigw,
     aws_ssm as ssm,
     aws_ec2 as ec2,
-    aws_rds as rds
+    aws_rds as rds,
+    aws_route53 as route53,
+    aws_route53_targets as route53_targets,
+    aws_certificatemanager as acm
 )
 from constructs import Construct
 
@@ -115,16 +118,32 @@ class CheckingConstruct(Construct):
 
 class IFrameGeneratorConstruct(Construct):
 
-    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, hosted_zone, certificate, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.hosted_zone = hosted_zone
+        self.certificate = certificate
 
+        # Create the API Gateway
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
             rest_api_name="IFramGeneratorAPI",
+            domain_name=apigw.DomainNameOptions(
+                domain_name="api.sandbox.syntrillo-clinic-backend.com",
+                certificate=self.certificate
+            ),
             deploy_options= apigw.StageOptions(
                 tracing_enabled=True,
                 stage_name="sandbox"
+            )
+        )
+
+        # Create a Route53 record to map the custom domain to the API Gateway domain
+        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
+            zone=hosted_zone,
+            record_name="api.sandbox.syntrillo-clinic-backend.com",
+            target=route53.RecordTarget.from_alias(
+                route53_targets.ApiGateway(iframe_generator_api)
             )
         )
 
@@ -384,9 +403,26 @@ class SyntrilloClinicBackendStack(Stack):
             "Allow SSH access to the bastion host"
         )
 
+        # Reference an existing hosted zone using its attributes
+        hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
+            zone_name="sandbox.syntrillo-clinic-backend.com",
+            hosted_zone_id="Z00281931X0P3VA26SLKK"
+        )
+        self.hosted_zone = hosted_zone
+
+        # Create a certificate for the domain
+        certificate = acm.Certificate( self, "SyntrilloClinicBackendSSLCertificate",
+            domain_name="sandbox.syntrillo-clinic-backend.com",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
+            subject_alternative_names=[
+                "api.sandbox.syntrillo-clinic-backend.com"
+            ]
+        )
+        self.certificate = certificate
+
         LandingPageConstruct(self, "LandingPageConstruct")
         
-        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc)
+        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc, self.hosted_zone, self.certificate)
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
 
