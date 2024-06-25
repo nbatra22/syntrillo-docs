@@ -1,34 +1,25 @@
 # Path: ./sources/syntrillo/api_tenovi/device_measurements.py
 
 from syntrillo.api_tenovi.auth import TenoviAuth
-from devices import Devices
+from syntrillo.api_tenovi.devices import Devices
 
 class DeviceMeasurements:
+
+
+    TENOVI_METRICS_BMP_BLOOD_PRESSURE = "blood_pressure"
+    TENOVI_METRICS_BMP_PULSE = "pulse"
+    TENOVI_METRICS_WATCH_STEPS = "steps"
+    TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS = "heart_rate_statistics"
+
+
     def __init__(self):
         self.auth = TenoviAuth()
 
-    def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access):
-        self.pseudo_code_for_tenovi_phi_access = pseudo_code_for_tenovi_phi_access
-        # get devices for this user
-        if pseudo_code_for_tenovi_phi_access is not None:
-            devices_module = Devices()
-            self.user_devices, _ = devices_module.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
-        else:
-            self.user_devices = None
-
-    def get_devices_by_patient_external_id(self, external_id):
-        self.external_id = external_id
-        # get devices for this user
-        if external_id is not None:
-            devices_module = Devices()
-            self.user_devices, _ = devices_module.get_devices_by_patient_external_id(external_id)
-        else:
-            self.user_devices = None
-
-
-    def _get_device_measurements(
+    def get_device_measurements(
         self,
         hwi_device_id : str = None,
+        created__gte : str = None,
+        created__lte : str = None,
         timestamp__gte : str = None,  # zulu time : 2019-08-24T14:15:22Z
         timestamp__lte : str = None,
         metric__name : str = None,
@@ -38,10 +29,14 @@ class DeviceMeasurements:
 
         https://api2.tenovi.com/hwi-redoc/#tag/hwi-device-measurements
 
+        Note, the "timestamp" field represents the time the measurement was actually taken, as measured by the device. The "created" field represents the time the measurement was created on our server. For backwards compatibility, the MEASUREMENT Webhook posts the "timestamp" value with both the "timestamp" and "created" key, which may not match the "created" value returned here. Please note the difference between these two fields when filtering via query parameters.
+
         Args:
             hwi_device_id (str): The HWI Device ID.
-            timestamp__gte (str): The earliest timestamp to include.
-            timestamp__lte (str): The latest timestamp to include.
+            created__gte (str): The earliest server created time to include.
+            created__lte (str): The latest server created time to include.
+            timestamp__gte (str): The earliest device timestamp to include.
+            timestamp__lte (str): The latest device timestamp to include.
             metric__name (str): The metric name to filter by.
 
         Returns a tupple:
@@ -53,6 +48,8 @@ class DeviceMeasurements:
 
         # pass only non-None parameters
         params = {k: v for k, v in {
+            "created__gte": created__gte,
+            "created__lte": created__lte,
             "timestamp__gte": timestamp__gte,
             "timestamp__lte": timestamp__lte,
             "metric__name": metric__name
@@ -81,7 +78,7 @@ if __name__ == "__main__":
 
         # Get and print all devices or a specific device
         for hwi_device_id in device_ids:
-            measurements, log = device_measurements._get_device_measurements(hwi_device_id)
+            measurements, log = device_measurements.get_device_measurements(hwi_device_id)
             print(f"\n-----------\nMeasurements for device {hwi_device_id}:")
             TenoviAuth.print_pretty_json(measurements)
 

@@ -47,7 +47,7 @@ class TemporaryLookUpCodesManagement:
         if self.verbose:
             print("Database connection closed.")
 
-    def generate_uuid_code(self):
+    def generate_uuid_code_as_str(self):
         """
         Generates a random UUID code.
 
@@ -70,12 +70,16 @@ class TemporaryLookUpCodesManagement:
                  ]
         return random.choice(words).capitalize() + random.choice(words).capitalize()
 
-    def remove_all_temporary_codes_for_syntrillo_internal_key(self, syntrillo_internal_key: str, purpose: str) -> dict:
+    def remove_all_temporary_codes_for_syntrillo_internal_key(
+        self,
+        syntrillo_internal_key: uuid.UUID,
+        purpose: str
+        ) -> dict:
         """
         Removes all temporary codes for a given syntrillo_internal_key and purpose from the user_look_up_temporary_codes table.
 
         Args:
-            syntrillo_internal_key (str): The internal key used in Syntrillo.
+            syntrillo_internal_key (uuid.UUID): The internal key used in Syntrillo.
             purpose (str): The purpose for which the temporary codes were created.
 
         Returns:
@@ -115,14 +119,14 @@ class TemporaryLookUpCodesManagement:
 
     def create_temporary_pseudo_code(
         self,
-        syntrillo_internal_key: str,
+        syntrillo_internal_key: uuid.UUID,
         purpose: str
         ):
         """
         Creates a temporary pseudo code for a given syntrillo_internal_key and purpose.
 
         Args:
-            syntrillo_internal_key (str): The internal key for the Syntrillo system.
+            syntrillo_internal_key (uuid.UUID): The internal key for the Syntrillo system.
             purpose (str): The purpose of the temporary code (PURPOSE_HEALTHIE_IFRAME or PURPOSE_TENOVI_PAIRING).
 
         Returns:
@@ -132,7 +136,7 @@ class TemporaryLookUpCodesManagement:
             ValueError: If the purpose is not 'iFrame' or 'Tenovi'.
         """
         if purpose == self.PURPOSE_HEALTHIE_IFRAME:
-            temp_code = self.generate_uuid_code()
+            temp_code = self.generate_uuid_code_as_str()
         elif purpose == self.PURPOSE_TENOVI_PAIRING:
             temp_code = self.generate_word_code()
         else:
@@ -162,7 +166,7 @@ class TemporaryLookUpCodesManagement:
 
                 # Regenerate the code if it already exists and loop again
                 if purpose == self.PURPOSE_HEALTHIE_IFRAME:
-                    temp_code = self.generate_uuid_code()
+                    temp_code = self.generate_uuid_code_as_str()
                 elif purpose == self.PURPOSE_TENOVI_PAIRING:
                     temp_code = self.generate_word_code()
 
@@ -182,12 +186,12 @@ class TemporaryLookUpCodesManagement:
 
         return temp_code
 
-    def retrieve_tenovi_pairing_temporary_pseudo_code(self, syntrillo_internal_key: str):
+    def retrieve_tenovi_pairing_temporary_pseudo_code(self, syntrillo_internal_key: uuid.UUID):
         """
         Retrieves the Tenovi temporary pseudo code for a given syntrillo_internal_key.
 
         Args:
-            syntrillo_internal_key (str): The internal key for the Syntrillo system.
+            syntrillo_internal_key (uuid.UUID): The internal key for the Syntrillo system.
 
         Returns:
             str: The Tenovi temporary pseudo code if found, None otherwise.
@@ -202,10 +206,10 @@ class TemporaryLookUpCodesManagement:
         add_log_entry(self.cursor, "TemporaryLookUpCodesManagement",
                       f"Retrieved Tenovi temporary pseudo code for syntrillo_internal_key: {syntrillo_internal_key}")
 
-        return result[0] if result else None
+        return str(result[0]) if result else None
 
 
-    def retrieve_syntrillo_internal_key(self, temp_code, purpose):
+    def retrieve_syntrillo_internal_key(self, temp_code: str, purpose: str) -> uuid.UUID:
         """
         Retrieves the syntrillo internal key using the temporary code and its purpose.
 
@@ -214,7 +218,7 @@ class TemporaryLookUpCodesManagement:
             purpose (str): The purpose of the temporary code.
 
         Returns:
-            str: The syntrillo internal key if found, None otherwise.
+            uuid.UUID: The syntrillo internal key if found, None otherwise.
         """
         query = """
             SELECT BIN_TO_UUID(syntrillo_internal_key) FROM user_look_up_temporary_codes
@@ -225,9 +229,11 @@ class TemporaryLookUpCodesManagement:
 
         add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Retrieved syntrillo internal key for purpose: {purpose}")
 
-        return result[0] if result else None
+        syntrillo_internal_key = uuid.UUID(result[0]) if result else None
 
-    def delete_entry(self, temp_code, purpose):
+        return syntrillo_internal_key
+
+    def delete_entry(self, temp_code: str, purpose: str):
         """
         Deletes an entry using the temporary code and its purpose.
 
@@ -262,7 +268,7 @@ if __name__ == "__main__":
     manager = TemporaryLookUpCodesManagement(verbose=True)
 
     # Example syntrillo_internal_key, replace with a real key if needed
-    syntrillo_internal_key = str(uuid.uuid4())
+    syntrillo_internal_key = uuid.uuid4()
 
     # Create a temporary code for 'iFrame' purpose
     temp_code_iframe = manager.create_temporary_pseudo_code(syntrillo_internal_key, TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME)

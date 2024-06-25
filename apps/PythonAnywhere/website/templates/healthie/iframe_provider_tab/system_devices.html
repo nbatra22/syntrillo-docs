@@ -10,9 +10,11 @@
                 <th>Device Name</th>
                 <th>Gateway ID</th>
                 <th>Patient Name</th>
-                <th>Patient External ID</th>
-                <th>Patient SMS opt-in</th>
+                <th>Patient<br> External ID</th>
+                <th>Patient<br> SMS opt-in</th>
                 <th>Status</th>
+                <th>n Data<br>Points</th>
+                <th>Needs<br> Syncing</th>
                 <th></th>
             </tr>
         </thead>
@@ -21,18 +23,20 @@
                 {% for device in paired_devices %}
                     <tr>
                         <td>{{ device.device.name }}</td>
-                        <td>{{ device.device.hardware_uuid }}</td>
+                        <td>{{ device.device.hardware_uuid_formatted }}</td>
                         <td>{{ device.patient.name }}</td>
                         <td>{{ device.patient.external_id }}</td>
                         <td>{{ device.patient.sms_opt_in }}</td>
                         <td>{{ device.status }}</td>
+                        <td>{{ device.device.number_of_data_points_in_syntrillo_database }}</td>
+                        <td>{{ device.device.needs_syncing }}</td>
                         <!-- single quotes in data-device matter here -->
                         <td><span class="device-info-toggle" data-device='{{ device|tojson|safe }}'>{{ 'info' }}</span></td>
                     </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="7">No devices paired</td>
+                    <td colspan="9">No devices paired</td>
                 </tr>
             {% endif %}
         </tbody>

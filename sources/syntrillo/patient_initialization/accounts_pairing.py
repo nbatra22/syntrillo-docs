@@ -1,11 +1,14 @@
 # Path: ./sources/syntrillo/patient_initialization/accounts_pairing.py
 
+import json
+
 from pprint import pprint  # Import pprint for pretty printing
 
 from syntrillo.api_tenovi.device_properties import DeviceProperties
 from syntrillo.api_tenovi.devices import Devices
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
 class AccountsPairing:
     """
@@ -134,6 +137,8 @@ class AccountsPairing:
         pseudo_code_for_tenovi_phi_access:str = None,
         healthie_user_id:str = None,
         syntrillo_internal_key:str = None,
+        add_syntrillo_database_stats:bool = False,
+        add_tenovi_latest_record_timestamp:bool = False,
     ) :
         """
         Retrieve the devices paired with the given pseudo_code_for_tenovi_phi_access, healthie_user_id, or syntrillo_internal_key.
@@ -155,12 +160,39 @@ class AccountsPairing:
         elif syntrillo_internal_key is not None:
             entry = lookup_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
             pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
+        elif pseudo_code_for_tenovi_phi_access is not None:
+            entry = lookup_manager.retrieve_entry_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
         elif pseudo_code_for_tenovi_phi_access is None:
             return None
 
-        matching_devices, _ = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
+        paired_devices, _ = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
 
-        return matching_devices
+        if add_syntrillo_database_stats:
+            data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
+            summary_report, log = data_manager.get_summary_devices_report()
+
+            # print(f"paired_devices: {paired_devices}")
+            # print(f"summary_report: {summary_report}")
+
+            # Create a dictionary from summary_report for quick lookup
+            summary_dict = {report['device_name']: report for report in summary_report}
+
+            # Merge summary_report into paired_devices
+            for device in paired_devices:
+                device_name = device['device']['name']
+                if device_name in summary_dict:
+                    device['device'].update(summary_dict[device_name])
+                    if add_tenovi_latest_record_timestamp:
+                        record, log = data_manager.get_latest_record_for_tenovi_device(device_name)
+                        device['device'].update({
+                            'latest__tenovi_server_created__at_tenovi': json.loads(record['data_json'])['created'],
+                            'needs_syncing': ( json.loads(record['data_json'])['created'] > device['device']['latest__tenovi_server_created__in_syntrillo_database'] )
+                        })
+
+
+
+
+        return paired_devices
 
 
 # Example usage:
@@ -170,57 +202,62 @@ if __name__ == "__main__":
     import sys
     from datetime import datetime
 
-    # -----
-    # Generate a new dummy healthie_user_id and create an entry in the user_look_up_codes table
+    if False:
+        # -----
+        # Generate a new dummy healthie_user_id and create an entry in the user_look_up_codes table
 
-    # Generate a random number and a date stamp
-    random_number = random.randint(1000, 9999)
-    date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    healthie_user_id = f"test_{random_number}_{date_stamp}"
+        # Generate a random number and a date stamp
+        random_number = random.randint(1000, 9999)
+        date_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        healthie_user_id = f"test_{random_number}_{date_stamp}"
 
-    # Initialize LookUpCodesManagement instance
-    lookup_manager = LookUpCodesManagement(verbose=True)
+        # Initialize LookUpCodesManagement instance
+        lookup_manager = LookUpCodesManagement(verbose=True)
 
-    # Test create_entry method
-    print(f"Creating entry for healthie_user_id: {healthie_user_id}")
-    create_result = lookup_manager.create_entry(healthie_user_id)
-    print(f"Create entry result: {create_result}")
+        # Test create_entry method
+        print(f"Creating entry for healthie_user_id: {healthie_user_id}")
+        create_result = lookup_manager.create_entry(healthie_user_id)
+        print(f"Create entry result: {create_result}")
 
-    # Test retrieve_entry_by_healthie_user_id method
-    if create_result is None:
-        print("Failed to create entry")
+        # Test retrieve_entry_by_healthie_user_id method
+        if create_result is None:
+            print("Failed to create entry")
+            lookup_manager.close_connection()
+            sys.exit(1)
+
+        print(f"Retrieving entry for healthie_user_id: {healthie_user_id}")
+        retrieve_result = lookup_manager.retrieve_entry_by_healthie_user_id(healthie_user_id)
+        print(f"Retrieve entry result: {retrieve_result}")
+
+        # Close the database connection
         lookup_manager.close_connection()
-        sys.exit(1)
 
-    print(f"Retrieving entry for healthie_user_id: {healthie_user_id}")
-    retrieve_result = lookup_manager.retrieve_entry_by_healthie_user_id(healthie_user_id)
-    print(f"Retrieve entry result: {retrieve_result}")
+        # ---------------
+        # Create a new AccountsPairing instance and generate a temporary pseudo code
+        pair = AccountsPairing(retrieve_result.get('syntrillo_internal_key'), verbose=True)
+        temporary_pseudo_code = pair.create_and_return_unique_temporary_pseudo_code()
+        print(f"Temporary pseudo code generated: {temporary_pseudo_code}")
 
-    # Close the database connection
-    lookup_manager.close_connection()
+        # ---------------
+        # Pair devices using the temporary pseudo code
+        print("Please go to the Tenovi dashboard and enter the temporary code in the patient_id field.")
+        confirmation = input("Once you have entered the code, please press enter to continue: ")
+        if confirmation is not None:
+            log = pair.pair_devices_using_temporary_pseudo_code()
+            print("Devices paired successfully.")
+            pprint(log)
 
-    # ---------------
-    # Create a new AccountsPairing instance and generate a temporary pseudo code
-    pair = AccountsPairing(retrieve_result.get('syntrillo_internal_key'), verbose=True)
-    temporary_pseudo_code = pair.create_and_return_unique_temporary_pseudo_code()
-    print(f"Temporary pseudo code generated: {temporary_pseudo_code}")
+            # list devices paired with the pseudo_code_for_tenovi_phi_access
+            matching_devices = pair.get_paired_devices(pseudo_code_for_tenovi_phi_access=retrieve_result.get('pseudo_code_for_tenovi_phi_access'))
+            print('Devices paired with the pseudo_code_for_tenovi_phi_access:')
+            pprint(matching_devices)
 
-    # ---------------
-    # Pair devices using the temporary pseudo code
-    print("Please go to the Tenovi dashboard and enter the temporary code in the patient_id field.")
-    confirmation = input("Once you have entered the code, please press enter to continue: ")
-    if confirmation is not None:
-        log = pair.pair_devices_using_temporary_pseudo_code()
-        print("Devices paired successfully.")
-        pprint(log)
+        else:
+            print("Pairing process cancelled.")
 
-        # list devices paired with the pseudo_code_for_tenovi_phi_access
-        matching_devices = pair.get_paired_devices(pseudo_code_for_tenovi_phi_access=retrieve_result.get('pseudo_code_for_tenovi_phi_access'))
-        print('Devices paired with the pseudo_code_for_tenovi_phi_access:')
-        pprint(matching_devices)
-
-    else:
-        print("Pairing process cancelled.")
-
+    if True:
+        healthie_user_id = "1051529" # Omar's "Patient One" with devices
+        devices = AccountsPairing.get_paired_devices(healthie_user_id=healthie_user_id, add_syntrillo_database_stats=True, add_tenovi_latest_record_timestamp=True)
+        print(json.dumps(devices, indent=4))
 
 

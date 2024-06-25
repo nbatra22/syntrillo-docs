@@ -21,56 +21,84 @@ class HealthInformationTablesManager:
             raise ConnectionError("Failed to connect to the database.")
         self.cursor = self.conn.cursor()
 
-    def create_misc_health_data_table(self):
+
+    def create_health_data_tables(self):
         """
-        Create the 'misc_health_data' table if it does not exist.
+        Create the PHI tables
         """
 
-        create_table_query = """
+        create_misc_phi_table = """
         CREATE TABLE IF NOT EXISTS misc_health_data (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            syntrillo_internal_key BINARY(16) NOT NULL,
-            data_type VARCHAR(255) NOT NULL,
-            data JSON NOT NULL,
-            date DATETIME DEFAULT CURRENT_TIMESTAMP
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            syntrillo_internal_key      BINARY(16) NOT NULL,
+            data_type VARCHAR(255)      NOT NULL,
+            data_json                   JSON NOT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (syntrillo_internal_key),
+            INDEX (data_type)
+        );
+        """
+
+        create_tenovi_raw_measurements_table = """
+        CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            syntrillo_internal_key      BINARY(16) NOT NULL,
+            device_name                 VARCHAR(255) NOT NULL,
+            metric_name                 VARCHAR(255) NOT NULL,      -- json data copied here to speed-up access
+            value_1                     VARCHAR(255) DEFAULT NULL,
+            value_2                     VARCHAR(255) DEFAULT NULL,
+            timestamp_local             VARCHAR(255) NOT NULL,  -- this is timestamp isoformat: patient local time + timezone_offset from the device
+            data_json                   JSON NOT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (syntrillo_internal_key),
+            INDEX (device_name)
         );
         """
 
         try:
-            self.cursor.execute(create_table_query)
+            self.cursor.execute(create_misc_phi_table)
+            self.cursor.execute(create_tenovi_raw_measurements_table)
             self.conn.commit()
-            print("Table 'misc_health_data' created successfully.")
+            print("PHI tables created successfully.")
         except pymysql.MySQLError as e:
             self.conn.rollback()
-            print(f"Error creating table: {e}")
+            print(f"Error creating tables: {e}")
 
-    def drop_misc_health_data_table(self):
+    def drop_user_lookup_tables(self):
         """
-        Drop the 'misc_health_data' table with a warning.
-        """
+        Drop the user PHI tables interactively with a warning.
 
-        confirm = input("Are you sure you want to drop the table 'misc_health_data'? This action cannot be undone (yes/no): ")
-        if confirm.lower() == "yes":
-            try:
-                self.cursor.execute("DROP TABLE IF EXISTS misc_health_data;")
-                self.conn.commit()
-                print("Table 'misc_health_data' dropped successfully.")
-            except pymysql.MySQLError as e:
-                self.conn.rollback()
-                print(f"Error dropping table: {e}")
-        else:
-            print("Skipping drop for table 'misc_health_data'.")
+        Tables:
+        - misc_health_data
+        - tenovi_raw_measurements
+
+        """
+        tables = ["misc_health_data", "tenovi_raw_measurements"]
+        for table in tables:
+            confirm = input(f"Are you sure you want to drop the table '{table}'? This action cannot be undone (yes/no): ")
+            if confirm.lower() == "yes":
+                try:
+                    self.cursor.execute(f"DROP TABLE IF EXISTS {table};")
+                    self.conn.commit()
+                    print(f"Table '{table}' dropped successfully.")
+                except pymysql.MySQLError as e:
+                    self.conn.rollback()
+                    print(f"Error dropping table '{table}': {e}")
+            else:
+                print(f"Skipping drop for table '{table}'.")
 
     def report_tables_status(self):
         """
-        Report if the 'misc_health_data' table exists and its number of records.
+        Report if the tables exist and their number of records.
         """
-        try:
-            self.cursor.execute("SELECT COUNT(*) FROM misc_health_data;")
-            count = self.cursor.fetchone()[0]
-            print(f"Table 'misc_health_data' exists with {count} records.")
-        except pymysql.MySQLError as e:
-            print(f"Table 'misc_health_data' does not exist or cannot be accessed: {e}")
+        tables = ["misc_health_data", "tenovi_raw_measurements"]
+        for table in tables:
+            try:
+                self.cursor.execute(f"SELECT COUNT(*) FROM {table};")
+                count = self.cursor.fetchone()[0]
+                print(f"Table '{table}' exists with {count} records.")
+            except pymysql.MySQLError as e:
+                print(f"Table '{table}' does not exist or cannot be accessed: {e}")
 
     def close_connection(self):
         """
@@ -85,17 +113,18 @@ class HealthInformationTablesManager:
 if __name__ == '__main__':
     manager = HealthInformationTablesManager()
 
-    # Report tables status
+    print("\n")
     manager.report_tables_status()
 
     while True:
-        action = input("\nChoose an action: 'create' to create the 'misc_health_data' table, 'drop' to drop the 'misc_health_data' table, 'exit' to quit: ").lower()
+        action = input("\nChoose an action: 'create' to create tables, 'drop' to drop tables, 'exit' to quit: ").lower()
         if action == "create":
-            manager.create_misc_health_data_table()
+            manager.create_health_data_tables()
         elif action == "drop":
-            manager.drop_misc_health_data_table()
+            manager.drop_user_lookup_tables()
         elif action == "exit":
             manager.close_connection()
             break
         else:
             print("Invalid action. Please choose 'create', 'drop', or 'exit'.")
+
