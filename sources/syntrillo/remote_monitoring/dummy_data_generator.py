@@ -44,13 +44,18 @@ class TenoviDummyDataGenerator:
             print(f"TenoviDummyDataGenerator: {self.healthie_user_id} - {self.syntrillo_internal_key} - {self.pseudo_code_for_tenovi_phi_access}")
             print(f"TenoviDummyDataGenerator: {self.device_id_BMP} - {self.device_id_pillbox} - {self.device_id_watch}")
 
-    def set_patient_state(self, patient_state: str):
+    def set_patient_state(
+        self,
+        patient_state_blood_pressure: str,
+        patient_state_heart_rate: str,
+        patient_state_steps: str
+        ):
         """
         Set the patient state to generate the data accordingly
         """
-        self.patient_state = patient_state
+        self.patient_state_blood_pressure = patient_state_blood_pressure
 
-        if patient_state == "healthy":
+        if patient_state_blood_pressure == "healthy":
             self.systolic_min = 90
             self.systolic_max = 120
             self.systolic_mean = 105
@@ -59,11 +64,7 @@ class TenoviDummyDataGenerator:
             self.diastolic_max = 80
             self.diastolic_mean = 70
             self.diastolic_var = 5
-            self.pulse_min = 60
-            self.pulse_max = 100
-            self.pulse_mean = 80
-            self.pulse_var = 5
-        elif patient_state == "hypertensive":
+        elif patient_state_blood_pressure == "hypertensive":
             self.systolic_min = 140
             self.systolic_max = 180
             self.systolic_mean = 160
@@ -72,36 +73,49 @@ class TenoviDummyDataGenerator:
             self.diastolic_max = 120
             self.diastolic_mean = 100
             self.diastolic_var = 5
+        elif patient_state_blood_pressure == "hypotensive":
+            self.systolic_min = 90
+            self.systolic_max = 120
+            self.systolic_mean = 105
+            self.systolic_var = 5
+            self.diastolic_min = 60
+            self.diastolic_max = 80
+            self.diastolic_mean = 70
+            self.diastolic_var = 5
+
+        if patient_state_heart_rate == "healthy":
             self.pulse_min = 60
             self.pulse_max = 100
             self.pulse_mean = 80
             self.pulse_var = 5
-        elif patient_state == "hypotensive":
-            self.systolic_min = 90
-            self.systolic_max = 120
-            self.systolic_mean = 105
-            self.systolic_var = 5
-            self.diastolic_min = 60
-            self.diastolic_max = 80
-            self.diastolic_mean = 70
-            self.diastolic_var = 5
-            self.pulse_min = 40
-            self.pulse_max = 60
-            self.pulse_mean = 50
-            self.pulse_var = 5
-        elif patient_state == "tachycardic":
-            self.systolic_min = 90
-            self.systolic_max = 120
-            self.systolic_mean = 105
-            self.systolic_var = 5
-            self.diastolic_min = 60
-            self.diastolic_max = 80
-            self.diastolic_mean = 70
-            self.diastolic_var = 5
+        elif patient_state_heart_rate == "tachycardic":
             self.pulse_min = 100
             self.pulse_max = 120
             self.pulse_mean = 110
             self.pulse_var = 5
+        elif patient_state_heart_rate == "bradycardic":
+            self.pulse_min = 40
+            self.pulse_max = 60
+            self.pulse_mean = 50
+            self.pulse_var = 5
+
+
+        if patient_state_steps == "healthy":
+            self.steps_min = 5000
+            self.steps_max = 10000
+            self.steps_mean = 7500
+            self.steps_var = 5
+        elif patient_state_steps == "sedentary":
+            self.steps_min = 1000
+            self.steps_max = 5000
+            self.steps_mean = 3000
+            self.steps_var = 5
+        elif patient_state_steps == "active":
+            self.steps_min = 10000
+            self.steps_max = 15000
+            self.steps_mean = 12500
+            self.steps_var = 5
+
 
     def generate_BMP_data_point(self):
         """
@@ -138,7 +152,9 @@ class TenoviDummyDataGenerator:
             created_str = created.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp_zulu = timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-            data = {
+            # ----------------------
+            # blood pressure data
+            data_bp = {
                 "metric": "blood_pressure",
                 "created": created_str,
                 "value_1": value1_str,
@@ -164,8 +180,159 @@ class TenoviDummyDataGenerator:
                 value_2=value2_str,
                 timestamp_zulu=timestamp_zulu,
                 timezone_offset=-4,
-                data_json=json.dumps(data, default=str)
+                data_json=json.dumps(data_bp, default=str)
             )
+
+            # ----------------------
+            # pulse data
+            value1_str = f"{pulse:.2f}"
+
+            data_hr = {
+                "metric": "pulse",
+                "created": created_str,
+                "value_1": value1_str,
+                "value_2": "0.00",
+                "timestamp": timestamp_zulu,
+                "patient_id": "Omar Real Device",
+                "device_name": "Tenovi BPM - L",
+                "sensor_code": "10",
+                "filter_params": {"measurement_index": 200+i},
+                "hardware_uuid": "FB5E23D5E7F7",
+                "hwi_device_id": self.device_id_BMP,
+                "timezone_offset": -4,
+                "estimated_timestamp": False,
+                "dummy_data": True
+                }
+
+            self.syntrillo_database_manager.insert_tenovi_raw_measurement(
+                device_name="Tenovi BPM - L",
+                metric_name="pulse",
+                value_1=value1_str,
+                value_2="0.00",
+                timestamp_zulu=timestamp_zulu,
+                timezone_offset=-4,
+                data_json=json.dumps(data_hr, default=str)
+            )
+
+        return None
+
+    def generate_watch_data_point(self, timestamp: datetime):
+
+        # ----------------------
+        # heart rate
+
+        # take a sample of 3600 heart rate values
+        heart_rate_values = [random.gauss(self.pulse_mean, self.pulse_var) for _ in range(3600)]
+        # get the average and max heart rate
+        heart_rate_average = round(sum(heart_rate_values) / len(heart_rate_values), 0)
+        heart_rate_max = round(max(heart_rate_values), 0)
+
+        # ----------------------
+        # steps
+        # the patient walks only if between 8am and 6pm
+        if timestamp.hour >= 8 and timestamp.hour < 18:
+            steps = random.gauss(self.steps_mean, self.steps_var)
+            steps = round(max(self.steps_min, min(steps, self.steps_max)), 0)
+        else:
+            steps = 0
+
+        return heart_rate_average, heart_rate_max, steps
+
+
+    def generate_watch_device_data(self, date_start: datetime, date_end: datetime):
+        """
+        Generate hourly watch data for the given date range.
+        """
+        date = date_start
+        i = 0
+
+        while date < date_end:
+            i += 1
+            date += timedelta(hours=1)
+
+            timestamp = date + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
+            created = timestamp + timedelta(minutes=random.randint(0, 59))
+
+            created_str = created.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            timestamp_zulu = timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+            heart_rate_average, heart_rate_max, steps = self.generate_watch_data_point(timestamp)
+
+            # ----------------------
+            # HR stats
+            value1_str = f"{heart_rate_average:.2f}"
+            value2_str = f"{heart_rate_max:.2f}"
+
+            data_hr_stats = {
+                "metric": "heart_rate_statistics",
+                "created": created_str,
+                "value_1": value1_str,
+                "value_2": value2_str,
+                "timestamp": timestamp_zulu,
+                "patient_id": self.healthie_user_id,
+                "device_name": "Tenovi Watch",
+                "sensor_code": "15",
+                "filter_params": {"period": 60, "wearable_code": 0, "max_heart_rate": 91, "min_heart_rate": 0, "average_heart_rate": 80},
+                "hardware_uuid": "FB5E23D5E7F7",
+                "hwi_device_id": self.device_id_watch,
+                "timezone_offset": -4,
+                "estimated_timestamp": False,
+                "dummy_data": True
+                }
+
+            self.syntrillo_database_manager.insert_tenovi_raw_measurement(
+                device_name="Tenovi Watch",
+                metric_name="heart_rate_statistics",
+                value_1=value1_str,
+                value_2=value2_str,
+                timestamp_zulu=timestamp_zulu,
+                timezone_offset=-4,
+                data_json=json.dumps(data_hr_stats, default=str)
+            )
+
+            # ----------------------
+            # steps
+            value1_str = f"{steps:.2f}"
+
+            data_steps = {
+                "metric": "steps",
+                "created": created_str,
+                "value_1": value1_str,
+                "value_2": "0.00",
+                "timestamp": timestamp_zulu,
+                "patient_id": self.healthie_user_id,
+                "device_name": "Tenovi Watch",
+                "sensor_code": "15",
+                "filter_params": {"wearable_code": 0},
+                "hardware_uuid": "FB5E23D5E7F7",
+                "hwi_device_id": self.device_id_watch,
+                "timezone_offset": -4,
+                "estimated_timestamp": False,
+                "dummy_data": True
+                }
+
+            self.syntrillo_database_manager.insert_tenovi_raw_measurement(
+                device_name="Tenovi Watch",
+                metric_name="steps",
+                value_1=value1_str,
+                value_2="0.00",
+                timestamp_zulu=timestamp_zulu,
+                timezone_offset=-4,
+                data_json=json.dumps(data_steps, default=str)
+            )
+
+        return None
+
+    def generate_pillbox_device_data(self, date_start: datetime, date_end: datetime):
+        """
+        Generate pillbox data for the given date range.
+        """
+        date = date_start
+        i = 0
+
+        while date < date_end:
+            i += 1
+            date += timedelta(days=1)
 
         return None
 
@@ -208,6 +375,13 @@ if __name__ == "__main__":
 
     data_generator.delete_dummy_records()
 
-    data_generator.set_patient_state("healthy")
+    data_generator.set_patient_state(
+        patient_state_blood_pressure="healthy",
+        patient_state_heart_rate="healthy",
+        patient_state_steps="healthy",
+    )
 
     _ = data_generator.generate_BMP_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
+
+    _ = data_generator.generate_watch_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
+
