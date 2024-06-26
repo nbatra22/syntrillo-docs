@@ -1,3 +1,1 @@
-# do not ignore any file in layers they are part of the lambda package
-# Otherwise you get errors with missing module when runnng the lambda
-!*
+python/lib/*
