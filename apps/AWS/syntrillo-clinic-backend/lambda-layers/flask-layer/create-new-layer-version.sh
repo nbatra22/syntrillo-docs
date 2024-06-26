@@ -1,0 +1,43 @@
+# ------------------------------------------------------------------------------
+# !!! IMPORTANT !!!
+# ------------------------------------------------------------------------------
+# This script will be executed manually on demand
+
+# - Each time requirements.txt is changed this sctipt 
+# must be re-executed before a cdk deploy
+
+# - Execution should be done on an Amazon Linux 2023 O.S., 
+# otherwise the AWS Lambda service may not find the right dependency packages
+
+# - Dependencies will be ignored in the .gitignore file 
+# (this will drastically reduce the repository storage volume)
+
+# - If you clone the repository for the first time and you want 
+# to see the dependency packages, you have to execute that script
+# ------------------------------------------------------------------------------
+
+BASE_DIR=$(dirname "$0");
+BASE_DIRE_NAME=$(basename "$BASE_DIR");
+
+LAYER_NAME=$BASE_DIRE_NAME
+
+echo "----------------------------------"
+echo "$> INSTALL LAYER PACKAGES LOCALLY "
+echo "----------------------------------"
+PACKAGE_FOLDER="python/lib/python3.10/site-packages"
+mkdir -p $PACKAGE_FOLDER
+pip install -r requirements.txt --target $PACKAGE_FOLDER
+
+echo "-----------------------------"
+echo "$> ZIP LAYER PACKAGES        "
+echo "-----------------------------"
+zip -r /tmp/layer.zip python/lib/python3.10/site-packages
+
+echo "-----------------------------"
+echo "$>  DEPLOY NEW LAYER VERSION "
+echo "$>  LAYER NAME = $LAYER_NAME "
+echo "-----------------------------"
+aws lambda publish-layer-version \
+  --layer-name $LAYER_NAME \
+  --zip-file fileb:///tmp/layer.zip \
+  --compatible-runtimes python3.10
