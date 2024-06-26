@@ -1,5 +1,4 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/system_devices.html -->
-<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/devices.html -->
 
 <h2>Paired Devices</h2>
 
@@ -185,6 +184,117 @@
 
 <div id="transientPopupTenoviPairingCode">Temporary Tenovi Pairing Code copied to clipboard.</div>
 
+<!-- ------------------------------------------------------------------------------------- -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Measurements Management
+</h2>
+
+<div class="collapsible-content">
+
+    <style>
+        /* Initially loading indicator and logs */
+        #syncMeasurementsLoading {
+            display: none;
+        }
+        #syncMeasurementsSuccess {
+            display: none;
+        }
+
+        #deleteSyntrilloMeasurementsRecordsLoading {
+            display: none;
+        }
+        #deleteSyntrilloMeasurementsRecordsSuccess {
+            display: none;
+        }
+
+        #deleteHealthieMeasurementsMetricsLoading {
+            display: none;
+        }
+        #deleteHealthieMeasurementsMetricsSuccess {
+            display: none;
+        }
+
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="syncMeasurementsForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.sync_measurements_form') }}" method="POST">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="syncMeasurementsFormButton" class="styled-button">Sync measurements</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="syncMeasurementsLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="syncMeasurementsSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="deleteSyntrilloMeasurementsRecordsForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.delete_syntrillo_measurements_records_form') }}" method="POST">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="deleteSyntrilloMeasurementsRecordsFormButton" class="styled-button">Delete Syntrillo measurements database records</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="deleteSyntrilloMeasurementsRecordsLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="deleteSyntrilloMeasurementsRecordsSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                <form id="deleteHealthieMeasurementsMetricsForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.delete_healthie_measurements_metrics_form') }}" method="POST">
+                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+                                    <button type="button" id="deleteHealthieMeasurementsMetricsFormButton" class="styled-button">Delete Healthie measurements metrics</button>
+                                </form>
+                            </td>
+                            <td align="left" style="vertical-align: middle;">
+                                <span id="deleteHealthieMeasurementsMetricsLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                <span id="deleteHealthieMeasurementsMetricsSuccess" class="response-message"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="measurementsCombinedTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
 <!-- ========================= SCRIPTS ============================ -->
 
 <script>
@@ -318,8 +428,181 @@
 
                 }
             });
-        });
-    });
+        }); // end of pairTenoviDevicesFormButton click function
+
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // MEASUREMENTS MANAGEMENT
+
+        // allows to prevent multiple requests from being sent at the same time
+        let isAnyMeasurementsManagementRunning = false;
+
+        // ========================= Sync Measurements =========================
+
+        $('#syncMeasurementsFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isAnyMeasurementsManagementRunning) return;
+            isAnyMeasurementsManagementRunning = true;
+
+            // Hide and erase previous log and show loading indicator
+            $('#measurementsCombinedTextarea').val("");
+            $('#syncMeasurementsSuccess').hide();
+            $('#syncMeasurementsLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#syncMeasurementsForm').attr('action'),
+                type: 'POST',
+                data: $('#syncMeasurementsForm').serialize(),
+                success: function(response) {
+                    $('#measurementsCombinedTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                    if (response.success) {
+                        $('#syncMeasurementsSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#syncMeasurementsSuccess').show();
+                        // Reload the page after a delay to allow the user to read the success message
+                        setTimeout(function() {
+                            // allows to prevent multiple requests from being sent at the same time
+                            // disabling until timer ends
+                            isAnyMeasurementsManagementRunning = false;
+
+                            // location.reload();
+                            // reloading only the device_s_ tab. loadTabContent is defined in the index.html
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                        }, 5000); // Reload after a delay
+                    } else {
+                        $('#syncMeasurementsSuccess').html("Error. See logs below.");
+                        $('#syncMeasurementsSuccess').show();
+                        // enables the button to try again
+                        isAnyMeasurementsManagementRunning = false;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#measurementsCombinedTextarea').val('Error: ' + error); // Display error message in textarea
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isAnyMeasurementsManagementRunning = false;
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#syncMeasurementsLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+
+                }
+            }); // end of AJAX call
+
+        }); // end of syncMeasurementsFormButton click function
+
+        // ========================= Delete Syntrillo Measurements Records =========================
+
+        $('#deleteSyntrilloMeasurementsRecordsFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isAnyMeasurementsManagementRunning) return;
+            isAnyMeasurementsManagementRunning = true;
+
+            // Hide and erase previous log and show loading indicator
+            $('#measurementsCombinedTextarea').val("");
+            $('#deleteSyntrilloMeasurementsRecordsSuccess').hide();
+            $('#deleteSyntrilloMeasurementsRecordsLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#deleteSyntrilloMeasurementsRecordsForm').attr('action'),
+                type: 'POST',
+                data: $('#deleteSyntrilloMeasurementsRecordsForm').serialize(),
+                success: function(response) {
+                    $('#measurementsCombinedTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                    if (response.success) {
+                        $('#deleteSyntrilloMeasurementsRecordsSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#deleteSyntrilloMeasurementsRecordsSuccess').show();
+                        // Reload the page after a delay to allow the user to read the success message
+                        setTimeout(function() {
+                            // allows to prevent multiple requests from being sent at the same time
+                            // disabling until timer ends
+                            isAnyMeasurementsManagementRunning = false;
+
+                            // location.reload();
+                            // reloading only the device_s_ tab. loadTabContent is defined in the index.html
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                        }, 5000); // Reload after a delay
+                    } else {
+                        $('#deleteSyntrilloMeasurementsRecordsSuccess').html("Error. See logs below.");
+                        $('#deleteSyntrilloMeasurementsRecordsSuccess').show();
+                        // enables the button to try again
+                        isAnyMeasurementsManagementRunning = false;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#measurementsCombinedTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#deleteSyntrilloMeasurementsRecordsLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            }); // end of AJAX call
+
+        }); // end of deleteSyntrilloMeasurementsRecordsFormButton click function
+
+        // ========================= Delete Healthie Measurements Metrics =========================
+
+        $('#deleteHealthieMeasurementsMetricsFormButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isAnyMeasurementsManagementRunning) return;
+            isAnyMeasurementsManagementRunning = true;
+
+            // Hide and erase previous log and show loading indicator
+            $('#measurementsCombinedTextarea').val("");
+            $('#deleteHealthieMeasurementsMetricsSuccess').hide();
+            $('#deleteHealthieMeasurementsMetricsLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#deleteHealthieMeasurementsMetricsForm').attr('action'),
+                type: 'POST',
+                data: $('#deleteHealthieMeasurementsMetricsForm').serialize(),
+                success: function(response) {
+                    $('#measurementsCombinedTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                    if (response.success) {
+                        $('#deleteHealthieMeasurementsMetricsSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#deleteHealthieMeasurementsMetricsSuccess').show();
+                        // Reload the page after a delay to allow the user to read the success message
+                        setTimeout(function() {
+                            // allows to prevent multiple requests from being sent at the same time
+                            // disabling until timer ends
+                            isAnyMeasurementsManagementRunning = false;
+
+                            // location.reload();
+                            // reloading only the device_s_ tab. loadTabContent is defined in the index.html
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                        }, 5000); // Reload after a delay
+                    } else {
+                        $('#deleteHealthieMeasurementsMetricsSuccess').html("Error. See logs below.");
+                        $('#deleteHealthieMeasurementsMetricsSuccess').show();
+                        // enables the button to try again
+                        isAnyMeasurementsManagementRunning = false;
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#measurementsCombinedTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    //  Hide loading indicator after AJAX completes (whether success or error)
+                    $('#deleteHealthieMeasurementsMetricsLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+                }
+            }); // end of AJAX call
+        }); // end of deleteHealthieMeasurementsMetricsFormButton click function
+
+    }); // end of document ready
+
 </script>
 
 <script>

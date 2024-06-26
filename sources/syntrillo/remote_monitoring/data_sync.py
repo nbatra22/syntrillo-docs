@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/remote_monitoring/data_sync.py
 
 import json
 import uuid

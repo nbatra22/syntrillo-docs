@@ -1,3 +1,4 @@
+# Path: ./apps/PythonAnywhere/scheduled_tasks/healthie/device_measurement_sync.py
 """
 This script is run on PythonAnywhere to sync data between Tenovi and Syntrillo, at regular intervals.
 """

@@ -556,8 +556,8 @@ class HealthieMetrics():
         self,
         user_id: str,
         category: str,
-        start_date: datetime,
-        end_date: datetime,
+        start_date: datetime = None,
+        end_date: datetime = None,
         ) -> Tuple[dict, dict]:
         """
         Remove metric data entries for a user within a date range.
@@ -565,11 +565,11 @@ class HealthieMetrics():
         Args:
             user_id (str): The user ID.
             category (str): The category of the metric data.
-            start_date (datetime): The start date of the date range.
-            end_date (datetime): The end date of the date range.
+            start_date (datetime, optional): The start date of the date range. Default None
+            end_date (datetime, optional): The end date of the date range. Default None
 
         Returns:
-            log (dict): The log of the request.
+            log (dict): The log of the request. Contains the number of records deleted and success status.
 
         """
 

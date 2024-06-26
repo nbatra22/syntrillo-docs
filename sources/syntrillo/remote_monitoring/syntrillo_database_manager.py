@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/remote_monitoring/syntrillo_database_manager.py
 
 import uuid
 import json
@@ -360,7 +361,7 @@ class SyntrilloDatabaseManager:
 
     def delete_records(
         self,
-        device_name: str,
+        device_name: str = None,
     ) -> dict:
         """
         delete all records for a given device
