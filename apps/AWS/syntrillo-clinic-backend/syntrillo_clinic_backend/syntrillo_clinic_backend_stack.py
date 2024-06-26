@@ -116,8 +116,20 @@ class CheckingConstruct(Construct):
             apigw.LambdaIntegration(checking_function),
         )
 
+import boto3
 class IFrameGeneratorConstruct(Construct):
-
+    
+    def get_latest_layer_version_arn(self, layer_name: str) -> str:
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.list_layer_versions(LayerName=layer_name)
+        
+        if not response['LayerVersions']:
+            raise ValueError(f"No versions found for layer: {layer_name}")
+        
+        # The versions are returned in descending order, so the first one is the latest
+        latest_version = response['LayerVersions'][0]
+        return latest_version['LayerVersionArn'] 
+        
     def __init__(self, scope: Construct, id: str, vpc, hosted_zone, certificate, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
@@ -147,31 +159,6 @@ class IFrameGeneratorConstruct(Construct):
             )
         )
 
-        # Create the Lambda layers that contains the required libraries
-        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
-            layer_version_name="FlaskLayer",
-            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
-
-        mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
-            layer_version_name="MySQLLayer",
-            code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
-
-        pandas_layer = _lambda.LayerVersion(self, "PandasLayer",
-            layer_version_name="PandasLayer",
-            code=_lambda.Code.from_asset("lambda-layers/pandas-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
-        )
-
-        monitoring_layer = _lambda.LayerVersion(self, "MonitoringLayer",
-            layer_version_name="MonitoringLayer",
-            code=_lambda.Code.from_asset("lambda-layers/monitoring-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
-        )
-
         # Create the Lambda function
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
             function_name="IFrameGeneratorFunction",
@@ -186,23 +173,17 @@ class IFrameGeneratorConstruct(Construct):
             }
         )
 
-        # test_ = _lambda.LayerVersion(
-        #     self,
-        #     "Function",
-        #     layer_version_name="Function",
-        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        #     code=_lambda.Code.from_asset(
-        #         "lambda-functions/iframe-generator-function",
-        #         bundling={
-        #             "image": _lambda.Runtime.PYTHON_3_10.bundling_image,
-        #             "command": [
-        #                 "bash",
-        #                 "-c",
-        #                 "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output",
-        #             ],
-        #         },
-        #     ),
-        # )
+        latest_layer_version_arn = self.get_latest_layer_version_arn("flask-layer")
+        flask_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FlaskLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("mysql-layer")
+        mysql_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MySQLLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("pandas-layer")
+        pandas_layer = _lambda.LayerVersion.from_layer_version_arn(self, "PandasLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("monitoring-layer")
+        monitoring_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MonitoringLayer", latest_layer_version_arn)
 
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
