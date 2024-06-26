@@ -1,3 +1,5 @@
+# Path: ./sources/syntrillo/remote_monitoring/dummy_data_generator.py
+
 import uuid
 from datetime import datetime, timedelta, timezone
 import random
@@ -335,6 +337,15 @@ class TenoviDummyDataGenerator:
             date += timedelta(days=1)
 
         return None
+
+    def generate_all_devices_data_wrapup(self, date_start: datetime, date_end: datetime):
+        """
+        Generate data for all devices for the given date range.
+        """
+        _ = self.generate_BMP_device_data(date_start, date_end)
+        _ = self.generate_watch_device_data(date_start, date_end)
+        _ = self.generate_pillbox_device_data(date_start, date_end)
+
 
     def delete_dummy_records(self) -> dict:
         """

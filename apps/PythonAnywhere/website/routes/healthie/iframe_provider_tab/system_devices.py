@@ -2,12 +2,14 @@
 from flask import Blueprint, render_template, request, jsonify
 
 import json
+from datetime import datetime, timedelta
 
 from .post_management import PostManager
 from syntrillo.patient_initialization.accounts_pairing import AccountsPairing
 from syntrillo.remote_monitoring.data_sync import RemoteMonitoringDataSync
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_healthie.metrics import HealthieMetrics
+from syntrillo.remote_monitoring.tenovi_dummy_data_generator import TenoviDummyDataGenerator
 
 iframe_healthie_provider_tab_system_devices_bp = Blueprint('iframe_healthie_provider_tab_system_devices_bp', __name__)
 
@@ -214,4 +216,138 @@ def delete_healthie_measurements_metrics_form():
 
     return jsonify( overall_log ), 200
 
+
+def _checkbox_to_bool(checkbox):
+    if checkbox is None:
+        return False
+    else:
+        return True
+
+# data_generator = TenoviDummyDataGenerator(entry["syntrillo_internal_key"],
+@iframe_healthie_provider_tab_system_devices_bp.route('/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form', methods=['POST'])
+def tenovi_dummy_data_generator_form():
+    """
+    This endpoint generates dummy data for this patient.
+
+    Returns a tuple with the following elements:
+        log (dict): log of the operation, with 'success' key, used by the frontend to check if the operation was successful
+        200 (int): status code
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+    success = True
+    log = {
+        "success": True,
+    }
+
+
+    # get posted data
+    sync_and_reload = _checkbox_to_bool(request.form.get('sync_and_reload'))
+    log['must_reload'] = sync_and_reload
+
+    date_start_ago = request.form.get('date_start_ago')
+    date_end_ago = request.form.get('date_end_ago')
+
+    blood_pressure_state = request.form.get('blood_pressure_state')
+    heart_rate_state = request.form.get('heart_rate_state')
+    steps_state = request.form.get('steps_state')
+
+    # ---------------------
+    # manage dates
+    today = datetime.today()
+
+    # ---- start date ----
+    if date_start_ago == "one-week-ago":
+        date_start = today - timedelta(weeks=1)
+
+    elif date_start_ago == "one-month-ago":
+        date_start = today - timedelta(weeks=4)
+
+    elif date_start_ago == "two-months-ago":
+        date_start = today - timedelta(weeks=8)
+
+    elif date_start_ago == "three-months-ago":
+        date_start = today - timedelta(weeks=12)
+
+    elif date_start_ago == "four-months-ago":
+        date_start = today - timedelta(weeks=16)
+
+    elif date_start_ago == "five-months-ago":
+        date_start = today - timedelta(weeks=20)
+
+    elif date_start_ago == "six-months-ago":
+        date_start = today - timedelta(weeks=24)
+
+    elif date_start_ago == "one-year-ago":
+        date_start = today - timedelta(weeks=52)
+
+    else:
+        success = False
+        log['success'] = False
+        log['error'] = "Invalid date_start_ago: " + date_start_ago
+
+    # ---- end date ----
+    if date_end_ago == "today":
+        date_end = today
+
+    elif date_end_ago == "one-week-ago":
+        date_end = today - timedelta(weeks=1)
+
+    elif date_end_ago == "one-month-ago":
+        date_end = today - timedelta(weeks=4)
+
+    elif date_end_ago == "two-months-ago":
+        date_end = today - timedelta(weeks=8)
+
+    elif date_end_ago == "three-months-ago":
+        date_end = today - timedelta(weeks=12)
+
+    elif date_end_ago == "four-months-ago":
+        date_end = today - timedelta(weeks=16)
+
+    elif date_end_ago == "five-months-ago":
+        date_end = today - timedelta(weeks=20)
+
+    elif date_end_ago == "six-months-ago":
+        date_end = today - timedelta(weeks=24)
+
+    else:
+        success = False
+        log['success'] = False
+        log['error'] = "Invalid date_end_ago: " + date_end_ago
+
+    if success:
+        # instantiate TenoviDummyDataGenerator
+        data_generator = TenoviDummyDataGenerator(post_manager.syntrillo_internal_key)
+
+        # set states
+        data_generator.set_patient_state(
+            patient_state_blood_pressure=blood_pressure_state,
+            patient_state_heart_rate=heart_rate_state,
+            patient_state_steps=steps_state,
+        )
+
+        # generate dummy data
+        data_generator.generate_all_devices_data_wrapup(
+            date_start=date_start,
+            date_end=date_end,
+        )
+
+        # sync and reload
+        if sync_and_reload:
+            sync = RemoteMonitoringDataSync(post_manager.syntrillo_internal_key)
+
+            sync_log = sync.sync_syntrillo_to_healthie()
+
+            if sync_log['success'] :
+                log['number_of_records_inserted__syntrillo_to_healthie'] = sync_log['number_of_records_inserted']
+            else:
+                log['success'] = False
+                log['sync_log_error'] = sync_log
+
+    return jsonify( log ), 200
 
