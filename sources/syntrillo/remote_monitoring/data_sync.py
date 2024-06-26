@@ -142,21 +142,22 @@ class RemoteMonitoringDataSync:
 
             # Loop over measurements
             for measurement in measurements:
-                # Insert into Syntrillo database
-                log = self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name=measurement['device_name'],
-                    timestamp_zulu=measurement['timestamp'],
-                    timezone_offset=measurement['timezone_offset'],
-                    data_json=json.dumps(measurement),
-                    metric_name=measurement['metric'],
-                    value_1=measurement['value_1'],
-                    value_2=measurement['value_2']
-                )
-                if not log["success"]:
-                    overall_log["logs"].append(log)
-                    overall_log["success"] = False
-                else:
-                    overall_log["number_of_records_inserted"] += 1
+                if measurement['metric'] != "battery_percentage":
+                    # Insert into Syntrillo database
+                    log = self.syntrillo_database_manager.insert_tenovi_raw_measurement(
+                        device_name=measurement['device_name'],
+                        timestamp_zulu=measurement['timestamp'],
+                        timezone_offset=measurement['timezone_offset'],
+                        data_json=json.dumps(measurement),
+                        metric_name=measurement['metric'],
+                        value_1=measurement['value_1'],
+                        value_2=measurement['value_2']
+                    )
+                    if not log["success"]:
+                        overall_log["logs"].append(log)
+                        overall_log["success"] = False
+                    else:
+                        overall_log["number_of_records_inserted"] += 1
 
         return overall_log
 
@@ -391,6 +392,52 @@ class RemoteMonitoringDataSync:
 
         return overall_log
 
+    def sync_syntrillo_to_healthie__watch_sleep(self) -> dict:
+        """
+        Sync Tenovi Watch maximum pulse data from Syntrillo PHI database to Healthie.
+
+        Returns:
+            dict: Overall log.
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted": 0,
+            "lastest_timestamp": None,
+            "logs": []
+        }
+
+        # get latest timestamp from Healthie
+        latest_timestamp = self.healthie_metrics.get_metric_latest_timestamp(
+            self.healthie_user_id,
+            HealthieMetrics.HEALTHIE_METRICS_HOURS_OF_SLEEP_CATEGORY
+        )
+
+        overall_log["lastest_timestamp"] = latest_timestamp
+
+        # get all stats records from syntrillo database for this category after the latest timestamp
+        records, log = self.syntrillo_database_manager.get_metric_records_after_local_timestamp(
+            timestamp_local=latest_timestamp,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_SLEEP
+            )
+
+        if records is not None:
+
+            # loop over records, and store using Healthie API sleep_data
+            for record in records:
+                response, log = self.healthie_metrics.store_metric_data(
+                    self.healthie_user_id,
+                    created_at=record['timestamp_local'],
+                    metric_stat=record['value_1'],
+                    entry_category=HealthieMetrics.HEALTHIE_METRICS_HOURS_OF_SLEEP_CATEGORY
+                )
+                if not log["success"]:
+                    overall_log["logs"].append(log)
+                    overall_log["success"] = False
+                else:
+                    overall_log["number_of_records_inserted"] += 1
+
+        return overall_log
+
 
     def sync_syntrillo_to_healthie(
         self
@@ -408,11 +455,12 @@ class RemoteMonitoringDataSync:
         overall_log3 = self.sync_syntrillo_to_healthie__watch_daily_sum_steps()
         overall_log4 = self.sync_syntrillo_to_healthie__watch_daily_average_pulse()
         overall_log5 = self.sync_syntrillo_to_healthie__watch_daily_maximum_pulse()
+        overall_log6 = self.sync_syntrillo_to_healthie__watch_sleep()
 
         overall_log = {
-            "success": overall_log1["success"] and overall_log2["success"] and overall_log3["success"] and overall_log4["success"] and overall_log5["success"],
-            "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"] + overall_log3["number_of_records_inserted"] + overall_log4["number_of_records_inserted"] + overall_log5["number_of_records_inserted"],
-            "logs": overall_log1["logs"] + overall_log2["logs"] + overall_log3["logs"] + overall_log4["logs"] + overall_log5["logs"]
+            "success": overall_log1["success"] and overall_log2["success"] and overall_log3["success"] and overall_log4["success"] and overall_log5["success"] and overall_log6["success"],
+            "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"] + overall_log3["number_of_records_inserted"] + overall_log4["number_of_records_inserted"] + overall_log5["number_of_records_inserted"] + overall_log6["number_of_records_inserted"],
+            "logs": overall_log1["logs"] + overall_log2["logs"] + overall_log3["logs"] + overall_log4["logs"] + overall_log5["logs"] + overall_log6["logs"]
         }
 
         return overall_log
@@ -434,7 +482,7 @@ if __name__ == '__main__':
         # Pretty print user devices
         print(json.dumps(sync.user_devices, indent=4))
 
-    if False:
+    if True:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
         print(json.dumps(overall_log, indent=4))

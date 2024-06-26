@@ -9,6 +9,7 @@ class DeviceMeasurements:
     TENOVI_METRICS_BMP_BLOOD_PRESSURE = "blood_pressure"
     TENOVI_METRICS_BMP_PULSE = "pulse"
     TENOVI_METRICS_WATCH_STEPS = "steps"
+    TENOVI_METRICS_WATCH_SLEEP = "sleep"
     TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS = "heart_rate_statistics"
 
 
