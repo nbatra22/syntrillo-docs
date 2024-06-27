@@ -382,16 +382,33 @@ class SyntrilloClinicBackendStack(Stack):
         # Create a bastion host in the public subnet
         self.bastion_host = ec2.BastionHostLinux(self, "BastionHost",
             vpc=self.vpc,
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC
-            )
+            ),
+            # init=ec2.CloudFormationInit.from_config_sets(
+            #     config_sets={
+            #         "default": ["install_packages", "run_commands"]
+            #     },
+            #     configs={
+            #         "install_packages": ec2.InitConfig([
+            #             ec2.InitPackage.yum("mysql"),
+            #         ]),
+            #         "run_commands": ec2.InitConfig([
+            #             ec2.InitCommand.shell_command("echo 'Hello from the bastion host!' > /tmp/message.txt")
+            #         ])
+            #     }
+            # ),
+            # init_options=ec2.ApplyCloudFormationInitOptions(
+            #     config_sets=["default"]
+            # ),
         )
         
         # Add a security group rule to allow SSH access to the bastion host
-        self.bastion_host.connections.allow_from_any_ipv4(
-            ec2.Port.tcp(22),
-            "Allow SSH access to the bastion host"
-        )
+        # self.bastion_host.connections.allow_from_any_ipv4(
+        #     ec2.Port.tcp(22),
+        #     "Allow SSH access to the bastion host"
+        # )
 
         # Reference an existing hosted zone using its attributes
         hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
