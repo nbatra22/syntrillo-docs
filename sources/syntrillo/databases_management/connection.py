@@ -8,10 +8,13 @@ from dotenv import load_dotenv
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
 import pymysql
-import sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel
+try:
+    import sshtunnel  # on PythonAnywhere, requires : pip install sshtunnel
 
-sshtunnel.SSH_TIMEOUT = 60.0
-sshtunnel.TUNNEL_TIMEOUT = 60.0
+    sshtunnel.SSH_TIMEOUT = 60.0
+    sshtunnel.TUNNEL_TIMEOUT = 60.0
+except ImportError:
+    pass
 
 class DatabaseConnection:
     """

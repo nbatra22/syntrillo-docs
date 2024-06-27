@@ -142,7 +142,7 @@ class RemoteMonitoringDataSync:
 
             # Loop over measurements
             for measurement in measurements:
-                if measurement['metric'] != "battery_percentage":
+                if True or ( measurement['metric'] != "battery_percentage" ):  # TODO: DEBUG battery_percentage
                     # Insert into Syntrillo database
                     log = self.syntrillo_database_manager.insert_tenovi_raw_measurement(
                         device_name=measurement['device_name'],
