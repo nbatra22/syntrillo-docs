@@ -2,6 +2,15 @@
 from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceTypes:
+
+    # The DeviceTypes class is used to retrieve valid device types for your account.
+    TENOVI_DEVICE_NAME__WATCH = "Tenovi Watch"
+    TENOVI_DEVICE_NAME__PILLBOX = "Tenovi Pillbox"
+    TENOVI_DEVICE_NAME__BMP_PREFIX = "Tenovi BMP"
+    TENOVI_DEVICE_NAME__BMP_LARGE  = "Tenovi BMP - L"
+    TENOVI_DEVICE_NAME__BMP_SMALL  = "Tenovi BMP - S"
+
+
     def __init__(self):
         self.auth = TenoviAuth()
 

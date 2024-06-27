@@ -5,9 +5,11 @@ import json
 import pymysql
 from typing import Tuple
 from datetime import datetime, timedelta, timezone
+import pandas as pd
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.api_tenovi.device_types import DeviceTypes
 
 
 class SyntrilloDatabaseManager:
@@ -21,10 +23,10 @@ class SyntrilloDatabaseManager:
 
     # Tenovi devices
     TENOVI_DEVICE_NAMES=[
-        "Tenovi Watch",
-        "Tenovi Pillbox",
-        "Tenovi BPM - L",
-        "Tenovi BPM - S"
+        DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
+        DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
+        DeviceTypes.TENOVI_DEVICE_NAME__BMP_LARGE,
+        DeviceTypes.TENOVI_DEVICE_NAME__BMP_SMALL,
         ]
 
 
@@ -357,7 +359,68 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
+    def get_tenovi_device_data(
+        self,
+        device_name: str,
+        start_date: datetime,
+        end_date: datetime,
+        include_battery: bool = False
+        ) -> Tuple[pd.DataFrame, dict]:
+        """
+            Get all records for a device between two dates
 
+            Args:
+                device_name (str): The name of the device
+                start_date (datetime): The start date
+                end_date (datetime): The end date
+                include_battery (bool): Include the battery percentage metric (default is False)
+
+            Returns a tuple:
+                df (pd.DataFrame): The records for the device, as a Pandas DataFrame
+                log (dict): The log of the request
+
+        """
+
+       # Check if device_name is valid
+        if device_name not in self.TENOVI_DEVICE_NAMES:
+            log = {
+                "success": False,
+                "error": f"Invalid device_name: {device_name}"
+            }
+            return None, log
+
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute(
+                    """
+                    SELECT device_name, metric_name, value_1, value_2, timestamp_local
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = %s
+                    AND device_name = %s
+                    AND ( metric_name <> 'battery_percentage' OR %s )
+                    AND timestamp_local BETWEEN %s AND %s
+                    ORDER BY timestamp_local ASC
+                    """,
+                    (self.syntrillo_internal_key.bytes, device_name, include_battery, start_date, end_date)
+                )
+                records = cursor.fetchall()  # Fetch all records
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        # Check if records are found
+        if records:
+            df = pd.DataFrame(records)
+        else:
+            df = pd.DataFrame()  # Return an empty DataFrame if no records found
+
+        return df, log
 
     def delete_records(
         self,
@@ -427,10 +490,18 @@ if __name__ == '__main__':
         log = data_manager.delete_records(None)
         print(log)
 
-    if True:
+    if False:
         records, log = data_manager.get_daily_stats_metric_records_after_local_timestamp(None, "steps")
         # Pretty print the records
         print(log)
         print(json.dumps(records, indent=4, default=str))
+
+    if True:
+        today = datetime.now().date()
+        df, log = data_manager.get_tenovi_device_data("Tenovi Pillbox", datetime(2024, 1, 1), today)
+
+        print(log)
+        print(df)
+
 
 
