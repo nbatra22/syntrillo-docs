@@ -9,6 +9,9 @@ from syntrillo.pseudonyms_management.temporary_lookup_codes_management import Te
     
 from syntrillo.api_tenovi.devices import Devices
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="CHECK-LIST-FUNCTION")
+
 class Database:
     def __init__(self):
         db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
@@ -71,8 +74,8 @@ def register_patient_devices():
     )
 
      # %%% ADDED TEST %%%
-    print("$> syntrillo_internal_key :", syntrillo_internal_key)
-    print("$> temporary_lookup_code :", temporary_lookup_code)
+    logger.info(f"$> syntrillo_internal_key {syntrillo_internal_key}")
+    logger.info(f"$> temporary_lookup_code {temporary_lookup_code}")
     # variables below will be reused for testing purposes
     syntrillo_internal_key_save = syntrillo_internal_key
     temporary_lookup_code_save = temporary_lookup_code
@@ -169,7 +172,7 @@ def register_patient_devices():
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=syntrillo_internal_key)
 
     # %%% ADDED TEST %%%    
-    print("$> paired_devices:", paired_devices)
+    logger.info("$> paired_devices: {paired_devices}")
     assert paired_devices == []
     # %%% ADDED TEST %%%
 
@@ -223,46 +226,41 @@ def register_patient_devices():
 
     # %%% ADDED TEST %%%
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=syntrillo_internal_key)
-    print("$> paired_devices:", paired_devices)
+    logger.info("$> paired_devices: {paired_devices}")
     assert paired_devices == []
     # %%% ADDED TEST %%%
 
     # return jsonify( log ), 200
 
+# @logger.inject_lambda_context
 def handler(event, context):
-    print(event)
+    logger.info(f"START HANDLER - event {event}")
+
+    def response_200(message):
+        logger.info(f"RESPONSE 200 - {message}")
+        return {
+            'statusCode': 200,
+            'body': message
+        }
 
     resource_path = event['path']
-    print(f"Resource path: {resource_path}")
 
     if resource_path == "/test_network_outside_connectivity":
         call_external_url()
-        return {
-            'statusCode': 200,
-            'body': 'Called example.com'
-        }
+        return response_200("Called example.com")
 
     if resource_path == "/test_database_access":
         initiate_database_connection()
-        return {
-            'statusCode': 200,
-            'body': 'Called example.com'
-        }
+        return response_200("Database connexion ok")
     
     if resource_path == "/register_patient_devices":
         Database().delete_tables_content()
         register_patient_devices()
-        return {
-            'statusCode': 200,
-            'body': 'Patient  devices are registered'
-        }
+        return response_200("Patient  devices are registered")
 
-    return {
-        'statusCode': 200,
-        'body': 'Hello from Lambda!'
-    }
+    return response_200('Checklist lambda is working')
 
 if __name__ == "__main__":
-    print(handler({"path": "/test_network_outside_connectivity"}, None))
-    print(handler({"path": "/test_database_access"}, None))
-    print(handler({"path": "/register_patient_devices"}, None))
+    handler({"path": "/test_network_outside_connectivity"}, None)
+    handler({"path": "/test_database_access"}, None)
+    handler({"path": "/register_patient_devices"}, None)
