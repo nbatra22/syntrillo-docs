@@ -1,4 +1,4 @@
-# Path: ./sources/syntrillo/api_healthie/metrics.py
+# Path: ./sources/syntrillo/api_healthie/feature_toggle.py
 
 from syntrillo.api_healthie.auth import HealthieAuth
 import datetime
