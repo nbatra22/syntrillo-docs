@@ -261,3 +261,8 @@ def handler(event, context):
         'statusCode': 200,
         'body': 'Hello from Lambda!'
     }
+
+if __name__ == "__main__":
+    print(handler({"path": "/test_network_outside_connectivity"}, None))
+    print(handler({"path": "/test_database_access"}, None))
+    print(handler({"path": "/register_patient_devices"}, None))
