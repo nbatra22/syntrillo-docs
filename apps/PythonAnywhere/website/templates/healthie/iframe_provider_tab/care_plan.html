@@ -1,10 +1,81 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/care_plan.html -->
 
 <h2>Care Plan</h2>
-
-<p>Care plans for this patient can be generated here and updated overtime.</p>
-
+<p>Care plans for this patient can be generated here and updated over time.</p>
 <p>Known risk factors can be listed.</p>
+<p>Progress can be reported.</p>
 
-<p>Progress can be reported</p>
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Medication adherence
+</h2>
 
+<div class="collapsible-content">
+    <style>
+        .medical-adherence-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .medical-adherence-table td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+        }
+        .medical-adherence-table td:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 1;
+        }
+    </style>
+
+    <table class="medical-adherence-table">
+        <tr>
+            <td>Period</td>
+            <td>Day</td>
+            <td>Sun</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+            <td>Total</td>
+            <td>Comment</td>
+        </tr>
+        {% for week in medication_adherence_data %}
+            <tr>
+                <td rowspan="2">{{ week.name }}</td>
+                <td>AM</td>
+                {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                    <td style="background-color: {{ week.status_per_day[day]['AM_color'] }};"
+                        data-tooltip="{{ week.status_per_day[day]['AM_data'] }} - {{ week.status_per_day[day]['AM_comment'] }}">
+                    </td>
+                {% endfor %}
+                <td>{{ week.status_per_day['total']['AM_comment'] }}</td>
+            </tr>
+            <tr>
+                <td>PM</td>
+                {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                    <td style="background-color: {{ week.status_per_day[day]['PM_color'] }};"
+                        data-tooltip="{{ week.status_per_day[day]['PM_data'] }} - {{ week.status_per_day[day]['PM_comment'] }}">
+                    </td>
+                {% endfor %}
+                <td>{{ week.status_per_day['total']['PM_comment'] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>

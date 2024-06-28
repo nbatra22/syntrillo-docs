@@ -79,6 +79,15 @@ class RemoteMonitoringDataReporting:
         if end_date is None:
             end_date = datetime.now()
 
+        # end_date - start date < 2 days, return an error
+        if (end_date - start_date).days < 2:
+            log = {
+                'success': False,
+                'error': 'Report period is too short',
+            }
+            return None, log
+
+
         # get pillbox data from PHI database, ordered by timestamp
         pillbox_data, log = self.syntrillo_database_manager.get_tenovi_device_data(
             device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
@@ -306,14 +315,25 @@ class RemoteMonitoringDataReporting:
 
         # get data of first pillbox event
         first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
+
+        if first_record is None:
+            log = {
+                'success': False,
+                'error': 'No pillbox data found',
+            }
+            return None, log
+
         date_first_record = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
 
         # Get todays date and time as an offset-aware datetime object
         todays_date = datetime.now(date_first_record.tzinfo)
 
+        # remove one day from todays date
+        todays_date = todays_date - timedelta(days=1)
+
         # loop for each 7 days period from date_first_record to today
         current_date = date_first_record
-        global_report = {}
+        global_report = []
         i=1
         while current_date <= todays_date:
 
@@ -325,6 +345,10 @@ class RemoteMonitoringDataReporting:
 
             # get report for this period
             report, log = self.get_pillbox_detailed_report(start_date, end_date, expected_pattern)
+
+            if report is None:
+                # exit while loop
+                break
 
             # get the dataframe
             pillbox_opened_status_per_day_df = report['pillbox_opened_status_per_day_df']
@@ -342,7 +366,9 @@ class RemoteMonitoringDataReporting:
                 }
 
             # add the report to the global report
-            global_report[i] = {
+            global_report.append(
+                {
+                'i': i,
                 'name': f'Week {i}',
                 'start_date': start_date.isoformat(),
                 'end_date': end_date.isoformat(),
@@ -351,14 +377,15 @@ class RemoteMonitoringDataReporting:
                 'missed_doses': report['missed_doses'],
                 'duplicate_count': report['duplicate_count'],
                 'status_per_day': status_per_day,
-            }
+                }
+            )
 
             # increment current_date by 7 days
             current_date += timedelta(days=7)
             i += 1
 
         log = {
-            'success': True,
+            'success': True,  # TODO combine logs from all periods
         }
 
         return global_report, log
