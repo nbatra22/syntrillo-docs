@@ -30,7 +30,7 @@ class RemoteMonitoringDataReporting:
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
 
-    def get_pillbox_report(
+    def get_pillbox_detailed_report(
         self,
         start_date : datetime,
         end_date : datetime,
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     end_date = datetime.now()
     expected_pattern = "twice daily"
     # expected_pattern = "daily AM"
-    report, log = data_reported.get_pillbox_report(start_date, end_date, expected_pattern)
+    report, log = data_reported.get_pillbox_detailed_report(start_date, end_date, expected_pattern)
 
     print(report)
     print("")
