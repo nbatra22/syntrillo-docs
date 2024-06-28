@@ -15,7 +15,14 @@ iframe_healthie_provider_tab_system_devices_bp = Blueprint('iframe_healthie_prov
 
 # ========================= HTML PAGE ==========================
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="SYSTEM_DEVICES")
+
+from aws_xray_sdk.core import patch_all, xray_recorder
+patch_all()
+
 @iframe_healthie_provider_tab_system_devices_bp.route('/healthie/iframe_provider_tab/system_devices', methods=['POST'])
+@xray_recorder.capture('iframe_healthie_provider_tab_system_devices')
 def iframe_healthie_provider_tab_system_devices():
     """
     This endpoint is used to display the devices page in the provider tab iframe.
@@ -28,6 +35,7 @@ def iframe_healthie_provider_tab_system_devices():
 
     # deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:
+        logger.warning(f"[SYSTEM_DEVICES] <PATIENT NOT REGISTERED> healthie_user_id {post_manager.posted_healthie_user_id}")
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # --------------------------------------------------------------------
@@ -38,6 +46,7 @@ def iframe_healthie_provider_tab_system_devices():
         add_tenovi_latest_record_timestamp=True,
         )
 
+    logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices {paired_devices}  <FOR> syntrillo_internal_key {post_manager.syntrillo_internal_key }")
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
