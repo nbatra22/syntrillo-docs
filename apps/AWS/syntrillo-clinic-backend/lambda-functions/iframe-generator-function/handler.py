@@ -1,11 +1,11 @@
 import json
 import awsgi
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="IFRAME_GENERATOR")
+
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
-
-from aws_lambda_powertools import Logger
-logger = Logger(service="PROVIDER_TAB")
 
 from aws_xray_sdk.core import patch_all, xray_recorder
 patch_all()
@@ -71,6 +71,5 @@ def iframe_healthie_provider_tab_index():
 
 @logger.inject_lambda_context
 def handler(event, context):
-    # logger.info(f"&&&&& INFO LEVEL LOG")
-    logger.debug(f"%%%% DEBUG LEVEL LOG")
+    logger.info(f"[IFRAME GENERATOR FUNCTION] <STARTED>")
     return awsgi.response(app, event, context)
