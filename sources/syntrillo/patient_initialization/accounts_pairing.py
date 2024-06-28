@@ -192,9 +192,6 @@ class AccountsPairing:
                             'needs_syncing': ( needs_syncing )
                         })
 
-
-
-
         return paired_devices
 
 
