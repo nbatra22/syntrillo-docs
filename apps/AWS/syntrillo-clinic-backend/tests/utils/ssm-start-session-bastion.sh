@@ -1,0 +1,1 @@
+aws ssm start-session --target i-04eeb91af7fc7606f --document-name AWS-StartInteractiveCommand --parameters '{"command":["sudo su - ec2-user"]}'

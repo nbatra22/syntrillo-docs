@@ -109,6 +109,7 @@ class DatabaseConnection:
             self.conn = pymysql.connect(**aws_db_config)
             if verbose:
                 print("connection to", aws_db_config.get('host'), "successful.")
+            return self.conn, None
 
         elif self.database_server == 'PythonAnywhere':
 

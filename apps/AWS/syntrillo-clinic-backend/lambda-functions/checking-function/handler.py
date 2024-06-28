@@ -9,6 +9,9 @@ from syntrillo.pseudonyms_management.temporary_lookup_codes_management import Te
     
 from syntrillo.api_tenovi.devices import Devices
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="CHECK-LIST-FUNCTION")
+
 class Database:
     def __init__(self):
         db_conn = DatabaseConnection(DatabaseConnection.PSEUDONYM_DB)
@@ -36,24 +39,24 @@ class Database:
         self.show_table_content("user_look_up_temporary_codes")
         self.show_table_content("logs")
 
-def initiate_database_connection():
-    db = Database()
-
 def display_database_content():
     Database().show_content()
-    
-def call_external_url():
-    response = requests.get("https://www.example.com")
-    return response
 
 def clean_database():
     Database().delete_tables_content()
 
-def call_tenovi():
+def test_initiate_database_connection():
+    db = Database()
+
+def test_internet_access():
+    response = requests.get("https://www.example.com")
+    return response
+
+def test_tenovi_access():
     devices = Devices()
     print(devices.get_devices_by_pseudo_code('564c8031-da06-4f7e-9057-44c4b790547d'))
 
-def register_patient_devices():
+def test_register_patient_devices():
 
     healthie_user_id = "1035117"
 
@@ -63,6 +66,8 @@ def register_patient_devices():
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
     syntrillo_internal_key = entry['syntrillo_internal_key']
 
+    logger.info(f"[IFRAME_PROVIDER_TAB] <NEW PATIENT ID GENERATED> syntrillo_internal_key {syntrillo_internal_key}")
+
     # create temp code
     temporary_lookup_codes_management = TemporaryLookUpCodesManagement()
     temporary_lookup_code = temporary_lookup_codes_management.create_temporary_pseudo_code(
@@ -71,8 +76,7 @@ def register_patient_devices():
     )
 
      # %%% ADDED TEST %%%
-    print("$> syntrillo_internal_key :", syntrillo_internal_key)
-    print("$> temporary_lookup_code :", temporary_lookup_code)
+    logger.info(f"[IFRAME_PROVIDER_TAB] <NEW PATIENT ID GENERATED> temporary_lookup_code {temporary_lookup_code}")
     # variables below will be reused for testing purposes
     syntrillo_internal_key_save = syntrillo_internal_key
     temporary_lookup_code_save = temporary_lookup_code
@@ -169,7 +173,7 @@ def register_patient_devices():
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=syntrillo_internal_key)
 
     # %%% ADDED TEST %%%    
-    print("$> paired_devices:", paired_devices)
+    logger.info(f"[IFRAME_PROVIDER_TAB][DEVICES] <PAIRED DEVICES READ FOR DISPLAY> Paired Devices: {paired_devices}")
     assert paired_devices == []
     # %%% ADDED TEST %%%
 
@@ -223,34 +227,50 @@ def register_patient_devices():
 
     # %%% ADDED TEST %%%
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=syntrillo_internal_key)
-    print("$> paired_devices:", paired_devices)
     assert paired_devices == []
     # %%% ADDED TEST %%%
 
     # return jsonify( log ), 200
 
+# @logger.inject_lambda_context
 def handler(event, context):
-    print(event)
+    logger.debug(f"START HANDLER - event {event}")
+
+    def test_response_200(message):
+        logger.info(f"TEST RESPONSE 200 - {message}")
+        return {
+            'statusCode': 200,
+            'body': message
+        }
 
     resource_path = event['path']
-    print(f"Resource path: {resource_path}")
 
-    if resource_path == "/test_network_outside_connectivity":
-        call_external_url()
-        return {
-            'statusCode': 200,
-            'body': 'Called example.com'
-        }
+    if resource_path == "/test_internet_access":
+        logger.info(f"START TEST" + resource_path)
+        test_internet_access()
+        return test_response_200(resource_path + " ok")
+
+    if resource_path == "/test_database_access":
+        logger.info(f"START TEST" + resource_path)
+        test_initiate_database_connection()
+        return test_response_200(resource_path + " ok")
     
-    if resource_path == "/register_patient_devices":
-        Database().delete_tables_content()
-        register_patient_devices()
-        return {
-            'statusCode': 200,
-            'body': 'Patient  devices are registered'
-        }
+    if resource_path == "/test_tenovi_access":
+        logger.info(f"START TEST" + resource_path)
+        test_tenovi_access()
+        return test_response_200(resource_path + " ok")
 
-    return {
-        'statusCode': 200,
-        'body': 'Hello from Lambda!'
-    }
+    if resource_path == "/test_device_pairing":
+        logger.info(f"START TEST" + resource_path)
+        Database().delete_tables_content()
+        test_register_patient_devices()
+        return test_response_200(resource_path + " ok")
+
+    logger.info(f"START TEST")
+    return test_response_200('/test_lambda_handler' + " ok")
+
+if __name__ == "__main__":
+    handler({"path": "/test_internet_access"}, None)
+    handler({"path": "/test_database_access"}, None)
+    handler({"path": "/test_tenovi_access"}, None)
+    handler({"path": "/test_device_pairing"}, None)

@@ -8,7 +8,10 @@ from aws_cdk import (
     aws_apigateway as apigw,
     aws_ssm as ssm,
     aws_ec2 as ec2,
-    aws_rds as rds
+    aws_rds as rds,
+    aws_route53 as route53,
+    aws_route53_targets as route53_targets,
+    aws_certificatemanager as acm
 )
 from constructs import Construct
 
@@ -16,18 +19,20 @@ from constructs import Construct
 # SYNTRILLO BACKEND CUSTOM CONSTRUCTS
 # -----------------------------------------------------------------------------
 class LandingPageConstruct(Construct):
-    '''
-        This CDK Construct creates a lambda function that serves the landing page.
-    '''
+    
+    def get_latest_layer_version_arn(self, layer_name: str) -> str:
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.list_layer_versions(LayerName=layer_name)
+        
+        if not response['LayerVersions']:
+            raise ValueError(f"No versions found for layer: {layer_name}")
+        
+        # The versions are returned in descending order, so the first one is the latest
+        latest_version = response['LayerVersions'][0]
+        return latest_version['LayerVersionArn'] 
+    
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-
-        # Create the Lambda layer that contains the required libraries
-        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
-            layer_version_name="FlaskLayer",
-            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
 
         # Create the Lambda function
         landing_page_function = _lambda.Function(self, "LandingPageFunction",
@@ -37,34 +42,46 @@ class LandingPageConstruct(Construct):
             code=_lambda.Code.from_asset("lambda-functions/landing-page-function"),
         )
 
+        # retrieve latest arn for lambda layers
+        latest_layer_version_arn = self.get_latest_layer_version_arn("flask-layer")
+        flask_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FlaskLayer", latest_layer_version_arn)
+
         # Add the Lambda layer to the Lambda function
         landing_page_function.add_layers(flask_layer)
 
         # Add the Lambda function as a REST API resource
-        landing_page_api = apigw.RestApi(self, "LandingPageAPI", rest_api_name="LandingPageAPI")
+        landing_page_api = apigw.RestApi(self, "LandingPageAPI", 
+            rest_api_name="LandingPageAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
+        )
         landing_page_api_root = landing_page_api.root
         landing_page_api_root.add_method("GET", apigw.LambdaIntegration(landing_page_function))
 
 class CheckingConstruct(Construct):
+
+    def get_latest_layer_version_arn(self, layer_name: str) -> str:
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.list_layer_versions(LayerName=layer_name)
+        
+        if not response['LayerVersions']:
+            raise ValueError(f"No versions found for layer: {layer_name}")
+        
+        # The versions are returned in descending order, so the first one is the latest
+        latest_version = response['LayerVersions'][0]
+        return latest_version['LayerVersionArn'] 
 
     def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
 
-        checking_api = apigw.RestApi(self, "CheckingAPI", rest_api_name="CheckingAPI")
-
-        # Create the Lambda layers that contains the required libraries
-        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
-            layer_version_name="FlaskLayer",
-            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
-
-        mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
-            layer_version_name="MySQLLayer",
-            code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
+        checking_api = apigw.RestApi(self, "CheckingAPI", 
+            rest_api_name="CheckingAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
         )
 
         # Create the Lambda function
@@ -77,9 +94,20 @@ class CheckingConstruct(Construct):
             timeout=Duration.seconds(5)
         )
 
+        # retrieve latest arn for lambda layers
+        latest_layer_version_arn = self.get_latest_layer_version_arn("flask-layer")
+        flask_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FlaskLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("mysql-layer")
+        mysql_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MySQLLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("monitoring-layer")
+        monitoring_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MonitoringLayer", latest_layer_version_arn)
+
         # Add the Lambda layers to the Lambda function
         checking_function.add_layers(flask_layer)
         checking_function.add_layers(mysql_layer)
+        checking_function.add_layers(monitoring_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = checking_api.root
@@ -90,71 +118,53 @@ class CheckingConstruct(Construct):
         )
 
         # Add resources for tests
-        iframe_healthie_provider_tab = root_resource.add_resource("test_network_outside_connectivity")
+        iframe_healthie_provider_tab = root_resource.add_resource("{id}")
         iframe_healthie_provider_tab.add_method(
             "ANY",
             apigw.LambdaIntegration(checking_function),
         )
 
-        iframe_healthie_provider_tab = root_resource.add_resource("test_tenovi_access")
-        iframe_healthie_provider_tab.add_method(
-            "ANY",
-            apigw.LambdaIntegration(checking_function),
-        )
-
-        iframe_healthie_provider_tab = root_resource.add_resource("register_patient_devices")
-        iframe_healthie_provider_tab.add_method(
-            "ANY",
-            apigw.LambdaIntegration(checking_function),
-        )
-
+import boto3
 class IFrameGeneratorConstruct(Construct):
-
-    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
+    
+    def get_latest_layer_version_arn(self, layer_name: str) -> str:
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.list_layer_versions(LayerName=layer_name)
+        
+        if not response['LayerVersions']:
+            raise ValueError(f"No versions found for layer: {layer_name}")
+        
+        # The versions are returned in descending order, so the first one is the latest
+        latest_version = response['LayerVersions'][0]
+        return latest_version['LayerVersionArn'] 
+        
+    def __init__(self, scope: Construct, id: str, vpc, hosted_zone, certificate, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.hosted_zone = hosted_zone
+        self.certificate = certificate
 
+        # Create the API Gateway
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
             rest_api_name="IFramGeneratorAPI",
+            domain_name=apigw.DomainNameOptions(
+                domain_name="api.sandbox.syntrillo-clinic-backend.com",
+                certificate=self.certificate
+            ),
             deploy_options= apigw.StageOptions(
-                tracing_enabled=True
+                tracing_enabled=True,
+                stage_name="sandbox"
             )
         )
 
-        # # Add a new stage
-        # deployment = apigw.Deployment(self, "SandboxDeployment",
-        #     api = iframe_generator_api
-        # )
-
-        # sandbox_stage = apigw.Stage(self, "SandBoxStage",
-        #     stage_name="sandbox",
-        #     deployment=deployment
-        # )
-
-        # Create the Lambda layers that contains the required libraries
-        flask_layer = _lambda.LayerVersion(self, "FlaskLayer",
-            layer_version_name="FlaskLayer",
-            code=_lambda.Code.from_asset("lambda-layers/flask-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
-
-        mysql_layer = _lambda.LayerVersion(self, "MySQLLayer",
-            layer_version_name="MySQLLayer",
-            code=_lambda.Code.from_asset("lambda-layers/mysql-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10],
-        )
-
-        pandas_layer = _lambda.LayerVersion(self, "PandasLayer",
-            layer_version_name="PandasLayer",
-            code=_lambda.Code.from_asset("lambda-layers/pandas-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
-        )
-
-        monitoring_layer = _lambda.LayerVersion(self, "MonitoringLayer",
-            layer_version_name="MonitoringLayer",
-            code=_lambda.Code.from_asset("lambda-layers/monitoring-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_10]
+        # Create a Route53 record to map the custom domain to the API Gateway domain
+        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
+            zone=hosted_zone,
+            record_name="api.sandbox.syntrillo-clinic-backend.com",
+            target=route53.RecordTarget.from_alias(
+                route53_targets.ApiGateway(iframe_generator_api)
+            )
         )
 
         # Create the Lambda function
@@ -165,8 +175,24 @@ class IFrameGeneratorConstruct(Construct):
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
             vpc = self.vpc,
             timeout=Duration.seconds(5),
-            tracing=_lambda.Tracing.ACTIVE
+            tracing=_lambda.Tracing.ACTIVE,
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG"
+            }
         )
+
+        # retrieve latest arn for lambda layers
+        latest_layer_version_arn = self.get_latest_layer_version_arn("flask-layer")
+        flask_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FlaskLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("mysql-layer")
+        mysql_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MySQLLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("pandas-layer")
+        pandas_layer = _lambda.LayerVersion.from_layer_version_arn(self, "PandasLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("monitoring-layer")
+        monitoring_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MonitoringLayer", latest_layer_version_arn)
 
         # Add the Lambda layers to the Lambda function
         iframe_generator_function.add_layers(flask_layer)
@@ -356,20 +382,54 @@ class SyntrilloClinicBackendStack(Stack):
         # Create a bastion host in the public subnet
         self.bastion_host = ec2.BastionHostLinux(self, "BastionHost",
             vpc=self.vpc,
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC
-            )
+            ),
+            # init=ec2.CloudFormationInit.from_config_sets(
+            #     config_sets={
+            #         "default": ["install_packages", "run_commands"]
+            #     },
+            #     configs={
+            #         "install_packages": ec2.InitConfig([
+            #             ec2.InitPackage.yum("mysql"),
+            #         ]),
+            #         "run_commands": ec2.InitConfig([
+            #             ec2.InitCommand.shell_command("echo 'Hello from the bastion host!' > /tmp/message.txt")
+            #         ])
+            #     }
+            # ),
+            # init_options=ec2.ApplyCloudFormationInitOptions(
+            #     config_sets=["default"]
+            # ),
         )
         
         # Add a security group rule to allow SSH access to the bastion host
-        self.bastion_host.connections.allow_from_any_ipv4(
-            ec2.Port.tcp(22),
-            "Allow SSH access to the bastion host"
+        # self.bastion_host.connections.allow_from_any_ipv4(
+        #     ec2.Port.tcp(22),
+        #     "Allow SSH access to the bastion host"
+        # )
+
+        # Reference an existing hosted zone using its attributes
+        hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
+            zone_name="sandbox.syntrillo-clinic-backend.com",
+            hosted_zone_id="Z00281931X0P3VA26SLKK"
         )
+        self.hosted_zone = hosted_zone
+
+        # Create a certificate for the domain
+        certificate = acm.Certificate( self, "SyntrilloClinicBackendSSLCertificate",
+            domain_name="sandbox.syntrillo-clinic-backend.com",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
+            subject_alternative_names=[
+                "api.sandbox.syntrillo-clinic-backend.com"
+            ]
+        )
+        self.certificate = certificate
 
         LandingPageConstruct(self, "LandingPageConstruct")
         
-        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc)
+        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc, self.hosted_zone, self.certificate)
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
 
