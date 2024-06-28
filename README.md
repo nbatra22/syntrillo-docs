@@ -97,7 +97,7 @@ pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v2.txt
 ```
 
 Move to pymysql:
-   - no available on PythonAnywhere `pip show pymysql`, have to install it: `pip install pymysql`
+   - not available on PythonAnywhere `pip show pymysql`, have to install it: `pip install pymysql`
    - installs well on `p3.9_Syntrillo_Clinic_v2` @ maxwell
    - summary of changes:
         - Replaced `import MySQLdb` with `import pymysql`.
