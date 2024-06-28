@@ -2,6 +2,8 @@ import uuid
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
+import matplotlib
+import matplotlib.cm as cm # color map
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
@@ -66,8 +68,11 @@ class RemoteMonitoringDataReporting:
 
         # deal with None start_date, end_date
         if start_date is None:
-            start_date = datetime.now() - timedelta(days=30)
-            # TODO : look for the first pillbox event and set start_date to that date
+            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
+            if first_record is not None:
+                start_date = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
+            else:
+                start_date = datetime(2000, 1, 1)
         if end_date is None:
             end_date = datetime.now()
 
@@ -93,11 +98,56 @@ class RemoteMonitoringDataReporting:
         #   - row names are days of the week : sun=1, mon=2, ..., sat=7
         #   - each cell will store the number of pillbox_opened events for that day of the week and AM/PM
         #   - if multiple pillbox_opened events for the same day and AM/PM : count duplicates as one event
+
+        # get pillbox_opened events
         pillbox_opened = pillbox_data[pillbox_data['metric_name'] == 'pillbox_opened']
-        pillbox_opened_count = pillbox_opened.shape[0]
-        pillbox_actual_opened_count_per_day_df = pd.DataFrame(np.zeros((7, 2)), columns=['AM', 'PM'])
+
+        # ------------------------------------------------------
+        # create a new panda dataframe with 7 rows (one for each day of the week) and several sets of AM, PM columns with:
+        #  - actual count of pillbox_opened events
+        #  - expected count of pillbox_opened events
+        #  - difference between actual and expected
+        #  - ratio of actual to expected
+        #  - color representing the ratio, differences and potential issues
+        pillbox_opened_status_per_day_df = pd.DataFrame(
+            np.zeros((7, 2*8)),
+            columns=[
+                'AM_actual_raw', 'PM_actual_raw',  # with duplicates
+                'AM_actual', 'PM_actual',          # without duplicates
+                'AM_expected', 'PM_expected',
+                'AM_diff', 'PM_diff',
+                'AM_ratio', 'PM_ratio',
+                'AM_color', 'PM_color',
+                'AM_comment', 'PM_comment',
+                'AM_data', 'PM_data',
+                ]
+            )
+
         row_names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-        pillbox_actual_opened_count_per_day_df.index = row_names
+        pillbox_opened_status_per_day_df.index = row_names
+
+        # Converting columns to the desired types
+        pillbox_opened_status_per_day_df = pillbox_opened_status_per_day_df.astype({
+            'AM_actual_raw': 'int32',
+            'PM_actual_raw': 'int32',
+            'AM_actual': 'int32',
+            'PM_actual': 'int32',
+            'AM_expected': 'int32',
+            'PM_expected': 'int32',
+            'AM_diff': 'int32',
+            'PM_diff': 'int32',
+            'AM_ratio': 'float64',
+            'PM_ratio': 'float64',
+            'AM_color': 'str',
+            'PM_color': 'str',
+            'AM_comment': 'str',
+            'PM_comment': 'str',
+            'AM_data': 'str',
+            'PM_data': 'str',
+        })
+
+        # ------------------------------------------------------
+        # get actual count of pillbox_opened events
         current_row_date = None
         current_am_pm = None
         duplicate_count = 0
@@ -105,20 +155,18 @@ class RemoteMonitoringDataReporting:
             # get date from row['timestamp_local'], which has this isoformat: '2024-06-26T15:43:08.000000-04:00'
             row_date = datetime.strptime(row['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z').date()
             day_of_week = int(round(float(row['value_1']), 0)) - 1
-            am_pm = int(round(float(row['value_2']), 0)) - 1
+            am_pm = int(round(float(row['value_2']), 0)) - 1 # columns 0 and 1 for AM_actual and PM_actual
             if row_date == current_row_date and am_pm == current_am_pm:
                 duplicate_count += 1
+                pillbox_opened_status_per_day_df.iloc[day_of_week, am_pm] += 1 # raw, with duplicates
                 continue
-            pillbox_actual_opened_count_per_day_df.iloc[day_of_week, am_pm] += 1
+            pillbox_opened_status_per_day_df.iloc[day_of_week, am_pm] += 1 # raw, with duplicates
+            pillbox_opened_status_per_day_df.iloc[day_of_week, am_pm + 2] += 1  # without duplicates
             current_row_date = row_date
             current_am_pm = am_pm
 
-        print(pillbox_actual_opened_count_per_day_df)  # actual
-
+        # ------------------------------------------------------
         # build expected df from the expected pattern
-        pillbox_expected_opened_count_per_day_df = pd.DataFrame(np.zeros((7, 2)), columns=['AM', 'PM'])
-        row_names = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-        pillbox_expected_opened_count_per_day_df.index = row_names
 
         # loop for each day from start_date to end_date :
         # add 1 to the expected df for each day and AM/PM that matches the expected pattern
@@ -128,21 +176,113 @@ class RemoteMonitoringDataReporting:
             day_of_week = current_day.weekday()
             # get expected AM/PM from expected pattern
             if expected_pattern == "twice daily":
-                pillbox_expected_opened_count_per_day_df.iloc[day_of_week, 0] += 1
-                pillbox_expected_opened_count_per_day_df.iloc[day_of_week, 1] += 1
+                pillbox_opened_status_per_day_df.iloc[day_of_week, 4] += 1
+                pillbox_opened_status_per_day_df.iloc[day_of_week, 5] += 1
             elif expected_pattern == "daily AM":
-                pillbox_expected_opened_count_per_day_df.iloc[day_of_week, 0] += 1
+                pillbox_opened_status_per_day_df.iloc[day_of_week, 4] += 1
             elif expected_pattern == "daily PM":
-                pillbox_expected_opened_count_per_day_df.iloc[day_of_week, 1] += 1
+                pillbox_opened_status_per_day_df.iloc[day_of_week, 5] += 1
             current_day += timedelta(days=1)
 
-        print(pillbox_expected_opened_count_per_day_df)  # expected
+
+        # ------------------------------------------------------
+        # compare actual and expected
+
+        # get total number of actual doses : that's the sum of all cells in pillbox_opened_status_per_day_df AM_actual and PM_actual columns
+        actual_doses = pillbox_opened_status_per_day_df['AM_actual'].sum() + pillbox_opened_status_per_day_df['PM_actual'].sum()
+
+        # get total number of expected doses : that's the sum of all cells in pillbox_opened_status_per_day_df AM_expected and PM_expected columns
+        expected_doses = pillbox_opened_status_per_day_df['AM_expected'].sum() + pillbox_opened_status_per_day_df['PM_expected'].sum()
+
+        # get number of missed doses : that's the difference between expected and actual doses
+        missed_doses = expected_doses - actual_doses
+
+        # calculate differences  (expected - actual) in pillbox_opened_status_per_day_df AM_diff and PM_diff columns
+        #  : useful to detect negative numbers, which would indicate that the patient took more doses than expected or at the wrong time
+        pillbox_opened_status_per_day_df['AM_diff'] = pillbox_opened_status_per_day_df['AM_expected'] - pillbox_opened_status_per_day_df['AM_actual']
+        pillbox_opened_status_per_day_df['PM_diff'] = pillbox_opened_status_per_day_df['PM_expected'] - pillbox_opened_status_per_day_df['PM_actual']
+
+        # calculate ratio  (actual/expected) in pillbox_opened_status_per_day_df AM_ratio and PM_ratio columns
+        pillbox_opened_status_per_day_df['AM_ratio'] = pillbox_opened_status_per_day_df['AM_actual'] / pillbox_opened_status_per_day_df['AM_expected']
+        pillbox_opened_status_per_day_df['PM_ratio'] = pillbox_opened_status_per_day_df['PM_actual'] / pillbox_opened_status_per_day_df['PM_expected']
+
+        # ------------------------------------------------------
+        # determine colors and comments based on diff and ratio
+        #  - green to red colormap: 0% to 100% missed doses
+        #  - black : a negative number, which would indicate that the patient took more doses than expected or at the wrong time
+        #  - white : no expected dosage
+        #  - use matplotlib to display the dataframe with colors
+
+        # initialize color columns to white
+        pillbox_opened_status_per_day_df['AM_color'] = 'white'
+        pillbox_opened_status_per_day_df['PM_color'] = 'white'
+
+        # initialize comment columns to empty string
+        pillbox_opened_status_per_day_df['AM_comment'] = ''
+        pillbox_opened_status_per_day_df['PM_comment'] = ''
+
+        # Create a colormap object
+        colormap = matplotlib.cm.RdYlGn
+
+        # loop through the dataframe and set colors
+        for index, row in pillbox_opened_status_per_day_df.iterrows():
+            # ---
+            # AM
+
+            if row['AM_expected'] > 0:
+                # if AM_expected is not zero, then set color based on ratio
+                # use a green to red colormap with matplotlib: 0% to 100% missed doses
+                # loop through the dataframe and set colors
+                for index, row in pillbox_opened_status_per_day_df.iterrows():
+                    # add data to the AM_data and PM_data columns : actual_raw and expected for AM and PM, line separated with '<br>
+                    pillbox_opened_status_per_day_df.at[index, 'AM_data'] = 'Actual raw: ' + str(row['AM_actual_raw']) + '<br>Expected: ' + str(row['AM_expected'])
+                    pillbox_opened_status_per_day_df.at[index, 'PM_data'] = 'Actual raw: ' + str(row['PM_actual_raw']) + '<br>Expected: ' + str(row['PM_expected'])
+
+                    # ---
+                    # AM
+                    if row['AM_expected'] > 0:
+                        if row['AM_actual_raw'] <= row['AM_expected'] :
+                            # if AM_expected is not zero, then set color based on ratio
+                            # use a green to red colormap with matplotlib: 0% to 100% missed doses
+                            color = colormap(row['AM_ratio'])
+                            # Convert the color to hex and set it in the DataFrame
+                            pillbox_opened_status_per_day_df.at[index, 'AM_color'] = matplotlib.colors.rgb2hex(color[:3])
+                        else:
+                            # overdose
+                            pillbox_opened_status_per_day_df.at[index, 'AM_color'] = 'violet'
+                            pillbox_opened_status_per_day_df.at[index, 'AM_comment'] = 'Pillbox opened more than expected'
+
+                    # if AM_actual is greater than zero, the patient took doses that were not expected
+                    if row['AM_expected']==0 and row['AM_actual'] > 0:
+                        pillbox_opened_status_per_day_df.at[index, 'AM_color'] = 'black'
+                        pillbox_opened_status_per_day_df.at[index, 'AM_comment'] = 'Pillbox opening not expected'
+
+                    # ---
+                    # PM
+                    if row['PM_expected'] > 0:
+                        if row['PM_actual_raw'] <= row['PM_expected'] :
+                            # if PM_expected is not zero, then set color based on ratio
+                            # use a green to red colormap with matplotlib: 0% to 100% missed doses
+                            color = colormap(row['PM_ratio'])
+                            # Convert the color to hex and set it in the DataFrame
+                            pillbox_opened_status_per_day_df.at[index, 'PM_color'] = matplotlib.colors.rgb2hex(color[:3])
+                        else:
+                            # overdose
+                            pillbox_opened_status_per_day_df.at[index, 'PM_color'] = 'violet'
+                            pillbox_opened_status_per_day_df.at[index, 'PM_comment'] = 'Pillbox opened more than expected'
+
+                    # if PM_actual is greater than zero, the patient took doses that were not expected
+                    if row['PM_expected']==0 and row['PM_actual'] > 0:
+                        pillbox_opened_status_per_day_df.at[index, 'PM_color'] = 'black'
+                        pillbox_opened_status_per_day_df.at[index, 'PM_comment'] = 'Pillbox opening not expected'
 
 
         report = {
             'pillbox_refilled_count': pillbox_refilled_count,
             'pillbox_refill_initiated_count': pillbox_refill_initiated_count,
+            'missed_doses': missed_doses,
             'duplicate_count': duplicate_count,
+            'pillbox_opened_status_per_day_df': pillbox_opened_status_per_day_df,
         }
 
         return report, log
@@ -156,9 +296,10 @@ if __name__ == "__main__":
     data_reported = RemoteMonitoringDataReporting(entry['syntrillo_internal_key'])
 
     # Get pillbox report
-    start_date = datetime(2024, 6, 10)
+    start_date = None
     end_date = datetime.now()
-    expected_pattern = "twice daily"
+    # expected_pattern = "twice daily"
+    expected_pattern = "daily AM"
     report, log = data_reported.get_pillbox_report(start_date, end_date, expected_pattern)
 
     print(report)
