@@ -1,4 +1,5 @@
 import uuid
+import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
@@ -62,7 +63,9 @@ class RemoteMonitoringDataReporting:
             end_date : datetime (if None: the current date will be used)
             expected_pattern : str = "twice daily", "daily AM", "daily PM"
 
-        Returns:
+        Returns a tuple:
+            - report : dict
+            - log : str
 
         """
 
@@ -277,6 +280,91 @@ class RemoteMonitoringDataReporting:
 
         return report, log
 
+    def pillbox_global_report(
+        self,
+        expected_pattern : str = "twice daily",
+    ):
+        """
+        Report medication adherence using all available pillbox information for this patient.
+
+        The report is divided by periods of 7 days, or 28 days, depending on how long the patient has been using the pillbox.
+
+        The report is a dict that includes for each period:
+            - date range
+            - from the report from get_pillbox_detailed_report(), as a dict, for each day and AM/PM:
+                - color
+                - data
+                - comment
+
+        Args:
+            expected_pattern : str = "twice daily", "daily AM", "daily PM"
+
+        Returns a tuple:
+            - report : dict
+            - log : str
+        """
+
+        # get data of first pillbox event
+        first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
+        date_first_record = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
+
+        # Get todays date and time as an offset-aware datetime object
+        todays_date = datetime.now(date_first_record.tzinfo)
+
+        # loop for each 7 days period from date_first_record to today
+        current_date = date_first_record
+        global_report = {}
+        i=1
+        while current_date <= todays_date:
+
+            # set start_date and end_date for this period
+            start_date = current_date
+            end_date = start_date + timedelta(days=7)
+            if end_date > todays_date:
+                end_date = todays_date
+
+            # get report for this period
+            report, log = self.get_pillbox_detailed_report(start_date, end_date, expected_pattern)
+
+            # get the dataframe
+            pillbox_opened_status_per_day_df = report['pillbox_opened_status_per_day_df']
+
+            # extract what we need from the dataframe
+            status_per_day = {}
+            for index, row in pillbox_opened_status_per_day_df.iterrows():
+                status_per_day[index] = {
+                    'AM_color': row['AM_color'],
+                    'AM_data': row['AM_data'],
+                    'AM_comment': row['AM_comment'],
+                    'PM_color': row['PM_color'],
+                    'PM_data': row['PM_data'],
+                    'PM_comment': row['PM_comment'],
+                }
+
+            # add the report to the global report
+            global_report[i] = {
+                'name': f'Week {i}',
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+                'pillbox_refilled_count': report['pillbox_refilled_count'],
+                'pillbox_refill_initiated_count': report['pillbox_refill_initiated_count'],
+                'missed_doses': report['missed_doses'],
+                'duplicate_count': report['duplicate_count'],
+                'status_per_day': status_per_day,
+            }
+
+            # increment current_date by 7 days
+            current_date += timedelta(days=7)
+            i += 1
+
+        log = {
+            'success': True,
+        }
+
+        return global_report, log
+
+
+
 
 if __name__ == "__main__":
     # Example usage
@@ -285,16 +373,29 @@ if __name__ == "__main__":
 
     data_reported = RemoteMonitoringDataReporting(entry['syntrillo_internal_key'])
 
-    # Get pillbox report
-    start_date = None
-    end_date = datetime.now()
-    expected_pattern = "twice daily"
-    # expected_pattern = "daily AM"
-    report, log = data_reported.get_pillbox_detailed_report(start_date, end_date, expected_pattern)
+    if False:
+        # Get single pillbox report
+        start_date = None
+        end_date = datetime.now()
+        expected_pattern = "twice daily"
+        # expected_pattern = "daily AM"
+        report, log = data_reported.get_pillbox_detailed_report(start_date, end_date, expected_pattern)
 
-    print(report)
-    print("")
-    print(report['pillbox_opened_status_per_day_df'])
+        print(report)
+        print("")
+        print(report['pillbox_opened_status_per_day_df'])
+
+    if True:
+        # Get global pillbox report
+        expected_pattern = "twice daily"
+        report, log = data_reported.pillbox_global_report(expected_pattern)
+
+        print(json.dumps(report, indent=4, default=str))
+
+
+
+
+
 
 
 

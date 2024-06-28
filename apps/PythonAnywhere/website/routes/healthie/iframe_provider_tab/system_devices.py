@@ -46,6 +46,7 @@ def iframe_healthie_provider_tab_system_devices():
         add_tenovi_latest_record_timestamp=True,
         )
 
+    # TODO : don't log PII from paired_devices, use another ID for <FOR>
     logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices {paired_devices}  <FOR> syntrillo_internal_key {post_manager.syntrillo_internal_key }")
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
