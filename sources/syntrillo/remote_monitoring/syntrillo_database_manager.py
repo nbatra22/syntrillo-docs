@@ -78,11 +78,13 @@ class SyntrilloDatabaseManager:
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 cursor.execute(
-                    """SELECT *, JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.created')) as 'created'
+                    """
+                    SELECT *, JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.created')) as 'created'
                     FROM tenovi_raw_measurements
                     WHERE syntrillo_internal_key = %s AND device_name = %s
                     ORDER BY JSON_UNQUOTE(JSON_EXTRACT(data_json, '$.created')) DESC
-                    LIMIT 1""",
+                    LIMIT 1
+                    """,
                     (self.syntrillo_internal_key.bytes, device_name)
                 )
                 record = cursor.fetchone()
@@ -359,6 +361,58 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
+    def get_first_tenovi_device_data(
+        self,
+        device_name: str
+        ) -> Tuple[dict, dict]:
+        """
+            Get the first record for a given device, based on ite timestamp_local.
+
+            For example used in pillbox data analysis to produce correct stats, based on usage duration.
+
+            Args:
+                device_name (str): The name of the device
+
+            Returns a tuple:
+                record (dict): The latest record for the device.
+                log (dict): The log of the request
+
+        """
+
+       # Check if device_name is valid
+        if device_name not in self.TENOVI_DEVICE_NAMES:
+            log = {
+                "success": False,
+                "error": f"Invalid device_name: {device_name}"
+            }
+            return None, log
+
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute(
+                    """
+                    SELECT *
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = %s AND device_name = %s
+                    ORDER BY timestamp_local ASC
+                    LIMIT 1
+                    """,
+                    (self.syntrillo_internal_key.bytes, device_name)
+                )
+                record = cursor.fetchone()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            record = None
+
+        return record, log
+
+
     def get_tenovi_device_data(
         self,
         device_name: str,
@@ -371,8 +425,8 @@ class SyntrilloDatabaseManager:
 
             Args:
                 device_name (str): The name of the device
-                start_date (datetime): The start date
-                end_date (datetime): The end date
+                start_date (datetime): The start date. None allowed.
+                end_date (datetime): The end date. If None, the current date will be used.
                 include_battery (bool): Include the battery percentage metric (default is False)
 
             Returns a tuple:
@@ -389,6 +443,14 @@ class SyntrilloDatabaseManager:
             }
             return None, log
 
+        # deal with None start_date, end_date
+        if start_date is None:
+            start_date = datetime(2000)
+
+        if end_date is None:
+            end_date = datetime.now()
+
+        # run query
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 cursor.execute(
