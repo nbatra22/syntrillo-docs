@@ -171,9 +171,6 @@ class AccountsPairing:
             data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
             summary_report, log = data_manager.get_summary_devices_report()
 
-            # print(f"paired_devices: {paired_devices}")
-            # print(f"summary_report: {summary_report}")
-
             # Create a dictionary from summary_report for quick lookup
             summary_dict = {report['device_name']: report for report in summary_report}
 
@@ -184,9 +181,15 @@ class AccountsPairing:
                     device['device'].update(summary_dict[device_name])
                     if add_tenovi_latest_record_timestamp:
                         record, log = data_manager.get_latest_record_for_tenovi_device(device_name)
+                        if record :
+                            latest__tenovi_server_created__at_tenovi = json.loads(record['data_json'])['created']
+                            needs_syncing = json.loads(record['data_json'])['created'] > device['device']['latest__tenovi_server_created__in_syntrillo_database']
+                        else:
+                            latest__tenovi_server_created__at_tenovi = None
+                            needs_syncing = True
                         device['device'].update({
-                            'latest__tenovi_server_created__at_tenovi': json.loads(record['data_json'])['created'],
-                            'needs_syncing': ( json.loads(record['data_json'])['created'] > device['device']['latest__tenovi_server_created__in_syntrillo_database'] )
+                            'latest__tenovi_server_created__at_tenovi': latest__tenovi_server_created__at_tenovi,
+                            'needs_syncing': ( needs_syncing )
                         })
 
 
