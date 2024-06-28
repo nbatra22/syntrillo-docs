@@ -186,6 +186,10 @@ class RemoteMonitoringDataReporting:
 
 
         # ------------------------------------------------------
+        # add a row that sums up the columns
+        pillbox_opened_status_per_day_df.loc['total'] = pillbox_opened_status_per_day_df.sum()
+
+        # ------------------------------------------------------
         # compare actual and expected
 
         # get total number of actual doses : that's the sum of all cells in pillbox_opened_status_per_day_df AM_actual and PM_actual columns
@@ -224,58 +228,44 @@ class RemoteMonitoringDataReporting:
         # Create a colormap object
         colormap = matplotlib.cm.RdYlGn
 
-        # loop through the dataframe and set colors
-        for index, row in pillbox_opened_status_per_day_df.iterrows():
-            # ---
-            # AM
+        # loop through the dataframe and set colors and comments
+        for col_prefix in ['AM', 'PM']:
+            for index, row in pillbox_opened_status_per_day_df.iterrows():
+                # add data to the AM_data and PM_data columns : actual_raw and expected for AM and PM, line separated with '<br>
+                pillbox_opened_status_per_day_df.at[index, col_prefix + '_data'] = col_prefix \
+                    + ' : Actual raw: ' \
+                    + str(row[col_prefix + '_actual_raw']) \
+                    + ' / Expected: ' + str(row[col_prefix + '_expected'])
 
-            if row['AM_expected'] > 0:
-                # if AM_expected is not zero, then set color based on ratio
-                # use a green to red colormap with matplotlib: 0% to 100% missed doses
-                # loop through the dataframe and set colors
-                for index, row in pillbox_opened_status_per_day_df.iterrows():
-                    # add data to the AM_data and PM_data columns : actual_raw and expected for AM and PM, line separated with '<br>
-                    pillbox_opened_status_per_day_df.at[index, 'AM_data'] = 'Actual raw: ' + str(row['AM_actual_raw']) + '<br>Expected: ' + str(row['AM_expected'])
-                    pillbox_opened_status_per_day_df.at[index, 'PM_data'] = 'Actual raw: ' + str(row['PM_actual_raw']) + '<br>Expected: ' + str(row['PM_expected'])
+                # ---
+                # color and comment logic
+                if row[col_prefix + '_expected'] > 0: # if AM_expected is not zero, then set color based on ratio
 
-                    # ---
-                    # AM
-                    if row['AM_expected'] > 0:
-                        if row['AM_actual_raw'] <= row['AM_expected'] :
-                            # if AM_expected is not zero, then set color based on ratio
-                            # use a green to red colormap with matplotlib: 0% to 100% missed doses
-                            color = colormap(row['AM_ratio'])
-                            # Convert the color to hex and set it in the DataFrame
-                            pillbox_opened_status_per_day_df.at[index, 'AM_color'] = matplotlib.colors.rgb2hex(color[:3])
+                    if row[col_prefix + '_actual_raw'] <= row[col_prefix + '_expected'] : # within expected range
+
+                        ratio = row[col_prefix + '_ratio']
+                        # use a green to red colormap with matplotlib: 0% to 100% missed doses
+                        color = colormap(ratio)
+
+                        # Convert the color to hex and set it in the DataFrame
+                        pillbox_opened_status_per_day_df.at[index, col_prefix + '_color'] = matplotlib.colors.rgb2hex(color[:3])
+
+                        # add adherence comment based on ratio
+                        if ratio == 1.0:
+                            pillbox_opened_status_per_day_df.at[index, col_prefix + '_comment'] = 'Perfect adherence'
+                        elif ratio >= 0.5:
+                            pillbox_opened_status_per_day_df.at[index, col_prefix + '_comment'] = 'Partial adherence'
                         else:
-                            # overdose
-                            pillbox_opened_status_per_day_df.at[index, 'AM_color'] = 'violet'
-                            pillbox_opened_status_per_day_df.at[index, 'AM_comment'] = 'Pillbox opened more than expected'
+                            pillbox_opened_status_per_day_df.at[index, col_prefix + '_comment'] = 'Poor adherence'
 
-                    # if AM_actual is greater than zero, the patient took doses that were not expected
-                    if row['AM_expected']==0 and row['AM_actual'] > 0:
-                        pillbox_opened_status_per_day_df.at[index, 'AM_color'] = 'black'
-                        pillbox_opened_status_per_day_df.at[index, 'AM_comment'] = 'Pillbox opening not expected'
+                    else: # overdose
+                        pillbox_opened_status_per_day_df.at[index, col_prefix + '_color'] = 'violet'
+                        pillbox_opened_status_per_day_df.at[index, col_prefix + '_comment'] = 'Pillbox opened more than expected'
 
-                    # ---
-                    # PM
-                    if row['PM_expected'] > 0:
-                        if row['PM_actual_raw'] <= row['PM_expected'] :
-                            # if PM_expected is not zero, then set color based on ratio
-                            # use a green to red colormap with matplotlib: 0% to 100% missed doses
-                            color = colormap(row['PM_ratio'])
-                            # Convert the color to hex and set it in the DataFrame
-                            pillbox_opened_status_per_day_df.at[index, 'PM_color'] = matplotlib.colors.rgb2hex(color[:3])
-                        else:
-                            # overdose
-                            pillbox_opened_status_per_day_df.at[index, 'PM_color'] = 'violet'
-                            pillbox_opened_status_per_day_df.at[index, 'PM_comment'] = 'Pillbox opened more than expected'
-
-                    # if PM_actual is greater than zero, the patient took doses that were not expected
-                    if row['PM_expected']==0 and row['PM_actual'] > 0:
-                        pillbox_opened_status_per_day_df.at[index, 'PM_color'] = 'black'
-                        pillbox_opened_status_per_day_df.at[index, 'PM_comment'] = 'Pillbox opening not expected'
-
+                # if expected==0 and actual_raw is greater than zero, the patient took doses that were not expected
+                if row[col_prefix + '_expected']==0 and row[col_prefix + '_actual_raw'] > 0:
+                    pillbox_opened_status_per_day_df.at[index, col_prefix + '_color'] = 'black'
+                    pillbox_opened_status_per_day_df.at[index, col_prefix + '_comment'] = 'Pillbox opening not expected'
 
         report = {
             'pillbox_refilled_count': pillbox_refilled_count,
@@ -298,11 +288,13 @@ if __name__ == "__main__":
     # Get pillbox report
     start_date = None
     end_date = datetime.now()
-    # expected_pattern = "twice daily"
-    expected_pattern = "daily AM"
+    expected_pattern = "twice daily"
+    # expected_pattern = "daily AM"
     report, log = data_reported.get_pillbox_report(start_date, end_date, expected_pattern)
 
     print(report)
+    print("")
+    print(report['pillbox_opened_status_per_day_df'])
 
 
 
