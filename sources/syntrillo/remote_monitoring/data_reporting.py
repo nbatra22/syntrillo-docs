@@ -69,6 +69,13 @@ class RemoteMonitoringDataReporting:
 
         """
 
+        # ------------------------------------------------------
+        # get data
+        #   - make sure start_date and end_date are at midnight
+        #   - deal with edges cases
+
+
+        # ---
         # deal with None start_date, end_date
         if start_date is None:
             first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
@@ -79,6 +86,14 @@ class RemoteMonitoringDataReporting:
         if end_date is None:
             end_date = datetime.now()
 
+        # ---
+        # the time of start_date should be 00:00:00
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # the time of end_date should be 23:59:59
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=0)
+
+        # ---
         # end_date - start date < 2 days, return an error
         if (end_date - start_date).days < 2:
             log = {
@@ -87,7 +102,7 @@ class RemoteMonitoringDataReporting:
             }
             return None, log
 
-
+        # ---
         # get pillbox data from PHI database, ordered by timestamp
         pillbox_data, log = self.syntrillo_database_manager.get_tenovi_device_data(
             device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
@@ -95,7 +110,18 @@ class RemoteMonitoringDataReporting:
             end_date=end_date,
         )
 
-        # get total number of pillbox_refilled events
+        # ---
+        # exit if no pillbox data : None or empty dataframe
+        if pillbox_data is None or pillbox_data.empty or log['success'] == False:
+            overall_log = {
+                'success': False,
+                'error': 'No pillbox data found',
+                'log': log,
+            }
+            return None, overall_log
+
+        # ------------------------------------------------------
+        # get total number of pillbox_refilled events, if any
         pillbox_refilled = pillbox_data[pillbox_data['metric_name'] == 'pillbox_refilled']
         pillbox_refilled_count = pillbox_refilled.shape[0]
 
@@ -185,7 +211,7 @@ class RemoteMonitoringDataReporting:
         current_day = start_date.date()
         while current_day <= end_date.date():
             # get day of the week
-            day_of_week = current_day.weekday()
+            day_of_week = current_day.weekday() + 1 if current_day.weekday() < 6 else 0
             # get expected AM/PM from expected pattern
             if expected_pattern == "twice daily":
                 pillbox_opened_status_per_day_df.iloc[day_of_week, 4] += 1
@@ -325,11 +351,16 @@ class RemoteMonitoringDataReporting:
 
         date_first_record = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
 
+        # add one day and set time to midnight
+        date_first_record = date_first_record + timedelta(days=1)
+        date_first_record = date_first_record.replace(hour=0, minute=0, second=0, microsecond=0)
+
         # Get todays date and time as an offset-aware datetime object
         todays_date = datetime.now(date_first_record.tzinfo)
 
-        # remove one day from todays date
+        # remove one day from todays date and set time to midnight
         todays_date = todays_date - timedelta(days=1)
+        todays_date = todays_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # loop for each 7 days period from date_first_record to today
         current_date = date_first_record
@@ -339,7 +370,7 @@ class RemoteMonitoringDataReporting:
 
             # set start_date and end_date for this period
             start_date = current_date
-            end_date = start_date + timedelta(days=7)
+            end_date = start_date + timedelta(days=6) # 7 days in total
             if end_date > todays_date:
                 end_date = todays_date
 
@@ -396,13 +427,13 @@ class RemoteMonitoringDataReporting:
 if __name__ == "__main__":
     # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One"
 
     data_reported = RemoteMonitoringDataReporting(entry['syntrillo_internal_key'])
 
     if False:
         # Get single pillbox report
-        start_date = None
+        start_date = datetime.now() - timedelta(days=7)
         end_date = datetime.now()
         expected_pattern = "twice daily"
         # expected_pattern = "daily AM"

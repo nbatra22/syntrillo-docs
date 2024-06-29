@@ -267,6 +267,8 @@ def tenovi_dummy_data_generator_form():
     blood_pressure_state = request.form.get('blood_pressure_state')
     heart_rate_state = request.form.get('heart_rate_state')
     steps_state = request.form.get('steps_state')
+    medication_adherence_state = request.form.get('medication_adherence_state')
+    medication_expected_pattern = request.form.get('medication_expected_pattern')
 
     # ---------------------
     # manage dates
@@ -341,6 +343,8 @@ def tenovi_dummy_data_generator_form():
             patient_state_blood_pressure=blood_pressure_state,
             patient_state_heart_rate=heart_rate_state,
             patient_state_steps=steps_state,
+            patient_state_medication_adherence = medication_adherence_state,
+            patient_state_medication_expected_pattern = medication_expected_pattern,
         )
 
         # generate dummy data

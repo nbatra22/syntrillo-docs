@@ -372,6 +372,7 @@
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
                                     <select name="blood_pressure_state" id="bloodPressureState" class="styled-select">
+                                        <option value="no_data">No data</option>
                                         <option value="healthy" selected>Healthy</option>
                                         <option value="hypertensive">Hypertensive</option>
                                         <option value="hypotensive">Hypotensive</option>
@@ -384,6 +385,7 @@
                                 </td>
                                 <td align="left" style="vertical-align: middle; white-space: nowrap;">
                                     <select name="heart_rate_state" id="heartRateState" class="styled-select">
+                                        <option value="no_data">No data</option>
                                         <option value="healthy" selected>Healthy</option>
                                         <option value="tachycardic">Tachycardic</option>
                                         <option value="bradycardic">Bradycardic</option>
@@ -398,9 +400,30 @@
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
                                     <select name="steps_state" id="stepsState" class="styled-select">
+                                        <option value="no_data">No data</option>
                                         <option value="healthy" selected>Healthy</option>
                                         <option value="sedentary">Sedentary</option>
                                         <option value="active">Active</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <label for="medicationAdherenceState" class="styled-label">Medication adherence:</label>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <select name="medication_adherence_state" id="medicationAdherenceState" class="styled-select">
+                                        <option value="no_data">No data</option>
+                                        <option value="perfect" selected>Perfect</option>
+                                        <option value="partial">Partial</option>
+                                        <option value="poor">Poor</option>
+                                    </select>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <label for="medicationExpectedPattern" class="styled-label">expected pattern:</label>
+                                    <select name="medication_expected_pattern" id="medicationExpectedPattern" class="styled-select">
+                                        <option value="twice_daily" selected>Twice daily</option>
+                                        <option value="daily_am">Daily AM</option>
+                                        <option value="daily_pm">Daily PM</option>
                                     </select>
                                 </td>
                             </tr>
