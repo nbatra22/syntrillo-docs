@@ -339,6 +339,8 @@ class RemoteMonitoringDataReporting:
             - log : str
         """
 
+        # -----  get global date range ---------
+
         # get data of first pillbox event
         first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
 
@@ -362,6 +364,17 @@ class RemoteMonitoringDataReporting:
         todays_date = todays_date - timedelta(days=1)
         todays_date = todays_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
+        # ----- get period size : month or week, depending on total number of days -------
+        #  - if total number of days is less than 28, use 7 days period
+        #  - if total number of days is 28 or more, use 28 days period
+        total_number_of_days = (todays_date - date_first_record).days
+        if total_number_of_days < 28:
+            period_size = 7
+            period_label = 'Week'
+        else:
+            period_size = 28
+            period_label = 'Month'
+
         # loop for each 7 days period from date_first_record to today
         current_date = date_first_record
         global_report = []
@@ -370,7 +383,7 @@ class RemoteMonitoringDataReporting:
 
             # set start_date and end_date for this period
             start_date = current_date
-            end_date = start_date + timedelta(days=6) # 7 days in total
+            end_date = start_date + timedelta(days=period_size - 1) # -1 to avoid overlap with next period
             if end_date > todays_date:
                 end_date = todays_date
 
@@ -400,7 +413,7 @@ class RemoteMonitoringDataReporting:
             global_report.append(
                 {
                 'i': i,
-                'name': f'Week {i}',
+                'name': f'{period_label} {i}',
                 'start_date': start_date.isoformat(),
                 'end_date': end_date.isoformat(),
                 'pillbox_refilled_count': report['pillbox_refilled_count'],
@@ -411,8 +424,8 @@ class RemoteMonitoringDataReporting:
                 }
             )
 
-            # increment current_date by 7 days
-            current_date += timedelta(days=7)
+            # increment current_date by period_size days
+            current_date += timedelta(days=period_size)
             i += 1
 
         log = {
