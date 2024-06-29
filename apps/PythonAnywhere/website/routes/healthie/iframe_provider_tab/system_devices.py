@@ -35,7 +35,9 @@ def iframe_healthie_provider_tab_system_devices():
 
     # deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:
+        # log the healthie_user_id of the patient not registered to allow for further investigation
         logger.warning(f"[SYSTEM_DEVICES] <PATIENT NOT REGISTERED> healthie_user_id {post_manager.posted_healthie_user_id}")
+        # render the patient_not_registered.html template
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # --------------------------------------------------------------------
@@ -46,7 +48,8 @@ def iframe_healthie_provider_tab_system_devices():
         add_tenovi_latest_record_timestamp=True,
         )
 
-    logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices {paired_devices}  <FOR> syntrillo_internal_key {post_manager.syntrillo_internal_key }")
+    # Minimal logging
+    logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices_ids {[entry['id'] for entry in paired_devices]} <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
