@@ -86,4 +86,10 @@ if company_packages_home not in sys.path:
 from flask_app import app as application  # noqa
 ```
 
+## Additional packages installed manually
+
+```bash
+pip install aws-lambda-powertools aws-xray-sdk
+```
+
 
