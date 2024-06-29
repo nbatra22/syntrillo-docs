@@ -56,26 +56,32 @@
             <td>Total</td>
             <td>Comment</td>
         </tr>
-        {% for week in medication_adherence_data %}
+        {% if medication_adherence_data %}
+            {% for week in medication_adherence_data %}
+                <tr>
+                    <td rowspan="2">{{ week.name }}</td>
+                    <td>AM</td>
+                    {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                        <td style="background-color: {{ week.status_per_day[day]['AM_color'] }};"
+                            data-tooltip="{{ week.status_per_day[day]['AM_data'] }} - {{ week.status_per_day[day]['AM_comment'] }}">
+                        </td>
+                    {% endfor %}
+                    <td>{{ week.status_per_day['total']['AM_comment'] }}</td>
+                </tr>
+                <tr>
+                    <td>PM</td>
+                    {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                        <td style="background-color: {{ week.status_per_day[day]['PM_color'] }};"
+                            data-tooltip="{{ week.status_per_day[day]['PM_data'] }} - {{ week.status_per_day[day]['PM_comment'] }}">
+                        </td>
+                    {% endfor %}
+                    <td>{{ week.status_per_day['total']['PM_comment'] }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
             <tr>
-                <td rowspan="2">{{ week.name }}</td>
-                <td>AM</td>
-                {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
-                    <td style="background-color: {{ week.status_per_day[day]['AM_color'] }};"
-                        data-tooltip="{{ week.status_per_day[day]['AM_data'] }} - {{ week.status_per_day[day]['AM_comment'] }}">
-                    </td>
-                {% endfor %}
-                <td>{{ week.status_per_day['total']['AM_comment'] }}</td>
+                <td colspan="11" style="text-align: center;">No data available</td>
             </tr>
-            <tr>
-                <td>PM</td>
-                {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
-                    <td style="background-color: {{ week.status_per_day[day]['PM_color'] }};"
-                        data-tooltip="{{ week.status_per_day[day]['PM_data'] }} - {{ week.status_per_day[day]['PM_comment'] }}">
-                    </td>
-                {% endfor %}
-                <td>{{ week.status_per_day['total']['PM_comment'] }}</td>
-            </tr>
-        {% endfor %}
+        {% endif %}
     </table>
 </div>
