@@ -463,7 +463,9 @@ class SyntrilloDatabaseManager:
                     AND timestamp_local BETWEEN %s AND %s
                     ORDER BY timestamp_local ASC
                     """,
-                    (self.syntrillo_internal_key.bytes, device_name, include_battery, start_date, end_date)
+                    (self.syntrillo_internal_key.bytes, device_name, include_battery,
+                     start_date.isoformat(), end_date.isoformat() # using isoformat everywhere, to select base on local time, and not rely on mySQL time features
+                     )
                 )
                 records = cursor.fetchall()  # Fetch all records
                 log = {
