@@ -27,6 +27,7 @@ class SyntrilloDatabaseManager:
         DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
         DeviceTypes.TENOVI_DEVICE_NAME__BMP_LARGE,
         DeviceTypes.TENOVI_DEVICE_NAME__BMP_SMALL,
+        DeviceTypes.TENOVI_DEVICE_NAME__BMP_PREFIX, # will retrieve all BMP devices
         ]
 
 
@@ -453,18 +454,88 @@ class SyntrilloDatabaseManager:
         # run query
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = f"""
+                SELECT device_name, metric_name, value_1, value_2, timestamp_local
+                FROM tenovi_raw_measurements
+                WHERE syntrillo_internal_key = %s
+                AND device_name = %s
+                AND (metric_name <> 'battery_percentage' OR %s)
+                AND ( timestamp_local BETWEEN %s AND %s )
+                ORDER BY timestamp_local ASC
+                """
                 cursor.execute(
-                    """
-                    SELECT device_name, metric_name, value_1, value_2, timestamp_local
-                    FROM tenovi_raw_measurements
-                    WHERE syntrillo_internal_key = %s
-                    AND device_name = %s
-                    AND ( metric_name <> 'battery_percentage' OR %s )
-                    AND timestamp_local BETWEEN %s AND %s
-                    ORDER BY timestamp_local ASC
-                    """,
-                    (self.syntrillo_internal_key.bytes, device_name, include_battery,
-                     start_date.isoformat(), end_date.isoformat() # using isoformat everywhere, to select base on local time, and not rely on mySQL time features
+                    query,
+                    (
+                        self.syntrillo_internal_key.bytes,
+                        device_name,
+                        include_battery,
+                        start_date.isoformat(), end_date.isoformat() # using isoformat everywhere, to select base on local time, and not rely on mySQL time features
+                     )
+                )
+                records = cursor.fetchall()  # Fetch all records
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        # Check if records are found
+        if records:
+            df = pd.DataFrame(records)
+        else:
+            df = pd.DataFrame()  # Return an empty DataFrame if no records found
+
+        return df, log
+
+    def get_tenovi_device_metric_data(
+        self,
+        metric_name: str,
+        start_date: datetime,
+        end_date: datetime,
+        ) -> Tuple[pd.DataFrame, dict]:
+        """
+            Get all records for a metric between two dates
+
+            Args:
+                metric_name (str): The name of the metric
+                start_date (datetime): The start date. None allowed.
+                end_date (datetime): The end date. If None, the current date will be used.
+                include_battery (bool): Include the battery percentage metric (default is False)
+
+            Returns a tuple:
+                df (pd.DataFrame): The records for the device, as a Pandas DataFrame
+                log (dict): The log of the request
+
+        """
+
+        # deal with None start_date, end_date
+        if start_date is None:
+            start_date = datetime(2000)
+
+        if end_date is None:
+            end_date = datetime.now()
+
+        # run query
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = f"""
+                SELECT device_name, metric_name, value_1, value_2, timestamp_local
+                FROM tenovi_raw_measurements
+                WHERE syntrillo_internal_key = %s
+                AND metric_name = %s
+                AND ( timestamp_local BETWEEN %s AND %s )
+                ORDER BY timestamp_local ASC
+                """
+                cursor.execute(
+                    query,
+                    (
+                        self.syntrillo_internal_key.bytes,
+                        metric_name,
+                        start_date.isoformat(), end_date.isoformat() # using isoformat everywhere, to select base on local time, and not rely on mySQL time features
                      )
                 )
                 records = cursor.fetchall()  # Fetch all records
