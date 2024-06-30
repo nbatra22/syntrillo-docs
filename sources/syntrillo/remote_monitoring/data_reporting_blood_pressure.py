@@ -99,18 +99,6 @@ class DataReportingBloodPressure:
         )
 
         # ---
-        # rename columns :
-        #  - value_1 -> systolic
-        #  - value_2 -> diastolic
-        # drop 'device_name' and 'metric_name' columns
-        bpm_df = bpm_df.rename(columns={'value_1': 'systolic', 'value_2': 'diastolic'})
-        bpm_df = bpm_df.drop(columns=['device_name', 'metric_name'])
-
-        # make sure systolic and diastolic are numeric
-        bpm_df['systolic'] = pd.to_numeric(bpm_df['systolic'], errors='coerce')
-        bpm_df['diastolic'] = pd.to_numeric(bpm_df['diastolic'], errors='coerce')
-
-        # ---
         # exit if no pillbox data : None or empty dataframe
         if bpm_df is None or bpm_df.empty or log['success'] == False:
             overall_log = {
@@ -119,6 +107,19 @@ class DataReportingBloodPressure:
                 'log': log,
             }
             return None, overall_log
+
+        # ---
+        # rename columns :
+        #  - value_1 -> systolic
+        #  - value_2 -> diastolic
+        # drop 'device_name' and 'metric_name' columns
+        bpm_df = bpm_df.rename(columns={'value_1': 'systolic', 'value_2': 'diastolic'})
+        bpm_df = bpm_df.drop(columns=['device_name', 'metric_name'])
+
+        # ---
+        # make sure systolic and diastolic are numeric
+        bpm_df['systolic'] = pd.to_numeric(bpm_df['systolic'], errors='coerce')
+        bpm_df['diastolic'] = pd.to_numeric(bpm_df['diastolic'], errors='coerce')
 
         # ---
 
