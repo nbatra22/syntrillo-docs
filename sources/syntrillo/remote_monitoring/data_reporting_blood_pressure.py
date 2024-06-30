@@ -202,9 +202,8 @@ class DataReportingBloodPressure:
         fig.update_layout(
             title='Blood Pressure',
             xaxis_title='Date',
-            # yaxis_title='mmHg',
             yaxis=dict(title='Blood Pressure (mmHg)', side='left'),
-            # yaxis2=dict(title='Blood Pressure (mmHg)', side='right', overlaying='y', showgrid=False),
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
             )
 
 

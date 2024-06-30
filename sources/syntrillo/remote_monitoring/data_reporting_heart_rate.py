@@ -223,6 +223,100 @@ class DataReportingHeartRate:
         return ihb_df, log
 
 
+    def get_heart_rate_statistics_dataframe(
+        self,
+        start_date : datetime = None,
+        end_date : datetime = None,
+        ) -> Tuple[pd.DataFrame, dict]:
+        """
+        Get Watch report, only heartrate_statistics data.
+
+        https://tenovi.com/hwi-device-overview/#tenovi-watch
+
+        https://tenovi.com/tenovi-smart-watch/
+
+        Available metrics:
+            - heart_rate_statistics : value_1 is the hourly_average_pulse in bpm, value_2 is the hourly_max_pulse in bpm
+
+        Returns a tuple:
+            - pandas dataframe with columns: timestamp_local, hourly_average_pulse, hourly_maximum_pulse
+            - log : str
+
+        """
+
+        # ------------------------------------------------------
+        # get data
+        #   - make sure start_date and end_date are at midnight
+        #   - deal with edges cases
+
+
+        # ---
+        # deal with None start_date, end_date
+        if start_date is None:
+            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__WATCH)
+            if first_record is not None:
+                start_date = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
+            else:
+                start_date = datetime(2000, 1, 1)
+        if end_date is None:
+            end_date = datetime.now()
+
+        # ---
+        # the time of start_date should be 00:00:00
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # the time of end_date should be 23:59:59
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=0)
+
+        # ---
+        # end_date - start date < 2 days, return an error
+        tz_utc = timezone.utc # quick fix if one date has no timezone to allow the substraction
+        if (end_date.astimezone(tz_utc) - start_date.astimezone(tz_utc)).days < 2:
+            log = {
+                'success': False,
+                'error': 'Report period is too short',
+            }
+            return None, log
+
+        # ---
+        # get data from PHI database, ordered by timestamp
+        heart_rate_statistics_df, log = self.syntrillo_database_manager.get_tenovi_device_metric_data(
+            metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+        # ---
+        # exit if no data : None or empty dataframe
+        if heart_rate_statistics_df is None or heart_rate_statistics_df.empty or log['success'] == False:
+            overall_log = {
+                'success': False,
+                'error': 'No Watch heart rate stats data found',
+                'log': log,
+            }
+            return None, overall_log
+
+        # ---
+        # rename columns :
+        #  - value_1 -> pulse
+        #  - value_2 -> drop
+        # drop 'device_name' and 'metric_name' columns
+        heart_rate_statistics_df = heart_rate_statistics_df.rename(columns={'value_1': 'hourly_average_pulse', 'value_2': 'hourly_maximum_pulse'})
+        heart_rate_statistics_df = heart_rate_statistics_df.drop(columns=['device_name', 'metric_name'])
+
+        # ---
+        # make sure data is numeric
+        heart_rate_statistics_df['hourly_average_pulse'] = pd.to_numeric(heart_rate_statistics_df['hourly_average_pulse'], errors='coerce')
+        heart_rate_statistics_df['hourly_maximum_pulse'] = pd.to_numeric(heart_rate_statistics_df['hourly_maximum_pulse'], errors='coerce')
+
+        # ---
+
+        # store the dataframe in the class
+        self.heart_rate_statistics_df = heart_rate_statistics_df
+
+        # return the dataframe and the log
+        return heart_rate_statistics_df, log
+
     def get_pulse_plotly(
         self,
         representation: str = 'html',
@@ -277,25 +371,27 @@ class DataReportingHeartRate:
                 x=self.pulse_df['timestamp_local'],
                 y=self.pulse_df['pulse'],
                 mode='lines+markers',
-                name='pulse',
+                name='Pulse',
                 line=dict(color=pulse_color)
                 )
             )
 
-        fig.add_trace(
-            go.Scatter(
-                x=self.irregular_heartbeat_df['timestamp_local'],
-                y=self.irregular_heartbeat_df['irregular_heartbeat'],
-                mode='markers',
-                name='irregular_heartbeat',
-                line=dict(color=irregular_heartrate_color)
+        if hasattr(self, 'irregular_heartbeat_df') and self.irregular_heartbeat_df is not None and not self.irregular_heartbeat_df.empty:
+            fig.add_trace(
+                go.Scatter(
+                    x=self.irregular_heartbeat_df['timestamp_local'],
+                    y=self.irregular_heartbeat_df['irregular_heartbeat'],
+                    mode='markers',
+                    name='Irregular heartbeat event',
+                    line=dict(color=irregular_heartrate_color)
+                    )
                 )
-            )
 
         fig.update_layout(
             title='Pulse and Irregular Heartbeat',
             xaxis_title='Date',
             yaxis=dict(title='bpm', side='left'),
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
             )
 
 
@@ -310,6 +406,94 @@ class DataReportingHeartRate:
         # return the figure as html or json
         return fig, representation_output
 
+
+    def get_heart_rate_statistics_plotly(
+        self,
+        representation: str = 'html',
+    ):
+        """
+        Creates a figure from the watch hourly heart rate stats data.
+
+        Use HTML for simplicity and direct embedding, and JSON for flexibility and dynamic client-side manipulation.
+
+        Include this in the HTML head: <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+        Usage if JSON:
+            <div id="plot"></div>
+            <script type="text/javascript">
+                var graphJSON = {{ graph_json|safe }};
+                Plotly.newPlot('plot', graphJSON.data, graphJSON.layout);
+            </script>
+
+        Usage if HTML:
+            <div>
+                {{ graph_html|safe }}
+            </div>
+
+        Args:
+            representation (str): 'html' or 'json'
+
+        Returns a tuple:
+            - the figure
+            - its representation as html or json
+
+        """
+
+        # ---
+        # check if pulse_df data is available
+        if not hasattr(self, 'heart_rate_statistics_df'):
+            return None, None
+
+        if self.heart_rate_statistics_df is None or self.heart_rate_statistics_df.empty:
+            return None, None
+
+        # ---
+        # create the figure
+
+        # Define accessible colors for the plot
+        hourly_average_pulse = 'blue'
+        hourly_maximum_pulse = 'orange'
+
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Scatter(
+                x=self.heart_rate_statistics_df['timestamp_local'],
+                y=self.heart_rate_statistics_df['hourly_average_pulse'],
+                mode='markers',
+                name='Hourly Average Pulse',
+                line=dict(color=hourly_average_pulse)
+                )
+            )
+
+        fig.add_trace(
+            go.Scatter(
+                x=self.heart_rate_statistics_df['timestamp_local'],
+                y=self.heart_rate_statistics_df['hourly_maximum_pulse'],
+                mode='markers',
+                name='Hourly Maximum Pulse',
+                line=dict(color=hourly_maximum_pulse)
+                )
+            )
+
+        fig.update_layout(
+            title='Hourly heart rate statistics',
+            xaxis_title='Date',
+            yaxis=dict(title='bpm', side='left'),
+            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
+            )
+
+
+        # ---
+        # convert the figure to html or json
+        if representation == 'html':
+            representation_output = pio.to_html(fig, full_html=False)
+        elif representation == 'json':
+            representation_output = json.dumps(fig, cls=pio.PlotlyJSONEncoder)
+
+        # ---
+        # return the figure as html or json
+        return fig, representation_output
 
 
 
@@ -333,4 +517,9 @@ if __name__ == '__main__':
     irregular_heartbeat_df, log = data_reporting_heart_rate.get_irregular_heartbeat_dataframe(start_date=start_date, end_date=end_date)
 
     print(irregular_heartbeat_df.head())
+
+    heart_rate_statistics_df, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe(start_date=start_date, end_date=end_date)
+
+    print(heart_rate_statistics_df.head())
+
 

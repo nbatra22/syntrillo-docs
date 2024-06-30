@@ -119,4 +119,34 @@
         <p>No pulse plot available</p>
     {% endif %}
 
+    <br>
+
+    {% if heart_rate_statistics_html_plot %}
+        {{ heart_rate_statistics_html_plot|safe }}
+    {% else %}
+        <p>No heart rate stats plot available</p>
+    {% endif %}
+
+</div>
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Activity
+</h2>
+
+<div class="collapsible-content">
+
+</div>
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Sleep
+</h2>
+
+<div class="collapsible-content">
+
 </div>

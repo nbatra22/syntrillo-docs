@@ -61,8 +61,12 @@ def iframe_healthie_provider_tab_care_plan():
 
     # ---
     # Heart rate statistics
+    _, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe()
 
-
+    if log['success'] == False:
+        heart_rate_statistics_html_plot = None
+    else:
+        _, heart_rate_statistics_html_plot = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation='html')
 
 
     # --------------------------------------------------------------------
@@ -71,6 +75,7 @@ def iframe_healthie_provider_tab_care_plan():
                            medication_adherence_data=medication_adherence_data,
                            blood_pressure_html_plot=blood_pressure_html_plot,
                            pulse_html_plot=pulse_html_plot,
+                           heart_rate_statistics_html_plot=heart_rate_statistics_html_plot,
                            )
 
 
