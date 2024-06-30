@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 import plotly.graph_objs as go
 import plotly.io as pio
+from typing import Tuple
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
@@ -38,7 +39,7 @@ class DataReportingBloodPressure:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-        ) -> tuple[pd.DataFrame, dict]:
+        ) -> Tuple[pd.DataFrame, dict]:
         """
         Get BPM report, only Blood Pressure data.
 
