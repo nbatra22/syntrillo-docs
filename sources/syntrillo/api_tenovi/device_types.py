@@ -6,9 +6,9 @@ class DeviceTypes:
     # The DeviceTypes class is used to retrieve valid device types for your account.
     TENOVI_DEVICE_NAME__WATCH = "Tenovi Watch"
     TENOVI_DEVICE_NAME__PILLBOX = "Tenovi Pillbox"
-    TENOVI_DEVICE_NAME__BMP_PREFIX = "Tenovi BMP"
-    TENOVI_DEVICE_NAME__BMP_LARGE  = "Tenovi BMP - L"
-    TENOVI_DEVICE_NAME__BMP_SMALL  = "Tenovi BMP - S"
+    TENOVI_DEVICE_NAME__BPM_PREFIX = "Tenovi BPM"
+    TENOVI_DEVICE_NAME__BPM_LARGE  = "Tenovi BPM - L"
+    TENOVI_DEVICE_NAME__BPM_SMALL  = "Tenovi BPM - S"
 
 
     def __init__(self):

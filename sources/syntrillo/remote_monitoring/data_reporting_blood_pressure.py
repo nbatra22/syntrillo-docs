@@ -66,7 +66,7 @@ class DataReportingBloodPressure:
         # deal with None start_date, end_date
         if start_date is None:
             # TODO : get first metrics date from the database
-            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__BMP_LARGE)
+            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE)
             if first_record is not None:
                 start_date = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
             else:
@@ -83,7 +83,8 @@ class DataReportingBloodPressure:
 
         # ---
         # end_date - start date < 2 days, return an error
-        if (end_date - start_date).days < 2:
+        tz_utc = timezone.utc # quick fix if one date has no timezone to allow the substraction
+        if (end_date.astimezone(tz_utc) - start_date.astimezone(tz_utc)).days < 2:
             log = {
                 'success': False,
                 'error': 'Report period is too short',
@@ -93,7 +94,7 @@ class DataReportingBloodPressure:
         # ---
         # get pillbox data from PHI database, ordered by timestamp
         bpm_df, log = self.syntrillo_database_manager.get_tenovi_device_metric_data(
-            metric_name=DeviceMeasurements.TENOVI_METRICS_BMP_BLOOD_PRESSURE,
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
             start_date=start_date,
             end_date=end_date,
         )

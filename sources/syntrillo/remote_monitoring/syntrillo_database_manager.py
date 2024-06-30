@@ -25,9 +25,9 @@ class SyntrilloDatabaseManager:
     TENOVI_DEVICE_NAMES=[
         DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
         DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
-        DeviceTypes.TENOVI_DEVICE_NAME__BMP_LARGE,
-        DeviceTypes.TENOVI_DEVICE_NAME__BMP_SMALL,
-        DeviceTypes.TENOVI_DEVICE_NAME__BMP_PREFIX, # will retrieve all BMP devices
+        DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+        DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL,
+        DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX, # will retrieve all BMP devices
         ]
 
 
