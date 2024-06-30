@@ -85,6 +85,7 @@ python3.9 -m venv p3.9_Syntrillo_Clinic_v3
 source p3.9_Syntrillo_Clinic_v3/bin/activate
 
 # Install dependencies from requirements.txt in SyntrilloClinic
+#  ( may need to update requirements.txt first with pipreqs )
 cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic
 pip install -r requirements.txt
 ```
