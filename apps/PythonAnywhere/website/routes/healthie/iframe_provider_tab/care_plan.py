@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify
 
 from .post_management import PostManager
-from syntrillo.remote_monitoring.data_reporting import RemoteMonitoringDataReporting
+from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
@@ -24,7 +24,7 @@ def iframe_healthie_provider_tab_care_plan():
     # --------------------------------------------------------------------
     # Medication Adherence
 
-    remote_monitoring_data_reporting = RemoteMonitoringDataReporting(post_manager.syntrillo_internal_key)
+    remote_monitoring_data_reporting = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
 
     # get medication adherence data
     medication_adherence_data, log = remote_monitoring_data_reporting.pillbox_global_report(expected_pattern='twice daily')
