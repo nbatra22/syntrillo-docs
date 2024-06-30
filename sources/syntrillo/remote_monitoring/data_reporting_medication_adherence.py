@@ -97,7 +97,8 @@ class DataReportingMedicationAdherence:
 
         # ---
         # end_date - start date < 2 days, return an error
-        if (end_date - start_date).days < 2:
+        tz_utc = timezone.utc # quick fix if one date has no timezone to allow the substraction
+        if (end_date.astimezone(tz_utc) - start_date.astimezone(tz_utc)).days < 2:
             log = {
                 'success': False,
                 'error': 'Report period is too short',
