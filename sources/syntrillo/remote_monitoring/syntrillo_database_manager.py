@@ -390,16 +390,36 @@ class SyntrilloDatabaseManager:
 
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
-                cursor.execute(
-                    """
-                    SELECT *
-                    FROM tenovi_raw_measurements
-                    WHERE syntrillo_internal_key = %s AND device_name = %s
-                    ORDER BY timestamp_local ASC
-                    LIMIT 1
-                    """,
-                    (self.syntrillo_internal_key.bytes, device_name)
-                )
+                if device_name == DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM tenovi_raw_measurements
+                        WHERE syntrillo_internal_key = %s AND ( device_name = %s OR device_name = %s )
+                        ORDER BY timestamp_local ASC
+                        LIMIT 1
+                        """,
+                        (
+                            self.syntrillo_internal_key.bytes,
+                            DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+                            DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL
+                        )
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        SELECT *
+                        FROM tenovi_raw_measurements
+                        WHERE syntrillo_internal_key = %s AND device_name = %s
+                        ORDER BY timestamp_local ASC
+                        LIMIT 1
+                        """,
+                        (
+                            self.syntrillo_internal_key.bytes,
+                            device_name
+                         )
+                    )
+
                 record = cursor.fetchone()
                 log = {
                     "success": True,

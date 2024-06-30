@@ -18,7 +18,7 @@ class DataReportingBloodPressure:
         """
         Get user level reports from the remote monitoring system on blood pressure.
 
-        Based on Tenovi Pillbox data.
+        Based on Tenovi BPM data.
 
         Data from the remote monitoring system is stored in our PHI database
 
@@ -51,7 +51,7 @@ class DataReportingBloodPressure:
           - blood_pressure : value_1 is systolic, value_2 is diastolic  mmHg
 
         Returns a tuple:
-            - pandas dataframe with columns: timestamp_local, value_1, value_2
+            - pandas dataframe with columns: timestamp_local, systolic, diastolic
             - log : str
 
         """
@@ -65,8 +65,7 @@ class DataReportingBloodPressure:
         # ---
         # deal with None start_date, end_date
         if start_date is None:
-            # TODO : get first metrics date from the database
-            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE)
+            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX)
             if first_record is not None:
                 start_date = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
             else:
@@ -92,7 +91,7 @@ class DataReportingBloodPressure:
             return None, log
 
         # ---
-        # get pillbox data from PHI database, ordered by timestamp
+        # get data from PHI database, ordered by timestamp
         bpm_df, log = self.syntrillo_database_manager.get_tenovi_device_metric_data(
             metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
             start_date=start_date,
@@ -100,11 +99,11 @@ class DataReportingBloodPressure:
         )
 
         # ---
-        # exit if no pillbox data : None or empty dataframe
+        # exit if no data : None or empty dataframe
         if bpm_df is None or bpm_df.empty or log['success'] == False:
             overall_log = {
                 'success': False,
-                'error': 'No BPM data found',
+                'error': 'No BPM blood_pressure data found',
                 'log': log,
             }
             return None, overall_log
@@ -166,6 +165,9 @@ class DataReportingBloodPressure:
         # ---
         # check if the data is available
         if not hasattr(self, 'bmp_df'):
+            return None, None
+
+        if self.bmp_df is None or self.bmp_df.empty:
             return None, None
 
         # ---

@@ -102,3 +102,21 @@
     {% endif %}
 
 </div>
+
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Heart Rate
+</h2>
+
+<div class="collapsible-content">
+
+    {% if pulse_html_plot %}
+        {{ pulse_html_plot|safe }}
+    {% else %}
+        <p>No pulse plot available</p>
+    {% endif %}
+
+</div>
