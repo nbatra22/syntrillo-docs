@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, jsonify
 
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
+from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
@@ -24,16 +25,29 @@ def iframe_healthie_provider_tab_care_plan():
     # --------------------------------------------------------------------
     # Medication Adherence
 
-    remote_monitoring_data_reporting = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
+    data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
 
     # get medication adherence data
-    medication_adherence_data, log = remote_monitoring_data_reporting.pillbox_global_report(expected_pattern='twice daily')
+    medication_adherence_data, log = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
+
+    # --------------------------------------------------------------------
+    # Blood Pressure
+
+    data_reporting_blood_pressure = DataReportingBloodPressure(post_manager.syntrillo_internal_key)
+
+    _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe()
+
+    if log['success'] == False:
+        blood_pressure_html_plot = None
+    else:
+        _, blood_pressure_html_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation='html')
 
 
     # --------------------------------------------------------------------
     # Render the template
     return render_template('healthie/iframe_provider_tab/care_plan.html',
                            medication_adherence_data=medication_adherence_data,
+                           blood_pressure_html_plot=blood_pressure_html_plot,
                            )
 
 

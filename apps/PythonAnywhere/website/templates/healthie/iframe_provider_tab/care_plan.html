@@ -85,3 +85,20 @@
         {% endif %}
     </table>
 </div>
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Blood pressure
+</h2>
+
+<div class="collapsible-content">
+
+    {% if blood_pressure_html_plot %}
+        {{ blood_pressure_html_plot|safe }}
+    {% else %}
+        <p>No plot available</p>
+    {% endif %}
+
+</div>

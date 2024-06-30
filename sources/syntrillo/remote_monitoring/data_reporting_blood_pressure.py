@@ -36,8 +36,8 @@ class DataReportingBloodPressure:
 
     def get_blood_pressure_dataframe(
         self,
-        start_date : datetime,
-        end_date : datetime,
+        start_date : datetime = None,
+        end_date : datetime = None,
         ) -> tuple[pd.DataFrame, dict]:
         """
         Get BPM report, only Blood Pressure data.
@@ -64,7 +64,8 @@ class DataReportingBloodPressure:
         # ---
         # deal with None start_date, end_date
         if start_date is None:
-            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX)
+            # TODO : get first metrics date from the database
+            first_record, log = self.syntrillo_database_manager.get_first_tenovi_device_data(device_name=DeviceTypes.TENOVI_DEVICE_NAME__BMP_LARGE)
             if first_record is not None:
                 start_date = datetime.strptime(first_record['timestamp_local'], '%Y-%m-%dT%H:%M:%S.%f%z')
             else:
@@ -103,6 +104,10 @@ class DataReportingBloodPressure:
         # drop 'device_name' and 'metric_name' columns
         bpm_df = bpm_df.rename(columns={'value_1': 'systolic', 'value_2': 'diastolic'})
         bpm_df = bpm_df.drop(columns=['device_name', 'metric_name'])
+
+        # make sure systolic and diastolic are numeric
+        bpm_df['systolic'] = pd.to_numeric(bpm_df['systolic'], errors='coerce')
+        bpm_df['diastolic'] = pd.to_numeric(bpm_df['diastolic'], errors='coerce')
 
         # ---
         # exit if no pillbox data : None or empty dataframe
@@ -162,10 +167,41 @@ class DataReportingBloodPressure:
 
         # ---
         # create the figure
+
+        # Define accessible colors for systolic and diastolic
+        systolic_color = '#1f77b4'  # Blue
+        diastolic_color = '#ff7f0e'  # Orange
+
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=self.bmp_df['timestamp_local'], y=self.bmp_df['systolic'], mode='lines+markers', name='systolic'))
-        fig.add_trace(go.Scatter(x=self.bmp_df['timestamp_local'], y=self.bmp_df['diastolic'], mode='lines+markers', name='diastolic'))
-        fig.update_layout(title='Blood Pressure', xaxis_title='Date', yaxis_title='mmHg')
+
+        fig.add_trace(
+            go.Scatter(
+                x=self.bmp_df['timestamp_local'],
+                y=self.bmp_df['systolic'],
+                mode='lines+markers',
+                name='systolic',
+                line=dict(color=systolic_color)
+                )
+            )
+
+        fig.add_trace(
+            go.Scatter(
+                x=self.bmp_df['timestamp_local'],
+                y=self.bmp_df['diastolic'],
+                mode='lines+markers',
+                name='diastolic',
+                line=dict(color=diastolic_color)
+                )
+            )
+
+        fig.update_layout(
+            title='Blood Pressure',
+            xaxis_title='Date',
+            # yaxis_title='mmHg',
+            yaxis=dict(title='Blood Pressure (mmHg)', side='left'),
+            # yaxis2=dict(title='Blood Pressure (mmHg)', side='right', overlaying='y', showgrid=False),
+            )
+
 
         # ---
         # convert the figure to html or json
