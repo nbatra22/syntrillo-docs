@@ -200,6 +200,7 @@ class IFrameGeneratorConstruct(Construct):
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
             vpc = self.vpc,
             timeout=Duration.seconds(30),
+            memory_size=512,
             tracing=_lambda.Tracing.ACTIVE,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.access_point,
