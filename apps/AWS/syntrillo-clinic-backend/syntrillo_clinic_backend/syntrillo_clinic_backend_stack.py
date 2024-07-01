@@ -312,7 +312,13 @@ class IFrameGeneratorConstruct(Construct):
         healthie_iframe_provider_tab_system.add_method(
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
-        )     
+        )
+
+        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form = healthie_iframe_provider_tab_system.add_resource("register_patient_at_syntrillo_form")
+        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
         # Add the Lambda function as a REST API resource (/healthie/iframe_provider_tab/system_devices)
         healthie_iframe_provider_tab_system_devices = healthie_iframe_provider_tab.add_resource("system_devices")
