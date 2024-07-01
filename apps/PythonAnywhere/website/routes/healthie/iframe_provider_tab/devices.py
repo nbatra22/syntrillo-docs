@@ -39,12 +39,13 @@ def iframe_healthie_provider_tab_devices():
     paired_devices = AccountsPairing.get_paired_devices(syntrillo_internal_key=post_manager.syntrillo_internal_key)
 
     gateway_id = None
-    for device in paired_devices:
-        # get gateway id : TODO : manage if several gateways
-        gateway_id = device['device']['hardware_uuid_formatted']
-        # Format dates before passing to template
-        if 'created' in device['device']:
-            device['device']['created_USformat'] = format_date(device['device']['created'])
+    if paired_devices is not None:
+        for device in paired_devices:
+            # get gateway id : TODO : manage if several gateways
+            gateway_id = device['device']['hardware_uuid_formatted']
+            # Format dates before passing to template
+            if 'created' in device['device']:
+                device['device']['created_USformat'] = format_date(device['device']['created'])
 
     if gateway_id is None:
         gateway_checked = ""
@@ -52,7 +53,7 @@ def iframe_healthie_provider_tab_devices():
         gateway_checked = "checked"
 
     # unroll order new devices form if it looks everything is in order
-    if len(paired_devices) >= 3 :
+    if ( paired_devices is not None ) and len(paired_devices) >= 3 :
         unroll_order_new_devices_form = False
     else:
         unroll_order_new_devices_form = True
