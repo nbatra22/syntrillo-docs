@@ -106,13 +106,15 @@ class TestProcesses(unittest.TestCase):
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
-class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
+class TestFlaskLandingPage(unittest.TestCase):
 
     def test_landing_page(self):
         url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
+
+class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
 
     def test_flask_playground(self):
         url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
