@@ -122,7 +122,10 @@ class DataReportingHeartRate:
         pulse_df['pulse'] = pd.to_numeric(pulse_df['pulse'], errors='coerce')
 
         # ---
+        # Convert 'timestamp_local' to datetime objects
+        pulse_df['timestamp_local'] = pd.to_datetime(pulse_df['timestamp_local'])
 
+        # ---
         # store the dataframe in the class
         self.pulse_df = pulse_df
 
@@ -215,7 +218,10 @@ class DataReportingHeartRate:
         ihb_df['irregular_heartbeat'] = pd.to_numeric(ihb_df['irregular_heartbeat'], errors='coerce')
 
         # ---
+        # Convert 'timestamp_local' to datetime objects
+        ihb_df['timestamp_local'] = pd.to_datetime(ihb_df['timestamp_local'])
 
+        # ---
         # store the dataframe in the class
         self.irregular_heartbeat_df = ihb_df
 
@@ -309,8 +315,12 @@ class DataReportingHeartRate:
         heart_rate_statistics_df['hourly_average_pulse'] = pd.to_numeric(heart_rate_statistics_df['hourly_average_pulse'], errors='coerce')
         heart_rate_statistics_df['hourly_maximum_pulse'] = pd.to_numeric(heart_rate_statistics_df['hourly_maximum_pulse'], errors='coerce')
 
-        # ---
 
+        # ---
+        # Convert 'timestamp_local' to datetime objects
+        heart_rate_statistics_df['timestamp_local'] = pd.to_datetime(heart_rate_statistics_df['timestamp_local'])
+
+        # ---
         # store the dataframe in the class
         self.heart_rate_statistics_df = heart_rate_statistics_df
 
@@ -496,11 +506,118 @@ class DataReportingHeartRate:
         return fig, representation_output
 
 
+    def get_pulse_moments(
+        self,
+        start_date : datetime = None,
+        end_date : datetime = None,
+    ):
+        """
+        get stat moments of the pulse data: average, std, min, max, median, 25%, 75%, kurtoisis, skewness
+
+        Returns a dictionary with the moments
+
+        """
+
+        # ---
+        if not hasattr(self, 'pulse_df') and self.pulse_df is None and not self.pulse_df.empty:
+            return None
+
+        # ---
+        # get timezone of the first data point
+        tz = self.pulse_df['timestamp_local'][0].tzinfo
+
+        # ---
+        # filter the data with start_date and end_date
+        pulse_df = self.pulse_df.copy()
+        if start_date is not None:
+            pulse_df = pulse_df[pulse_df['timestamp_local'] >= start_date.replace(tzinfo=tz)]
+        if end_date is not None:
+            pulse_df = pulse_df[pulse_df['timestamp_local'] <= end_date.replace(tzinfo=tz)]
+
+        # get stats
+        moments = self.pulse_df['pulse'].describe().to_dict()
+
+        # add skewness and kurtosis
+        moments['skewness'] = self.pulse_df['pulse'].skew()
+        moments['kurtosis'] = self.pulse_df['pulse'].kurtosis()
+
+        return moments
+
+    def get_rmssd(
+        self,
+        start_date : datetime = None,
+        end_date : datetime = None,
+    ):
+        """
+        The root mean square of successive differences (RMSSD) is a common HRV measure. Without beat-to-beat data, you can approximate it using the differences between successive hourly averages.
+
+        Process:
+            - get the hourly average pulse data
+            - get the differences between successive hourly averages
+            - square each difference
+            - take the mean of the squared differences
+            - take the square root
+
+        Args:
+            start_date : datetime
+            end_date : datetime
+
+        Returns:
+            RMSSD value
+
+        """
+
+        # ---
+        # check dataframe exists and is not empty
+        if not hasattr(self, 'heart_rate_statistics_df') and self.heart_rate_statistics_df is None and not self.heart_rate_statistics_df.empty:
+            return None
+
+        # ---
+        # get timezone of the first data point
+        tz = self.heart_rate_statistics_df['timestamp_local'][0].tzinfo
+
+        # ---
+        # filter the data with start_date and end_date
+        heart_rate_statistics_df = self.heart_rate_statistics_df.copy()
+        if start_date is not None:
+            heart_rate_statistics_df = heart_rate_statistics_df[heart_rate_statistics_df['timestamp_local'] >= start_date.replace(tzinfo=tz)]
+        if end_date is not None:
+            heart_rate_statistics_df = heart_rate_statistics_df[heart_rate_statistics_df['timestamp_local'] <= end_date.replace(tzinfo=tz)]
+
+        # ---
+        # get the hourly average pulse data
+        hourly_average_pulse = heart_rate_statistics_df[ ['timestamp_local', 'hourly_average_pulse'] ]
+
+        # ---
+        # order by ascending timestamp
+        hourly_average_pulse = hourly_average_pulse.sort_values(by='timestamp_local')
+
+        # ---
+        # get the differences of hourly_average_pulse between successive timestamps
+        hourly_average_pulse['diff'] = hourly_average_pulse['hourly_average_pulse'].diff()
+
+        # ---
+        # square each difference
+        hourly_average_pulse['diff_squared'] = hourly_average_pulse['diff'] ** 2
+
+        # ---
+        # take the mean of the squared differences
+        mean_squared_diff = hourly_average_pulse['diff_squared'].mean()
+
+        # ---
+        # take the square root
+        rmssd = np.sqrt(mean_squared_diff)
+
+        return rmssd
+
+
+
+
 
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
     lookup_codes.close_connection()
 
     # ---
@@ -516,10 +633,21 @@ if __name__ == '__main__':
 
     irregular_heartbeat_df, log = data_reporting_heart_rate.get_irregular_heartbeat_dataframe(start_date=start_date, end_date=end_date)
 
-    print(irregular_heartbeat_df.head())
+    if irregular_heartbeat_df is not None:
+        print(irregular_heartbeat_df.head())
 
     heart_rate_statistics_df, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe(start_date=start_date, end_date=end_date)
 
-    print(heart_rate_statistics_df.head())
+    if heart_rate_statistics_df is not None:
+        print(heart_rate_statistics_df.head())
+
+    pulse_moments = data_reporting_heart_rate.get_pulse_moments(start_date=start_date, end_date=end_date)
+
+    if pulse_moments is not None:
+        print(json.dumps(pulse_moments, indent=4, default=str))
+
+
+    rmssd = data_reporting_heart_rate.get_rmssd(start_date=start_date, end_date=end_date)
+    print("rmssd:", rmssd)
 
 

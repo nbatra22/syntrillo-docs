@@ -55,8 +55,12 @@ def iframe_healthie_provider_tab_care_plan():
 
     if log1['success'] == False:
         pulse_html_plot = None
+        pulse_moments = None
     else:
+        # plot
         _, pulse_html_plot = data_reporting_heart_rate.get_pulse_plotly(representation='html')
+        # moments
+        pulse_moments = data_reporting_heart_rate.get_pulse_moments()
 
 
     # ---
@@ -65,17 +69,22 @@ def iframe_healthie_provider_tab_care_plan():
 
     if log['success'] == False:
         heart_rate_statistics_html_plot = None
+        rmssd = None
     else:
         _, heart_rate_statistics_html_plot = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation='html')
+        rmssd = data_reporting_heart_rate.get_rmssd()
 
 
     # --------------------------------------------------------------------
     # Render the template
-    return render_template('healthie/iframe_provider_tab/care_plan.html',
-                           medication_adherence_data=medication_adherence_data,
-                           blood_pressure_html_plot=blood_pressure_html_plot,
-                           pulse_html_plot=pulse_html_plot,
-                           heart_rate_statistics_html_plot=heart_rate_statistics_html_plot,
-                           )
+    return render_template(
+        'healthie/iframe_provider_tab/care_plan.html',
+        medication_adherence_data=medication_adherence_data,
+        blood_pressure_html_plot=blood_pressure_html_plot,
+        pulse_html_plot=pulse_html_plot,
+        heart_rate_statistics_html_plot=heart_rate_statistics_html_plot,
+        pulse_moments=pulse_moments,
+        rmssd=rmssd,
+        )
 
 

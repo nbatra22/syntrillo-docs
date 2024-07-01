@@ -113,6 +113,27 @@
 
 <div class="collapsible-content">
 
+    {% if pulse_moments %}
+        <p>Pulse statistics (from BPM device, patient at rest):</p>
+        <table class="compact-table-two-columns">
+            <tr>
+                <td class="compact-table-two-columns-col1">Count</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.count | int }}</td>
+            </tr>
+            </tr>
+            <tr>
+                <td class="compact-table-two-columns-col1">Average</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.mean | int }} bpm</td>
+            </tr>
+            <tr>
+                <td class="compact-table-two-columns-col1">Std</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.std | round(1) }} bpm</td>
+            </tr>
+        </table>
+    {% else %}
+        <p>No pulse statistics available</p>
+    {% endif %}
+
     {% if pulse_html_plot %}
         {{ pulse_html_plot|safe }}
     {% else %}
@@ -120,6 +141,17 @@
     {% endif %}
 
     <br>
+    {% if rmssd %}
+        <p>HRV approximation from hourly averages:</p>
+        <table class="compact-table-two-columns">
+            <tr>
+                <td class="compact-table-two-columns-col1">Root Mean Square of Successive Differences (RMSSD)</td>
+                <td class="compact-table-two-columns-col2">{{ rmssd | round(1) }} bpm</td>
+            </tr>
+        </table>
+    {% else %}
+        <p>No HRV approximation available</p>
+    {% endif %}
 
     {% if heart_rate_statistics_html_plot %}
         {{ heart_rate_statistics_html_plot|safe }}
@@ -140,20 +172,12 @@
 
 </div>
 
-<h2 class="collapsible">
-    <span class="icon-container">
-        <i class="fas fa-chevron-right"></i>
-    </span>
-    Sleep
-</h2>
 
-<div class="collapsible-content">
 
+<!-- a spacer at the bottom. Nicer when the user scrolls up -->
+<div class="bg-white mb-5">
+    <p>&nbsp;</p>
 </div>
 
 
-<!-- add margin at the bottom to help when scrolling -->
-<div class="mb-2">
-    &nbsp;
-</div>
 
