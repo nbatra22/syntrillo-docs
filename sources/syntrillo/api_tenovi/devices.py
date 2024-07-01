@@ -121,6 +121,9 @@ class Devices:
 
         devices, log = self.auth.make_get_request(url, params=kwargs)
 
+        if devices is None:
+            return None, log
+
         return self.devices_format_hardware_uuid(devices), log
 
 

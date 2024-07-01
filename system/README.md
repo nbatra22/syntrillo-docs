@@ -78,6 +78,7 @@ pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v2.txt
 cd /home/olivier/projects/Syntrillo/python_environments
 
 # Create a new virtual environment
+#  : requires   'apt-get install python3-venv'
 python3.9 -m venv p3.9_Syntrillo_Clinic_v3
 
 # Activate the virtual environment
