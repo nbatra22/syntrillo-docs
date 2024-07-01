@@ -10,6 +10,9 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.api_tenovi.devices import Devices
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
+from aws_lambda_powertools import Logger
+logger = Logger(service="DUMMY_DATA_GENERATOR")
+
 class TenoviDummyDataGenerator:
     """
     Generate dummy Tenovi devices data for a given patient
@@ -33,6 +36,8 @@ class TenoviDummyDataGenerator:
         # get devices id
         devices_api = Devices()
         devices, log = devices_api.get_devices_by_pseudo_code(self.pseudo_code_for_tenovi_phi_access)
+
+        logger.info(f"[DUMMY_DATA_GENERATOR] <DEVICES_RETREIVE_FROM_TENOVI> devices {devices}, pseudo_code_for_tenovi_phi_access {self.pseudo_code_for_tenovi_phi_access}")
 
         for device in devices:
             if device['device']['name'] == "Tenovi BPM - L":
