@@ -11,7 +11,8 @@ from aws_cdk import (
     aws_rds as rds,
     aws_route53 as route53,
     aws_route53_targets as route53_targets,
-    aws_certificatemanager as acm
+    aws_certificatemanager as acm,
+    aws_efs as efs,
 )
 from constructs import Construct
 
@@ -72,10 +73,12 @@ class CheckingConstruct(Construct):
         latest_version = response['LayerVersions'][0]
         return latest_version['LayerVersionArn'] 
 
-    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, file_system, access_point, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.access_point = access_point
+        self.file_system = file_system
 
         checking_api = apigw.RestApi(self, "CheckingAPI", 
             rest_api_name="CheckingAPI",
@@ -91,8 +94,17 @@ class CheckingConstruct(Construct):
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/checking-function"),
             vpc = self.vpc,
-            timeout=Duration.seconds(5)
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.access_point,
+                "/mnt/dependencies"
+            ),
+            timeout=Duration.seconds(10),
+            environment={
+                "PYTHONPATH": "/mnt/dependencies"
+            }            
         )
+
+        # self.file_system.grant_read_write_access(checking_function)
 
         # retrieve latest arn for lambda layers
         latest_layer_version_arn = self.get_latest_layer_version_arn("flask-layer")
@@ -104,10 +116,21 @@ class CheckingConstruct(Construct):
         latest_layer_version_arn = self.get_latest_layer_version_arn("monitoring-layer")
         monitoring_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MonitoringLayer", latest_layer_version_arn)
 
+        latest_layer_version_arn = self.get_latest_layer_version_arn("pandas-layer")
+        pandas_layer = _lambda.LayerVersion.from_layer_version_arn(self, "PandasLayer", latest_layer_version_arn)
+
+        latest_layer_version_arn = self.get_latest_layer_version_arn("analytics-layer")
+        analytics_layer = _lambda.LayerVersion.from_layer_version_arn(self, "AnalyticsLayer", latest_layer_version_arn)
+
+        # aws_pandas_numpy_layer = _lambda.LayerVersion.from_layer_version_arn(self, "PandasLayer", 'arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python310:16')
+
         # Add the Lambda layers to the Lambda function
-        checking_function.add_layers(flask_layer)
-        checking_function.add_layers(mysql_layer)
-        checking_function.add_layers(monitoring_layer)
+        # checking_function.add_layers(flask_layer)
+        # checking_function.add_layers(mysql_layer)
+        # checking_function.add_layers(monitoring_layer)
+        # checking_function.add_layers(aws_pandas_numpy_layer)
+        # checking_function.add_layers(analytics_layer)
+        # checking_function.add_layers(pandas_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = checking_api.root
@@ -138,12 +161,14 @@ class IFrameGeneratorConstruct(Construct):
         latest_version = response['LayerVersions'][0]
         return latest_version['LayerVersionArn'] 
         
-    def __init__(self, scope: Construct, id: str, vpc, hosted_zone, certificate, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, hosted_zone, certificate, file_system, access_point, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
         self.hosted_zone = hosted_zone
         self.certificate = certificate
+        self.access_point = access_point
+        self.file_system = file_system
 
         # Create the API Gateway
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
@@ -174,10 +199,15 @@ class IFrameGeneratorConstruct(Construct):
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
             vpc = self.vpc,
-            timeout=Duration.seconds(5),
+            timeout=Duration.seconds(30),
             tracing=_lambda.Tracing.ACTIVE,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.access_point,
+                "/mnt/dependencies"
+            ),
             environment={
-                "POWERTOOLS_LOG_LEVEL": "DEBUG"
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "/mnt/dependencies"
             }
         )
 
@@ -194,11 +224,18 @@ class IFrameGeneratorConstruct(Construct):
         latest_layer_version_arn = self.get_latest_layer_version_arn("monitoring-layer")
         monitoring_layer = _lambda.LayerVersion.from_layer_version_arn(self, "MonitoringLayer", latest_layer_version_arn)
 
+        latest_layer_version_arn = self.get_latest_layer_version_arn("analytics-layer")
+        analytics_layer = _lambda.LayerVersion.from_layer_version_arn(self, "AnalyticsLayer", latest_layer_version_arn)
+
+        # aws_pandas_numpy_layer = _lambda.LayerVersion.from_layer_version_arn(self, "PandasLayer", 'arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python310:16')
+
         # Add the Lambda layers to the Lambda function
-        iframe_generator_function.add_layers(flask_layer)
-        iframe_generator_function.add_layers(mysql_layer)
-        iframe_generator_function.add_layers(pandas_layer)
-        iframe_generator_function.add_layers(monitoring_layer)
+        # iframe_generator_function.add_layers(flask_layer)
+        # iframe_generator_function.add_layers(mysql_layer)
+        # iframe_generator_function.add_layers(monitoring_layer)
+        # iframe_generator_function.add_layers(analytics_layer)
+        # iframe_generator_function.add_layers(pandas_layer)
+        # iframe_generator_function.add_layers(aws_pandas_numpy_layer)
 
         # Add the Lambda function as a REST API resource
         root_resource = iframe_generator_api.root
@@ -354,6 +391,22 @@ class SyntrilloClinicBackendStack(Stack):
             nat_gateways=1
         )
 
+        # Create an EFS file system
+        self.file_system = efs.FileSystem(self, "SyntrillClinicEFS",
+            vpc=self.vpc,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        # Create an EFS access point
+        self.access_point = efs.AccessPoint(self, "SyntrillClinicEFSAccessPoint",
+            file_system=self.file_system,
+            path="/lambda-dependencies",
+            posix_user=efs.PosixUser(
+                uid="1001",
+                gid="1001"
+            )
+        )
+
         # Create db instance
         self.db = rds.DatabaseInstance(self, "MySQLDatabase",
             engine=rds.DatabaseInstanceEngine.MYSQL,
@@ -386,6 +439,7 @@ class SyntrilloClinicBackendStack(Stack):
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC
             ),
+            machine_image=ec2.MachineImage.latest_amazon_linux2023(),
             # init=ec2.CloudFormationInit.from_config_sets(
             #     config_sets={
             #         "default": ["install_packages", "run_commands"]
@@ -410,6 +464,11 @@ class SyntrilloClinicBackendStack(Stack):
         #     "Allow SSH access to the bastion host"
         # )
 
+        self.file_system.connections.allow_from(self.bastion_host, ec2.Port.tcp(2049))
+        self.file_system.grant_read_write(self.bastion_host)
+        #self.access_point.grant_read_write(self.bastion_host)
+
+
         # Reference an existing hosted zone using its attributes
         hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
             zone_name="sandbox.syntrillo-clinic-backend.com",
@@ -429,8 +488,8 @@ class SyntrilloClinicBackendStack(Stack):
 
         LandingPageConstruct(self, "LandingPageConstruct")
         
-        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc, self.hosted_zone, self.certificate)
+        IFrameGeneratorConstruct(self, "IFrameGeneratorConstruct", self.vpc,  self.hosted_zone, self.certificate, self.file_system, self.access_point)
 
         UploadQuestionnaireConstruct(self, "UploadQuestionnaireConstruct")
 
-        CheckingConstruct(self, "CheckingConstruct", self.vpc)
+        CheckingConstruct(self, "CheckingConstruct", self.vpc, self.file_system, self.access_point)
