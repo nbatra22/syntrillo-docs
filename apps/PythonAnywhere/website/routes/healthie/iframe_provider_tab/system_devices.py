@@ -49,7 +49,10 @@ def iframe_healthie_provider_tab_system_devices():
         )
 
     # Minimal logging
-    logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices_ids {[entry['id'] for entry in paired_devices]} <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
+    if paired_devices:
+        logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices_ids {[entry['id'] for entry in paired_devices]} <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
+    else:
+        logger.warning(f"[SYSTEM_DEVICES] <NO PAIRED DEVICES RETRIEVED> <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
