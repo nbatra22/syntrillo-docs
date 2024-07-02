@@ -3,11 +3,13 @@
 from flask import Blueprint, request, jsonify, render_template
 import json
 import random
+import os
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
+from syntrillo.system.dot_env_loader import DotEnvFileLoader
 
 # -------------------------------------------------
 
@@ -41,10 +43,10 @@ def iframe_healthie_provider_tab_index():
     if healthie_user_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
         # healthie_user_id = '-1'
         # healthie_user_id = "1035117" # with onboarding forms
-        # healthie_user_id = "1209727" # with syntrillo_internal_key
+        healthie_user_id = "1209727" # with syntrillo_internal_key
         # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
         # healthie_user_id = "dummy456456" # without syntrillo_internal_key
-        healthie_user_id = "1051529" # Omar's "Patient One" with devices
+        # healthie_user_id = "1051529" # Omar's "Patient One" with devices
 
     # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
@@ -75,11 +77,23 @@ def iframe_healthie_provider_tab_index():
     if syntrillo_internal_key is not None:
         healthie_user_id = "Not transmitted"
 
+    # --------------------------------------------------------------------
+    # milliseconds_delay
+
+    # Load the .env file based on the environment to retrieve tweaks
+    _ = DotEnvFileLoader()
+
+    # if os env variable MILLISECONDS_DELAY exists use it else use 1000
+    milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', 1000) )
+
+    # --------------------------------------------------------------------
+    # render the template
     return render_template(
         'healthie/iframe_provider_tab/index.html',
         healthie_provider_id=healthie_provider_id,
         patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
         healthie_user_id=healthie_user_id,
-        temporary_lookup_code=temporary_lookup_code
+        temporary_lookup_code=temporary_lookup_code,
+        milliseconds_delay=milliseconds_delay
         )
 
