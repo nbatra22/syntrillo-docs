@@ -25,22 +25,26 @@ BASE_DIRE_NAME=$(basename "$BASE_DIR");
 LAYER_NAME=$BASE_DIRE_NAME
 
 echo "----------------------------------"
-echo "$> INSTALL LAYER PACKAGES LOCALLY "
+echo "$> INSTALL $LAYER_NAME PACKAGES LOCALLY "
 echo "----------------------------------"
 PACKAGE_FOLDER="python/lib/python3.10/site-packages"
+rm -rf $PACKAGE_FOLDER
 mkdir -p $PACKAGE_FOLDER
 pip install -r requirements.txt --target $PACKAGE_FOLDER
 
 echo "-----------------------------"
 echo "$> ZIP LAYER PACKAGES        "
 echo "-----------------------------"
+rm /tmp/$LAYER_NAME/*.zip
 zip -r /tmp/$LAYER_NAME.zip python/lib/python3.10/site-packages -x "**/__pycache__/*"
+PACKAGE_SIZE=$(du -sh /tmp/$LAYER_NAME.zip)
 
-echo "-----------------------------"
-echo "$>  DEPLOY NEW LAYER VERSION "
-echo "$>  LAYER NAME = $LAYER_NAME "
-echo "-----------------------------"
+echo "-------------------------------"
+echo "$> DEPLOY NEW LAYER VERSION    "
+echo "$> LAYER NAME: $LAYER_NAME     "
+echo "$> PACKAGE SIZE: $PACKAGE_SIZE "
+echo "-------------------------------"
 aws lambda publish-layer-version \
-  --layer-name $LAYER_NAME \
-  --zip-file fileb:///tmp/$LAYER_NAME.zip \
-  --compatible-runtimes python3.10
+    --layer-name $LAYER_NAME \
+    --zip-file fileb:///tmp/$LAYER_NAME.zip \
+    --compatible-runtimes python3.10
