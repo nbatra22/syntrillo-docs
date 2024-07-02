@@ -283,6 +283,57 @@ class TenoviAuth:
             }
             return None, log
 
+
+    def make_delete_request(self, url: str, verbose: bool = False) -> Tuple[dict, dict]:
+        """
+        Makes a DELETE request to the provided URL and handles the response.
+
+        Args:
+            url (str): The URL to make the DELETE request to.
+            verbose (bool, optional): Whether to print verbose output.
+
+        Returns a tupple:
+        - dict or None: The JSON response if the request was successful, None otherwise.
+        - log of the API call
+        """
+
+        # Construct the full URL for the DELETE request
+        full_url = self.construct_url(url)
+
+        # Get the name of the calling function for logging purposes
+        caller = inspect.stack()[1].function
+
+        # Make the DELETE request
+        try:
+            response = requests.delete(full_url, headers=self.get_headers())
+            if response.status_code == 204:
+                log = {
+                    "success": True,
+                    "message": f"Successfully deleted data in {caller}"
+                }
+                return {}, log
+            else:
+                if verbose:
+                    print(f"Failed to delete data in {caller}: {response.status_code}")
+                    print(response.text)
+                log = {
+                    "success": False,
+                    "message": f"Failed to delete data in {caller}: {response.status_code}",
+                    "error": response.json() if response.text else None,
+                }
+                return None, log
+
+        # Handle any exceptions that occur during the DELETE request
+        except requests.exceptions.RequestException as e:
+            if verbose:
+                print(f"An error occurred in {caller}: {e}")
+            log = {
+                "success": False,
+                "message": f"An error occurred in {caller}: {e}"
+            }
+            return None, log
+
+
     @staticmethod
     def print_pretty_json(data):
         print(json.dumps(data, indent=4, sort_keys=True))

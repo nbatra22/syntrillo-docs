@@ -415,6 +415,20 @@ class Devices:
 
         return devices_created, overall_log
 
+    def delete_device(self, hwi_device_id: str) -> Tuple[dict, dict]:
+        """
+        Deletes a HWI Device.
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+
+        Returns a tupple:
+            dict: The response of the request.
+            dict: The success log.
+        """
+        url = f"/hwi/hwi-devices/{hwi_device_id}/"
+        return self.auth.make_delete_request(url)
+
 
 # Example usage:
 if __name__ == "__main__":
