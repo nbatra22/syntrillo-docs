@@ -27,6 +27,10 @@ def iframe_healthie_provider_tab_index():
     """
 
     # --------------------------------------------------------------------
+    # Load the .env file based on the environment to retrieve local environment specific tweaks used mainly for debugging
+    _ = DotEnvFileLoader()
+
+    # --------------------------------------------------------------------
     # get healthie_provider_id and healthie_user_id from URL parameters
 
     # Retrieve the JSON data from the GET request
@@ -36,17 +40,23 @@ def iframe_healthie_provider_tab_index():
     # here it is the provider id
     healthie_provider_id = data_get_request.get('hl_current_user_id')
     if healthie_provider_id is None:
-        healthie_provider_id = "1033222" # "-1"
+        if os.getenv('OVERDIDE_HEALTHIE_PROVIDER_ID') is not None:
+            healthie_provider_id = os.getenv('OVERDIDE_HEALTHIE_PROVIDER_ID')
+        else:
+            healthie_provider_id = "1033222" # "-1"
 
     healthie_user_id = extract_healthie_user_id_from_url(data_get_request.get('referrer_url'))
 
     if healthie_user_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
-        # healthie_user_id = '-1'
-        # healthie_user_id = "1035117" # with onboarding forms
-        healthie_user_id = "1209727" # with syntrillo_internal_key
-        # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
-        # healthie_user_id = "dummy456456" # without syntrillo_internal_key
-        # healthie_user_id = "1051529" # Omar's "Patient One" with devices
+        if os.getenv('OVERDIDE_HEALTHIE_USER_ID') is not None:
+            healthie_user_id = os.getenv('OVERDIDE_HEALTHIE_USER_ID')
+        else:
+            # healthie_user_id = '-1'
+            # healthie_user_id = "1035117" # with onboarding forms
+            healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
+            # healthie_user_id = "dummy456456" # without syntrillo_internal_key
+            # healthie_user_id = "1051529" # Omar's "Patient One" with devices
 
     # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
@@ -79,9 +89,6 @@ def iframe_healthie_provider_tab_index():
 
     # --------------------------------------------------------------------
     # milliseconds_delay
-
-    # Load the .env file based on the environment to retrieve tweaks
-    _ = DotEnvFileLoader()
 
     # if os env variable MILLISECONDS_DELAY exists use it else use 1000
     milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', 1000) )
