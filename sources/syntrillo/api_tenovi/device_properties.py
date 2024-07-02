@@ -1,5 +1,8 @@
 # Path: ./sources/syntrillo/api_tenovi/device_properties.py
 
+import uuid
+from typing import Tuple
+
 from syntrillo.api_tenovi.auth import TenoviAuth
 
 class DeviceProperties:
@@ -32,7 +35,11 @@ class DeviceProperties:
         url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_get_request(url)
 
-    def create_device_property(self, hwi_device_id : str, payload : dict):
+    def create_device_property(
+        self,
+        hwi_device_id: str,
+        payload: dict
+        ) -> Tuple[dict, dict]:
         """
         Creates a new HWI Device Property with a key-value pair.
 
@@ -51,13 +58,21 @@ class DeviceProperties:
         url = f"/hwi/hwi-devices/{hwi_device_id}/properties/"
         return self.auth.make_post_request(url, payload)
 
-    def create__pseudo_code_for_tenovi_phi_access__property(self, hwi_device_id : str, pseudo_code : str):
+    def create__pseudo_code_for_tenovi_phi_access__property(
+        self,
+        hwi_device_id: str,
+        pseudo_code_for_tenovi_phi_access: uuid.UUID
+        ):
         """
-        Creates a new HWI Device Property with the key 'pseudo_code_for_tenovi_phi_access' and the given pseudo_code value.
+        Creates a new HWI Device Property with the key 'pseudo_code_for_tenovi_phi_access' and the given pseudo code value.
+
+        The pseudo_code_for_tenovi_phi_access is a UUID that is used to access the PHI data of the user.
+
+        It is stored as a string str(uuid.UUID) in Tenovi.
 
         Args:
             hwi_device_id (str): The HWI Device ID.
-            pseudo_code (str): The pseudo code to set.
+            pseudo_code_for_tenovi_phi_access (uuid.UUID): The pseudo code to set.
 
         Returns a tupple:
             dict: The created device property dictionary.
@@ -65,12 +80,16 @@ class DeviceProperties:
         """
         payload = {
             "key": "pseudo_code_for_tenovi_phi_access",
-            "value": pseudo_code,
+            "value": str(pseudo_code_for_tenovi_phi_access), # Convert the UUID to a string.
             "synced": False
         }
         return self.create_device_property(hwi_device_id, payload)
 
-    def create__healthie_user_id__property(self, hwi_device_id : str, healthie_user_id : str):
+    def create__healthie_user_id__property(
+        self,
+        hwi_device_id: str,
+        healthie_user_id: str
+        ):
         """
         Creates a new HWI Device Property with the key 'healthie_user_id' and the given healthie_user_id value.
 
