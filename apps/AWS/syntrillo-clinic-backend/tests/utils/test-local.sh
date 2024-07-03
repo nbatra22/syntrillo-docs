@@ -1,1 +1,1 @@
-python3 ../../../syntrillo-clinic-backend/lambda-functions/fitness-functions/connectivity-check-function/connectivity_check_function.py
+python3 ../../../syntrillo-clinic-backend/lambda-functions/fitness-functions/check-connectivity-function/check_connectivity_function.py

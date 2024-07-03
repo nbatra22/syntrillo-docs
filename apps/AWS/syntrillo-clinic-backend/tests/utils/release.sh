@@ -1,0 +1,1 @@
+./test-local.sh && ./deploy.sh && ./test-remote.sh

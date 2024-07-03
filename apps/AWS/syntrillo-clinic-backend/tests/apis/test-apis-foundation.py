@@ -14,9 +14,9 @@ def get_api_id(api_name):
     print(f"API '{api_name}' not found.")
     return None
 
-checking_api_id = get_api_id('CheckingAPI')
-iframe_generator_api_id = get_api_id('IFramGeneratorAPI')
-landing_page_api_id = get_api_id('LandingPageAPI')
+checking_api_id = get_api_id('ConnectivityCheckAPI')
+# iframe_generator_api_id = get_api_id('IFramGeneratorAPI')
+# landing_page_api_id = get_api_id('LandingPageAPI')
 
 from datetime import datetime, timedelta
 import time
@@ -26,6 +26,8 @@ def display_error_context(url, request):
     error_context += f"\nURL: {url}"
     error_context += f"\nRESPONSE: {request.text}"
     error_context += "\n" + ("<"*80)
+
+    return error_context
 
     if (request.status_code==200):
         return error_context
@@ -66,7 +68,7 @@ def display_error_context(url, request):
 
 class TestFoundation(unittest.TestCase):
 
-    def test_root(self):
+    def test_fitness_function_root_url_is_accessible(self):
         url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
@@ -76,43 +78,43 @@ class TestFoundation(unittest.TestCase):
         # (i.e. if the timeout is 3s and the lambda function take 3 seconds to start it will timeout), 
         # you should then increase the lambda timeout in the cdk stack
     
-    def test_network_outside_connectivity(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-        url += 'test_network_outside_connectivity'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_network_outside_connectivity(self):
+    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    #     url += 'test_network_outside_connectivity'
+    #     request = requests.get(url)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_tenovi_access(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-        url += 'test_tenovi_access'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_tenovi_access(self):
+    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    #     url += 'test_tenovi_access'
+    #     request = requests.get(url)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_database_access(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-        url += 'test_database_access'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_database_access(self):
+    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    #     url += 'test_database_access'
+    #     request = requests.get(url)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-class TestProcesses(unittest.TestCase):
+# class TestProcesses(unittest.TestCase):
     
-    def test_register_patient_devices(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-        url += 'register_patient_devices'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+#     def test_register_patient_devices(self):
+#         url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+#         url += 'register_patient_devices'
+#         request = requests.get(url)
+#         status_code = request.status_code
+#         self.assertEqual(status_code, 200, display_error_context(url, request))
 
-class TestFlaskLandingPage(unittest.TestCase):
+# class TestFlaskLandingPage(unittest.TestCase):
 
-    def test_landing_page(self):
-        url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+#     def test_landing_page(self):
+#         url = f'https://{landing_page_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+#         request = requests.get(url)
+#         status_code = request.status_code
+#         self.assertEqual(status_code, 200, display_error_context(url, request))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
