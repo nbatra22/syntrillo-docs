@@ -485,7 +485,7 @@ if __name__ == '__main__':
     if True:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
-        print(json.dumps(overall_log, indent=4))
+        print(json.dumps(overall_log, indent=4, default=str))
 
     if True:
         overall_log = sync.sync_syntrillo_to_healthie()
