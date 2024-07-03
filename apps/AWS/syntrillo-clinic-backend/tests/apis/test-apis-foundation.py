@@ -80,7 +80,11 @@ class TestFoundation(unittest.TestCase):
     
     def test_check_connectivity_function_internet_egress(self):
         url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+<<<<<<< HEAD
+        url += 'test_internet_egress'
+=======
         url += 'test_network_outside_connectivity'
+>>>>>>> f15505b4e16557bb5130f06ec2914a846da84457
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
