@@ -31,10 +31,11 @@ class CheckConnectivityConstruct(Construct):
         latest_version = response['LayerVersions'][0]
         return latest_version['LayerVersionArn']
 
-    def __init__(self, scope: Construct, id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, efs_access_point, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.efs_access_point = efs_access_point
 
         check_connectivity_function = _lambda.Function(self, "CheckConnectivityFunction",
             function_name="CheckConnectivityFunction",
@@ -42,10 +43,10 @@ class CheckConnectivityConstruct(Construct):
             handler="check_connectivity_function.handler",
             code=_lambda.Code.from_asset("lambda-functions/fitness-functions/check-connectivity-function"),
             vpc = self.vpc,
-            # filesystem =_lambda.FileSystem.from_efs_access_point(
-            #     self.access_point,
-            #     "/mnt/dependencies"
-            # ),
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.efs_access_point,
+                "/mnt/python_modules"
+            ),
             # timeout=Duration.seconds(10),
             # environment={
             #     "PYTHONPATH": "/mnt/dependencies"
@@ -94,6 +95,27 @@ class SyntrilloClinicBackendNetworkStack(Stack):
             nat_gateways=1
         )
 
+class SyntrilloClinicBackendStorageStack(Stack):
+
+    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.vpc = vpc
+
+        self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
+            vpc=self.vpc,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        self.efs_access_point = efs.AccessPoint(self, "SyntrillClinicEFSAccessPoint",
+            file_system=self.efs_file_system,
+            path="/lambda-dependencies",
+            posix_user=efs.PosixUser(
+                uid="1001",
+                gid="1001"
+            )
+        )
+
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -101,4 +123,6 @@ class SyntrilloClinicBackendStack(Stack):
 
         network=SyntrilloClinicBackendNetworkStack(self, "SyntrilloClinicNetworkStack")
 
-        CheckConnectivityConstruct(self, "ConnectivityCheckConstruct", network.vpc)
+        storage=SyntrilloClinicBackendStorageStack(self, "SyntrilloClinicStorageStack", network.vpc)
+
+        CheckConnectivityConstruct(self, "ConnectivityCheckConstruct", network.vpc, storage.efs_access_point)
