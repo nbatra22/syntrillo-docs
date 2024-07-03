@@ -1,5 +1,5 @@
 
-for resource_path in "/check_internet_ingress" "/check_internet_egress"; do
+for resource_path in "/check_internet_ingress" "/check_internet_egress" "/check_python_module_import"; do
     RESOURCE_PATH=$resource_path
     
     echo "CALL ConnectivityCheckFunction ($RESOURCE_PATH) (Remote)"
@@ -14,9 +14,18 @@ for resource_path in "/check_internet_ingress" "/check_internet_egress"; do
     ERROR_MESSAGE=$(cat /tmp/$RESOURCE_PATH.json | jq .errorMessage)
 
     if [ "$ERROR_MESSAGE" == "null" ]; then
-        echo "ConnectivityCheckAPI test passed"
+        echo "ConnectivityCheckFunction test passed"
     else
-        echo "ConnectivityCheckAPI test failed"
+        echo "ConnectivityCheckFunction test failed"
+        cat /tmp/$RESOURCE_PATH.json | jq
+        exit 1
+    fi
+
+    STATUS_CODE=$(cat /tmp/$RESOURCE_PATH.json | jq .statusCode)
+    if [ "$STATUS_CODE" == "200" ]; then
+        echo "ConnectivityCheckFunction test passed"
+    else
+        echo "ConnectivityCheckFunction test failed"
         cat /tmp/$RESOURCE_PATH.json | jq
         exit 1
     fi
