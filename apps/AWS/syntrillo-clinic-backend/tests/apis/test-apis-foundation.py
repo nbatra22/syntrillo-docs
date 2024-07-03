@@ -14,7 +14,7 @@ def get_api_id(api_name):
     print(f"API '{api_name}' not found.")
     return None
 
-checking_api_id = get_api_id('ConnectivityCheckAPI')
+check_connectivity_api_id = get_api_id('CheckConnectivityAPI')
 # iframe_generator_api_id = get_api_id('IFramGeneratorAPI')
 # landing_page_api_id = get_api_id('LandingPageAPI')
 
@@ -68,8 +68,8 @@ def display_error_context(url, request):
 
 class TestFoundation(unittest.TestCase):
 
-    def test_fitness_function_root_url_is_accessible(self):
-        url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    def test_check_connectivity_function_internet_ingress(self):
+        url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
@@ -78,22 +78,22 @@ class TestFoundation(unittest.TestCase):
         # (i.e. if the timeout is 3s and the lambda function take 3 seconds to start it will timeout), 
         # you should then increase the lambda timeout in the cdk stack
     
-    # def test_network_outside_connectivity(self):
-    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-    #     url += 'test_network_outside_connectivity'
-    #     request = requests.get(url)
-    #     status_code = request.status_code
-    #     self.assertEqual(status_code, 200, display_error_context(url, request))
+    def test_check_connectivity_function_internet_egress(self):
+        url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+        url += 'test_network_outside_connectivity'
+        request = requests.get(url)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
 
     # def test_tenovi_access(self):
-    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    #     url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
     #     url += 'test_tenovi_access'
     #     request = requests.get(url)
     #     status_code = request.status_code
     #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
     # def test_database_access(self):
-    #     url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+    #     url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
     #     url += 'test_database_access'
     #     request = requests.get(url)
     #     status_code = request.status_code
@@ -102,7 +102,7 @@ class TestFoundation(unittest.TestCase):
 # class TestProcesses(unittest.TestCase):
     
 #     def test_register_patient_devices(self):
-#         url = f'https://{checking_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+#         url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
 #         url += 'register_patient_devices'
 #         request = requests.get(url)
 #         status_code = request.status_code
