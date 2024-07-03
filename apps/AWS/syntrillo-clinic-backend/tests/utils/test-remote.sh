@@ -1,5 +1,5 @@
 
-for resource_path in "/test_internet_egress"; do
+for resource_path in "/check_internet_ingress" "/check_internet_egress"; do
     RESOURCE_PATH=$resource_path
     
     echo "CALL ConnectivityCheckFunction ($RESOURCE_PATH) (Remote)"
