@@ -5,6 +5,8 @@
 #   - can be used to QC data
 #
 
+# TODO : add success key to log
+
 import sys
 import os
 
