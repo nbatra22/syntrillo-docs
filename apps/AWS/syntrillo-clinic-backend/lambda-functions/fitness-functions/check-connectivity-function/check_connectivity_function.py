@@ -3,8 +3,12 @@ import sys
 
 sys.path.append('/mnt/python_modules')
 
-modules_to_control=["pandas"]
+modules_to_control=["pandas", "plotly", "kaleido"]
 import pandas
+import plotly
+import kaleido 
+# N.B. When kaleido is installed via cloud9, the instance must have a minimum of 2GB ram (t3.small) 
+# otherwise /tmp is too small for pip to install
 
 def test_internet_egress():
     response = requests.get("https://www.example.com")
