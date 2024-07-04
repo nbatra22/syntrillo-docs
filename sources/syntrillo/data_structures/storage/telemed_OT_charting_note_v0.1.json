@@ -4,7 +4,9 @@
         "internal_name": "telemed_OT_charting_note",
         "type": "Charting Notes (for providers)",
         "description": "Charting note for OT to review and fill in during the telemedicine encounter",
-        "version": "0.1"
+        "version": "0.1",
+        "use_for_charting": true,
+        "use_for_program": false
     },
     "variables": [
         {
