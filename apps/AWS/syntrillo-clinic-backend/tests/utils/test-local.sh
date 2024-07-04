@@ -1,5 +1,7 @@
 cd ../../../syntrillo-clinic-backend/lambda-functions/fitness-functions
-python3 ./check-connectivity-function/check_connectivity_function.py
+cd ./check-connectivity-function/
+# .env must be in this folder
+python3 ./check_connectivity_function.py
 
 cd -
 cd ../../../syntrillo-clinic-backend

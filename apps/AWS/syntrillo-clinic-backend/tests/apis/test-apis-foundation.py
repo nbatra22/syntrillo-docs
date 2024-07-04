@@ -100,12 +100,12 @@ class TestFoundation(unittest.TestCase):
     #     status_code = request.status_code
     #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    # def test_database_access(self):
-    #     url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
-    #     url += 'test_database_access'
-    #     request = requests.get(url)
-    #     status_code = request.status_code
-    #     self.assertEqual(status_code, 200, display_error_context(url, request))
+    def test_check_mysql_database_access(self):
+        url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+        url += 'check_mysql_database_access'
+        request = requests.get(url)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
 
 # class TestProcesses(unittest.TestCase):
     

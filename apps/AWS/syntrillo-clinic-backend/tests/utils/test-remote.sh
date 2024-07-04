@@ -1,5 +1,5 @@
 
-for resource_path in "/check_internet_ingress" "/check_internet_egress" "/check_python_module_import"; do
+for resource_path in "/check_internet_ingress" "/check_internet_egress" "/check_python_module_import" "/check_mysql_database_access"; do
     RESOURCE_PATH=$resource_path
     
     echo

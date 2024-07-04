@@ -92,6 +92,12 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
+        check_internet_ingress = root_resource.add_resource("check_mysql_database_access")
+        check_internet_ingress.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_connectivity_function),
+        )
+
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -101,7 +107,7 @@ class SyntrilloClinicBackendNetworkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         
-        # Create a VPC with one NAT gateways (N.B. Nat gateways are charged)
+        # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
         # Nat gateway is necessary for lambda functions to communicates outside the vpc
         # In our case lambdas need to call tenovi and healthie for example
         self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
@@ -130,6 +136,34 @@ class SyntrilloClinicBackendStorageStack(Stack):
             )
         )
 
+class SyntrilloClinicBackendDatabaseStack(Stack):
+
+    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.vpc = vpc
+
+        self.db = rds.DatabaseInstance(self, "MySQLDatabase",
+            vpc=self.vpc,
+            engine=rds.DatabaseInstanceEngine.MYSQL,
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
+            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
+            multi_az=False,
+            allocated_storage=20,
+            storage_type=rds.StorageType.GP2,
+            credentials=rds.Credentials.from_generated_secret("admin"),
+            database_name="syntrillo_clinic_db",
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        db_security_group = self.db.connections.security_groups[0]
+    
+        db_security_group.add_ingress_rule(
+            ec2.Peer.any_ipv4(),
+            ec2.Port.tcp(3306),
+            "Allow inbound traffic on port 3306 from any IPv4 address"
+        )
+
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -139,4 +173,9 @@ class SyntrilloClinicBackendStack(Stack):
 
         storage=SyntrilloClinicBackendStorageStack(self, "SyntrilloClinicStorageStack", network.vpc)
 
-        CheckConnectivityConstruct(self, "CheckConnectivityConstruct", network.vpc, storage.efs_access_point)
+        database=SyntrilloClinicBackendDatabaseStack(self, "SyntrilloClinicDatabaseStack", network.vpc)
+
+        CheckConnectivityConstruct(self, "CheckConnectivityConstruct", 
+            network.vpc, 
+            storage.efs_access_point,
+        )
