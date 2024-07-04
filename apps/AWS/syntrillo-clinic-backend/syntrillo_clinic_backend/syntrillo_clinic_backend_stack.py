@@ -16,6 +16,10 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+# -----------------------------------------------------------------------------
+# CONSTRUCTS
+# -----------------------------------------------------------------------------
+
 import boto3
 
 class CheckConnectivityConstruct(Construct):
@@ -82,6 +86,16 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
+        check_internet_ingress = root_resource.add_resource("check_python_module_import")
+        check_internet_ingress.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_connectivity_function),
+        )
+
+# -----------------------------------------------------------------------------
+# STACKS
+# -----------------------------------------------------------------------------
+
 class SyntrilloClinicBackendNetworkStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
@@ -107,9 +121,9 @@ class SyntrilloClinicBackendStorageStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        self.efs_access_point = efs.AccessPoint(self, "SyntrillClinicEFSAccessPoint",
+        self.efs_access_point = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPoint",
             file_system=self.efs_file_system,
-            path="/lambda-dependencies",
+            path="/shared-python-modules", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
             posix_user=efs.PosixUser(
                 uid="1001",
                 gid="1001"
@@ -125,4 +139,4 @@ class SyntrilloClinicBackendStack(Stack):
 
         storage=SyntrilloClinicBackendStorageStack(self, "SyntrilloClinicStorageStack", network.vpc)
 
-        CheckConnectivityConstruct(self, "ConnectivityCheckConstruct", network.vpc, storage.efs_access_point)
+        CheckConnectivityConstruct(self, "CheckConnectivityConstruct", network.vpc, storage.efs_access_point)

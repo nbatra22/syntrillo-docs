@@ -1,6 +1,8 @@
 import requests
 import sys
 
+sys.path.append('/mnt/python_modules')
+
 modules_to_control=["pandas"]
 import pandas
 
@@ -41,7 +43,7 @@ def handler(event, context):
             else:
                 return response_500(module + " module not present")
 
-        return response_200(modules)
+        return response_200(str(modules))
 
     return response_500()
 
@@ -74,7 +76,7 @@ if __name__ == '__main__':
         def test_check_python_module_import(self):
             expected = {
                 'statusCode': 200,
-                'body': modules_to_control
+                'body': str(modules_to_control)
             }
             self.assertEqual(expected, handler({"path": "/check_python_module_import"}, None))
 
