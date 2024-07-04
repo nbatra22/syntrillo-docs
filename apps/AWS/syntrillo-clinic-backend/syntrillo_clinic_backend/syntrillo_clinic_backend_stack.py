@@ -98,6 +98,80 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
+class IFrameGeneratorConstruct(Construct):
+    
+    def get_latest_layer_version_arn(self, layer_name: str) -> str:
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.list_layer_versions(LayerName=layer_name)
+        
+        if not response['LayerVersions']:
+            raise ValueError(f"No versions found for layer: {layer_name}")
+        
+        # The versions are returned in descending order, so the first one is the latest
+        latest_version = response['LayerVersions'][0]
+        return latest_version['LayerVersionArn'] 
+        
+    def __init__(self, scope: Construct, id: str, 
+            vpc, 
+            hosted_zone, 
+            certificate, 
+            file_system, 
+            access_point, 
+            **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+    
+        self.vpc = vpc
+        self.hosted_zone = hosted_zone
+        self.certificate = certificate
+        self.access_point = access_point
+        self.file_system = file_system
+
+        iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
+            function_name="IFrameGeneratorFunction",
+            vpc = self.vpc,
+            handler="handler.handler",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
+            memory_size=512,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.access_point,
+                "/mnt/python_modules"
+            ),
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "/mnt/python_modules"
+            },
+            tracing=_lambda.Tracing.ACTIVE,
+            timeout=Duration.seconds(30),
+        )
+
+        iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
+            rest_api_name="IFramGeneratorAPI",
+            domain_name=apigw.DomainNameOptions(
+                domain_name="api.sandbox.syntrillo-clinic-backend.com",
+                certificate=self.certificate
+            ),
+            deploy_options= apigw.StageOptions(
+                tracing_enabled=True,
+                stage_name="sandbox"
+            )
+        )
+
+        root_resource = iframe_generator_api.root
+
+        root_method = root_resource.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
+            zone=hosted_zone,
+            record_name="api.sandbox.syntrillo-clinic-backend.com",
+            target=route53.RecordTarget.from_alias(
+                route53_targets.ApiGateway(iframe_generator_api)
+            )
+        )
+        
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -113,6 +187,19 @@ class SyntrilloClinicBackendNetworkStack(Stack):
         self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
             vpc_name = "SyntrilloClinicVPC",
             nat_gateways=1
+        )
+
+        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
+            zone_name="sandbox.syntrillo-clinic-backend.com",
+            hosted_zone_id="Z00281931X0P3VA26SLKK"
+        )
+
+        self.certificate = acm.Certificate( self, "SyntrilloClinicBackendSSLCertificate",
+            domain_name="sandbox.syntrillo-clinic-backend.com",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
+            subject_alternative_names=[
+                "api.sandbox.syntrillo-clinic-backend.com"
+            ]
         )
 
 class SyntrilloClinicBackendStorageStack(Stack):
@@ -179,3 +266,13 @@ class SyntrilloClinicBackendStack(Stack):
             network.vpc, 
             storage.efs_access_point,
         )
+
+        IFrameGeneratorConstruct(
+            self, "IFrameGeneratorConstruct", 
+            vpc=network.vpc, 
+            access_point=storage.efs_access_point,
+            file_system=storage.efs_file_system, 
+            hosted_zone=network.hosted_zone, 
+            certificate=network.certificate, 
+        )
+

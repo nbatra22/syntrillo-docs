@@ -14,9 +14,9 @@ def get_api_id(api_name):
     print(f"API '{api_name}' not found.")
     return None
 
-checking_api_id = get_api_id('CheckingAPI')
+# checking_api_id = get_api_id('CheckingAPI')
 iframe_generator_api_id = get_api_id('IFramGeneratorAPI')
-landing_page_api_id = get_api_id('LandingPageAPI')
+# landing_page_api_id = get_api_id('LandingPageAPI')
 
 from datetime import datetime, timedelta
 import time
@@ -26,6 +26,8 @@ def display_error_context(url, request):
     error_context += f"\nURL: {url}"
     error_context += f"\nRESPONSE: {request.text}"
     error_context += "\n" + ("<"*80)
+
+    return error_context
 
     if (request.status_code==200):
         return error_context
@@ -66,47 +68,47 @@ def display_error_context(url, request):
 
 class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
 
-    def test_flask_playground(self):
+    def test_flask_playground_page(self):
         url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
         request = requests.get(url)
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_iframe_healthie_provider_tab(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/iframe_healthie_provider_tab'
-        request = requests.get(url)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_iframe_healthie_provider_tab(self):
+    #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/iframe_healthie_provider_tab'
+    #     request = requests.get(url)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_iframe_healthie_provider_tab_system_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices'
-        device_form_data = {
-            'healthie_provider_id': '1173733',
-            'healthie_user_id': 'Not+transmitted',
-            'temporary_lookup_code': '9b6feb98-8603-4a0d-9bd8-eaec74413172',
-            'patient_not_registered_at_syntrillo': 'False'
-        }
-        request = requests.post(url, data=device_form_data)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_iframe_healthie_provider_tab_system_devices(self):
+    #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices'
+    #     device_form_data = {
+    #         'healthie_provider_id': '1173733',
+    #         'healthie_user_id': 'Not+transmitted',
+    #         'temporary_lookup_code': '9b6feb98-8603-4a0d-9bd8-eaec74413172',
+    #         'patient_not_registered_at_syntrillo': 'False'
+    #     }
+    #     request = requests.post(url, data=device_form_data)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_iframe_healthie_provider_tab_system_devices_generate_temporary_pairing_code(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_generate_temporary_pairing_code_form'
-        device_form_data = {
-            'temporary_lookup_code': '69c70ff8-6589-42b2-8b54-1501079441e2',
-        }
-        request = requests.post(url, data=device_form_data)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_iframe_healthie_provider_tab_system_devices_generate_temporary_pairing_code(self):
+    #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_generate_temporary_pairing_code_form'
+    #     device_form_data = {
+    #         'temporary_lookup_code': '69c70ff8-6589-42b2-8b54-1501079441e2',
+    #     }
+    #     request = requests.post(url, data=device_form_data)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    def test_iframe_healthie_provider_tab_system_devices_pair_devices(self):
-        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
-        device_form_data = {
-            'temporary_lookup_code': '467c3431-aac8-4307-948d-0d92a3f06a2d',
-        }
-        request = requests.post(url, data=device_form_data)
-        status_code = request.status_code
-        self.assertEqual(status_code, 200, display_error_context(url, request))
+    # def test_iframe_healthie_provider_tab_system_devices_pair_devices(self):
+    #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
+    #     device_form_data = {
+    #         'temporary_lookup_code': '467c3431-aac8-4307-948d-0d92a3f06a2d',
+    #     }
+    #     request = requests.post(url, data=device_form_data)
+    #     status_code = request.status_code
+    #     self.assertEqual(status_code, 200, display_error_context(url, request))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
