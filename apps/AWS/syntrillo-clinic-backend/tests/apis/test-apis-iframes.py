@@ -74,11 +74,11 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
-    # def test_iframe_healthie_provider_tab(self):
-    #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/iframe_healthie_provider_tab'
-    #     request = requests.get(url)
-    #     status_code = request.status_code
-    #     self.assertEqual(status_code, 200, display_error_context(url, request))
+    def test_iframe_healthie_provider_tab(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/iframe_healthie_provider_tab'
+        request = requests.get(url)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
 
     # def test_iframe_healthie_provider_tab_system_devices(self):
     #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices'

@@ -1,6 +1,7 @@
 
 RESOURCE_PATHES="\
 / \
+/iframe_healthie_provider_tab \
 "
 
 FUNCTION_NAME="IFrameGeneratorFunction"
@@ -11,7 +12,7 @@ for resource_path in $RESOURCE_PATHES; do
     echo
     echo "Remote Iframe Test ($RESOURCE_PATH)"
 
-    PAYLOAD='{"httpMethod": "GET", "path": "$resource_path", "queryStringParameters": ""}'
+    PAYLOAD='{"httpMethod": "GET", "path": "'$resource_path'", "queryStringParameters": ""}'
 
     TEST=$(aws lambda invoke \
         --cli-binary-format raw-in-base64-out \
@@ -27,6 +28,15 @@ for resource_path in $RESOURCE_PATHES; do
     else
         echo "IFrame Generator function ($RESOURCE_PATH) test failed"
         cat /tmp/$RESOURCE_PATH.json | jq # in the case of "/" $RESOURCE_PATH, file is /tmp/.json
+        exit 1
+    fi
+
+    STATUS_CODE=$(cat /tmp/$RESOURCE_PATH.json | jq .statusCode)
+    if [ "$STATUS_CODE" == "\"200\"" ]; then
+        echo "IFrame Generator function ($RESOURCE_PATH) test passed"
+    else
+        echo "IFrame Generator function test failed"
+        cat /tmp/$RESOURCE_PATH.json | jq
         exit 1
     fi
 
@@ -49,6 +59,7 @@ for resource_path in $RESOURCE_PATHES; do
     else
         echo "IFrame Generator API ($RESOURCE_PATH) test failed"
         echo $TEST | jq .
+        echo "### LAMBDA FUNCTION RESPONSE (CAN HELP TO UNDERSTAND THE ISSSUE SOMETIMES)"
         cat /tmp/$RESOURCE_PATH.json | jq .
         exit 1
     fi
@@ -118,6 +129,7 @@ for resource_path in $RESOURCE_PATHES; do
     else
         echo "CheckConnectivityAPI ($RESOURCE_PATH) test failed"
         echo $TEST | jq .
+        echo "### LAMBDA FUNCTION RESPONSE (CAN HELP TO UNDERSTAND THE ISSSUE SOMETIMES)"
         cat /tmp/$RESOURCE_PATH.json | jq .
         exit 1
     fi

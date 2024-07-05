@@ -170,6 +170,12 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
+        iframe_healthie_provider_tab.add_method(
+            "ANY",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
         route53.ARecord(self, "SyntrilloCustomDomainARecord", 
             zone=hosted_zone,
             record_name="api.sandbox.syntrillo-clinic-backend.com",
