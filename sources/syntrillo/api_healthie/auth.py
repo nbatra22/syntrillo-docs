@@ -3,6 +3,8 @@
 import requests
 import os
 import json
+import inspect
+from typing import Tuple
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -21,6 +23,13 @@ class HealthieAuth:
         verbose (bool): Whether to print verbose output for debugging (default: False).
         url (str): The GraphQL endpoint URL based on the organization.
     """
+
+    # class attributes
+    api_key = None
+    organization = None
+    verbose = False
+    url = None
+
 
     def __init__(
         self,
@@ -71,7 +80,7 @@ class HealthieAuth:
         self,
         query: str,
         variables: dict = {}
-        ):
+        ) -> Tuple[dict, dict]:
         """
         Sends a GraphQL query to the Healthie API.
 
@@ -89,11 +98,26 @@ class HealthieAuth:
             Exception if the response contains an 'errors' or does not contain 'data'
         """
 
+        # Get the name of the calling function for logging purposes
+        caller = inspect.stack()[1].function
+
         # Set up the request headers with the API key
         headers = {
             'Authorization': f'Basic {self.api_key}',
             'AuthorizationSource': 'API'
         }
+
+        # Try converting the data to a JSON string. If this fails, return an error log.
+        #   : this will fail if the data is not JSON serializable, for example if it includes uuid objects
+        try:
+            temp = json.dumps(variables)
+        except Exception as e:
+            log = {
+                "success": False,
+                "message": f"A json.dumps error occurred in {caller}: {e}",
+                "data": variables,
+            }
+            return None, log
 
         try:
             # Make the HTTP POST request to the Healthie API
@@ -108,7 +132,7 @@ class HealthieAuth:
                 response_to_return = None
                 log = {
                     'success': False,
-                    'message': 'GraphQL query returned errors',
+                    'message': f"GraphQL query returned errors in {caller}",
                     'response': response_json
                 }
             # Check if response contains 'data' field
@@ -116,7 +140,7 @@ class HealthieAuth:
                 response_to_return = None
                 log = {
                     'success': False,
-                    'message': 'GraphQL query did not return valid data',
+                    'message': f"GraphQL query did not return valid data in {caller}",
                     'response': response_json
                 }
             # successful response
@@ -125,21 +149,21 @@ class HealthieAuth:
                 response_to_return = response_json['data']
                 log = {
                     'success': True,
-                    'message': 'GraphQL query successful',
+                    'message': f"GraphQL query successful in {caller}",
                 }
 
         except requests.exceptions.HTTPError as errh:
             response_to_return = None
             log = {
                 'success': False,
-                'message': f"HTTP Error: {errh}",
+                'message': f"HTTP Error: {errh} in {caller}",
             }
 
         except requests.exceptions.RequestException as err:
             response_to_return = None
             log = {
                 'success': False,
-                'message': f"Request Exception: {err}",
+                'message': f"Request Exception: {err} in {caller}",
             }
 
         return response_to_return, log

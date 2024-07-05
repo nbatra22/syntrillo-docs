@@ -1,5 +1,9 @@
 # Path: ./sources/syntrillo/api_tenovi/devices.py
 
+import json
+import uuid
+from typing import Tuple
+
 from syntrillo.api_tenovi.auth import TenoviAuth
 from syntrillo.api_tenovi.device_properties import DeviceProperties
 
@@ -47,7 +51,7 @@ class Devices:
     def __init__(self):
         self.auth = TenoviAuth()
 
-    def device_dict_format_hardware_uuid(self, device):
+    def device_dict_format_hardware_uuid(self, device: dict) -> dict:
         """
         Adds a field 'hardware_uuid_formatted' to the device dictionary,
         formatting the 'hardware_uuid' with hyphens every 4 characters.
@@ -68,7 +72,7 @@ class Devices:
 
         return device
 
-    def devices_format_hardware_uuid(self, devices):
+    def devices_format_hardware_uuid(self, devices: list) -> list:
         """
         Adds a field 'hardware_uuid_formatted' to each device in the devices list,
         formatting the 'hardware_uuid' with hyphens every 4 characters.
@@ -91,7 +95,7 @@ class Devices:
         return devices
 
 
-    def get_devices(self, hwi_device_id  : str = None, **kwargs):
+    def get_devices(self, hwi_device_id: str = None, **kwargs) -> Tuple[list, dict]:
         """
         Lists all or reads a single HWI Device. To read a single HWI Device, the ID must be included in the URL.
 
@@ -121,10 +125,13 @@ class Devices:
 
         devices, log = self.auth.make_get_request(url, params=kwargs)
 
+        if devices is None:
+            return None, log
+
         return self.devices_format_hardware_uuid(devices), log
 
 
-    def get_devices_by_patient_external_id(self, external_id):
+    def get_devices_by_patient_external_id(self, external_id: str) -> Tuple[list, dict]:
         """
         Returns devices matching patient external ID
 
@@ -140,12 +147,16 @@ class Devices:
         }
         return self.get_devices(**query_params)
 
-    def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access : str):
+    def get_devices_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access__uuid: uuid.UUID) -> Tuple[list, dict]:
         """
-        Returns devices matching the pseudo_code_for_tenovi_phi_access key/value propoerty
+        Returns devices matching the pseudo_code_for_tenovi_phi_access key/value property
+
+        The pseudo_code_for_tenovi_phi_access represents the pseudo code for Tenovi PHI access.
+
+        The pseudo_code_for_tenovi_phi_access is stored/searched for as a str(uuid.UUID)
 
         Args:
-            pseudo_code_for_tenovi_phi_access (str): The pseudo code for Tenovi PHI access.
+            pseudo_code_for_tenovi_phi_access__uuid (uuid.UUID): The pseudo code for Tenovi PHI access.
 
         Returns a tupple:
             list: A list of device dictionaries.
@@ -153,12 +164,12 @@ class Devices:
         """
         query_params = {
             "properties__key": "pseudo_code_for_tenovi_phi_access",
-            "properties__value": pseudo_code_for_tenovi_phi_access,
+            "properties__value": str(pseudo_code_for_tenovi_phi_access__uuid), # str(uuid.UUID) : important to convert to string
         }
         return self.get_devices(**query_params)
 
 
-    def create_device(self, payload : dict):
+    def create_device(self, payload: dict) -> Tuple[dict, dict]:
         """
         Creates a new HWI Device with optional Fulfillment Request
 
@@ -180,7 +191,7 @@ class Devices:
         return self.auth.make_post_request(url, payload)
 
 
-    def update_device_patient_id(self, hwi_device_id : str, patient_id : str):
+    def update_device_patient_id(self, hwi_device_id: str, patient_id: str) -> Tuple[dict, dict]:
         """
         Updates the patient_id of a device.
 
@@ -215,24 +226,24 @@ class Devices:
     def create_set_of_devices_with_fulfillment_request(
         self,
         # devices
-        devices_names : list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'),
+        devices_names: list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'),
 
         # pairing
-        pair_devices : bool = True,
-        healthie_user_id : str = None,
-        pseudo_code_for_tenovi_phi_access : str = None,
+        pair_devices: bool = True,
+        healthie_user_id: str = None,
+        pseudo_code_for_tenovi_phi_access__uuid: uuid.UUID = None,  # : uuid.UUID
 
         # patient
-        patient_id : str = "TempCode",
-        patient_name : str = None,
-        patient_phone_number : str = "",
-        patient_email : str = None,
+        patient_id: str = "TempCode",
+        patient_name: str = None,
+        patient_phone_number: str = "",
+        patient_email: str = None,
 
         # gateway
-        gateway_id : str = None,
+        gateway_id: str = None,
 
         # fulfillment request
-        fullfillment_request : bool = True,
+        fullfillment_request: bool = True,
 
         shipping_name: str = None,
         shipping_address: str = None,
@@ -247,13 +258,19 @@ class Devices:
         client_will_fulfill: bool = False, # False will request a dropship by Tenovi ('Dropship Requested' status in the dashboard)
         flagged_by_client: bool = None,
 
-        sms_opt_in : bool = False, # If you have not obtained the patient's consent to receive SMS messages, please set the sms_opt_in field to False.
+        sms_opt_in: bool = False, # If you have not obtained the patient's consent to receive SMS messages, please set the sms_opt_in field to False.
     ):
         """
         Creates a new set of HWI Devices with optional Fulfillment Request for each device.
 
         Args:
-            devices_names (list): List of device names to be created. Default includes 'Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'. None allowed and will be ignored.
+            devices_names (list): List of device names to be created. Default includes 'Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'. None
+
+            pair_devices (bool): Whether to pair the devices. Default is True.
+            healthie_user_id (str): The Healthie User ID to pair the devices with.
+            pseudo_code_for_tenovi_phi_access__uuid (uuid.UUID): The pseudo code for Tenovi PHI access.
+
+            allowed and will be ignored.
             patient_id (str): The ID of the patient.
             patient_name (str): The name of the patient.
             patient_external_id (str): The external ID of the patient. Will be displayed on the Device Dashboard as 'Patient ID'
@@ -370,23 +387,25 @@ class Devices:
                                 "error_message": "Device ID is None",
                             }
 
-                        device_properties = DeviceProperties()
+                        else:
 
-                        _, log1 = device_properties.create__healthie_user_id__property(
-                            hwi_device_id = new_device['id'],
-                            healthie_user_id = healthie_user_id,
-                        )
+                            device_properties = DeviceProperties()
 
-                        _, log2 = device_properties.create__pseudo_code_for_tenovi_phi_access__property(
-                            hwi_device_id = new_device['id'],
-                            pseudo_code = pseudo_code_for_tenovi_phi_access,
-                        )
+                            _, log1 = device_properties.create__healthie_user_id__property(
+                                hwi_device_id = new_device['id'],
+                                healthie_user_id = healthie_user_id,
+                            )
 
-                        log_pairing = {
-                            "success": log1['success'] and log2['success'],
-                            "log1": log1,
-                            "log2": log2
-                        }
+                            _, log2 = device_properties.create__pseudo_code_for_tenovi_phi_access__property(
+                                hwi_device_id = new_device['id'],
+                                pseudo_code_for_tenovi_phi_access = pseudo_code_for_tenovi_phi_access__uuid,
+                            )
+
+                            log_pairing = {
+                                "success": log1['success'] and log2['success'],
+                                "log1": log1,
+                                "log2": log2
+                            }
 
                     overall_log["log"].append({
                         "new_device": log_new_device,
@@ -395,6 +414,20 @@ class Devices:
                     overall_log["success"] = overall_log["success"] and log_new_device["success"] and log_pairing["success"]
 
         return devices_created, overall_log
+
+    def delete_device(self, hwi_device_id: str) -> Tuple[dict, dict]:
+        """
+        Deletes a HWI Device.
+
+        Args:
+            hwi_device_id (str): The HWI Device ID.
+
+        Returns a tupple:
+            dict: The response of the request.
+            dict: The success log.
+        """
+        url = f"/hwi/hwi-devices/{hwi_device_id}/"
+        return self.auth.make_delete_request(url)
 
 
 # Example usage:

@@ -8,6 +8,8 @@ import pymysql
 
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.api_tenovi.devices import Devices
+from syntrillo.api_tenovi.device_types import DeviceTypes
+from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
 from aws_lambda_powertools import Logger
@@ -40,11 +42,11 @@ class TenoviDummyDataGenerator:
         logger.info(f"[DUMMY_DATA_GENERATOR] <DEVICES_RETREIVE_FROM_TENOVI> devices {devices}, pseudo_code_for_tenovi_phi_access {self.pseudo_code_for_tenovi_phi_access}")
 
         for device in devices:
-            if device['device']['name'] == "Tenovi BPM - L":
+            if device['device']['name'] in [DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE, DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL] :
                 self.device_id_BMP = device["id"]
-            elif device['device']['name'] == "Tenovi Pillbox":
+            elif device['device']['name'] == DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX:
                 self.device_id_pillbox = device["id"]
-            elif device['device']['name'] == "Tenovi Watch":
+            elif device['device']['name'] == DeviceTypes.TENOVI_DEVICE_NAME__WATCH:
                 self.device_id_watch = device["id"]
 
         if verbose:
@@ -58,6 +60,7 @@ class TenoviDummyDataGenerator:
         patient_state_steps: str,
         patient_state_medication_adherence: str,
         patient_state_medication_expected_pattern: str,
+        patient_state_irregular_heartbeat: bool = False,
         ) -> None:
         """
         Set the patient state to generate the data accordingly
@@ -73,6 +76,13 @@ class TenoviDummyDataGenerator:
 
 
         # ---------------------- Blood Pressure ----------------------
+
+        self.patient_state_irregular_heartbeat = patient_state_irregular_heartbeat
+
+        if patient_state_irregular_heartbeat:
+            self.irregular_heartbeat_probability = 0.1
+        else:
+            self.irregular_heartbeat_probability = 0.0
 
         self.patient_state_blood_pressure = patient_state_blood_pressure
 
@@ -167,7 +177,7 @@ class TenoviDummyDataGenerator:
             self.pillbox_refill_rate = 0.05
 
 
-    def generate_BMP_data_point(self):
+    def generate_BPM_data_point(self):
         """
         Generate a single blood pressure measurement data point
         """
@@ -179,9 +189,14 @@ class TenoviDummyDataGenerator:
         diastolic = round(max(self.diastolic_min, min(diastolic, self.diastolic_max)), 0)
         pulse = round(max(self.pulse_min, min(pulse, self.pulse_max)), 0)
 
-        return systolic, diastolic, pulse
+        if self.patient_state_irregular_heartbeat:
+            irregular_heartbeat = random.random() < self.irregular_heartbeat_probability
+        else:
+            irregular_heartbeat = False
 
-    def generate_BMP_device_data(self, date_start: datetime, date_end: datetime):
+        return systolic, diastolic, pulse, irregular_heartbeat
+
+    def generate_BPM_device_data(self, date_start: datetime, date_end: datetime):
         """
         Generate blood pressure data for the given date range.
         """
@@ -194,28 +209,34 @@ class TenoviDummyDataGenerator:
                 date += timedelta(days=1)
 
             timestamp = date + timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
-            created = timestamp + timedelta(minutes=random.randint(0, 59))
-
-            created_str = created.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             timestamp_zulu = timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+            created1 = timestamp + timedelta(minutes=random.randint(0, 59))
+            created2 = created1 + timedelta(microseconds=random.randint(100, 999))
+            created3 = created2 + timedelta(microseconds=random.randint(100, 999))
+
+            created1_str = created1.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            created2_str = created2.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            created3_str = created3.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
 
             # ----------------------
             # blood pressure data
             if self.patient_state_blood_pressure != "no_data":
 
-                systolic, diastolic, pulse = self.generate_BMP_data_point()
+                systolic, diastolic, pulse, irregular_heartbeat = self.generate_BPM_data_point()
 
                 value1_str = f"{systolic:.2f}"
                 value2_str = f"{diastolic:.2f}"
 
                 data_bp = {
-                    "metric": "blood_pressure",
-                    "created": created_str,
+                    "metric": DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+                    "created": created1_str,
                     "value_1": value1_str,
                     "value_2": value2_str,
                     "timestamp": timestamp_zulu,
                     "patient_id": self.healthie_user_id,
-                    "device_name": "Tenovi BPM - L",
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
                     "sensor_code": "10",
                     "filter_params": {
                         "measurement_index": 100 + i
@@ -228,8 +249,8 @@ class TenoviDummyDataGenerator:
                 }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi BPM - L",
-                    metric_name="blood_pressure",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
                     value_1=value1_str,
                     value_2=value2_str,
                     timestamp_zulu=timestamp_zulu,
@@ -242,13 +263,13 @@ class TenoviDummyDataGenerator:
                 value1_str = f"{pulse:.2f}"
 
                 data_hr = {
-                    "metric": "pulse",
-                    "created": created_str,
+                    "metric": DeviceMeasurements.TENOVI_METRICS_BPM_PULSE,
+                    "created": created2_str,
                     "value_1": value1_str,
                     "value_2": "0.00",
                     "timestamp": timestamp_zulu,
-                    "patient_id": "Omar Real Device",
-                    "device_name": "Tenovi BPM - L",
+                    "patient_id": self.healthie_user_id,
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
                     "sensor_code": "10",
                     "filter_params": {"measurement_index": 200+i},
                     "hardware_uuid": "FB5E23D5E7F7",
@@ -259,14 +280,44 @@ class TenoviDummyDataGenerator:
                     }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi BPM - L",
-                    metric_name="pulse",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_PULSE,
                     value_1=value1_str,
                     value_2="0.00",
                     timestamp_zulu=timestamp_zulu,
                     timezone_offset=-4,
                     data_json=json.dumps(data_hr, default=str)
                 )
+
+                # ----------------------
+                # irregular heartbeat
+                if irregular_heartbeat:
+                    data_ihb = {
+                        "metric": DeviceMeasurements.TENOVI_METRICS_BPM_IRREGULAR_HEARTBEAT,
+                        "created": created3_str,
+                        "value_1": "1.00",
+                        "value_2": "0.00",
+                        "timestamp": timestamp_zulu,
+                        "patient_id": self.healthie_user_id,
+                        "device_name": DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+                        "sensor_code": "10",
+                        "filter_params": {"measurement_index": 200+i},
+                        "hardware_uuid": "FB5E23D5E7F7",
+                        "hwi_device_id": self.device_id_BMP,
+                        "timezone_offset": -4,
+                        "estimated_timestamp": False,
+                        "dummy_data": True
+                        }
+
+                    self.syntrillo_database_manager.insert_tenovi_raw_measurement(
+                        device_name=DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
+                        metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_IRREGULAR_HEARTBEAT,
+                        value_1="1.00",
+                        value_2="0.00",
+                        timestamp_zulu=timestamp_zulu,
+                        timezone_offset=-4,
+                        data_json=json.dumps(data_ihb, default=str)
+                    )
 
         return None
 
@@ -319,13 +370,13 @@ class TenoviDummyDataGenerator:
                 value2_str = f"{heart_rate_max:.2f}"
 
                 data_hr_stats = {
-                    "metric": "heart_rate_statistics",
+                    "metric": DeviceMeasurements.TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS,
                     "created": created_str,
                     "value_1": value1_str,
                     "value_2": value2_str,
                     "timestamp": timestamp_zulu,
                     "patient_id": self.healthie_user_id,
-                    "device_name": "Tenovi Watch",
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
                     "sensor_code": "15",
                     "filter_params": {"period": 60, "wearable_code": 0, "max_heart_rate": 91, "min_heart_rate": 0, "average_heart_rate": 80},
                     "hardware_uuid": "FB5E23D5E7F7",
@@ -336,8 +387,8 @@ class TenoviDummyDataGenerator:
                     }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi Watch",
-                    metric_name="heart_rate_statistics",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS,
                     value_1=value1_str,
                     value_2=value2_str,
                     timestamp_zulu=timestamp_zulu,
@@ -351,13 +402,13 @@ class TenoviDummyDataGenerator:
                 value1_str = f"{steps:.2f}"
 
                 data_steps = {
-                    "metric": "steps",
+                    "metric": DeviceMeasurements.TENOVI_METRICS_WATCH_STEPS,
                     "created": created_str,
                     "value_1": value1_str,
                     "value_2": "0.00",
                     "timestamp": timestamp_zulu,
                     "patient_id": self.healthie_user_id,
-                    "device_name": "Tenovi Watch",
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
                     "sensor_code": "15",
                     "filter_params": {"wearable_code": 0},
                     "hardware_uuid": "FB5E23D5E7F7",
@@ -368,8 +419,8 @@ class TenoviDummyDataGenerator:
                     }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi Watch",
-                    metric_name="steps",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__WATCH,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_WATCH_STEPS,
                     value_1=value1_str,
                     value_2="0.00",
                     timestamp_zulu=timestamp_zulu,
@@ -412,13 +463,13 @@ class TenoviDummyDataGenerator:
                 created_str = created.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
                 data_pillbox_refill_initiated = {
-                        "metric": "pillbox_refill_initiated",
+                        "metric": DeviceMeasurements.TENOVI_METRICS_PILLBOX_REFILL_INITIATED,
                         "created": created_str,
                         "value_1": "1.00",
                         "value_2": "0.00",
                         "timestamp": timestamp_zulu,
                         "patient_id": self.healthie_user_id,
-                        "device_name": "Tenovi Pillbox",
+                        "device_name": DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
                         "sensor_code": "21",
                         "filter_params": None,
                         "hardware_uuid": "FB5E23D5E7F7",
@@ -429,8 +480,8 @@ class TenoviDummyDataGenerator:
                         }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi Pillbox",
-                    metric_name="pillbox_refill_initiated",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_PILLBOX_REFILL_INITIATED,
                     value_1="1.00",
                     value_2="0.00",
                     timestamp_zulu=timestamp_zulu,
@@ -455,7 +506,7 @@ class TenoviDummyDataGenerator:
                         compartment = timestamp.strftime("%A") + " " + ("AM" if timestamp.hour < 12 else "PM")
 
                         data_pillbox_refilled = {
-                            "metric": "pillbox_refilled",
+                            "metric": DeviceMeasurements.TENOVI_METRICS_PILLBOX_REFILLED,
                             "created": created_str,
                             "value_1": value_1_str,
                             "value_2": value_2_str,
@@ -472,8 +523,8 @@ class TenoviDummyDataGenerator:
                         }
 
                         self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                            device_name="Tenovi Pillbox",
-                            metric_name="pillbox_refilled",
+                            device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
+                            metric_name=DeviceMeasurements.TENOVI_METRICS_PILLBOX_REFILLED,
                             value_1=value_1_str,
                             value_2=value_2_str,
                             timestamp_zulu=timestamp_zulu,
@@ -510,13 +561,13 @@ class TenoviDummyDataGenerator:
 
                 # pillbox opened event
                 data_pillbox_opened = {
-                    "metric": "pillbox_opened",
+                    "metric": DeviceMeasurements.TENOVI_METRICS_PILLBOX_OPENED,
                     "created": created_str,
                     "value_1": value1_str,
                     "value_2": "1.00",  # 1=AM, 2=PM
                     "timestamp": timestamp_zulu,
                     "patient_id": self.healthie_user_id,
-                    "device_name": "Tenovi Pillbox",
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
                     "sensor_code": "21",
                     "filter_params": { "compartment": compartment },
                     "hardware_uuid": "FB5E23D5E7F7",
@@ -527,8 +578,8 @@ class TenoviDummyDataGenerator:
                     }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi Pillbox",
-                    metric_name="pillbox_opened",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_PILLBOX_OPENED,
                     value_1=value1_str,
                     value_2="1.00",
                     timestamp_zulu=timestamp_zulu,
@@ -565,13 +616,13 @@ class TenoviDummyDataGenerator:
 
                 # pillbox opened event
                 data_pillbox_opened = {
-                    "metric": "pillbox_opened",
+                    "metric": DeviceMeasurements.TENOVI_METRICS_PILLBOX_OPENED,
                     "created": created_str,
                     "value_1": value1_str,
                     "value_2": "2.00",  # 1=AM, 2=PM
                     "timestamp": timestamp_zulu,
                     "patient_id": self.healthie_user_id,
-                    "device_name": "Tenovi Pillbox",
+                    "device_name": DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
                     "sensor_code": "21",
                     "filter_params": { "compartment": compartment },
                     "hardware_uuid": "FB5E23D5E7F7",
@@ -582,8 +633,8 @@ class TenoviDummyDataGenerator:
                     }
 
                 self.syntrillo_database_manager.insert_tenovi_raw_measurement(
-                    device_name="Tenovi Pillbox",
-                    metric_name="pillbox_opened",
+                    device_name=DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
+                    metric_name=DeviceMeasurements.TENOVI_METRICS_PILLBOX_OPENED,
                     value_1=value1_str,
                     value_2="2.00",
                     timestamp_zulu=timestamp_zulu,
@@ -605,7 +656,7 @@ class TenoviDummyDataGenerator:
         Generate data for all devices for the given date range.
         """
 
-        _ = self.generate_BMP_device_data(date_start, date_end)
+        _ = self.generate_BPM_device_data(date_start, date_end)
 
         _ = self.generate_watch_device_data(date_start, date_end)
 
@@ -657,10 +708,11 @@ if __name__ == "__main__":
         patient_state_heart_rate="no_data",
         patient_state_steps="no_data",
         patient_state_medication_adherence="perfect",
-        patient_state_medication_expected_pattern="twice daily"
+        patient_state_medication_expected_pattern="twice daily",
+        patient_state_irregular_heartbeat=False,
     )
 
-    # _ = data_generator.generate_BMP_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
+    # _ = data_generator.generate_BPM_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
 
     # _ = data_generator.generate_watch_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
 

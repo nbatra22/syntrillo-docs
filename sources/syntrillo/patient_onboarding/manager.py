@@ -5,8 +5,7 @@ import json
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.data_structures.data_structure import DataStructure
-from syntrillo.data_structures.storage_manager import StorageManager
+from syntrillo.data_structures.questionnaire_healthie_manager import DataStructureQuestionnaireHealthieManager
 from syntrillo.api_healthie.misc import *
 
 class PatientOnboardingManager():
@@ -307,12 +306,11 @@ class PatientOnboardingManager():
         # append to personalized_intake_form_header
 
         # Load JSON data from StorageManager
-        storage_manager = StorageManager()
-        data_structure = DataStructure(storage_manager)
-        data_structure.load_from_storage(self.personalized_intake_form_header)
+        healthie_questionnaire_manager = DataStructureQuestionnaireHealthieManager()
+        healthie_questionnaire_manager.load_structure_from_storage(self.personalized_intake_form_header)
 
         # Transform JSON data to custom_modules
-        personalized_intake_form_header_custom_modules = data_structure.transform_for_healthie_api()
+        personalized_intake_form_header_custom_modules = healthie_questionnaire_manager.transform_into_healthie_modules()
 
         # Combine header modules and unique missing modules
         header_unique_custom_modules_with_missing_answer = personalized_intake_form_header_custom_modules + unique_custom_modules_with_missing_answer

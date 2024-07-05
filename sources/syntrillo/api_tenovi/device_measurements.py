@@ -6,11 +6,16 @@ from syntrillo.api_tenovi.devices import Devices
 class DeviceMeasurements:
 
 
-    TENOVI_METRICS_BMP_BLOOD_PRESSURE = "blood_pressure"
-    TENOVI_METRICS_BMP_PULSE = "pulse"
+    TENOVI_METRICS_BPM_BLOOD_PRESSURE = "blood_pressure"
+    TENOVI_METRICS_BPM_PULSE = "pulse"
+    TENOVI_METRICS_BPM_IRREGULAR_HEARTBEAT = "irregular_heartbeat"
     TENOVI_METRICS_WATCH_STEPS = "steps"
     TENOVI_METRICS_WATCH_SLEEP = "sleep"
     TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS = "heart_rate_statistics"
+
+    TENOVI_METRICS_PILLBOX_REFILL_INITIATED = "pillbox_refill_initiated"
+    TENOVI_METRICS_PILLBOX_REFILLED = "pillbox_refilled"
+    TENOVI_METRICS_PILLBOX_OPENED = "pillbox_opened"
 
 
     def __init__(self):

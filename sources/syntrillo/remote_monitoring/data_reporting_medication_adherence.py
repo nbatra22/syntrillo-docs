@@ -10,11 +10,13 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
-class RemoteMonitoringDataReporting:
+class DataReportingMedicationAdherence:
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
         """
-        Get user level reports from the remote monitoring system
+        Get user level reports from the remote monitoring system on medication adherence.
+
+        Based on Tenovi Pillbox data.
 
         Data from the remote monitoring system is stored in our PHI database
 
@@ -95,7 +97,8 @@ class RemoteMonitoringDataReporting:
 
         # ---
         # end_date - start date < 2 days, return an error
-        if (end_date - start_date).days < 2:
+        tz_utc = timezone.utc # quick fix if one date has no timezone to allow the substraction
+        if (end_date.astimezone(tz_utc) - start_date.astimezone(tz_utc)).days < 2:
             log = {
                 'success': False,
                 'error': 'Report period is too short',
@@ -442,7 +445,7 @@ if __name__ == "__main__":
     lookup_codes = LookUpCodesManagement()
     entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One"
 
-    data_reported = RemoteMonitoringDataReporting(entry['syntrillo_internal_key'])
+    data_reported = DataReportingMedicationAdherence(entry['syntrillo_internal_key'])
 
     if False:
         # Get single pillbox report

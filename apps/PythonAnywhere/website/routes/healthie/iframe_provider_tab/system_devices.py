@@ -49,10 +49,8 @@ def iframe_healthie_provider_tab_system_devices():
         )
 
     # Minimal logging
-    if paired_devices:
+    if paired_devices is not None:
         logger.info(f"[SYSTEM_DEVICES] <PAIRED DEVICES RETRIEVED> paired_devices_ids {[entry['id'] for entry in paired_devices]} <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
-    else:
-        logger.warning(f"[SYSTEM_DEVICES] <NO PAIRED DEVICES RETRIEVED> <FOR> temporary_lookup_code {post_manager.temporary_lookup_code }")
 
     return render_template('healthie/iframe_provider_tab/system_devices.html',
                            temporary_lookup_code=post_manager.temporary_lookup_code,
@@ -273,6 +271,8 @@ def tenovi_dummy_data_generator_form():
     medication_adherence_state = request.form.get('medication_adherence_state')
     medication_expected_pattern = request.form.get('medication_expected_pattern')
 
+    irregular_heartbeat = _checkbox_to_bool(request.form.get('has_arrhythmia'))
+
     # ---------------------
     # manage dates
     today = datetime.today()
@@ -348,6 +348,7 @@ def tenovi_dummy_data_generator_form():
             patient_state_steps=steps_state,
             patient_state_medication_adherence = medication_adherence_state,
             patient_state_medication_expected_pattern = medication_expected_pattern,
+            patient_state_irregular_heartbeat=irregular_heartbeat,
         )
 
         # generate dummy data

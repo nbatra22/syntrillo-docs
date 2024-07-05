@@ -1,5 +1,6 @@
 # Path: ./sources/syntrillo/patient_initialization/order_tenovi_devices.py
 
+import uuid
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.api_tenovi.devices import Devices
@@ -15,6 +16,9 @@ class OrderTenoviDevices:
 
     """
 
+    # class variables
+    healthie_user_id: str = None
+    pseudo_code_for_tenovi_phi_access__uuid: uuid.UUID = None
 
     def __init__(self, syntrillo_internal_key):
         """
@@ -26,8 +30,7 @@ class OrderTenoviDevices:
         lookup_codes_management = LookUpCodesManagement()
         entry = lookup_codes_management.retrieve_entry_by_internal_key(syntrillo_internal_key)
         self.healthie_user_id = entry.get('healthie_user_id')
-        self.pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
-
+        self.pseudo_code_for_tenovi_phi_access__uuid = entry.get('pseudo_code_for_tenovi_phi_access')
 
 
     def place_order(
@@ -102,7 +105,7 @@ class OrderTenoviDevices:
                 # pairing
                 pair_devices= pair_devices,
                 healthie_user_id= self.healthie_user_id,
-                pseudo_code_for_tenovi_phi_access= self.pseudo_code_for_tenovi_phi_access,
+                pseudo_code_for_tenovi_phi_access__uuid= self.pseudo_code_for_tenovi_phi_access__uuid,
 
                 # patient
                 patient_id = self.healthie_user_id,

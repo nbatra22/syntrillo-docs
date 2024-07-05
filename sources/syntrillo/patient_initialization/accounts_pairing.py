@@ -167,30 +167,31 @@ class AccountsPairing:
 
         paired_devices, _ = devices.get_devices_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
 
-        if add_syntrillo_database_stats:
-            data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
-            summary_report, log = data_manager.get_summary_devices_report()
+        if paired_devices is not None:
+            if add_syntrillo_database_stats:
+                data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
+                summary_report, log = data_manager.get_summary_devices_report()
 
-            # Create a dictionary from summary_report for quick lookup
-            summary_dict = {report['device_name']: report for report in summary_report}
+                # Create a dictionary from summary_report for quick lookup
+                summary_dict = {report['device_name']: report for report in summary_report}
 
-            # Merge summary_report into paired_devices
-            for device in paired_devices:
-                device_name = device['device']['name']
-                if device_name in summary_dict:
-                    device['device'].update(summary_dict[device_name])
-                    if add_tenovi_latest_record_timestamp:
-                        record, log = data_manager.get_latest_record_for_tenovi_device(device_name)
-                        if record :
-                            latest__tenovi_server_created__at_tenovi = json.loads(record['data_json'])['created']
-                            needs_syncing = json.loads(record['data_json'])['created'] > device['device']['latest__tenovi_server_created__in_syntrillo_database']
-                        else:
-                            latest__tenovi_server_created__at_tenovi = None
-                            needs_syncing = True
-                        device['device'].update({
-                            'latest__tenovi_server_created__at_tenovi': latest__tenovi_server_created__at_tenovi,
-                            'needs_syncing': ( needs_syncing )
-                        })
+                # Merge summary_report into paired_devices
+                for device in paired_devices:
+                    device_name = device['device']['name']
+                    if device_name in summary_dict:
+                        device['device'].update(summary_dict[device_name])
+                        if add_tenovi_latest_record_timestamp:
+                            record, log = data_manager.get_latest_record_for_tenovi_device(device_name)
+                            if record :
+                                latest__tenovi_server_created__at_tenovi = json.loads(record['data_json'])['created']
+                                needs_syncing = json.loads(record['data_json'])['created'] > device['device']['latest__tenovi_server_created__in_syntrillo_database']
+                            else:
+                                latest__tenovi_server_created__at_tenovi = None
+                                needs_syncing = True
+                            device['device'].update({
+                                'latest__tenovi_server_created__at_tenovi': latest__tenovi_server_created__at_tenovi,
+                                'needs_syncing': ( needs_syncing )
+                            })
 
         return paired_devices
 

@@ -4,10 +4,9 @@ from dotenv import load_dotenv
 import os
 import json
 
-def get_device_types(api_key):
-    # Set up the client domain and the URL for the API call
-    CLIENT_DOMAIN = "syntrillo"
-    URL = f"https://api2.tenovi.com/clients/{CLIENT_DOMAIN}/hwi/hwi-device-types/"
+def get_device_types(api_key, client_domain):
+    # Set up the URL for the API request
+    URL = f"https://api2.tenovi.com/clients/{client_domain}/hwi/hwi-device-types/"
 
     # Set up the headers with the API key
     headers = {
@@ -38,18 +37,25 @@ def print_pretty_devices(devices):
     for device in devices:
         print(json.dumps(device, indent=4, sort_keys=True))
 
-# Load the environment variables from the .env file
-load_dotenv(dotenv_path='.env')
+if __name__ == "__main__":
 
-# Retrieve the API key from environment variables
-api_key = os.getenv('TENOVI_API_KEY')
+    # Load the environment variables from the .env file
+    load_dotenv(dotenv_path='.env')
 
-# Check if the API key was loaded successfully
-if api_key:
+    # Retrieve the API key and client domain from environment variables
+    api_key = os.getenv('TENOVI_API_KEY')
+    tenovi_client_domain = os.getenv('TENOVI_CLIENT_DOMAIN')
+
+    if api_key is None:
+        print("API key not found. Please check your .env file.")
+        exit()
+
+    if tenovi_client_domain is None:
+        print("Client domain not found. Please check your .env file.")
+        exit()
+
     # Call the function and print the results
-    device_types = get_device_types(api_key)
+    device_types = get_device_types(api_key, tenovi_client_domain)
     if device_types:
         print("Device Types:")
         print_pretty_devices(device_types)
-else:
-    print("API key not found. Please check your .env file.")

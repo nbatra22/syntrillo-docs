@@ -2,7 +2,9 @@
 from flask import Blueprint, render_template, request, jsonify
 
 from .post_management import PostManager
-from syntrillo.remote_monitoring.data_reporting import RemoteMonitoringDataReporting
+from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
+from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
+from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
@@ -24,16 +26,65 @@ def iframe_healthie_provider_tab_care_plan():
     # --------------------------------------------------------------------
     # Medication Adherence
 
-    remote_monitoring_data_reporting = RemoteMonitoringDataReporting(post_manager.syntrillo_internal_key)
+    data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
 
     # get medication adherence data
-    medication_adherence_data, log = remote_monitoring_data_reporting.pillbox_global_report(expected_pattern='twice daily')
+    medication_adherence_data, log = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
+
+    # --------------------------------------------------------------------
+    # Blood Pressure
+
+    data_reporting_blood_pressure = DataReportingBloodPressure(post_manager.syntrillo_internal_key)
+
+    _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe()
+
+    if log['success'] == False:
+        blood_pressure_html_plot = None
+    else:
+        _, blood_pressure_html_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation='html')
+
+    # --------------------------------------------------------------------
+    # Heart Rate
+
+    data_reporting_heart_rate = DataReportingHeartRate(post_manager.syntrillo_internal_key)
+
+    # ---
+    # Pulse
+    _, log1 = data_reporting_heart_rate.get_pulse_dataframe()
+    _, log2 = data_reporting_heart_rate.get_irregular_heartbeat_dataframe()
+
+    if log1['success'] == False:
+        pulse_html_plot = None
+        pulse_moments = None
+    else:
+        # plot
+        _, pulse_html_plot = data_reporting_heart_rate.get_pulse_plotly(representation='html')
+        # moments
+        pulse_moments = data_reporting_heart_rate.get_pulse_moments()
+
+
+    # ---
+    # Heart rate statistics
+    _, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe()
+
+    if log['success'] == False:
+        heart_rate_statistics_html_plot = None
+        rmssd = None
+    else:
+        _, heart_rate_statistics_html_plot = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation='html')
+        rmssd = data_reporting_heart_rate.get_rmssd()
 
 
     # --------------------------------------------------------------------
     # Render the template
-    return render_template('healthie/iframe_provider_tab/care_plan.html',
-                           medication_adherence_data=medication_adherence_data,
-                           )
+    return render_template(
+        'healthie/iframe_provider_tab/care_plan.html',
+        medication_adherence_data=medication_adherence_data,
+        blood_pressure_html_plot=blood_pressure_html_plot,
+        pulse_html_plot=pulse_html_plot,
+        heart_rate_statistics_html_plot=heart_rate_statistics_html_plot,
+        pulse_moments=pulse_moments,
+        rmssd=rmssd,
+        )
 
 

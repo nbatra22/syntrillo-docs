@@ -187,7 +187,7 @@ class RemoteMonitoringDataSync:
         # get all records from syntrillo database for this category after the latest timestamp
         records, log = self.syntrillo_database_manager.get_metric_records_after_local_timestamp(
             timestamp_local=latest_timestamp,
-            metric_name=DeviceMeasurements.TENOVI_METRICS_BMP_BLOOD_PRESSURE
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE
             )
 
         if records is not None:
@@ -233,7 +233,7 @@ class RemoteMonitoringDataSync:
         # get all records from syntrillo database for this category after the latest timestamp
         records, log = self.syntrillo_database_manager.get_metric_records_after_local_timestamp(
             timestamp_local=latest_timestamp,
-            metric_name=DeviceMeasurements.TENOVI_METRICS_BMP_PULSE
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_PULSE
             )
 
         if records is not None:
@@ -485,7 +485,7 @@ if __name__ == '__main__':
     if True:
         overall_log = sync.sync_tenovi_to_syntrillo()
 
-        print(json.dumps(overall_log, indent=4))
+        print(json.dumps(overall_log, indent=4, default=str))
 
     if True:
         overall_log = sync.sync_syntrillo_to_healthie()

@@ -56,7 +56,8 @@ class LookUpCodesManagement:
 
     def __del__(self):
         try:
-            self.cursor.close()
+            if self.cursor:
+                self.cursor.close()
             if self.conn:
                 self.conn.close()
                 if self.tunnel:
@@ -64,7 +65,7 @@ class LookUpCodesManagement:
                 if self.verbose:
                     print("Database connection closed.")
         except Exception as e:
-            print(f"class LookUpCodesManagement - __del__ : Unexpected error during connection close: {e}")
+            # print(f"class LookUpCodesManagement - __del__ : Unexpected error during connection close: {e}")
             pass
 
 

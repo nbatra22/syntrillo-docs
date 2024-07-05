@@ -79,6 +79,9 @@
 <!-- Include jQuery UI for Tooltip -->
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
+<!-- plotly -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 <script>
 
     // Global function to format ISO date to US date format (MMM DD, YYYY)
@@ -90,7 +93,8 @@
 
     // Function to load content via POST
     //   : POST prefered over GET to avoid caching sensitive data in the URL
-    function loadTabContent(url, target, milliseconds_delay=2000) {
+    // TODO : milliseconds_delay based on server
+    function loadTabContent(url, target, milliseconds_delay={{ milliseconds_delay }}) {
 
         $(target).html("<h3>Loading content. Please wait...</h3>");
 
