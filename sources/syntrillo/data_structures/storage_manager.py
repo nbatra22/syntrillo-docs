@@ -38,6 +38,15 @@ class DataStructureStorageManager:
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
+    def get_storage_path(self) -> str:
+        """
+        Returns the storage path.
+
+        :return: The storage path.
+        """
+
+        return self.storage_path
+
     def list_all_structures(self) -> list:
         """
         Lists all available data structures.

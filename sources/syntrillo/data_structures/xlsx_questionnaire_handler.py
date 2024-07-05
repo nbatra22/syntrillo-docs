@@ -7,7 +7,6 @@ import ast
 from typing import Tuple
 from glob import glob
 
-
 from syntrillo.data_structures.storage_manager import DataStructureStorageManager
 
 class DataStructureXlsxQuestionnaireHandler:
