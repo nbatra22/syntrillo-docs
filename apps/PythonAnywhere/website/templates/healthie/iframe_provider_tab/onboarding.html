@@ -48,7 +48,7 @@
                                     <select name="charting_note_id" id="chartingNoteID" class="styled-select">
                                         {% if charting_notes %}
                                             {% for charting_note in charting_notes %}
-                                                <option value="{{ charting_note.id }}">{{ charting_note.name }}</option>
+                                                <option value="{{ charting_note.id }}">{{ charting_note.name }} [{{ charting_note.created_at }}]</option>
                                             {% endfor %}
                                         {% else %}
                                             <option value="">No charting note available</option>

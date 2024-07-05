@@ -3,6 +3,7 @@ import json
 from typing import Tuple
 
 from syntrillo.api_healthie.documents import HealthieDocuments
+from syntrillo.api_healthie.forms import HealthieForms
 
 class ChartingNotePrefillHandler:
     """
@@ -26,6 +27,8 @@ class ChartingNotePrefillHandler:
         self.healthie_user_id = healthie_user_id
 
         self.healthie_documents = HealthieDocuments()
+
+        self.healthie_forms = HealthieForms()
 
 
     def list_private_folders(
@@ -120,25 +123,53 @@ class ChartingNotePrefillHandler:
 
     def get_charting_notes(
         self
-    ):
+    ) -> Tuple[dict, str]:
         """
         Get the charting notes for the user using the Healthie API.
 
+        Incluse only charting ntoes with an external_id.
+
+        Returns:
+            Tuple[dict, str]: The response and log. The response includes these fields:
+                - healthie_customModuleForms_id
+                - name
+                - syntrillo_id
+                - syntrillo_id_type
+
         """
 
-        log = {
-            'success': True,
-            'message': 'Successfully listed private folders and documents',
-        }
+        try:
+            forms = self.healthie_forms.list_forms(
+                category='charting',
+            )
 
-        charting_notes = [
-            {
-                "id": "1",
-                "name": "test_note_1",
+            charting_notes = []
+
+            for form in forms['customModuleForms']:
+                if form['external_id']:
+                    charting_notes.append({
+                        'healthie_customModuleForms_id': form['id'],
+                        'name': form['name'],
+                        'syntrillo_id': form['external_id'],
+                        'syntrillo_id_type': form['external_id_type'],
+                        'created_at': form['created_at'],
+                    })
+
+            log = {
+                'success': True,
+                'message': 'Successfully listed private folders and documents',
             }
-        ]
 
-        return charting_notes, log
+            return charting_notes, log
+
+        except Exception as e:
+            log = {
+                'success': False,
+                'message': f'Error: Unable to get charting notes: {str(e)}',
+            }
+
+            return [], log
+
 
     def run_prefill_ai_agent(
         self,
