@@ -170,9 +170,19 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        # Add static resources
+        static = root_resource.add_resource("static")
+
+        # Add the Lambda function as a REST API resource (/static/healthie/iframe_provider.css)
+        static_healthie_iframe_provider_css = static.add_resource("healthie").add_resource("iframe_provider.css")
+        static_healthie_iframe_provider_css.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
         iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
         iframe_healthie_provider_tab.add_method(
-            "ANY",
+            "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
