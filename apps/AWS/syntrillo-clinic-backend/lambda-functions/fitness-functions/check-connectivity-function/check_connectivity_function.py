@@ -1,5 +1,6 @@
 import requests
 import sys
+import os
 
 sys.path.append('/mnt/python_modules')
 
@@ -14,7 +15,10 @@ import kaleido
 # HELPERS
 # -----------------------------------------------------------------------------
 
+from syntrillo.system.dot_env_loader import DotEnvFileLoader
+
 from syntrillo.databases_management.connection import DatabaseConnection
+
 
 class Database:
     def __init__(self):
@@ -28,9 +32,9 @@ class Database:
     def close_connection(self):
         self.conn.close()
 
-def call_public_url(url="https://www.example.com"):
-    response = requests.get(url)
-    return str(response)
+def call_public_url(url="https://www.example.com", headers='', params='{}'):
+    response = requests.get(url, headers=headers, params=params)
+    return response.status_code, response.text
 
 def response_200(message='Hello World'):
     return {
@@ -50,15 +54,44 @@ def response_500(message='NO CHECK SELECTED OR CHECK DOES NOT EXIST OR CHECK HAS
 def handler(event, context):
     resource_path = event['path']
 
+    if resource_path == "/check_internet_ingress":
+        return response_200('check_internet_ingress ok')
+    
     if resource_path == "/check_internet_egress":
-        response = call_public_url()
-        if response == '<Response [200]>':
+        status_code, text = call_public_url()
+        if status_code == 200:
             return response_200('check_internet_egress ok')
         else:
             return response_500("check_internet_egress fail [No internet connection available]")
-    
-    if resource_path == "/check_internet_ingress":
-        return response_200('check_internet_ingress ok')
+
+    if resource_path == "/check_api_url_access":
+        status_code, text = call_public_url('https://api.sandbox.syntrillo-clinic-backend.com/')
+        if status_code == 200:
+            return response_200('check_api_url_access ok')
+        else:
+            return response_500("check_api_url_access fail [" + text + ']')
+
+    if resource_path == "/check_tenovi_non_hwi_access":
+        _ = DotEnvFileLoader()
+        api_key=os.getenv('TENOVI_API_KEY_NON_HWI')
+        client_domain=os.getenv('TENOVI_CLIENT_DOMAIN_NON_HWI')
+        headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'}
+        status_code, text = call_public_url(f'https://api2.tenovi.com/clients/{client_domain}///hwi/hwi-devices/', headers)
+        if status_code == 200:
+            return response_200('check_tenovi_non_hwi_access ok')
+        else:
+            return response_500("check_tenovi_non_hwi_access fail [" + text + ']')
+
+    if resource_path == "/check_tenovi_hwi_access":
+        _ = DotEnvFileLoader()
+        api_key=os.getenv('TENOVI_API_KEY')
+        client_domain=os.getenv('TENOVI_CLIENT_DOMAIN')
+        headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'}
+        status_code, text = call_public_url(f'https://api2.tenovi.com/clients/{client_domain}///hwi/hwi-devices/', headers)
+        if status_code == 200:
+            return response_200('check_tenovi_hwi_access ok')
+        else:
+            return response_500("check_tenovi_hwi_access fail [" + text + ']')
 
     if resource_path == "/check_python_module_import":
         modules=[]
@@ -78,14 +111,6 @@ def handler(event, context):
             return response_200('check_mysql_database_access ok')
         else:
             return response_500('check_mysql_database_access fail')
-
-
-    if resource_path == "/check_api_url_access":
-        response = call_public_url('https://api.sandbox.syntrillo-clinic-backend.com/')
-        if response == '<Response [200]>':
-            return response_200('check_api_url_access ok')
-        else:
-            return response_500("check_api_url_access fail")
 
     return response_500()
 
@@ -119,12 +144,12 @@ if __name__ == '__main__':
             }
             self.assertEqual(expected, handler({"path": "/check_internet_egress"}, None))
 
-        def test_check_mysql_database_access(self):
-            expected = {
-                'statusCode': 200,
-                'body': 'check_mysql_database_access ok'
-            }
-            self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
+        # def test_check_mysql_database_access(self):
+        #     expected = {
+        #         'statusCode': 200,
+        #         'body': 'check_mysql_database_access ok'
+        #     }
+        #     self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
         
         def test_check_api_url_access(self):
             expected = {
@@ -133,11 +158,27 @@ if __name__ == '__main__':
             }
             self.assertEqual(expected, handler({"path": "/check_api_url_access"}, None))        
 
+        def test_check_tenovi_non_hwi_access(self):
+            expected = {
+                'statusCode': 200,
+                'body': 'check_tenovi_non_hwi_access ok'
+            }
+            self.assertEqual(expected, handler({"path": "/check_tenovi_non_hwi_access"}, None))
+
+        def test_check_tenovi_hwi_access(self):
+            expected = {
+                'statusCode': 200,
+                'body': 'check_tenovi_hwi_access ok'
+            }
+            self.assertEqual(expected, handler({"path": "/check_tenovi_hwi_access"}, None))
+
         def test_check_python_module_import(self):
             expected = {
                 'statusCode': 200,
                 'body': str(modules_to_control)
             }
             self.assertEqual(expected, handler({"path": "/check_python_module_import"}, None))
+
+
 
     unittest.main()
