@@ -10,8 +10,8 @@
     },
     "variables": [
         {
-            "internal_name": "var1",
-            "question": "Therapy Progress Note",
+            "internal_name": null,
+            "question": "============= therapy progress note ===============",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -23,12 +23,12 @@
             "comment": null
         },
         {
-            "internal_name": "var2",
-            "question": "Existing rehab plan",
+            "internal_name": "existing_rehabilitation_plan",
+            "question": "Existing rehabilitation plan",
             "display": "textarea",
             "special_values": null,
             "values": null,
-            "add_unknown": "no",
+            "add_unknown": null,
             "add_not_applicable": null,
             "user_description": null,
             "type": "Text",
@@ -36,20 +36,20 @@
             "comment": "Taken fom previous summary (either from hospital notes or previous progress note); editable and save new edits"
         },
         {
-            "internal_name": "var2_other",
-            "question": "Other Existing rehab plan",
+            "internal_name": "existing_rehabilitation_plan_other",
+            "question": "Other Existing rehabilitation plan",
             "display": "text",
             "special_values": null,
             "values": null,
             "add_unknown": null,
             "add_not_applicable": null,
-            "user_description": "Please specify other Existing rehab plan",
+            "user_description": "Please specify other Existing rehabilitation plan",
             "type": "text",
             "llm_prompt": null,
             "comment": null
         },
         {
-            "internal_name": "var3",
+            "internal_name": "home_setup",
             "question": "Home set up",
             "display": "dropdown",
             "special_values": null,
@@ -59,7 +59,7 @@
                 "Trailer",
                 "Assisted living"
             ],
-            "add_unknown": "no",
+            "add_unknown": null,
             "add_not_applicable": null,
             "user_description": null,
             "type": "Nominal",
@@ -67,7 +67,7 @@
             "comment": null
         },
         {
-            "internal_name": "var3_other",
+            "internal_name": "home_setup_other",
             "question": "Other Home set up",
             "display": "text",
             "special_values": null,
@@ -80,7 +80,7 @@
             "comment": null
         },
         {
-            "internal_name": "var4",
+            "internal_name": "home_lives_with",
             "question": "Lives with",
             "display": "dropdown",
             "special_values": null,
@@ -89,7 +89,7 @@
                 "Spouse",
                 "Family"
             ],
-            "add_unknown": "no",
+            "add_unknown": null,
             "add_not_applicable": null,
             "user_description": null,
             "type": "Nominal",
@@ -97,7 +97,7 @@
             "comment": null
         },
         {
-            "internal_name": "var4_other",
+            "internal_name": "home_lives_with_other",
             "question": "Other Lives with",
             "display": "text",
             "special_values": null,
@@ -110,7 +110,7 @@
             "comment": null
         },
         {
-            "internal_name": "var5",
+            "internal_name": "home_bathroom",
             "question": "Bathroom",
             "display": "dropdown",
             "special_values": null,
@@ -133,8 +133,8 @@
             "comment": null
         },
         {
-            "internal_name": "var6",
-            "question": "Previous level of function",
+            "internal_name": null,
+            "question": "------------- Previous level of function -------------",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -146,7 +146,7 @@
             "comment": null
         },
         {
-            "internal_name": "var7",
+            "internal_name": "previous__assistive_device",
             "question": "Assistive device",
             "display": "dropdown",
             "special_values": null,
@@ -166,7 +166,7 @@
             "comment": null
         },
         {
-            "internal_name": "var8",
+            "internal_name": "previous__activities_of_daily_living",
             "question": "ADLs/IADLs",
             "display": "dropdown",
             "special_values": "Assistance_level",
@@ -186,12 +186,12 @@
             "comment": null
         },
         {
-            "internal_name": "var9",
-            "question": "Current level of function",
+            "internal_name": null,
+            "question": "------------- Current level of function -------------",
             "display": "label",
             "special_values": null,
             "values": null,
-            "add_unknown": "yes",
+            "add_unknown": null,
             "add_not_applicable": null,
             "user_description": null,
             "type": null,
@@ -199,15 +199,15 @@
             "comment": null
         },
         {
-            "internal_name": "var10",
-            "question": "Activities of daily living",
+            "internal_name": null,
+            "question": "--- Activities of daily living ---",
             "display": "label",
             "special_values": null,
             "values": null,
-            "add_unknown": "yes",
+            "add_unknown": null,
             "add_not_applicable": null,
             "user_description": null,
-            "type": "Ordinal",
+            "type": null,
             "llm_prompt": null,
             "comment": null
         },
@@ -352,8 +352,8 @@
             "comment": "Keep track over time and display previous answers"
         },
         {
-            "internal_name": "var18",
-            "question": "Cognition",
+            "internal_name": null,
+            "question": "--- Cognition ---",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -383,8 +383,8 @@
             "comment": "Keep track over time and display previous answers"
         },
         {
-            "internal_name": "var20",
-            "question": "Memory",
+            "internal_name": null,
+            "question": "--- Memory ---",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -483,8 +483,8 @@
             "comment": null
         },
         {
-            "internal_name": "var24",
-            "question": "Balance",
+            "internal_name": null,
+            "question": "--- Balance ---",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -496,8 +496,8 @@
             "comment": null
         },
         {
-            "internal_name": "var25",
-            "question": "Sitting",
+            "internal_name": null,
+            "question": "-- Sitting",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -549,8 +549,8 @@
             "comment": null
         },
         {
-            "internal_name": "var28",
-            "question": "Standing",
+            "internal_name": null,
+            "question": "-- Standing",
             "display": "label",
             "special_values": null,
             "values": null,
@@ -654,8 +654,8 @@
             "comment": null
         },
         {
-            "internal_name": "var35",
-            "question": "Range of motion/manual muscle testing (ROM/MMT)",
+            "internal_name": null,
+            "question": "--- Range of motion/manual muscle testing (ROM/MMT) ---",
             "display": "label",
             "special_values": null,
             "values": null,
