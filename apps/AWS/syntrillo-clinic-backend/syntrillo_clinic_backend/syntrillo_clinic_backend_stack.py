@@ -98,6 +98,12 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
+        check_internet_ingress = root_resource.add_resource("check_api_url_access")
+        check_internet_ingress.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_connectivity_function),
+        )
+
 class IFrameGeneratorConstruct(Construct):
     
     def get_latest_layer_version_arn(self, layer_name: str) -> str:
@@ -171,7 +177,7 @@ class IFrameGeneratorConstruct(Construct):
                 route53_targets.ApiGateway(iframe_generator_api)
             )
         )
-        
+
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------

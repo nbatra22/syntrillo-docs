@@ -107,6 +107,13 @@ class TestFoundation(unittest.TestCase):
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
+    def test_check_api_url_access(self):
+        url = f'https://{check_connectivity_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/'
+        url += 'check_api_url_access'
+        request = requests.get(url)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
+
 # class TestProcesses(unittest.TestCase):
     
 #     def test_register_patient_devices(self):

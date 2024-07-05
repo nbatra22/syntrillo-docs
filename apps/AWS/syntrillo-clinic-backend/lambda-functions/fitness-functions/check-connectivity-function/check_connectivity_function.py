@@ -28,8 +28,8 @@ class Database:
     def close_connection(self):
         self.conn.close()
 
-def test_internet_egress():
-    response = requests.get("https://www.example.com")
+def call_public_url(url="https://www.example.com"):
+    response = requests.get(url)
     return str(response)
 
 def response_200(message='Hello World'):
@@ -51,7 +51,7 @@ def handler(event, context):
     resource_path = event['path']
 
     if resource_path == "/check_internet_egress":
-        response = test_internet_egress()
+        response = call_public_url()
         if response == '<Response [200]>':
             return response_200('check_internet_egress ok')
         else:
@@ -78,6 +78,14 @@ def handler(event, context):
             return response_200('check_mysql_database_access ok')
         else:
             return response_500('check_mysql_database_access fail')
+
+
+    if resource_path == "/check_api_url_access":
+        response = call_public_url('https://api.sandbox.syntrillo-clinic-backend.com/')
+        if response == '<Response [200]>':
+            return response_200('check_api_url_access ok')
+        else:
+            return response_500("check_api_url_access fail")
 
     return response_500()
 
@@ -117,6 +125,13 @@ if __name__ == '__main__':
                 'body': 'check_mysql_database_access ok'
             }
             self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
+        
+        def test_check_api_url_access(self):
+            expected = {
+                'statusCode': 200,
+                'body': 'check_api_url_access ok'
+            }
+            self.assertEqual(expected, handler({"path": "/check_api_url_access"}, None))        
 
         def test_check_python_module_import(self):
             expected = {
