@@ -46,9 +46,13 @@
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
                                     <select name="charting_note_id" id="chartingNoteID" class="styled-select">
-                                        {% for charting_note in charting_notes %}
-                                            <option value="{{ charting_note.id }}">{{ charting_note.name }}</option>
-                                        {% endfor %}
+                                        {% if charting_notes %}
+                                            {% for charting_note in charting_notes %}
+                                                <option value="{{ charting_note.id }}">{{ charting_note.name }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="">No charting note available</option>
+                                        {% endif %}
                                     </select>
                                 </td>
                             </tr>
@@ -58,9 +62,13 @@
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
                                     <select name="private_folder_id" id="privateFolderID" class="styled-select">
-                                        {% for folder_info in private_folders_and_documents %}
-                                            <option value="{{ folder_info.folder.id }}">{{ folder_info.folder.name }}</option>
-                                        {% endfor %}
+                                        {% if private_folders_and_documents %}
+                                            {% for folder_info in private_folders_and_documents %}
+                                                <option value="{{ folder_info.folder.id }}">{{ folder_info.folder.name }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="">No private folder available</option>
+                                        {% endif %}
                                     </select>
                                 </td>
                             </tr>

@@ -98,11 +98,10 @@ class ChartingNotePrefillHandler:
             overall_log['success'] = False
             overall_log['message'] = 'Error: Unable to list private folders and documents'
             overall_log['errors'].append(log)
-            return None, overall_log
+            return [], overall_log
 
-        folders_and_documents = None
+        folders_and_documents = []
         if response.get('folders'):
-            folders_and_documents = []
             for folder in response['folders']:
                 folder_id = folder['id']
                 documents, log = self.list_private_documents_in_folder(folder_id=folder_id)
