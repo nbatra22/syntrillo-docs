@@ -252,6 +252,11 @@ ul {
     font-size: 0.8em;
 }
 
+.styled-file {
+    display: inline-block;
+    font-size: 0.8em;
+}
+
 .styled-legend {
     font-size: 0.9em;
     font-weight: bold;

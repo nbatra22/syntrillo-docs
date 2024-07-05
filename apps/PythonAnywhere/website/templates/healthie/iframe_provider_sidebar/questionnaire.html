@@ -15,6 +15,13 @@
 
     <p>This is for testing, and works only on the PythonAnywhere staging server.</p>
 
+    <p>When the file has been validated and uploaded, its corresponding Charting Note can be built automatically, or manually in the next section.</p>
+
+    <!-- TODO:
+    - add checkbox to also build the form after validation (default yes)
+    - reload the page after success
+    -->
+
     <style>
         /* Initially loading indicator and logs */
         #uploadAndValidateStructureLoading {
@@ -45,8 +52,24 @@
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <label for="uploadAndValidateStructureFile" class="styled-label">Select File:</label>
                                 </td>
-                                <td align="left" style="vertical-align: middle;">
-                                    <input type="file" name="file" id="uploadAndValidateStructureFile">
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <input class="styled-file" type="file" name="file" id="uploadAndValidateStructureFile">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="build_charting_note" name="build_charting_note" value="yes" checked>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="build_charting_note" class="styled-label">Also Build Charting Note</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="allow_overwrite" name="allow_overwrite" value="yes" checked>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="allow_overwrite" class="styled-label">Allow overwriting if file already exists</label>
                                 </td>
                             </tr>
                         </table>
@@ -184,8 +207,22 @@
                     $('#uploadAndValidateStructureTextarea').val(JSON.stringify(response, null, 4));
 
                     if (response.success) {
-                        $('#uploadAndValidateStructureSuccess').html('Success');
-                        $('#uploadAndValidateStructureSuccess').show();
+                        if (response.must_reload) {
+
+                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - The page will reload to show the updates in the Build Questionnaire section below.</b>');
+                            $('#uploadAndValidateStructureSuccess').show();
+
+                            setTimeout(function() {
+                                isUploadAndValidateStructureRunning = false;
+                                // reload this tab content
+                                loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+                            }, 8000);
+
+                        } else {
+                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your Charting Note.<b>');
+                            $('#uploadAndValidateStructureSuccess').show();
+                        }
+
                     } else {
                         $('#uploadAndValidateStructureSuccess').html('Error. See logs below.' );
                         $('#uploadAndValidateStructureSuccess').show();
