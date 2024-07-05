@@ -1,3 +1,44 @@
+# # TEST IFRAMES
+
+# RESOURCE_PATH='/healthie/iframe_provider_tab/system_devices/tenovi_pair_devices_form'
+
+# echo
+# echo "Remote Iframe Test ($RESOURCE_PATH)"
+
+# PAYLOAD='{"httpMethod": "POST", "path": "'$RESOURCE_PATH'", "queryStringParameters": "", "body": "temporary_lookup_code=750335a3-d8bb-49cb-9e57-559f6441e099"}'
+
+# TEST=$(aws lambda invoke \
+#     --cli-binary-format raw-in-base64-out \
+#     --function-name IFrameGeneratorFunction \
+#     --cli-binary-format raw-in-base64-out \
+#     --payload "$PAYLOAD" \
+#     --log-type Tail \
+#     --query 'LogResult' \
+#     --output text \
+#     /tmp/test.json > /tmp/test-with-logs.json)
+
+# ERROR_MESSAGE=$(cat /tmp/test.json | jq .errorMessage)
+
+# if [ "$ERROR_MESSAGE" == "null" ]; then
+#     echo "IFrame Generator function ($RESOURCE_PATH) test passed"
+# else
+#     echo "IFrame Generator function ($RESOURCE_PATH) test failed"
+#     cat /tmp/test.json | jq # in the case of "/" $RESOURCE_PATH, file is /tmp/.json
+#     exit 1
+# fi
+
+# STATUS_CODE=$(cat /tmp/test.json | jq .statusCode)
+# if [ "$STATUS_CODE" == "\"200\"" ]; then
+#     echo "IFrame Generator function ($RESOURCE_PATH) test passed"
+# else
+#     echo "IFrame Generator function test failed"
+#     cat /tmp/test.json | jq
+#     cat /tmp/test-with-logs.json | base64 --decode
+#     exit 1
+# fi
+
+
+# TEST IFRAMES
 
 RESOURCE_PATHES="\
 / \
@@ -68,6 +109,9 @@ done
 
 cd ../..
 python3 tests/apis/test-apis-iframes.py
+
+
+# CHECK FOUNDATIONS IFRAMES
 
 cd -
 
