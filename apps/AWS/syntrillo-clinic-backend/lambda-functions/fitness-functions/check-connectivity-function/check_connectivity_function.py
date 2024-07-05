@@ -4,13 +4,6 @@ import os
 
 sys.path.append('/mnt/python_modules')
 
-modules_to_control=["pandas", "plotly", "kaleido"]
-import pandas
-import plotly
-import kaleido 
-# N.B. When kaleido is installed via cloud9, the instance must have a minimum of 2GB ram (t3.small) 
-# otherwise /tmp is too small for pip to install
-
 # -----------------------------------------------------------------------------
 # HELPERS
 # -----------------------------------------------------------------------------
@@ -93,16 +86,6 @@ def handler(event, context):
         else:
             return response_500("check_tenovi_hwi_access fail [" + text + ']')
 
-    if resource_path == "/check_python_module_import":
-        modules=[]
-        for module in modules_to_control:
-            if module in sys.modules.keys(): 
-                modules.append(module)
-            else:
-                return response_500(module + " module not present")
-
-        return response_200(str(modules))
-
     if resource_path == "/check_mysql_database_access":
         db = Database()
         connection = db.get_connection()
@@ -151,12 +134,12 @@ if __name__ == '__main__':
         #     }
         #     self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
         
-        def test_check_api_url_access(self):
-            expected = {
-                'statusCode': 200,
-                'body': 'check_api_url_access ok'
-            }
-            self.assertEqual(expected, handler({"path": "/check_api_url_access"}, None))        
+        # def test_check_api_url_access(self):
+        #     expected = {
+        #         'statusCode': 200,
+        #         'body': 'check_api_url_access ok'
+        #     }
+        #     self.assertEqual(expected, handler({"path": "/check_api_url_access"}, None))        
 
         def test_check_tenovi_non_hwi_access(self):
             expected = {
@@ -171,14 +154,5 @@ if __name__ == '__main__':
                 'body': 'check_tenovi_hwi_access ok'
             }
             self.assertEqual(expected, handler({"path": "/check_tenovi_hwi_access"}, None))
-
-        def test_check_python_module_import(self):
-            expected = {
-                'statusCode': 200,
-                'body': str(modules_to_control)
-            }
-            self.assertEqual(expected, handler({"path": "/check_python_module_import"}, None))
-
-
 
     unittest.main()

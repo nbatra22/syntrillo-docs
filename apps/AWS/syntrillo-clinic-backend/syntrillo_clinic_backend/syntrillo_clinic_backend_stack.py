@@ -22,6 +22,51 @@ from constructs import Construct
 
 import boto3
 
+class CheckBehaviourConstruct(Construct):
+
+    def __init__(self, scope: Construct, id: str, vpc, efs_access_point, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+
+        self.vpc = vpc
+        self.efs_access_point = efs_access_point
+
+        check_behaviour_function = _lambda.Function(
+            self, "CheckBehaviourFunction",
+            function_name="CheckBehaviourFunction",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            handler="check_behaviour_function.handler",
+            code=_lambda.Code.from_asset("lambda-functions/fitness-functions/check-behaviour-function"),
+            vpc = self.vpc,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.efs_access_point,
+                "/mnt/python_modules"
+            ),
+            # timeout=Duration.seconds(10),
+            # environment={
+            #     "PYTHONPATH": "/mnt/dependencies"
+            # }            
+        )
+
+        check_behaviour_api = apigw.RestApi(
+            self, "CheckBehaviourAPI", 
+            rest_api_name="CheckBehaviourAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
+        )
+
+        root_resource = check_behaviour_api.root
+        root_get_method = root_resource.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_behaviour_function),
+        )
+
+        check_python_module_import = root_resource.add_resource("check_python_module_import")
+        check_python_module_import.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_behaviour_function),
+        )
+
 class CheckConnectivityConstruct(Construct):
 
     def get_latest_layer_version_arn(self, layer_name: str) -> str:
@@ -81,12 +126,6 @@ class CheckConnectivityConstruct(Construct):
         )
 
         check_internet_ingress = root_resource.add_resource("check_internet_ingress")
-        check_internet_ingress.add_method(
-            "GET",
-            apigw.LambdaIntegration(check_connectivity_function),
-        )
-
-        check_internet_ingress = root_resource.add_resource("check_python_module_import")
         check_internet_ingress.add_method(
             "GET",
             apigw.LambdaIntegration(check_connectivity_function),
@@ -361,15 +400,18 @@ class SyntrilloClinicBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        network=SyntrilloClinicBackendNetworkStack(self, "SyntrilloClinicNetworkStack")
+        network=SyntrilloClinicBackendNetworkStack(
+            self, "SyntrilloClinicNetworkStack"
+        )
 
-        storage=SyntrilloClinicBackendStorageStack(self, "SyntrilloClinicStorageStack", network.vpc)
+        storage=SyntrilloClinicBackendStorageStack(
+            self, "SyntrilloClinicStorageStack", 
+            network.vpc
+        )
 
-        database=SyntrilloClinicBackendDatabaseStack(self, "SyntrilloClinicDatabaseStack", network.vpc)
-
-        CheckConnectivityConstruct(self, "CheckConnectivityConstruct", 
-            network.vpc, 
-            storage.efs_access_point,
+        database=SyntrilloClinicBackendDatabaseStack(
+            self, "SyntrilloClinicDatabaseStack", 
+            network.vpc
         )
 
         IFrameGeneratorConstruct(
@@ -381,3 +423,14 @@ class SyntrilloClinicBackendStack(Stack):
             certificate=network.certificate, 
         )
 
+        CheckConnectivityConstruct(
+            self, "CheckConnectivityConstruct", 
+            network.vpc, 
+            storage.efs_access_point,
+        )
+
+        CheckBehaviourConstruct(
+            self, "CheckLambdaBehaviourConstruct", 
+            network.vpc, 
+            storage.efs_access_point,
+        )
