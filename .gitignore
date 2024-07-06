@@ -11,9 +11,10 @@ _**
 *.pkl
 *.jpg
 
-# files meant to be ignored
+# files and folders meant to be ignored
 ignore_*
 ignored_*
+ignored/
 
 # ignore jupyter folders
 .ipynb_checkpoints/
