@@ -1,3 +1,14 @@
+USE syntrillo$PseudonymManagement;
+
+DROP TABLE IF EXISTS logs;
+CREATE TABLE IF NOT EXISTS logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
+    date DATETIME DEFAULT CURRENT_TIMESTAMP,                # Date and time of the log entry
+    event VARCHAR(255) NOT NULL,                            # Brief description of the event
+    json_data JSON,                                         # Additional data associated with the event in JSON format
+    comment TEXT                                            # Additional comments about the log entry
+);
+
 DROP TABLE IF EXISTS user_look_up_codes;
 CREATE TABLE IF NOT EXISTS user_look_up_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
@@ -42,4 +53,23 @@ CREATE TABLE IF NOT EXISTS user_look_up_temporary_codes (
 
     INDEX (syntrillo_internal_key),
     INDEX (temporary_pseudo_code)
+);
+
+# ---
+
+USE syntrillo$HealthInformation;
+
+DROP TABLE IF EXISTS tenovi_raw_measurements;
+CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
+    id                          INT AUTO_INCREMENT PRIMARY KEY,
+    syntrillo_internal_key      BINARY(16) NOT NULL,
+    device_name                 VARCHAR(255) NOT NULL,
+    metric_name                 VARCHAR(255) NOT NULL,      -- json data copied here to speed-up access
+    value_1                     VARCHAR(255) DEFAULT NULL,
+    value_2                     VARCHAR(255) DEFAULT NULL,
+    timestamp_local             VARCHAR(255) NOT NULL,  -- this is timestamp isoformat: patient local time + timezone_offset from the device
+    data_json                   JSON NOT NULL,
+    date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX (syntrillo_internal_key),
+    INDEX (device_name)
 );

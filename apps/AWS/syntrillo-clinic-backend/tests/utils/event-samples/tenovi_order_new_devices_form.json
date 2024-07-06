@@ -1,0 +1,126 @@
+{
+    "resource": "/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form",
+    "path": "/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form",
+    "httpMethod": "POST",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Host": "api.sandbox.syntrillo-clinic-backend.com",
+        "origin": "https://api.sandbox.syntrillo-clinic-backend.com",
+        "priority": "u=1, i",
+        "referer": "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab",
+        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-6688fe67-79656349560effb96176ee84",
+        "X-Forwarded-For": "109.9.46.184",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "x-requested-with": "XMLHttpRequest"
+    },
+    "multiValueHeaders": {
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br, zstd"
+        ],
+        "accept-language": [
+            "en-US,en;q=0.9"
+        ],
+        "content-type": [
+            "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        "Host": [
+            "api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "origin": [
+            "https://api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "priority": [
+            "u=1, i"
+        ],
+        "referer": [
+            "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab"
+        ],
+        "sec-ch-ua": [
+            "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\""
+        ],
+        "sec-ch-ua-mobile": [
+            "?0"
+        ],
+        "sec-ch-ua-platform": [
+            "\"Windows\""
+        ],
+        "sec-fetch-dest": [
+            "empty"
+        ],
+        "sec-fetch-mode": [
+            "cors"
+        ],
+        "sec-fetch-site": [
+            "same-origin"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-6688fe67-79656349560effb96176ee84"
+        ],
+        "X-Forwarded-For": [
+            "109.9.46.184"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "x-requested-with": [
+            "XMLHttpRequest"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "8yz8nq",
+        "resourcePath": "/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form",
+        "httpMethod": "POST",
+        "extendedRequestId": "aeywPHOPIAMEEwQ=",
+        "requestTime": "06/Jul/2024:08:20:55 +0000",
+        "path": "/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form",
+        "accountId": "730335351683",
+        "protocol": "HTTP/1.1",
+        "stage": "sandbox",
+        "domainPrefix": "api",
+        "requestTimeEpoch": 1720254055603,
+        "requestId": "37336311-2f48-4caa-80fb-3a740628f9ec",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "sourceIp": "109.9.46.184",
+            "principalOrgId": null,
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "user": null
+        },
+        "domainName": "api.sandbox.syntrillo-clinic-backend.com",
+        "deploymentId": "6ggkqi",
+        "apiId": "1gj504dz91"
+    },
+    "body": "temporary_lookup_code=520ca46e-99a5-4bc2-9f32-c0e4c283969c&gateway_id=None&device_bpm_large=yes&device_pillbox=yes&device_watch=yes",
+    "isBase64Encoded": false
+}

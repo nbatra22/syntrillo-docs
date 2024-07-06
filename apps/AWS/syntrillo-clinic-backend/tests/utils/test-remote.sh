@@ -249,7 +249,8 @@ event='''{
 }'''
 
 RESOURCE_PATHES="\
-/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form
+/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form \
+/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form \
 "
 
 FUNCTION_NAME="IFrameGeneratorFunction"
@@ -286,10 +287,11 @@ for resource_path in $RESOURCE_PATHES; do
     fi
 
     STATUS_CODE=$(cat /tmp/$PATH_BASE_NAME.json | jq .statusCode)
+    echo $STATUS_CODE
     if [ "$STATUS_CODE" == "\"200\"" ]; then
         echo "IFrame Generator function ($RESOURCE_PATH) test passed"
     else
-        echo "IFrame Generator function test failed"
+        echo "IFrame Generator function ($RESOURCE_PATH) test failed"
         cat /tmp/$PATH_BASE_NAME.json | jq
         cat /tmp/$PATH_BASE_NAME.logs | base64 --decode
         exit 1
@@ -303,9 +305,9 @@ for resource_path in $RESOURCE_PATHES; do
     TEST=$(aws apigateway test-invoke-method \
         --rest-api-id $REST_API_ID \
         --resource-id $RESOURCE_ID \
-        --http-method GET \
+        --http-method POST \
         --path-with-query-string $RESOURCE_PATH \
-        --body '')
+        --body 'temporary_lookup_code=520ca46e-99a5-4bc2-9f32-c0e4c283969c&gateway_id=None&device_bpm_large=yes&device_pillbox=yes&device_watch=yes')
 
     STATUS=$(echo $TEST | jq .status)
 
