@@ -1,0 +1,126 @@
+{
+    "resource": "/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form",
+    "path": "/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form",
+    "httpMethod": "POST",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Host": "api.sandbox.syntrillo-clinic-backend.com",
+        "origin": "https://api.sandbox.syntrillo-clinic-backend.com",
+        "priority": "u=1, i",
+        "referer": "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab",
+        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-668826e1-7bba19535d5fe7502110507e",
+        "X-Forwarded-For": "109.9.46.184",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "x-requested-with": "XMLHttpRequest"
+    },
+    "multiValueHeaders": {
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br, zstd"
+        ],
+        "accept-language": [
+            "en-US,en;q=0.9"
+        ],
+        "content-type": [
+            "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        "Host": [
+            "api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "origin": [
+            "https://api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "priority": [
+            "u=1, i"
+        ],
+        "referer": [
+            "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab"
+        ],
+        "sec-ch-ua": [
+            "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\""
+        ],
+        "sec-ch-ua-mobile": [
+            "?0"
+        ],
+        "sec-ch-ua-platform": [
+            "\"Windows\""
+        ],
+        "sec-fetch-dest": [
+            "empty"
+        ],
+        "sec-fetch-mode": [
+            "cors"
+        ],
+        "sec-fetch-site": [
+            "same-origin"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-668826e1-7bba19535d5fe7502110507e"
+        ],
+        "X-Forwarded-For": [
+            "109.9.46.184"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "x-requested-with": [
+            "XMLHttpRequest"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "ra9v2p",
+        "resourcePath": "/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form",
+        "httpMethod": "POST",
+        "extendedRequestId": "acsDWHKHIAMEsKA=",
+        "requestTime": "05/Jul/2024:17:01:21 +0000",
+        "path": "/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form",
+        "accountId": "730335351683",
+        "protocol": "HTTP/1.1",
+        "stage": "sandbox",
+        "domainPrefix": "api",
+        "requestTimeEpoch": 1720198881915,
+        "requestId": "87c05c8c-b247-4b98-916a-1603163eae52",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "sourceIp": "109.9.46.184",
+            "principalOrgId": null,
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "user": null
+        },
+        "domainName": "api.sandbox.syntrillo-clinic-backend.com",
+        "deploymentId": "klalc5",
+        "apiId": "1gj504dz91"
+    },
+    "body": "temporary_lookup_code=84bbd0cd-d8d5-40cc-b993-d50f8d98ba66&date_start_ago=one-week-ago&date_end_ago=today&blood_pressure_state=healthy&heart_rate_state=healthy&steps_state=healthy&medication_adherence_state=perfect&medication_expected_pattern=twice_daily",
+    "isBase64Encoded": false
+}

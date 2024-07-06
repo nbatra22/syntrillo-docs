@@ -303,6 +303,19 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         ) 
 
+        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system/register_patient_at_syntrillo_form
+        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form = healthie_iframe_provider_tab_system.add_resource("register_patient_at_syntrillo_form")
+        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form
+        healthie_iframe_provider_tab_system_devices_tenovi_dummy_data_generator_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_dummy_data_generator_form")
+        healthie_iframe_provider_tab_system_devices_tenovi_dummy_data_generator_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)

@@ -80,6 +80,31 @@ class TestSyntrilloClinicBackendIFrames(unittest.TestCase):
         status_code = request.status_code
         self.assertEqual(status_code, 200, display_error_context(url, request))
 
+    def test_healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system/register_patient_at_syntrillo_form'
+        data = {
+            'healthie_user_id': '1209727',
+        }
+        request = requests.post(url, data=data)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
+
+    def test_healthie_iframe_provider_tab_system_devices_tenovi_dummy_data_generator_form(self):
+        url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form'
+        data = {
+            "temporary_lookup_code": "84bbd0cd-d8d5-40cc-b993-d50f8d98ba66",
+            "date_start_ago": "one-week-ago",
+            "date_end_ago": "today",
+            "blood_pressure_state": "healthy",
+            "heart_rate_state": "healthy",
+            "steps_state": "healthy",
+            "medication_adherence_state": "perfect",
+            "medication_expected_pattern": "twice_daily"
+        }
+        request = requests.post(url, data=data)
+        status_code = request.status_code
+        self.assertEqual(status_code, 200, display_error_context(url, request))
+
     # def test_iframe_healthie_provider_tab_system_devices(self):
     #     url = f'https://{iframe_generator_api_id}.execute-api.us-east-1.amazonaws.com/sandbox/healthie/iframe_provider_tab/system_devices'
     #     device_form_data = {
