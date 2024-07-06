@@ -13,7 +13,6 @@ curl -X GET \
      "https://api2.tenovi.com/clients/$CLIENT_DOMAIN///hwi/hwi-devices/" \
      |jq '.[] | select(.id == "8f6b64e2-01f2-4528-a8c4-4ce1763d9193")'
 
-exit
 curl -X GET \
      -H "Authorization: Api-Key $API_KEY" \
      -H "Content-Type: application/json" \
