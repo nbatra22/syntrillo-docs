@@ -317,6 +317,13 @@ class IFrameGeneratorConstruct(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        # /healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form
+        healthie_iframe_provider_tab_devices_tenovi_order_new_devices_form= healthie_iframe_provider_tab_devices.add_resource("tenovi_order_new_devices_form")
+        healthie_iframe_provider_tab_devices_tenovi_order_new_devices_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)
         # ---------------------------------------------------------------------
