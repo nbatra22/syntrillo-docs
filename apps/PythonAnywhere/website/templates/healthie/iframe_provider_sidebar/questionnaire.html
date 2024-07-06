@@ -9,13 +9,15 @@
 </h2>
 <div class="collapsible-content">
 
-    <p>Upload an Excel XLSX file and validate its structure.</p>
+    <p>This is for testing, and works only on the PythonAnywhere staging server.</p>
+
+    <p>Upload an Excel xlsx file and validate its structure. When the file has been validated and uploaded, its corresponding Form or Charting Note can be built automatically, or manually in the next section.</p>
 
     <p>The file will be stored on the server, and could be pushed (manually) into our repository.</p>
 
-    <p>This is for testing, and works only on the PythonAnywhere staging server.</p>
-
-    <p>When the file has been validated and uploaded, its corresponding Form or Charting Note can be built automatically, or manually in the next section.</p>
+    <p>
+        <a target='_blank' href="{{ url_for('static', filename='healthie/documents/questionnaire_template_v0.1.xlsx') }}">Download Excel xlsx structure file template</a>
+    </p>
 
     <!-- TODO:
     - add checkbox to also build the form after validation (default yes)
