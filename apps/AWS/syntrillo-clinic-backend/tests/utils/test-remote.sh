@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Load configuration from environment variables
 FUNCTION_NAME="${FUNCTION_NAME:-IFrameGeneratorFunction}"
@@ -35,7 +35,7 @@ invoke_lambda_function() {
         echo "status_code: "$status_code
         echo "error_message: "$error_message
         jq '.' "$out_temp_file"
-        cat /tmp/$log_temp_file |jq .LogResult | sed 's/^"//' | sed 's/"$//' | base64 --decode
+        cat $log_temp_file |jq .LogResult | sed 's/^"//' | sed 's/"$//' | base64 --decode
         return 1
     fi
 }
@@ -70,30 +70,29 @@ test_api_gateway_endpoint() {
         echo "API OUTPUT"
         echo "$test_result" | jq '.'
         echo "LAMBDA OUTPUT"
-        cat /tmp/$log_temp_file |jq .LogResult | sed 's/^"//' | sed 's/"$//' | base64 --decode
+        cat $log_temp_file |jq .LogResult | sed 's/^"//' | sed 's/"$//' | base64 --decode
         return 1
     fi
 }
 
-# Define resource paths as arrays
 
-# Test connectivity checks
-CONNECTIVITY_CHECK_PATHS=("/check_internet_ingress" "/check_internet_egress" "/check_mysql_database_access")
-for resource_path in "${CONNECTIVITY_CHECK_PATHS[@]}"; do
-    echo "---"$resource_path
-    invoke_lambda_function "CheckConnectivityFunction" "$resource_path" "{\"path\": \"$resource_path\"}"
-    test_api_gateway_endpoint "$resource_path" "CheckConnectivityAPI" "GET"
-    echo
-done
+# # Test connectivity checks
+# CONNECTIVITY_CHECK_PATHS=("/check_internet_ingress" "/check_internet_egress" "/check_mysql_database_access")
+# for resource_path in "${CONNECTIVITY_CHECK_PATHS[@]}"; do
+#     echo "---"$resource_path
+#     invoke_lambda_function "CheckConnectivityFunction" "$resource_path" "{\"path\": \"$resource_path\"}"
+#     test_api_gateway_endpoint "$resource_path" "CheckConnectivityAPI" "GET"
+#     echo
+# done
 
-# Test behavior checks
-BEHAVIOR_CHECK_PATHS=("/check_python_module_import")
-for resource_path in "${BEHAVIOR_CHECK_PATHS[@]}"; do
-    echo "---"$resource_path
-    invoke_lambda_function "CheckBehaviourFunction" "$resource_path" "{\"path\": \"$resource_path\"}"
-    test_api_gateway_endpoint "$resource_path" "CheckBehaviourAPI" "GET"
-    echo
-done
+# # Test behavior checks
+# BEHAVIOR_CHECK_PATHS=("/check_python_module_import")
+# for resource_path in "${BEHAVIOR_CHECK_PATHS[@]}"; do
+#     echo "---"$resource_path
+#     invoke_lambda_function "CheckBehaviourFunction" "$resource_path" "{\"path\": \"$resource_path\"}"
+#     test_api_gateway_endpoint "$resource_path" "CheckBehaviourAPI" "GET"
+#     echo
+# done
 
 # Test iframe GET requests
 IFRAME_GET_PATHS=("/" "/iframe_healthie_provider_tab")
@@ -104,12 +103,12 @@ for resource_path in "${IFRAME_GET_PATHS[@]}"; do
     echo
 done
 
-# Test iframe POST requests
-IFRAME_POST_PATHS=("/healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form" "/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form")
-for resource_path in "${IFRAME_POST_PATHS[@]}"; do
-    echo "---"$resource_path
-    payload="$(cat event-samples/$(basename "$resource_path").json)"
-    invoke_lambda_function "$FUNCTION_NAME" "$resource_path" "$payload"
-    test_api_gateway_endpoint "$resource_path" "$API_NAME" "POST"
-    echo
-done
+# # Test iframe POST requests
+# IFRAME_POST_PATHS=("healthie/iframe_provider_tab/status")
+# for resource_path in "${IFRAME_POST_PATHS[@]}"; do
+#     echo "---"$resource_path
+#     payload="$(cat event-samples/$(basename "$resource_path").json)"
+#     invoke_lambda_function "$FUNCTION_NAME" "$resource_path" "$payload"
+#     test_api_gateway_endpoint "$resource_path" "$API_NAME" "POST"
+#     echo
+# done

@@ -77,8 +77,8 @@ def handler(event, context):
 
     if resource_path == "/check_tenovi_hwi_access":
         _ = DotEnvFileLoader()
-        api_key=os.getenv('TENOVI_API_KEY')
-        client_domain=os.getenv('TENOVI_CLIENT_DOMAIN')
+        api_key=os.getenv('TENOVI_API_KEY_HWI')
+        client_domain=os.getenv('TENOVI_CLIENT_DOMAIN_HWI')
         headers={'Authorization': f'Api-Key {api_key}', 'Content-Type': 'application/json'}
         status_code, text = call_public_url(f'https://api2.tenovi.com/clients/{client_domain}///hwi/hwi-devices/', headers)
         if status_code == 200:
