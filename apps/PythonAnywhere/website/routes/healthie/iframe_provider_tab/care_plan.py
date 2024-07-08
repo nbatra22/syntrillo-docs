@@ -87,8 +87,27 @@ def iframe_healthie_provider_tab_care_plan():
         rmssd=rmssd,
         )
 
-
 # ========================= ENDPOINTS ==========================
 
-# TODO : move plotly calls as endpoints
+def _checkbox_to_bool(checkbox):
+    if checkbox is None:
+        return False
+    else:
+        return True
+
+@iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_plot_pressure_plot', methods=['POST'])
+def get_plot_pressure_plot():
+    """
+    This endpoint orders new devices from Tenovi API.
+
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+    # TODO
+
+    pass
 
