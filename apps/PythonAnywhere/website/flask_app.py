@@ -22,14 +22,16 @@ from api import api_bp
 # Register blueprints
 app.register_blueprint(api_bp)
 
+# => Olivier L Note: testui is not in the requirements.txt
 # ---------- tests ui ---------------------
-from tests_ui.index import tests_ui_index_bp
-from tests_ui.tab1 import tests_ui_tab1_bp
-from tests_ui.tab2 import tests_ui_tab2_bp
+# from tests_ui.index import tests_ui_index_bp
+# from tests_ui.tab1 import tests_ui_tab1_bp
+# from tests_ui.tab2 import tests_ui_tab2_bp
 
-app.register_blueprint(tests_ui_index_bp)
-app.register_blueprint(tests_ui_tab1_bp)
-app.register_blueprint(tests_ui_tab2_bp)
+# app.register_blueprint(tests_ui_index_bp)
+# app.register_blueprint(tests_ui_tab1_bp)
+# app.register_blueprint(tests_ui_tab2_bp)
+
 
 # ================== Healthie route for webhook endpoints ========================
 
