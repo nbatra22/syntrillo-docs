@@ -1,5 +1,8 @@
 # Path: ./sources/syntrillo/api_healthie/forms.py
 
+import json
+import html
+
 from syntrillo.api_healthie.auth import HealthieAuth
 
 class HealthieForms():
@@ -284,7 +287,22 @@ class HealthieForms():
         }
 
         # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
+        # TODO : manage errors
+        """
+        response : {'createCustomModuleForm': {'customModuleForm': None, 'messages': [{'field': 'base', 'message': 'Name is too long (maximum is 50 characters)'}]}}
+
+        log : {'success': True, 'message': 'GraphQL query successful in create_custom_module_form'}
+
+        log represents the API log
+
+        if customModuleForm none => report error in log
+        """
+
         response, log = self.auth.send_query(mutation, variables)
+
+        if response.get('createCustomModuleForm').get('customModuleForm') is None:
+            # TODO : manage error
+            pass
 
         return response
 
@@ -1049,9 +1067,9 @@ class HealthieForms():
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    forms = HealthieForms(dotenv_path=".env")
+    forms = HealthieForms()
 
-    if True:
+    if False:
         # List all forms
         response = forms.list_forms(sort_by='name_asc' , keywords='onboarding')
         print('==== All forms ====')
@@ -1072,7 +1090,7 @@ if __name__ == "__main__":
             response = forms.get_form_answers_group(custom_module_form_id=first_id)
             HealthieAuth.print_pretty_json(response)
 
-    if True:
+    if False:
         # get_modules_with_missing_answers
         print(f"\n==== get_modules_with_missing_answers ====")
         response = forms.get_modules_with_missing_answers(
@@ -1091,10 +1109,57 @@ if __name__ == "__main__":
             )
         HealthieAuth.print_pretty_json(response)
 
-    if True:
+    if False:
         print(f"\n==== get form by external_id ====")
         response = forms.get_form_id_by_external_id(external_id='onboarding')
         HealthieAuth.print_pretty_json(response)
+
+
+    if True:
+
+        text_string = """
+        These variables will be used to assess medical adherence. It is recommended to monitor only medications of interest for stroke rehabilitation and prevention. If possible, for a higher accuracy, split in AM and PM openings. If not (eg 'as needed', or '3 times a day'), use a 'daily total' number of openings (and leave am and pm openings blank).
+        """
+
+        # Escape special characters for HTML
+        text_safe = html.escape(text_string)
+
+        new_form = forms.create_form_wrapper(
+            form_name='testing textarea with option',
+            modules=[
+                {
+                 'label': 'What is your age?',
+                 'mod_type': 'text',
+                 'sublabel': 'Please enter\nyour age in <b>years</b>'
+                 },
+                {
+                 'label': 'Some textarea',
+                 'mod_type': 'textarea',
+                 'sublabel': 'A sublabel for textarea',
+                 'options' : text_safe
+                 },
+                {
+                 'label': 'Some sublabel',
+                 'mod_type': 'label',
+                 'sublabel': text_string,
+                 },
+                {
+                 'label': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ',
+                 'mod_type': 'label',
+                 'sublabel': 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+                 },
+            ],
+            use_for_charting=True,
+            use_for_program=False,
+        )
+
+        print(json.dumps(new_form, indent=4, default=str))
+
+    if False:
+        form = forms.get_form_by_id(form_id='1354538')
+
+        print(json.dumps(form, indent=4, default=str))
+
 
 
 

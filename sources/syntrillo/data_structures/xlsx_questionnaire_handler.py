@@ -2,6 +2,7 @@
 
 import pandas as pd
 import json
+import html
 import os
 import ast
 from typing import Tuple
@@ -159,6 +160,8 @@ class DataStructureXlsxQuestionnaireHandler:
                 log['error'] = f"Key '{key}' not found in metadata tab of Excel file '{xlsx_file_name}'"
                 return None, log
 
+        # TODO : deal with prefill
+
         # ---
         # verify that the version matches the xls filename
         #  : version is for example '0.1' , and file name is 'onboarding_v0.1.xlsx'
@@ -211,12 +214,13 @@ class DataStructureXlsxQuestionnaireHandler:
         # replace spaces with underscores
         xls_variables.columns = xls_variables.columns.str.replace(' ', '_')
 
-        # if it exists, rename 'question_item' to 'question'
-        if 'question_item' in xls_variables.columns:
-            xls_variables.rename(columns={'question_item': 'question'}, inplace=True)
+        # if it exists, rename 'question*' to 'question'
+        for colname in xls_variables.columns:
+            if colname.startswith('question'):
+                xls_variables.rename(columns={colname: 'question'}, inplace=True)
 
         # verify that the columns are as expected
-        expected_columns = ['internal_name', 'question', 'display', 'special_values', 'values', 'add_unknown', 'add_not_applicable', 'add_other', 'add_comment_box',   'user_description', 'type', 'llm_prompt', 'comment']
+        expected_columns = ['internal_name', 'question', 'sublabel', 'display', 'special_values', 'values', 'add_unknown', 'add_not_applicable', 'add_other', 'add_comment_box', 'type', 'llm_prompt', 'internal_description', 'comment']
         for column in expected_columns:
             if column not in xls_variables.columns:
                 log['success'] = False
@@ -255,7 +259,11 @@ class DataStructureXlsxQuestionnaireHandler:
             # Handle None value for 'values'
             if values_list is None:
                 if cleaned_values is not None:
-                    values_list = self.parse_comma_separated_string(cleaned_values)
+                    if row['display'] in ['text', 'textarea']:
+                        # Escape special characters for HTML
+                        values_list = [html.escape(cleaned_values)]
+                    else:
+                        values_list = self.parse_comma_separated_string(cleaned_values)
                 else:
                     values_list = None
 
@@ -274,18 +282,37 @@ class DataStructureXlsxQuestionnaireHandler:
                 return None, log
 
             # ---
+            # Specific values for question and sublabel : 'space' and 'separator'
+            question = self.nan2null(row['question'])
+            sublabel = self.nan2null(row['sublabel'])
+
+            if row['display'] == 'label':
+                # deal with blank question (used as a separator). Add a space character to avoid empty question
+                if row['question'] == '' or row['question'] is None or pd.isna(row['question']) :
+                    question = ' '
+
+                if question == 'separator':
+                    question = '_' * 30
+                elif question == 'space':
+                    question = ' '
+
+                if sublabel == 'space':
+                    sublabel = ' '
+
+            # ---
             # Create a dictionary for the data variable
             data_variable = {
                 'internal_name': self.nan2null(row['internal_name']),
-                'question': self.nan2null(row['question']),
+                'question': question,
+                'sublabel': sublabel,
                 'display': self.nan2null(row['display']),
                 'special_values': self.nan2null(row['special_values']),
                 'values': values_list,
                 'add_unknown': self.nan2null(row['add_unknown']),
                 'add_not_applicable': self.nan2null(row['add_not_applicable']),
-                'user_description': self.nan2null(row['user_description']),
                 'type': self.nan2null(row['type']),
                 'llm_prompt': self.nan2null(row['llm_prompt']),
+                'internal_description': self.nan2null(row['internal_description']),
                 'comment': self.nan2null(row['comment']),
             }
             json_data_variables.append(data_variable)
@@ -296,14 +323,15 @@ class DataStructureXlsxQuestionnaireHandler:
                 data_variable_other = {
                     'internal_name': f"{row['internal_name']}_other",
                     'question': f"Other {row['question']}",
+                    'sublabel': f"Please specify other {row['question']}",
                     'display': 'text',
                     'special_values': None,
                     'values': None,
                     'add_unknown': None,
                     'add_not_applicable': None,
-                    'user_description': f"Please specify other {row['question']}",
                     'type': 'text',
                     'llm_prompt': None,
+                    'internal_description': None,
                     'comment': None,
                 }
                 json_data_variables.append(data_variable_other)
@@ -314,14 +342,15 @@ class DataStructureXlsxQuestionnaireHandler:
                 data_variable_comment = {
                     'internal_name': f"{row['internal_name']}_comment",
                     'question': f"Comment for {row['question']}",
+                    'sublabel': f"Please add a comment for {row['question']}",
                     'display': 'textarea',
                     'special_values': None,
                     'values': None,
                     'add_unknown': None,
                     'add_not_applicable': None,
-                    'user_description': f"Please add a comment for {row['question']}",
                     'type': 'text',
                     'llm_prompt': None,
+                    'internal_description': None,
                     'comment': None,
                 }
                 json_data_variables.append(data_variable_comment)

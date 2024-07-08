@@ -88,3 +88,7 @@ def iframe_healthie_provider_tab_care_plan():
         )
 
 
+# ========================= ENDPOINTS ==========================
+
+# TODO : move plotly calls as endpoints
+

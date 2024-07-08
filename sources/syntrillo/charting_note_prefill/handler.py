@@ -7,7 +7,7 @@ from syntrillo.api_healthie.forms import HealthieForms
 
 class ChartingNotePrefillHandler:
     """
-
+    The ChartingNotePrefillHandler class is used to handle the prefilling of charting notes.
 
 
     """
