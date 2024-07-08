@@ -13,6 +13,9 @@ from aws_cdk import (
     aws_route53_targets as route53_targets,
     aws_certificatemanager as acm,
     aws_efs as efs,
+    aws_backup as backup,
+    aws_efs as efs,
+    aws_events as events,
 )
 from constructs import Construct
 
@@ -143,8 +146,125 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
-class IFrameGeneratorConstruct(Construct):
+# -----------------------------------------------------------------------------
+# STACKS
+# -----------------------------------------------------------------------------
+
+class SyntrilloClinicBackupStack(Stack):
+    def __init__(self, scope: Construct, construct_id: str, efs_file_system, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.efs_file_system = efs_file_system
+
+        backup_vault = backup.BackupVault(
+            self, "BackupVault",
+            backup_vault_name="syntrillo-clinic-backup-vault",
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        backup_plan = backup.BackupPlan(
+            self, "BackupPlan",
+            backup_plan_name="syntrillo-clinic-backup-plan",
+            backup_vault=backup_vault
+        )
+
+        backup_rule = backup_plan.add_rule(
+            backup.BackupPlanRule(
+                rule_name="DailyBackupRule",
+                schedule_expression=events.Schedule.cron(
+                    minute="0",
+                    hour="5",
+                    month="*",
+                    week_day="*",
+                    year="*"
+                ),  # Run daily at 5:00 AM UTC
+                )
+        )
+
+        backup_plan.add_selection(
+            "EfsBackup",
+            resources=[
+                backup.BackupResource.from_efs_file_system(self.efs_file_system)
+            ]
+        )
+
+class SyntrilloClinicBackendNetworkStack(Stack):
+
+    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+        
+        # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
+        # Nat gateway is necessary for lambda functions to communicates outside the vpc
+        # In our case lambdas need to call tenovi and healthie for example
+        self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
+            vpc_name = "SyntrilloClinicVPC",
+            nat_gateways=1
+        )
+
+        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
+            zone_name="sandbox.syntrillo-clinic-backend.com",
+            hosted_zone_id="Z00281931X0P3VA26SLKK"
+        )
+
+        self.certificate = acm.Certificate( self, "SyntrilloClinicBackendSSLCertificate",
+            domain_name="sandbox.syntrillo-clinic-backend.com",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
+            subject_alternative_names=[
+                "api.sandbox.syntrillo-clinic-backend.com"
+            ]
+        )
+
+class SyntrilloClinicBackendStorageStack(Stack):
+
+    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.vpc = vpc
+
+        self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
+            vpc=self.vpc,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        self.efs_access_point = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPoint",
+            file_system=self.efs_file_system,
+            path="/shared-python-modules", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
+            posix_user=efs.PosixUser(
+                uid="1001",
+                gid="1001"
+            )
+        )
+
+class SyntrilloClinicBackendDatabaseStack(Stack):
+
+    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.vpc = vpc
+
+        self.db = rds.DatabaseInstance(self, "MySQLDatabase",
+            vpc=self.vpc,
+            engine=rds.DatabaseInstanceEngine.MYSQL,
+            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
+            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
+            multi_az=False,
+            allocated_storage=20,
+            storage_type=rds.StorageType.GP2,
+            credentials=rds.Credentials.from_generated_secret("admin"),
+            database_name="syntrillo_clinic_db",
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        db_security_group = self.db.connections.security_groups[0]
     
+        db_security_group.add_ingress_rule(
+            ec2.Peer.any_ipv4(),
+            ec2.Port.tcp(3306),
+            "Allow inbound traffic on port 3306 from any IPv4 address"
+        )
+
+class SyntrilloClinicIFrameGeneratorStack(Stack):
+
     def get_latest_layer_version_arn(self, layer_name: str) -> str:
         lambda_client = boto3.client('lambda')
         response = lambda_client.list_layer_versions(LayerName=layer_name)
@@ -336,83 +456,24 @@ class IFrameGeneratorConstruct(Construct):
             )
         )
 
-# -----------------------------------------------------------------------------
-# STACKS
-# -----------------------------------------------------------------------------
+class SyntrilloClinicBackendFitnessFunctionsStack(Stack):
 
-class SyntrilloClinicBackendNetworkStack(Stack):
-
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-        super().__init__(scope, construct_id, **kwargs)
-        
-        # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
-        # Nat gateway is necessary for lambda functions to communicates outside the vpc
-        # In our case lambdas need to call tenovi and healthie for example
-        self.vpc = ec2.Vpc(self, "SyntrilloClinicVPC",
-            vpc_name = "SyntrilloClinicVPC",
-            nat_gateways=1
-        )
-
-        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(self, "SyntrilloClinicBackendHostedZone",
-            zone_name="sandbox.syntrillo-clinic-backend.com",
-            hosted_zone_id="Z00281931X0P3VA26SLKK"
-        )
-
-        self.certificate = acm.Certificate( self, "SyntrilloClinicBackendSSLCertificate",
-            domain_name="sandbox.syntrillo-clinic-backend.com",
-            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
-            subject_alternative_names=[
-                "api.sandbox.syntrillo-clinic-backend.com"
-            ]
-        )
-
-class SyntrilloClinicBackendStorageStack(Stack):
-
-    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, vpc, efs_access_point, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.vpc = vpc
+        self.efs_access_point = efs_access_point
 
-        self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
-            vpc=self.vpc,
-            removal_policy=RemovalPolicy.DESTROY
+        check_connectivity_function=CheckConnectivityConstruct(
+            self, "CheckConnectivityConstruct", 
+            self.vpc, 
+            self.efs_access_point,
         )
 
-        self.efs_access_point = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPoint",
-            file_system=self.efs_file_system,
-            path="/shared-python-modules", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
-            posix_user=efs.PosixUser(
-                uid="1001",
-                gid="1001"
-            )
-        )
-
-class SyntrilloClinicBackendDatabaseStack(Stack):
-
-    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
-        super().__init__(scope, construct_id, **kwargs)
-
-        self.vpc = vpc
-
-        self.db = rds.DatabaseInstance(self, "MySQLDatabase",
-            vpc=self.vpc,
-            engine=rds.DatabaseInstanceEngine.MYSQL,
-            instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
-            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
-            multi_az=False,
-            allocated_storage=20,
-            storage_type=rds.StorageType.GP2,
-            credentials=rds.Credentials.from_generated_secret("admin"),
-            database_name="syntrillo_clinic_db",
-            removal_policy=RemovalPolicy.DESTROY
-        )
-
-        db_security_group = self.db.connections.security_groups[0]
-    
-        db_security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(3306),
-            "Allow inbound traffic on port 3306 from any IPv4 address"
+        check_behaviour_function=CheckBehaviourConstruct(
+            self, "CheckLambdaBehaviourConstruct", 
+            self.vpc, 
+            self.efs_access_point,
         )
 
 class SyntrilloClinicBackendStack(Stack):
@@ -434,23 +495,22 @@ class SyntrilloClinicBackendStack(Stack):
             network.vpc
         )
 
-        IFrameGeneratorConstruct(
-            self, "IFrameGeneratorConstruct", 
+        backupStack=SyntrilloClinicBackupStack(
+            self, "BackupStack",
+            storage.efs_file_system
+        )
+
+        fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
+            self, "FitnessFunctionStack",
+            network.vpc,
+            storage.efs_access_point,
+        )
+
+        iframe_generator=SyntrilloClinicIFrameGeneratorStack(
+            self, "IFrameGeneratorStack", 
             vpc=network.vpc, 
             access_point=storage.efs_access_point,
             file_system=storage.efs_file_system, 
             hosted_zone=network.hosted_zone, 
             certificate=network.certificate, 
-        )
-
-        CheckConnectivityConstruct(
-            self, "CheckConnectivityConstruct", 
-            network.vpc, 
-            storage.efs_access_point,
-        )
-
-        CheckBehaviourConstruct(
-            self, "CheckLambdaBehaviourConstruct", 
-            network.vpc, 
-            storage.efs_access_point,
         )
