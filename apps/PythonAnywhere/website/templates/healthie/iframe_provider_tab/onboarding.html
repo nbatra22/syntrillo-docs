@@ -48,7 +48,7 @@
                                     <select name="charting_note_id" id="chartingNoteID" class="styled-select">
                                         {% if charting_notes %}
                                             {% for charting_note in charting_notes %}
-                                                <option value="{{ charting_note.id }}">{{ charting_note.name }}</option>
+                                                <option value="{{ charting_note.id }}">{{ charting_note.name }} [{{ charting_note.created_at }}]</option>
                                             {% endfor %}
                                         {% else %}
                                             <option value="">No charting note available</option>
@@ -89,8 +89,7 @@
                     <table>
                         <tr>
                             <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                                <p class="logs">Logs
-                                </p>
+                                <p class="logs">Logs</p>
                             </td>
                             <td align="left">
                                 <textarea id="prefillChartingNoteTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
@@ -102,7 +101,7 @@
         </table>
     </div> <!-- End of Charting Note Prefilling -->
 
-</div>
+</div> <!-- End of Charting Note Prefilling collapsible section -->
 
 
 <h2 class="collapsible">

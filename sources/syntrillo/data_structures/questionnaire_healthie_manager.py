@@ -13,6 +13,8 @@ class DataStructureQuestionnaireHealthieManager:
     """
     Allows to transform a JSON data structure into a format suitable for the Healthie API, and create that questionnaire as a custom module into Healthie
 
+    TODO : comment
+
     """
 
     structure_name = None
@@ -63,7 +65,7 @@ class DataStructureQuestionnaireHealthieManager:
             transformed_item = {
                 "external_id": item["internal_name"],
                 "label": item["question"],
-                "sublabel": item["user_description"],
+                "sublabel": item["sublabel"],
                 "mod_type": item["display"],
                 # "options_array": item["values"] # not supported by Healthie
                 "options": options  # Use "options" instead of "options_array"
@@ -83,7 +85,8 @@ class DataStructureQuestionnaireHealthieManager:
         """
 
         # form name and external id
-        form_name = self.structure.get('metadata').get('name') + ' ( version ' + self.structure.get('metadata').get('version') + ' )'
+        #  : form name have to be less than 50 characters
+        form_name = self.structure.get('metadata').get('name') + ' (v' + self.structure.get('metadata').get('version') + ')'
         external_id = self.structure.get('metadata').get('internal_name')
 
         # form type

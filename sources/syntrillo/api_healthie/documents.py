@@ -237,11 +237,12 @@ class HealthieDocuments():
         viewable_user_id = None
         private_user_id = None
         consolidated_user_id = None
+
         if is_private_to_user:
             private_user_id = healthie_user_id
-        elif is_viewable_to_user:
+        if is_viewable_to_user:
             viewable_user_id = healthie_user_id
-        else:
+        if not is_private_to_user and not is_viewable_to_user:
             consolidated_user_id = healthie_user_id
 
         variables = {
