@@ -1,1 +1,0 @@
-../create-new-layer-version.generic.sh
