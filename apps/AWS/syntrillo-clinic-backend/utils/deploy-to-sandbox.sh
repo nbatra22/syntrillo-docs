@@ -1,2 +1,0 @@
-cd ..
-cdk deploy SyntrilloClinicBackendStack
