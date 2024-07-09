@@ -130,7 +130,7 @@
     //   : information will be retrived from the endpoint parts of the route scripts, with the get_pseudonyms_from_tab_post function
     //     that's why it requires only the temporary_lookup_code to be passed
     // Function to load html content via POST
-    function loadPlotContent(url, target, milliseconds_delay={{ milliseconds_delay }}) {
+    function loadPlotContent(url, target, json_or_html, milliseconds_delay={{ milliseconds_delay }}) {
             $(target).html("<p>Loading content. Please wait...</p>");
             var temporaryLookupCode = "{{ temporary_lookup_code }}";
 
@@ -140,9 +140,17 @@
                     url: url,
                     data: {
                         temporary_lookup_code: temporaryLookupCode,
+                        json_or_html: json_or_html
                     },
                     success: function(data) {
-                        $(target).html(data.html);
+                        if ( json_or_html === 'html' ) {
+                            $(target).html(data.html);
+                        } else if ( json_or_html === 'json' ) {
+                            $(target).html(data.html);
+                            if (data.json !== null) {
+                                Plotly.newPlot(target.replace('#', ''), data.json.data, data.json.layout);
+                            }
+                        }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');

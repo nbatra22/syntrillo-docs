@@ -95,18 +95,12 @@
 
 <div class="collapsible-content">
 
-    <!-- TODO : get blood pressure plot by calling loadHTMLContent on /healthie/iframe_provider_tab/care_plan/get_blood_pressure_plot  -->
+    <div id="blood-pressure-plot-container-html">
+        <p>Loading blood pressure plot as html...</p>
+    </div>
 
-    {% if blood_pressure_html_plot %}
-        {{ blood_pressure_html_plot|safe }}
-    {% else %}
-        <p>No plot available</p>
-    {% endif %}
-
-    <p>Asyn test below</p>
-
-    <div id="blood-pressure-plot-container">
-        <p>Loading blood pressure plot...</p>
+    <div id="blood-pressure-plot-container-json">
+        <p>Loading blood pressure plot as json...</p>
     </div>
 
 </div>
@@ -142,11 +136,13 @@
         <p>No pulse statistics available</p>
     {% endif %}
 
-    {% if pulse_html_plot %}
-        {{ pulse_html_plot|safe }}
-    {% else %}
-        <p>No pulse plot available</p>
-    {% endif %}
+    <div id="pulse-plot-container-html">
+        <p>Loading pulse plot as html...</p>
+    </div>
+
+    <div id="pulse-plot-container-json">
+        <p>Loading pulse plot as json...</p>
+    </div>
 
     <br>
     {% if rmssd %}
@@ -161,11 +157,13 @@
         <p>No HRV approximation available</p>
     {% endif %}
 
-    {% if heart_rate_statistics_html_plot %}
-        {{ heart_rate_statistics_html_plot|safe }}
-    {% else %}
-        <p>No heart rate stats plot available</p>
-    {% endif %}
+    <div id="heart-rate-statistics-plot-container-html">
+        <p>Loading heart rate statistics plot as html...</p>
+    </div>
+
+    <div id="heart-rate-statistics-plot-container-json">
+        <p>Loading heart rate statistics plot as json...</p>
+    </div>
 
 </div>
 
@@ -192,10 +190,42 @@
 <script>
     $(document).ready(function() {
 
+        // -----------------------------------------
+        // -- HTML PLOTS --
+
         // Load blood pressure plot when the document is ready
-        var target = '#blood-pressure-plot-container';
+        var target = '#blood-pressure-plot-container-html';
         var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
-        loadPlotContent(url, target);
+        loadPlotContent(url, target, json_or_html='html');
+
+        // Load pulse plot when the document is ready
+        var target = '#pulse-plot-container-html';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_pulse_plot") }}';
+        loadPlotContent(url, target, json_or_html='html');
+
+        // Load heart rate statistics plot when the document is ready
+        var target = '#heart-rate-statistics-plot-container-html';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
+        loadPlotContent(url, target, json_or_html='html');
+
+        // -----------------------------------------
+        // -- JSON PLOTS --
+
+        // Load blood pressure plot when the document is ready
+        var target = '#blood-pressure-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load pulse plot when the document is ready
+        var target = '#pulse-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_pulse_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load heart rate statistics plot when the document is ready
+        var target = '#heart-rate-statistics-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
     });
 </script>
 

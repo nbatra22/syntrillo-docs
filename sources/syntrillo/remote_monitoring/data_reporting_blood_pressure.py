@@ -5,12 +5,18 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 import plotly.graph_objs as go
 import plotly.io as pio
+import plotly.utils as pu
 from typing import Tuple
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+
+from syntrillo.helper_functions.plotly import plotly_fig_to_dict
+
+# Set a default template
+pio.templates.default = "plotly"
 
 class DataReportingBloodPressure:
 
@@ -132,8 +138,9 @@ class DataReportingBloodPressure:
 
     def get_blood_pressure_plotly(
         self,
-        representation: str = 'html'
-    ):
+        representation: str = 'html',
+        html_no_data : str = 'No blood pressure data available',
+    ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the blood pressure data.
 
@@ -154,21 +161,22 @@ class DataReportingBloodPressure:
             </div>
 
         Args:
-            representation (str): 'html' or 'json'
+            representation (str): 'html' or 'json' or 'both'
 
         Returns a tuple:
             - the figure
-            - its representation as html or json
+            - its representation as html
+            - its representation as json
 
         """
 
         # ---
         # check if the data is available
         if not hasattr(self, 'bmp_df'):
-            return None, None
+            return None, html_no_data, None
 
         if self.bmp_df is None or self.bmp_df.empty:
-            return None, None
+            return None, html_no_data, None
 
         # ---
         # create the figure
@@ -209,14 +217,19 @@ class DataReportingBloodPressure:
 
         # ---
         # convert the figure to html or json
-        if representation == 'html':
-            representation_output = pio.to_html(fig, full_html=False)
-        elif representation == 'json':
-            representation_output = json.dumps(fig, cls=pio.PlotlyJSONEncoder)
+        if representation == 'html' or representation == 'both':
+            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_json = None
+        elif representation == 'json' or representation == 'both':
+            representation_output_json = plotly_fig_to_dict(fig)
+            representation_output_html = None
+        else:
+            representation_output_html = None
+            representation_output_json = None
 
         # ---
         # return the figure as html or json
-        return fig, representation_output
+        return fig, representation_output_html, representation_output_json
 
 
 
@@ -243,7 +256,7 @@ if __name__ == '__main__':
     # print the first 5 rows of the dataframe
     print(bpm_data.head())
 
-    fig, output = data_reporting_blood_pressure.get_blood_pressure_plotly(
+    fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
         representation='html'
     )
 

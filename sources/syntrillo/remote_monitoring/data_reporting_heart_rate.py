@@ -5,12 +5,18 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 import plotly.graph_objs as go
 import plotly.io as pio
+import plotly.utils as pu
 from typing import Tuple
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+
+from syntrillo.helper_functions.plotly import plotly_fig_to_dict
+
+# Set a default template
+pio.templates.default = "plotly"
 
 class DataReportingHeartRate:
 
@@ -330,7 +336,8 @@ class DataReportingHeartRate:
     def get_pulse_plotly(
         self,
         representation: str = 'html',
-    ):
+        html_no_data : str = 'No blood pressure data available',
+    ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the pulse and irregular_heartrate data.
 
@@ -362,10 +369,10 @@ class DataReportingHeartRate:
         # ---
         # check if pulse_df data is available
         if not hasattr(self, 'pulse_df'):
-            return None, None
+            return None, html_no_data, None
 
         if self.pulse_df is None or self.pulse_df.empty:
-            return None, None
+            return None, html_no_data, None
 
         # ---
         # create the figure
@@ -407,20 +414,26 @@ class DataReportingHeartRate:
 
         # ---
         # convert the figure to html or json
-        if representation == 'html':
-            representation_output = pio.to_html(fig, full_html=False)
-        elif representation == 'json':
-            representation_output = json.dumps(fig, cls=pio.PlotlyJSONEncoder)
+        if representation == 'html' or representation == 'both':
+            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_json = None
+        elif representation == 'json' or representation == 'both':
+            representation_output_json = plotly_fig_to_dict(fig)
+            representation_output_html = None
+        else:
+            representation_output_html = None
+            representation_output_json = None
 
         # ---
         # return the figure as html or json
-        return fig, representation_output
+        return fig, representation_output_html, representation_output_json
 
 
     def get_heart_rate_statistics_plotly(
         self,
         representation: str = 'html',
-    ):
+        html_no_data : str = 'No blood pressure data available',
+    ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the watch hourly heart rate stats data.
 
@@ -452,10 +465,10 @@ class DataReportingHeartRate:
         # ---
         # check if pulse_df data is available
         if not hasattr(self, 'heart_rate_statistics_df'):
-            return None, None
+            return None, html_no_data, None
 
         if self.heart_rate_statistics_df is None or self.heart_rate_statistics_df.empty:
-            return None, None
+            return None, html_no_data, None
 
         # ---
         # create the figure
@@ -496,14 +509,19 @@ class DataReportingHeartRate:
 
         # ---
         # convert the figure to html or json
-        if representation == 'html':
-            representation_output = pio.to_html(fig, full_html=False)
-        elif representation == 'json':
-            representation_output = json.dumps(fig, cls=pio.PlotlyJSONEncoder)
+        if representation == 'html' or representation == 'both':
+            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_json = None
+        elif representation == 'json' or representation == 'both':
+            representation_output_json = plotly_fig_to_dict(fig)
+            representation_output_html = None
+        else:
+            representation_output_html = None
+            representation_output_json = None
 
         # ---
         # return the figure as html or json
-        return fig, representation_output
+        return fig, representation_output_html, representation_output_json
 
 
     def get_pulse_moments(
