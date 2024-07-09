@@ -297,7 +297,6 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
-            memory_size=512,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.access_point,
                 "/mnt/python_modules"
@@ -307,7 +306,8 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
                 "PYTHONPATH": "/mnt/python_modules"
             },
             tracing=_lambda.Tracing.ACTIVE,
-            timeout=Duration.seconds(30),
+            memory_size=512,
+            timeout=Duration.seconds(60),
         )
 
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
