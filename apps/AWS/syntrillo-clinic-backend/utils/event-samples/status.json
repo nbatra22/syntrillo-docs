@@ -1,0 +1,126 @@
+{
+    "resource": "/healthie/iframe_provider_tab/status",
+    "path": "/healthie/iframe_provider_tab/status",
+    "httpMethod": "POST",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Host": "api.sandbox.syntrillo-clinic-backend.com",
+        "origin": "https://api.sandbox.syntrillo-clinic-backend.com",
+        "priority": "u=1, i",
+        "referer": "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab",
+        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-668ce98a-0962726a3f8768e03c58f66c",
+        "X-Forwarded-For": "109.9.46.184",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "x-requested-with": "XMLHttpRequest"
+    },
+    "multiValueHeaders": {
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br, zstd"
+        ],
+        "accept-language": [
+            "en-US,en;q=0.9"
+        ],
+        "content-type": [
+            "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        "Host": [
+            "api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "origin": [
+            "https://api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "priority": [
+            "u=1, i"
+        ],
+        "referer": [
+            "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab"
+        ],
+        "sec-ch-ua": [
+            "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\""
+        ],
+        "sec-ch-ua-mobile": [
+            "?0"
+        ],
+        "sec-ch-ua-platform": [
+            "\"Windows\""
+        ],
+        "sec-fetch-dest": [
+            "empty"
+        ],
+        "sec-fetch-mode": [
+            "cors"
+        ],
+        "sec-fetch-site": [
+            "same-origin"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-668ce98a-0962726a3f8768e03c58f66c"
+        ],
+        "X-Forwarded-For": [
+            "109.9.46.184"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "x-requested-with": [
+            "XMLHttpRequest"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "gzpqne",
+        "resourcePath": "/healthie/iframe_provider_tab/status",
+        "httpMethod": "POST",
+        "extendedRequestId": "aoltnFWhIAMEQEg=",
+        "requestTime": "09/Jul/2024:07:40:58 +0000",
+        "path": "/healthie/iframe_provider_tab/status",
+        "accountId": "730335351683",
+        "protocol": "HTTP/1.1",
+        "stage": "sandbox",
+        "domainPrefix": "api",
+        "requestTimeEpoch": 1720510858053,
+        "requestId": "6a352f82-286a-4bd0-8389-85d328508271",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "sourceIp": "109.9.46.184",
+            "principalOrgId": null,
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "user": null
+        },
+        "domainName": "api.sandbox.syntrillo-clinic-backend.com",
+        "deploymentId": "514nrc",
+        "apiId": "w6qeny667c"
+    },
+    "body": "healthie_provider_id=1033222&healthie_user_id=Not+transmitted&temporary_lookup_code=b3f85d52-04ca-4ba5-acaa-74d146d85958&patient_not_registered_at_syntrillo=False",
+    "isBase64Encoded": false
+}
