@@ -127,12 +127,12 @@ if __name__ == '__main__':
             }
             self.assertEqual(expected, handler({"path": "/check_internet_egress"}, None))
 
-        # def test_check_mysql_database_access(self):
-        #     expected = {
-        #         'statusCode': 200,
-        #         'body': 'check_mysql_database_access ok'
-        #     }
-        #     self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
+        def test_check_mysql_database_access(self):
+            expected = {
+                'statusCode': 200,
+                'body': 'check_mysql_database_access ok'
+            }
+            self.assertEqual(expected, handler({"path": "/check_mysql_database_access"}, None))
         
         # def test_check_api_url_access(self):
         #     expected = {

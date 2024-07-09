@@ -2,7 +2,7 @@
 
 source ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/tests/remote/_invoke-lambdas-and-api-functions.sh
 
-# Test connectivity checks
+# Connectivity checks
 CONNECTIVITY_CHECK_PATHS=("/check_internet_ingress" "/check_internet_egress" "/check_mysql_database_access")
 for resource_path in "${CONNECTIVITY_CHECK_PATHS[@]}"; do
     echo "---"$resource_path
@@ -11,7 +11,7 @@ for resource_path in "${CONNECTIVITY_CHECK_PATHS[@]}"; do
     echo
 done
 
-# Test behavior checks
+# Behavior checks
 BEHAVIOR_CHECK_PATHS=("/check_python_module_import")
 for resource_path in "${BEHAVIOR_CHECK_PATHS[@]}"; do
     echo "---"$resource_path
