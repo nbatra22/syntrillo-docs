@@ -26,7 +26,7 @@ def iframe_healthie_provider_tab_care_plan():
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # --------------------------------------------------------------------
-    # Medication Adherence
+    # Medication Adherence data
 
     data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
 
@@ -34,19 +34,7 @@ def iframe_healthie_provider_tab_care_plan():
     medication_adherence_data, log = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
 
     # --------------------------------------------------------------------
-    # Blood Pressure
-
-    data_reporting_blood_pressure = DataReportingBloodPressure(post_manager.syntrillo_internal_key)
-
-    _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe()
-
-    if log['success'] == False:
-        blood_pressure_html_plot = None
-    else:
-        _, blood_pressure_html_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation='html')
-
-    # --------------------------------------------------------------------
-    # Heart Rate
+    # Heart Rate moments and stats
 
     data_reporting_heart_rate = DataReportingHeartRate(post_manager.syntrillo_internal_key)
 
@@ -56,24 +44,18 @@ def iframe_healthie_provider_tab_care_plan():
     _, log2 = data_reporting_heart_rate.get_irregular_heartbeat_dataframe()
 
     if log1['success'] == False:
-        pulse_html_plot = None
         pulse_moments = None
     else:
-        # plot
-        _, pulse_html_plot = data_reporting_heart_rate.get_pulse_plotly(representation='html')
         # moments
         pulse_moments = data_reporting_heart_rate.get_pulse_moments()
-
 
     # ---
     # Heart rate statistics
     _, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe()
 
     if log['success'] == False:
-        heart_rate_statistics_html_plot = None
         rmssd = None
     else:
-        _, heart_rate_statistics_html_plot = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation='html')
         rmssd = data_reporting_heart_rate.get_rmssd()
 
 
@@ -82,9 +64,6 @@ def iframe_healthie_provider_tab_care_plan():
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
         medication_adherence_data=medication_adherence_data,
-        blood_pressure_html_plot=blood_pressure_html_plot,
-        pulse_html_plot=pulse_html_plot,
-        heart_rate_statistics_html_plot=heart_rate_statistics_html_plot,
         pulse_moments=pulse_moments,
         rmssd=rmssd,
         )
@@ -100,7 +79,7 @@ def _checkbox_to_bool(checkbox):
 @iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_blood_pressure_plot', methods=['POST'])
 def get_blood_pressure_plot():
     """
-    This endpoint orders new devices from Tenovi API.
+    This endpoint return the blood pressure plot as html or json
 
     """
 
@@ -115,27 +94,122 @@ def get_blood_pressure_plot():
     json_or_html = request.form.get('json_or_html')
 
     # must be 'html' or 'json'
-    if json_or_html not in ['html', 'json']:
-        return jsonify({'html': 'Internal error: must be json or html' })
+    if json_or_html not in ['html', 'json', 'both']:
+        return jsonify({'html': 'Internal error: must be json or html or both' })
 
     # ---
     # Get the data and generate plot
     data_reporting_blood_pressure = DataReportingBloodPressure(post_manager.syntrillo_internal_key)
 
-    _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe()
+    # get all available data
+    _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe(
+        start_date=None,
+        end_date=None,
+    )
 
+    # if no data, return None
+    # if data, return the plot as html or json as requested
     if log['success'] == False:
-        blood_pressure_plot = None
         json_returned = None
         html_returned = 'No data'
     else:
-        _, blood_pressure_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation=json_or_html)
-        if json_or_html == 'json':
-            json_returned = json.loads(blood_pressure_plot)
-            html_returned = ''
-        elif json_or_html == 'html':
-            json_returned = None
-            html_returned = blood_pressure_plot
+        _, html_returned, json_returned = data_reporting_blood_pressure.get_blood_pressure_plotly(representation=json_or_html)
+
+    return jsonify({'json': json_returned, 'html': html_returned })
+
+
+
+@iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_pulse_plot', methods=['POST'])
+def get_pulse_plot():
+    """
+    This endpoint returns the pulse plot as html or json
+    It includes also irregular heartbeat data
+
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+
+    # ---
+    # get type of return to generate
+    json_or_html = request.form.get('json_or_html')
+
+    # must be 'html' or 'json'
+    if json_or_html not in ['html', 'json', 'both']:
+        return jsonify({'html': 'Internal error: must be json or html or both' })
+
+    # ---
+    # Get the data and generate plot
+
+    data_reporting_heart_rate = DataReportingHeartRate(post_manager.syntrillo_internal_key)
+
+    # ---
+    # Get pulse and irregular heartbeat for the plot
+    #  : get all available data
+
+    _, log1 = data_reporting_heart_rate.get_pulse_dataframe(
+        start_date=None,
+        end_date=None,
+    )
+    _, log2 = data_reporting_heart_rate.get_irregular_heartbeat_dataframe(
+        start_date=None,
+        end_date=None,
+    )
+
+    # if no data, return None
+    # if data, return the plot as html or json as requested
+    if log1['success'] == False and log2['success'] == False:
+        json_returned = None
+        html_returned = 'No data'
+    else:
+        _, html_returned, json_returned = data_reporting_heart_rate.get_pulse_plotly(representation=json_or_html)
+
+    return jsonify({'json': json_returned, 'html': html_returned })
+
+
+
+@iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_heart_rate_statistics_plot', methods=['POST'])
+def get_heart_rate_statistics_plot():
+    """
+    This endpoint returns the heart rate statistics plot as html or json
+
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+
+    # ---
+    # get type of return to generate
+    json_or_html = request.form.get('json_or_html')
+
+    # must be 'html' or 'json'
+    if json_or_html not in ['html', 'json', 'both']:
+        return jsonify({'html': 'Internal error: must be json or html or both' })
+
+    # ---
+    # Get the data and generate plot
+
+    data_reporting_heart_rate = DataReportingHeartRate(post_manager.syntrillo_internal_key)
+
+    # get all available data
+    _, log = data_reporting_heart_rate.get_heart_rate_statistics_dataframe(
+        start_date=None,
+        end_date=None,
+    )
+
+    # if no data, return None
+    # if data, return the plot as html or json as requested
+    if log['success'] == False:
+        json_returned = None
+        html_returned = 'No data'
+    else:
+        _, html_returned, json_returned = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation=json_or_html)
 
     return jsonify({'json': json_returned, 'html': html_returned })
 
