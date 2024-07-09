@@ -1,4 +1,10 @@
 # Path: ./apps/PythonAnywhere/website/api.py
+
+"""
+Non Healthie routes - Can be disregarded in AWS
+
+"""
+
 # used to deliver Stroke Risk Factors to Scoring and Care Plans algorithms
 
 import random

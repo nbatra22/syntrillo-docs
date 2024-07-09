@@ -27,7 +27,7 @@ catboost_info/
 
 **/.ipynb_checkpoints
 
-# xls lock files
+# office lock files
 *.~lock.*
 
 # SQL
