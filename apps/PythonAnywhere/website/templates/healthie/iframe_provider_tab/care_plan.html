@@ -95,9 +95,11 @@
 
 <div class="collapsible-content">
 
+    <!--
     <div id="blood-pressure-plot-container-html">
         <p>Loading blood pressure plot as html...</p>
     </div>
+    -->
 
     <div id="blood-pressure-plot-container-json">
         <p>Loading blood pressure plot as json...</p>
@@ -136,9 +138,11 @@
         <p>No pulse statistics available</p>
     {% endif %}
 
+    <!--
     <div id="pulse-plot-container-html">
         <p>Loading pulse plot as html...</p>
     </div>
+    -->
 
     <div id="pulse-plot-container-json">
         <p>Loading pulse plot as json...</p>
@@ -157,9 +161,11 @@
         <p>No HRV approximation available</p>
     {% endif %}
 
+    <!--
     <div id="heart-rate-statistics-plot-container-html">
         <p>Loading heart rate statistics plot as html...</p>
     </div>
+    -->
 
     <div id="heart-rate-statistics-plot-container-json">
         <p>Loading heart rate statistics plot as json...</p>
@@ -192,8 +198,8 @@
 
         // -----------------------------------------
         // -- JSON PLOTS --
-        // N.B. JSON PLOTS are prefered over HTML PLOTS  
-        // because they take less time to execute in lambda functions 
+        // N.B. JSON PLOTS are prefered over HTML PLOTS
+        // because they take less time to execute in lambda functions
         // (~ 150ms for json plots against ~ 500ms for html plots)
 
         // Load blood pressure plot when the document is ready
