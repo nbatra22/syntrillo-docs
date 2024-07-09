@@ -95,19 +95,18 @@
 
 <div class="collapsible-content">
 
-    <!-- TODO : get blood pressure plot by calling loadHTMLContent on /healthie/iframe_provider_tab/care_plan/get_blood_pressure_plot  -->
+    <p>Asynch html</p>
 
-    {% if blood_pressure_html_plot %}
-        {{ blood_pressure_html_plot|safe }}
-    {% else %}
-        <p>No plot available</p>
-    {% endif %}
-
-    <p>Asyn test below</p>
-
-    <div id="blood-pressure-plot-container">
-        <p>Loading blood pressure plot...</p>
+    <div id="blood-pressure-plot-container-html">
+        <p>Loading blood pressure plot as html...</p>
     </div>
+
+    <p>Asynch json</p>
+
+    <div id="blood-pressure-plot-container-json">
+        <p>Loading blood pressure plot as json...</p>
+    </div>
+
 
 </div>
 
@@ -193,9 +192,15 @@
     $(document).ready(function() {
 
         // Load blood pressure plot when the document is ready
-        var target = '#blood-pressure-plot-container';
+        var target = '#blood-pressure-plot-container-html';
         var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
-        loadPlotContent(url, target);
+        loadPlotContent(url, target, json_or_html='html');
+
+        // Load blood pressure plot when the document is ready
+        var target = '#blood-pressure-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
     });
 </script>
 

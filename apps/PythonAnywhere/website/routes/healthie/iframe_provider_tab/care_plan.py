@@ -1,6 +1,8 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/care_plan.py
 from flask import Blueprint, render_template, request, jsonify
 
+import json
+
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
@@ -108,14 +110,34 @@ def get_blood_pressure_plot():
 
     # --------------------------------------------------------------------
 
+    # ---
+    # get type of return to generate
+    json_or_html = request.form.get('json_or_html')
+
+    # must be 'html' or 'json'
+    if json_or_html not in ['html', 'json']:
+        return jsonify({'html': 'Internal error: must be json or html' })
+
+    # ---
+    # Get the data and generate plot
     data_reporting_blood_pressure = DataReportingBloodPressure(post_manager.syntrillo_internal_key)
 
     _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe()
 
     if log['success'] == False:
-        blood_pressure_html_plot = None
+        blood_pressure_plot = None
+        json_returned = None
+        html_returned = 'No data'
     else:
-        _, blood_pressure_html_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation='html')
+        _, blood_pressure_plot = data_reporting_blood_pressure.get_blood_pressure_plotly(representation=json_or_html)
+        if json_or_html == 'json':
+            json_returned = json.loads(blood_pressure_plot)
+            html_returned = ''
+        elif json_or_html == 'html':
+            json_returned = None
+            html_returned = blood_pressure_plot
 
-    return jsonify({'html': blood_pressure_html_plot })
+    return jsonify({'json': json_returned, 'html': html_returned })
+
+
 

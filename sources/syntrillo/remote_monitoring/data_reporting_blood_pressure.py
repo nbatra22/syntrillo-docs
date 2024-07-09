@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 import plotly.graph_objs as go
 import plotly.io as pio
+import plotly.utils as pu
 from typing import Tuple
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
@@ -212,7 +213,7 @@ class DataReportingBloodPressure:
         if representation == 'html':
             representation_output = pio.to_html(fig, full_html=False)
         elif representation == 'json':
-            representation_output = json.dumps(fig, cls=pio.PlotlyJSONEncoder)
+            representation_output = json.dumps(fig, cls=pu.PlotlyJSONEncoder)
 
         # ---
         # return the figure as html or json
