@@ -41,6 +41,11 @@ class TenoviDummyDataGenerator:
 
         logger.info(f"[DUMMY_DATA_GENERATOR] <DEVICES_RETREIVE_FROM_TENOVI> devices {devices}, pseudo_code_for_tenovi_phi_access {self.pseudo_code_for_tenovi_phi_access}")
 
+        # OLEMAITRE: the 3 lines below will avoid errors like : 'TenoviDummyDataGenerator' object has no attribute 'device_id_watch'
+        self.device_id_BMP=None
+        self.device_id_pillbox=None
+        self.device_id_watch=None
+
         for device in devices:
             if device['device']['name'] in [DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE, DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL] :
                 self.device_id_BMP = device["id"]

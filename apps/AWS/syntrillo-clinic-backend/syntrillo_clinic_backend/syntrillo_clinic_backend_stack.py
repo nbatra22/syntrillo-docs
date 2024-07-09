@@ -444,6 +444,27 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        # /healthie/iframe_provider_tab/care_plan/get_blood_pressure_plot
+        healthie_iframe_provider_tab_care_plan_get_blood_pressure_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_blood_pressure_plot")
+        healthie_iframe_provider_tab_care_plan_get_blood_pressure_plot.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # /healthie/iframe_provider_tab/care_plan/get_pulse_plot
+        healthie_iframe_provider_tab_care_plan_get_pulse_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_pulse_plot")
+        healthie_iframe_provider_tab_care_plan_get_pulse_plot.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # /healthie/iframe_provider_tab/care_plan/get_heart_rate_statistics_plot
+        healthie_iframe_provider_tab_care_plan_get_heart_rate_statistics_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_heart_rate_statistics_plot")
+        healthie_iframe_provider_tab_care_plan_get_heart_rate_statistics_plot.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)
         # ---------------------------------------------------------------------

@@ -191,25 +191,10 @@
     $(document).ready(function() {
 
         // -----------------------------------------
-        // -- HTML PLOTS --
-
-        // Load blood pressure plot when the document is ready
-        var target = '#blood-pressure-plot-container-html';
-        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
-        loadPlotContent(url, target, json_or_html='html');
-
-        // Load pulse plot when the document is ready
-        var target = '#pulse-plot-container-html';
-        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_pulse_plot") }}';
-        loadPlotContent(url, target, json_or_html='html');
-
-        // Load heart rate statistics plot when the document is ready
-        var target = '#heart-rate-statistics-plot-container-html';
-        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
-        loadPlotContent(url, target, json_or_html='html');
-
-        // -----------------------------------------
         // -- JSON PLOTS --
+        // N.B. JSON PLOTS are prefered over HTML PLOTS  
+        // because they take less time to execute in lambda functions 
+        // (~ 150ms for json plots against ~ 500ms for html plots)
 
         // Load blood pressure plot when the document is ready
         var target = '#blood-pressure-plot-container-json';
