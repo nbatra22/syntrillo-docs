@@ -7,8 +7,10 @@ import os
 import ast
 from typing import Tuple
 from glob import glob
+from datetime import datetime, timezone
 
 from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+
 
 class DataStructureXlsxQuestionnaireHandler:
     """
@@ -45,7 +47,9 @@ class DataStructureXlsxQuestionnaireHandler:
         'date_picker': 'Date Picker',
         'time': 'Time',
         'number': 'Number',
-        'label': 'used to display a title (no data retrieved)'
+        'label': 'used to display a title (no data retrieved)',
+        'read_only': 'used to display a read-only *HTML* value (no data retrieved)',
+        'html': 'used to display a read-only *HTML* value (no data retrieved) -- html value in question item',
     }
 
 
@@ -153,14 +157,12 @@ class DataStructureXlsxQuestionnaireHandler:
 
         # ---
         # verify that the metadata dictionary has the expected keys
-        expected_keys = ['name', 'internal_name', 'type', 'description', 'version']
+        expected_keys = ['name', 'internal_name', 'type', 'description', 'prefill', 'version']
         for key in expected_keys:
             if key not in metadata_dict:
                 log['success'] = False
                 log['error'] = f"Key '{key}' not found in metadata tab of Excel file '{xlsx_file_name}'"
                 return None, log
-
-        # TODO : deal with prefill
 
         # ---
         # verify that the version matches the xls filename
@@ -192,6 +194,17 @@ class DataStructureXlsxQuestionnaireHandler:
         # store the use_for_charting and use_for_program in the metadata
         metadata_dict['use_for_charting'] = use_for_charting
         metadata_dict['use_for_program'] = use_for_program
+
+        # ---
+        # manage prefill
+        prefill_str = str(metadata_dict.get('prefill')).lower()
+        if prefill_str == 'yes':
+            metadata_dict['prefill'] = True
+        elif prefill_str == 'no':
+            metadata_dict['prefill'] = False
+        else:
+            log['success'] = False
+            log['error'] = f"Prefill value '{metadata_dict.get('prefill')}' not recognized"
 
         # --------------------------------
         # Load Excel file -- variables tab
@@ -232,7 +245,8 @@ class DataStructureXlsxQuestionnaireHandler:
 
         # ---
         # Convert Excel data to JSON format
-        json_data_variables = []
+        json_data_items = []
+        number_of_variables = 0
         for _, row in xls_variables.iterrows():
 
             # Handle None value for 'values'
@@ -262,10 +276,18 @@ class DataStructureXlsxQuestionnaireHandler:
                     if row['display'] in ['text', 'textarea']:
                         # Escape special characters for HTML
                         values_list = [html.escape(cleaned_values)]
+                    elif row['display'] == 'read_only':
+                        # Use the raw value for read-only fields
+                        #  : here, clean values can include html tags.
+                        values_list = [cleaned_values]
                     else:
                         values_list = self.parse_comma_separated_string(cleaned_values)
                 else:
                     values_list = None
+
+            if row['display'] == 'html':
+                # Use the question value for html fields
+                values_list = [ row['question'] ]
 
             # ---
             if values_list is not None:
@@ -282,11 +304,16 @@ class DataStructureXlsxQuestionnaireHandler:
                 return None, log
 
             # ---
+            # count if it is a variable
+            if row['display'] not in ['label', 'read_only', 'html']:
+                number_of_variables += 1
+
+            # ---
             # Specific values for question and sublabel : 'space' and 'separator'
             question = self.nan2null(row['question'])
             sublabel = self.nan2null(row['sublabel'])
 
-            if row['display'] == 'label':
+            if row['display'] in ['label', 'read_only']:
                 # deal with blank question (used as a separator). Add a space character to avoid empty question
                 if row['question'] == '' or row['question'] is None or pd.isna(row['question']) :
                     question = ' '
@@ -300,12 +327,20 @@ class DataStructureXlsxQuestionnaireHandler:
                     sublabel = ' '
 
             # ---
+            # manage home made html type
+            if row['display'] == 'html':
+                display = 'read_only'
+                question = ' '
+            else:
+                display = row['display']
+
+            # ---
             # Create a dictionary for the data variable
             data_variable = {
                 'internal_name': self.nan2null(row['internal_name']),
                 'question': question,
                 'sublabel': sublabel,
-                'display': self.nan2null(row['display']),
+                'display': display,
                 'special_values': self.nan2null(row['special_values']),
                 'values': values_list,
                 'add_unknown': self.nan2null(row['add_unknown']),
@@ -315,7 +350,7 @@ class DataStructureXlsxQuestionnaireHandler:
                 'internal_description': self.nan2null(row['internal_description']),
                 'comment': self.nan2null(row['comment']),
             }
-            json_data_variables.append(data_variable)
+            json_data_items.append(data_variable)
 
             # ---
             # add other question if needed
@@ -334,7 +369,7 @@ class DataStructureXlsxQuestionnaireHandler:
                     'internal_description': None,
                     'comment': None,
                 }
-                json_data_variables.append(data_variable_other)
+                json_data_items.append(data_variable_other)
 
             # ---
             # add comment box if needed
@@ -353,7 +388,7 @@ class DataStructureXlsxQuestionnaireHandler:
                     'internal_description': None,
                     'comment': None,
                 }
-                json_data_variables.append(data_variable_comment)
+                json_data_items.append(data_variable_comment)
 
             # end of loop over rows
 
@@ -361,7 +396,9 @@ class DataStructureXlsxQuestionnaireHandler:
         # Return JSON data structure
         json_data_structure = {
             'metadata': metadata_dict,
-            'variables': json_data_variables
+            'items': json_data_items,
+            'number_of_variables': number_of_variables,
+            'created_at': datetime.now(timezone.utc).isoformat()
         }
 
         return json_data_structure, log

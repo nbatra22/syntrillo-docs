@@ -55,7 +55,7 @@ class DataStructureQuestionnaireHealthieManager:
             return None
 
         healthie_custom_modules = []
-        for item in self.structure['variables']:
+        for item in self.structure['items']:
 
             if item["values"] is not None:
                 options = "\n".join(item["values"])  # Join values with newline separator
@@ -93,12 +93,16 @@ class DataStructureQuestionnaireHealthieManager:
         use_for_charting = self.structure.get('metadata').get('use_for_charting', False)
         use_for_program = self.structure.get('metadata').get('use_for_program', False)
 
+        # prefill flag
+        prefill = self.structure.get('metadata').get('prefill', False)
+
         # Call the create_form_wrapper function to create a new form with the specified modules
         response = self.forms_api.create_form_wrapper(
             form_name=form_name,
             external_id=external_id,
             use_for_charting=use_for_charting,
             use_for_program=use_for_program,
+            prefill=prefill,
             modules=self.healthie_custom_modules,
         )
 

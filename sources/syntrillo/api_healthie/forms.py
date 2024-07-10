@@ -1125,7 +1125,7 @@ if __name__ == "__main__":
         text_safe = html.escape(text_string)
 
         new_form = forms.create_form_wrapper(
-            form_name='testing textarea with option',
+            form_name='testing read_only with option',
             modules=[
                 {
                  'label': 'What is your age?',
@@ -1148,6 +1148,12 @@ if __name__ == "__main__":
                  'mod_type': 'label',
                  'sublabel': 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
                  },
+                {
+                 'label': 'html test with read_only mod_type',
+                 'mod_type': 'read_only',
+                 'sublabel': 'Some sub-label',
+                 'options': '<p style="color: red;">hello <b>there</b></p>.',
+                 },
             ],
             use_for_charting=True,
             use_for_program=False,
@@ -1156,7 +1162,7 @@ if __name__ == "__main__":
         print(json.dumps(new_form, indent=4, default=str))
 
     if False:
-        form = forms.get_form_by_id(form_id='1354538')
+        form = forms.get_form_by_id(form_id='1360846')
 
         print(json.dumps(form, indent=4, default=str))
 

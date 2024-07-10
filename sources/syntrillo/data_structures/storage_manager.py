@@ -4,6 +4,8 @@ import os
 import json
 from typing import Tuple
 
+from syntrillo.helper_functions.time import convert_to_est
+
 class DataStructureStorageManager:
     """
     Defines where the data structures are stored.
@@ -115,16 +117,25 @@ class DataStructureStorageManager:
                 # Remove extension to get the filename
                 structure_name = os.path.splitext(filename)[0]
 
+                # define Excel filename and check if it exists
+                filename_xlsx = structure_name + '.xlsx'
+                file_path_xlsx = os.path.join(self.storage_path, filename_xlsx)
+                if not os.path.exists(file_path_xlsx):
+                    file_path_xlsx = None
+
                 # Retrieve metadata from the JSON file
                 try:
                     json_data, _ = self.retrieve_structure(structure_name)
                     metadata = json_data.get('metadata', {})  # Get metadata from JSON data
                     structure_list.append(
                         {
-                            'filename': filename,
+                            'filename_json': filename,
+                            'filename_xlsx': filename_xlsx,
                             'structure_name': structure_name,
                             'metadata': metadata,
                             'number_of_items': len(json_data.get('variables', [])),
+                            'number_of_variables': json_data.get('number_of_variables', ''),
+                            'created_at_est': convert_to_est(json_data.get('created_at', '')),
                             }
                         )
                 except FileNotFoundError:
@@ -139,7 +150,7 @@ class DataStructureStorageManager:
         Stores a data structure.
 
         :param structure_name: The name of the data structure to store.
-        :param data_structure: The data structure to store as a dictionary. It must include metadata and variables
+        :param data_structure: The data structure to store as a dictionary. It must include metadata and items
 
         Returns a log dictionary with the following keys:
         - 'success': True if the data structure was successfully stored, False otherwise.
@@ -151,14 +162,14 @@ class DataStructureStorageManager:
             'success': True,
         }
 
-        # check if the data structure has metadata and variables
+        # check if the data structure has metadata and items
         if 'metadata' not in data_structure:
             log['success'] = False
             log['error'] = "Data structure must include metadata."
             return log
-        if 'variables' not in data_structure:
+        if 'items' not in data_structure:
             log['success'] = False
-            log['error'] = "Data structure must include variables."
+            log['error'] = "Data structure must include items."
             return log
 
         filename = structure_name + '.json'
