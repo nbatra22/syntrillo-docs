@@ -3,7 +3,7 @@
 source ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/tests/remote/_invoke-lambdas-and-api-functions.sh
 
 # Connectivity checks
-CONNECTIVITY_CHECK_PATHS=("/check_internet_ingress" "/check_internet_egress" "/check_mysql_database_access")
+CONNECTIVITY_CHECK_PATHS=("/check_internet_ingress" "/check_internet_egress" "/check_mysql_database_access" "/check_tenovi_hwi_access")
 for resource_path in "${CONNECTIVITY_CHECK_PATHS[@]}"; do
     echo "---"$resource_path
     invoke_lambda_function "CheckConnectivityFunction" "$resource_path" "{\"path\": \"$resource_path\"}"

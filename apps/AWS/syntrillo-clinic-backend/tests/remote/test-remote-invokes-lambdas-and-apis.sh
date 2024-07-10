@@ -12,7 +12,7 @@ for resource_path in "${IFRAME_GET_PATHS[@]}"; do
 done
 
 # Test iframe POST requests
-IFRAME_POST_PATHS=("/healthie/iframe_provider_tab/status")
+IFRAME_POST_PATHS=("/healthie/iframe_provider_tab/status" "/healthie/iframe_provider_tab/devices")
 for resource_path in "${IFRAME_POST_PATHS[@]}"; do
     echo "---"$resource_path
     payload="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/event-samples/$(basename "$resource_path").json)"
