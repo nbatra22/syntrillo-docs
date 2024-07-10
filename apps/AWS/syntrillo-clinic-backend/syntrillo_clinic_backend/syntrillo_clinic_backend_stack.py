@@ -45,10 +45,10 @@ class CheckBehaviourConstruct(Construct):
                 self.efs_access_point,
                 "/mnt/python_modules"
             ),
-            # timeout=Duration.seconds(10),
-            # environment={
-            #     "PYTHONPATH": "/mnt/dependencies"
-            # }            
+            environment={
+                "PYTHONPATH": "/mnt/python_modules"
+            },          
+            timeout=Duration.seconds(10),
         )
 
         check_behaviour_api = apigw.RestApi(
@@ -109,7 +109,7 @@ class CheckConnectivityConstruct(Construct):
                 "/mnt/python_modules"
             ),
             environment={
-                # "PYTHONPATH": "/mnt/dependencies"
+                "PYTHONPATH": "/mnt/python_modules",
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn
             },
