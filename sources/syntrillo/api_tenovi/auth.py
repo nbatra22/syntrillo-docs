@@ -9,6 +9,38 @@ from typing import Tuple
 
 from syntrillo.system.dot_env_loader import DotEnvFileLoader
 
+def get_secrets(secret_arn):
+    try:
+        get_secret_value_response = requests.get(
+            f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
+            headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
+        )
+        get_secret_value_response.raise_for_status()  # Raise an exception for non-2xx status codes
+    except requests.exceptions.RequestException as e:
+        # Handle exceptions related to the HTTP request
+        # if "an unexpected error occurred while executing request" in the response text => check lammbda permissions to read in secrets manager
+        raise Exception(f"Error fetching secret [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secret_value = get_secret_value_response.text
+        secret_dict = json.loads(secret_value)
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to JSON decoding
+        raise Exception(f"Error decoding secret value [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secrets_string = secret_dict["SecretString"]
+    except KeyError as e:
+        # Handle exceptions related to missing "SecretString" key
+        raise Exception(f"Error retrieving SecretString: {e}")
+    
+    try:
+        secrets_dict=json.loads(secrets_string)
+        return secrets_dict
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to not well formated secret string (non json)
+        raise Exception(f"Error decoding secrets (should be in json format in aws secrets manager): {e}")
+
 class TenoviAuth:
     """
     A class to handle authentication with the Tenovi API
@@ -27,34 +59,63 @@ class TenoviAuth:
     base_url: str = None
     api_key: str = None
 
-
     def __init__(self):
 
-        # Load the .env file based on the environment to retrieve the client domain and API key
-        _ = DotEnvFileLoader()
+        if os.getenv('AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN') != None:
+            # This test means we are in the lambda function
+            
+            # retrieve secrets in aws secrets manager
+            tenovi_hwi_secrets=get_secrets(os.getenv('AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'))
 
-        # retrieve the client domain from the environment variables
-        self.client_domain = os.getenv('TENOVI_CLIENT_DOMAIN')
-        if not self.client_domain:
-            raise ValueError("Tenovi client domain not found. Please check your .env file.")
+            # retrieve the client domain from the environment variables
+            self.client_domain=tenovi_hwi_secrets["tenoviHwiClientDomain"]
+            if not self.client_domain:
+                raise ValueError("Tenovi client domain not found. Please check aws secrets manager.")
 
-        # ensure the TENOVI_BASE_URL_ROOT ends with a trailing slash
-        if not self.TENOVI_BASE_URL_ROOT.endswith('/'):
-            self.TENOVI_BASE_URL_ROOT += '/'
+            # ensure the TENOVI_BASE_URL_ROOT ends with a trailing slash
+            if not self.TENOVI_BASE_URL_ROOT.endswith('/'):
+                self.TENOVI_BASE_URL_ROOT += '/'
 
-        # set the base url for the Tenovi API calls
-        #  : must end with a trailing slash
-        self.base_url = f"{self.TENOVI_BASE_URL_ROOT}{self.client_domain}"
+            # set the base url for the Tenovi API calls
+            #  : must end with a trailing slash
+            self.base_url = f"{self.TENOVI_BASE_URL_ROOT}{self.client_domain}"
 
-        if not self.base_url.endswith('/'):
-            self.base_url += '/'
+            if not self.base_url.endswith('/'):
+                self.base_url += '/'
 
-        # Retrieve the API key from environment variables
-        self.api_key = os.getenv('TENOVI_API_KEY')
+            # Retrieve the API key from environment variables
+            self.api_key=tenovi_hwi_secrets["tenoviHwiApiKey"]
 
-        # Ensure the API key was successfully loaded
-        if not self.api_key:
-            raise ValueError("Tenovi API key not found. Please check your .env file.")
+            # Ensure the API key was successfully loaded
+            if not self.api_key:
+                raise ValueError("Tenovi API key not found. Please check aws secrets manager.")
+
+        else:
+            # Load the .env file based on the environment to retrieve the client domain and API key
+            _ = DotEnvFileLoader()
+
+            # retrieve the client domain from the environment variables
+            self.client_domain = os.getenv('TENOVI_CLIENT_DOMAIN')
+            if not self.client_domain:
+                raise ValueError("Tenovi client domain not found. Please check your .env file.")
+
+            # ensure the TENOVI_BASE_URL_ROOT ends with a trailing slash
+            if not self.TENOVI_BASE_URL_ROOT.endswith('/'):
+                self.TENOVI_BASE_URL_ROOT += '/'
+
+            # set the base url for the Tenovi API calls
+            #  : must end with a trailing slash
+            self.base_url = f"{self.TENOVI_BASE_URL_ROOT}{self.client_domain}"
+
+            if not self.base_url.endswith('/'):
+                self.base_url += '/'
+
+            # Retrieve the API key from environment variables
+            self.api_key = os.getenv('TENOVI_API_KEY')
+
+            # Ensure the API key was successfully loaded
+            if not self.api_key:
+                raise ValueError("Tenovi API key not found. Please check your .env file.")
 
     def get_headers(self):
         # Return the headers needed for the API calls

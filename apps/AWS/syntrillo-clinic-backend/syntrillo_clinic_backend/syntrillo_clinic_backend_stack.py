@@ -16,7 +16,7 @@ from aws_cdk import (
     aws_backup as backup,
     aws_efs as efs,
     aws_events as events,
-    aws_iam as iam,
+    aws_secretsmanager as secretsmanager,
 )
 from constructs import Construct
 
@@ -84,11 +84,12 @@ class CheckConnectivityConstruct(Construct):
         latest_version = response['LayerVersions'][0]
         return latest_version['LayerVersionArn']
 
-    def __init__(self, scope: Construct, id: str, vpc, database, efs_access_point, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, database, efs_access_point, secrets, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
         self.database = database
+        self.secrets = secrets
         self.efs_access_point = efs_access_point
 
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
@@ -110,11 +111,13 @@ class CheckConnectivityConstruct(Construct):
             environment={
                 # "PYTHONPATH": "/mnt/dependencies"
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn
             },
             timeout=Duration.seconds(10),
         )
 
         self.database.secret.grant_read(check_connectivity_function)
+        self.secrets.tenovi_hwi_secrets.grant_read(check_connectivity_function)
 
         latest_layer_version_arn = self.get_latest_layer_version_arn("fitness-function-layer")
         fitness_function_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FitnessFunctionLayer", latest_layer_version_arn)
@@ -152,6 +155,12 @@ class CheckConnectivityConstruct(Construct):
         )
 
         check_internet_ingress = root_resource.add_resource("check_api_url_access")
+        check_internet_ingress.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_connectivity_function),
+        )
+
+        check_internet_ingress = root_resource.add_resource("check_tenovi_hwi_access")
         check_internet_ingress.add_method(
             "GET",
             apigw.LambdaIntegration(check_connectivity_function),
@@ -198,6 +207,19 @@ class SyntrilloClinicBackupStack(Stack):
                 backup.BackupResource.from_efs_file_system(self.efs_file_system)
             ]
         )
+
+class SyntrilloClinicSecretsStack(Stack):
+    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        self.tenovi_hwi_secrets = secretsmanager.Secret(
+            self, "TenoviHWISecrets"
+        )
+
+        self.healthie_secrets = secretsmanager.Secret(
+            self, "HealthieSecrets"
+        )
+    
 
 class SyntrilloClinicBackendNetworkStack(Stack):
 
@@ -295,7 +317,8 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
             hosted_zone, 
             certificate, 
             file_system, 
-            access_point, 
+            access_point,
+            secrets,
             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
@@ -305,6 +328,7 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
         self.certificate = certificate
         self.access_point = access_point
         self.file_system = file_system
+        self.secrets = secrets
 
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
@@ -316,7 +340,7 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
             vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
+            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.access_point,
@@ -326,6 +350,8 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
@@ -333,6 +359,8 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
         )
 
         self.database.secret.grant_read(iframe_generator_function)
+        self.secrets.tenovi_hwi_secrets.grant_read(iframe_generator_function)
+        self.secrets.healthie_secrets.grant_read(iframe_generator_function)
 
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
             rest_api_name="IFramGeneratorAPI",
@@ -503,18 +531,20 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
 
 class SyntrilloClinicBackendFitnessFunctionsStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, vpc, database, efs_access_point, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, vpc, database, efs_access_point, secrets, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.vpc = vpc
         self.database = database
         self.efs_access_point = efs_access_point
+        self.secrets=secrets
 
         check_connectivity_function=CheckConnectivityConstruct(
             self, "CheckConnectivityConstruct", 
-            self.vpc, 
+            self.vpc,
             self.database,
             self.efs_access_point,
+            self.secrets
         )
 
         check_behaviour_function=CheckBehaviourConstruct(
@@ -547,11 +577,8 @@ class SyntrilloClinicBackendStack(Stack):
             storage.efs_file_system
         )
 
-        fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
-            self, "FitnessFunctionStack",
-            vpc=network.vpc,
-            database=database,
-            efs_access_point=storage.efs_access_point,
+        secrets=SyntrilloClinicSecretsStack(
+            self, "SecretsStack"
         )
 
         iframe_generator=SyntrilloClinicIFrameGeneratorStack(
@@ -561,5 +588,14 @@ class SyntrilloClinicBackendStack(Stack):
             access_point=storage.efs_access_point,
             file_system=storage.efs_file_system, 
             hosted_zone=network.hosted_zone, 
-            certificate=network.certificate, 
+            certificate=network.certificate,
+            secrets=secrets
+        )
+
+        fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
+            self, "FitnessFunctionStack",
+            vpc=network.vpc,
+            database=database,
+            efs_access_point=storage.efs_access_point,
+            secrets=secrets
         )
