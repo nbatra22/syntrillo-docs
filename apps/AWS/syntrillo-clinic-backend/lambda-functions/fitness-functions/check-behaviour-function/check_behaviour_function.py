@@ -68,4 +68,4 @@ if __name__ == '__main__':
             }
             self.assertEqual(expected, handler({"path": "/check_python_module_import"}, None))
 
-    unittest.main()
+    unittest.main(verbosity=2)

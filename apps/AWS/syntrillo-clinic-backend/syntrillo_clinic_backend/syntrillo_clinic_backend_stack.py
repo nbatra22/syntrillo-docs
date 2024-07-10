@@ -16,6 +16,7 @@ from aws_cdk import (
     aws_backup as backup,
     aws_efs as efs,
     aws_events as events,
+    aws_iam as iam,
 )
 from constructs import Construct
 
@@ -83,27 +84,37 @@ class CheckConnectivityConstruct(Construct):
         latest_version = response['LayerVersions'][0]
         return latest_version['LayerVersionArn']
 
-    def __init__(self, scope: Construct, id: str, vpc, efs_access_point, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, database, efs_access_point, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.database = database
         self.efs_access_point = efs_access_point
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
 
         check_connectivity_function = _lambda.Function(self, "CheckConnectivityFunction",
             function_name="CheckConnectivityFunction",
             runtime=_lambda.Runtime.PYTHON_3_10,
             handler="check_connectivity_function.handler",
-            code=_lambda.Code.from_asset("lambda-functions/fitness-functions/check-connectivity-function"),
+            params_and_secrets=params_and_secrets,
+            code=_lambda.Code.from_asset("lambda-functions/fitness-functions/check-connectivity-function", exclude=['.env']),
             vpc = self.vpc,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.efs_access_point,
                 "/mnt/python_modules"
             ),
-            # timeout=Duration.seconds(10),
-            # environment={
-            #     "PYTHONPATH": "/mnt/dependencies"
-            # }            
+            environment={
+                # "PYTHONPATH": "/mnt/dependencies"
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+            },
+            timeout=Duration.seconds(10),
         )
+
+        self.database.secret.grant_read(check_connectivity_function)
 
         latest_layer_version_arn = self.get_latest_layer_version_arn("fitness-function-layer")
         fitness_function_layer = _lambda.LayerVersion.from_layer_version_arn(self, "FitnessFunctionLayer", latest_layer_version_arn)
@@ -263,6 +274,8 @@ class SyntrilloClinicBackendDatabaseStack(Stack):
             "Allow inbound traffic on port 3306 from any IPv4 address"
         )
 
+        self.secret=self.db.secret
+
 class SyntrilloClinicIFrameGeneratorStack(Stack):
 
     def get_latest_layer_version_arn(self, layer_name: str) -> str:
@@ -277,7 +290,8 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
         return latest_version['LayerVersionArn'] 
         
     def __init__(self, scope: Construct, id: str, 
-            vpc, 
+            vpc,
+            database,
             hosted_zone, 
             certificate, 
             file_system, 
@@ -286,10 +300,16 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
         super().__init__(scope, id, **kwargs)
     
         self.vpc = vpc
+        self.database = database
         self.hosted_zone = hosted_zone
         self.certificate = certificate
         self.access_point = access_point
         self.file_system = file_system
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
 
         iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
             function_name="IFrameGeneratorFunction",
@@ -297,18 +317,22 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function"),
+            params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.access_point,
                 "/mnt/python_modules"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
-                "PYTHONPATH": "/mnt/python_modules"
+                "PYTHONPATH": "/mnt/python_modules",
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
             timeout=Duration.seconds(60),
         )
+
+        self.database.secret.grant_read(iframe_generator_function)
 
         iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
             rest_api_name="IFramGeneratorAPI",
@@ -479,21 +503,23 @@ class SyntrilloClinicIFrameGeneratorStack(Stack):
 
 class SyntrilloClinicBackendFitnessFunctionsStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, vpc, efs_access_point, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, vpc, database, efs_access_point, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.vpc = vpc
+        self.database = database
         self.efs_access_point = efs_access_point
 
         check_connectivity_function=CheckConnectivityConstruct(
             self, "CheckConnectivityConstruct", 
             self.vpc, 
+            self.database,
             self.efs_access_point,
         )
 
         check_behaviour_function=CheckBehaviourConstruct(
             self, "CheckLambdaBehaviourConstruct", 
-            self.vpc, 
+            self.vpc,
             self.efs_access_point,
         )
 
@@ -523,13 +549,15 @@ class SyntrilloClinicBackendStack(Stack):
 
         fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
             self, "FitnessFunctionStack",
-            network.vpc,
-            storage.efs_access_point,
+            vpc=network.vpc,
+            database=database,
+            efs_access_point=storage.efs_access_point,
         )
 
         iframe_generator=SyntrilloClinicIFrameGeneratorStack(
             self, "IFrameGeneratorStack", 
-            vpc=network.vpc, 
+            vpc=network.vpc,
+            database=database,
             access_point=storage.efs_access_point,
             file_system=storage.efs_file_system, 
             hosted_zone=network.hosted_zone, 

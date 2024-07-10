@@ -5,6 +5,10 @@ import os
 import time
 from dotenv import load_dotenv
 
+# modules used to retrieve secrets in aws secrets manager:
+import requests
+import json
+
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
 import pymysql
@@ -53,37 +57,67 @@ class DatabaseConnection:
                 - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
         """
 
-        # paths have to be hard-coded at PythonAnywhere
-        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
-            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
-        else:
-            dotenv_path = ".env"
+        if os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN') != None:
+            # This test means we are in the lambda function
+            # We use AWS Secrets Manager to retreive the database secrets
+            # TAWS Secrets Manager should be accessible only by the lambda function and/or and admin user
 
-        load_dotenv(dotenv_path=dotenv_path)
+            secret_arn = os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN')
 
-        # select database to use
-        self.database_server = os.getenv('DATABASE_SERVER')
+            # This uses the lambda extension layer for secrets and parameters
+            # This uses a cache and avoid calling the secrets manager each time (it reduces cost & latency)
+            get_secret_value_response = requests.get(
+                f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
+                headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
+            )
 
-        if self.database_server == 'AWS':
+            secret_value = get_secret_value_response.text
+            secret_dict = json.loads(secret_value)
+            secret_string = secret_dict["SecretString"]
+
+            host=json.loads(secret_string)['host']
+            username=json.loads(secret_string)['username']
+            password=json.loads(secret_string)['password']
+
             self.AWS_DB_CONFIG = {
-                'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
-                'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
-                'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
+                'host': host,
+                'user': username,
+                'password': password,
             }
-
-        elif self.database_server == 'PythonAnywhere':
-            self.PA_DB_CONFIG = {
-                'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
-                'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
-                'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
-            }
-
-            self.PA_SSH_TUNNEL = {
-                'ssh_username': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME'),
-                'ssh_password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD'),
-            }
+            
         else:
-            raise ValueError("Invalid database server configuration")
+            # paths have to be hard-coded at PythonAnywhere
+            if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
+                dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
+            else:
+                dotenv_path = ".env"
+
+            load_dotenv(dotenv_path=dotenv_path)
+
+            # select database to use
+            self.database_server = os.getenv('DATABASE_SERVER')
+
+            if self.database_server == 'AWS':
+
+                self.AWS_DB_CONFIG = {
+                    'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
+                    'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
+                    'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
+                }
+
+            elif self.database_server == 'PythonAnywhere':
+                self.PA_DB_CONFIG = {
+                    'user': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_USER'),
+                    'password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_PASSWORD'),
+                    'host': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_HOST'),
+                }
+
+                self.PA_SSH_TUNNEL = {
+                    'ssh_username': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_USERNAME'),
+                    'ssh_password': os.getenv('PYTHON_ANYWHERE_DATABASE_CONFIG_SSH_PASSWORD'),
+                }
+            else:
+                raise ValueError("Invalid database server configuration")
 
     def create_connection(self, verbose=False, retries=3, delay=5):
         """
@@ -100,7 +134,7 @@ class DatabaseConnection:
 
         self.select_database_and_load_credentials()
 
-        if self.database_server == 'AWS':
+        if os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN') != None or self.database_server == 'AWS':
             aws_db_config = self.AWS_DB_CONFIG
 
             # update with requested database name
