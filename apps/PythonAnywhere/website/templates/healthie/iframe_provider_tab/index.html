@@ -17,6 +17,9 @@
     <!-- Include font-awesome for collapsable icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+    <!-- Link to DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css">
+
     <!-- Link to local CSS - at last position -->
     <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider.css') }}">
 
@@ -78,6 +81,10 @@
 
 <!-- Include jQuery UI for Tooltip -->
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<!-- Include DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
 
 <!-- plotly -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -149,6 +156,8 @@
                             $(target).html(data.html);
                             if (data.json !== null) {
                                 Plotly.newPlot(target.replace('#', ''), data.json.data, data.json.layout);
+                            } else {
+                                $(target).html('<p>No plot available</p>');
                             }
                         }
                     },

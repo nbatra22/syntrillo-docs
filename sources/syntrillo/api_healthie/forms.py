@@ -136,7 +136,10 @@ class HealthieForms():
             '''
 
         # Set up the variables for the GraphQL query
-        variables = { }
+        variables = {
+            'should_paginate': False,
+            'include_default_templates': False,
+        }
 
         # Make the GraphQL query request using the send_query method inherited from HealthieAPI
         response, log = self.auth.send_query(query, variables)
@@ -524,7 +527,6 @@ class HealthieForms():
         return { "form_response" : form_response, "modules_responses" : modules_responses }
 
 
-    # TODO : use our external_id to get answers ?
     def get_form_answers_group(
         self,
         custom_module_form_id: str = None,
@@ -604,6 +606,10 @@ class HealthieForms():
         """
         Retreive form answer group. That is “A completed form, with metadata about the completion, and the saved answers”
 
+        Note : nested queries are not supported by Healthie API,
+               so we need to make multiple queries to get all the data,
+               and we cannot filter queries based on nested data.
+
         Parameters:
             custom_module_form_id (str): The ID of the CustomModuleForm
             user_id (str): The ID of the User
@@ -629,7 +635,7 @@ class HealthieForms():
                     user_id: $user_id,
                 ) {
                     id
-                    name
+                    name                    # typically the initials and the custom module form name
                     created_at
                     user_id                 # returns a Str
                     filler {                # The user who filled out the form. Returns a 'User' object https://docs.gethealthie.com/schema/user.doc
