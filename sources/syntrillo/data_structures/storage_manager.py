@@ -118,12 +118,14 @@ class DataStructureStorageManager:
                 structure_name = os.path.splitext(filename)[0]
 
                 # define Excel filename and check if it exists
+                # TODO : then what?
                 filename_xlsx = structure_name + '.xlsx'
                 file_path_xlsx = os.path.join(self.storage_path, filename_xlsx)
                 if not os.path.exists(file_path_xlsx):
                     file_path_xlsx = None
 
                 # Retrieve metadata from the JSON file
+                # TODO : manage log
                 try:
                     json_data, _ = self.retrieve_structure(structure_name)
                     metadata = json_data.get('metadata', {})  # Get metadata from JSON data
