@@ -8,6 +8,8 @@ This repository contains the Syntrillo Clinic platform, designed to handle multi
 
 ## Directory Structure
 
+TODO : update
+
 ```
 SyntrilloClinic
 |-- apps

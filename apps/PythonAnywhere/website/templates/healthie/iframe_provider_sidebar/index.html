@@ -17,6 +17,9 @@
     <!-- Include font-awesome for collapsable icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+    <!-- Link to DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css">
+
     <!-- Link to local CSS - at last position -->
     <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider.css') }}">
 
@@ -35,7 +38,7 @@
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaire</a>
+            <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaires</a>
         </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
@@ -62,6 +65,10 @@
 
 <!-- Include jQuery UI for Tooltip -->
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<!-- Include DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
 
 <!-- plotly -->
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

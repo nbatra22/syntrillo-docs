@@ -182,6 +182,10 @@ def healthie_upload_and_validate_form():
             overall_log['success'] = False
             overall_log['message'] = "Failed to build the form"
             return jsonify( overall_log ), 200
+        else:
+            overall_log['message'] = "File uploaded, stored and form built successfully"
+            # must reload the page
+            overall_log['must_reload'] = True
 
     else:
         overall_log['message'] = "File uploaded and stored successfully"

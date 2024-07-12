@@ -41,7 +41,7 @@ class OrderTenoviDevices:
         healthie_location_index: int = 0,
         pair_devices: bool = True,
         flag_devices: bool = False,
-    ):
+    ) -> dict:
         """
         This method creates devices with a fulfillment request.
 
@@ -52,6 +52,9 @@ class OrderTenoviDevices:
             healthie_location_index (int): The index of the location in the user's locations.
             pair_devices (bool): Pair devices with identifiers and pseudonyms. Default is True.
             flag_devices (bool): Flagged devices are on hold for review. Flag can be removed on the Tenovi portal. Default is False.
+
+        Returns:
+            dict: A dictionary containing the success status and log message.
         """
 
         # get user PII
@@ -60,7 +63,14 @@ class OrderTenoviDevices:
 
         # get shippping location
         #  : https://docs.gethealthie.com/schema/location.doc
-        location = user_pii['locations'][healthie_location_index]
+        try:
+            location = user_pii['locations'][healthie_location_index]
+        except:
+            log = {
+                "success": False,
+                "error_message": "Error retrieving user location",
+            }
+            return log
 
         # --------------------------------------------------------------------
         # validate the input

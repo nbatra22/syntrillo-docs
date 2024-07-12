@@ -1,19 +1,47 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/questionnaire.html -->
 
-
 <h2 class="collapsible">
     <span class="icon-container">
         <i class="fas fa-chevron-right"></i>
     </span>
-    List of data structures
+    Template and list of data structures
 </h2>
 <div class="collapsible-content">
 
-    <p>Data structures avaialble localy in the repository:</p>
+    <p>Blank template: <a target='_blank' href="{{ url_for('static', filename='healthie/documents/questionnaire_template_latest.xlsx') }}">Download latest Excel xlsx structure file template</a></p>
 
+    <p>Data structures available localy in the repository:</p>
+
+    <div class="table-container-data">
+        <table id="data-structure-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Version</th>
+                    <th>File</th>
+                    <th>Created at (EST)</th>
+                    <th>Number of variables</th>
+                    <th>Type</th>
+                    <!-- <th>Description</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for structure in all_structures %}
+                    <tr>
+                        <td>{{ structure.metadata.name }}</td>
+                        <td>{{ structure.metadata.version }}</td>
+                        <td><a target="_blank" href="{{ url_for('static', filename='healthie/documents/storage/' ~ structure.filename_xlsx) }}">xlsx</a></td>
+                        <td>{{ structure.created_at_est }}</td>
+                        <td>{{ structure.number_of_variables }}</td>
+                        <td>{{ structure.metadata.type }}</td>
+                        <!-- <td>{{ structure.metadata.description }}</td> -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 </div> <!-- collapsible-content -->
-
 
 
 <h2 class="collapsible">
@@ -25,8 +53,6 @@
 <div class="collapsible-content">
 
     <p>Upload an Excel xlsx questionnaire file and validate its structure. When the file has been validated and uploaded, its corresponding Form or Charting Note can be built automatically, or manually in the next section.</p>
-
-    <p>Need a blank template? <a target='_blank' href="{{ url_for('static', filename='healthie/documents/questionnaire_template_v0.1.xlsx') }}">Download Excel xlsx structure file template</a></p>
 
     <style>
         /* Initially loading indicator and logs */
@@ -67,7 +93,7 @@
                                     <input class="styled-input-checkbox" type="checkbox" id="build_charting_note" name="build_charting_note" value="yes" checked>
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
-                                    <label for="build_charting_note" class="styled-label">Also Build Charting Note or Form</label>
+                                    <label for="build_charting_note" class="styled-label">Also Build the Questionnaire ( Charting Note or Form )</label>
                                 </td>
                             </tr>
                             <tr>
@@ -176,11 +202,20 @@
 <script>
     $(document).ready(function() {
 
+        // Initialize DataTable
+        $('#data-structure-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+
         // allows to prevent multiple requests from being sent at the same time
         let isQuestionnaireBuildFromDataStructureRunning = false;
         let isUploadAndValidateStructureRunning = false;
 
-        // ========================= Upload and Validate ============================
+        // ========================= Upload and Validate a Data Structure ============================
         $('#uploadAndValidateStructureButton').click(function() {
 
             // Check if file is selected
@@ -215,7 +250,7 @@
                     if (response.success) {
                         if (response.must_reload) {
 
-                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - The page will reload to show the updates in the Build Questionnaire section below.</b>');
+                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your new addition (this page will reload).</b>');
                             $('#uploadAndValidateStructureSuccess').show();
 
                             setTimeout(function() {
@@ -251,7 +286,7 @@
         });
 
 
-        // ========================= Generate Personalized Form ============================
+        // ========================= Build Questionnaire from Data Structure ============================
         $('#questionnaireBuildFromDataStructureButton').click(function() {
 
             // allows to prevent multiple requests from being sent at the same time

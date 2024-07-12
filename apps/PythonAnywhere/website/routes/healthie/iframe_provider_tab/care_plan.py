@@ -7,6 +7,7 @@ from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
+from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
@@ -25,13 +26,17 @@ def iframe_healthie_provider_tab_care_plan():
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
+
     # --------------------------------------------------------------------
     # Medication Adherence data
 
-    data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
+    # expectations
+    healthie_dataset_handler = DataStructureHealthieDatasetHandler('tenovi_pillbox_expectations')
+    tenovi_pillbox_expectations_dataset, _ = healthie_dataset_handler.get_patient_data(post_manager.syntrillo_internal_key, full_variable_names=False)
 
-    # get medication adherence data
-    medication_adherence_data, log = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
+    # monitoring data
+    data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
+    medication_adherence_data, _ = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
 
     # --------------------------------------------------------------------
     # Heart Rate moments and stats
@@ -63,6 +68,7 @@ def iframe_healthie_provider_tab_care_plan():
     # Render the template
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
+        tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
         pulse_moments=pulse_moments,
         rmssd=rmssd,

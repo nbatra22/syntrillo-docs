@@ -35,7 +35,7 @@ p {
     font-size: 16px;
     line-height: 21px;
     color: #16284a;
-    padding-left: 20px;
+    padding-left: 0px;
 }
 
 ol {
@@ -87,6 +87,7 @@ ul {
 .collapsible-content {
     display: none;
     margin-top: 10px;
+    margin-left: 40px;
 }
 .collapsible-content.show {
     display: block;
