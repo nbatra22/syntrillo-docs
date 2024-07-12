@@ -39,10 +39,10 @@ class SyntrilloClinicFitnessFunctionsStack(Stack):
             self, "FitnessAPI",
             handler=fitness_function,
             proxy=False,
-            domain_name=apigw.DomainNameOptions(
-                domain_name="api.prod.syntrillo-clinic-backend.com",
-                certificate=self.certificate
-            ),
+            # domain_name=apigw.DomainNameOptions(
+            #     domain_name="api.prod.syntrillo-clinic-backend.com",
+            #     certificate=self.certificate
+            # ),
             deploy_options= apigw.StageOptions(
                 tracing_enabled=True,
                 stage_name="prod"
@@ -70,11 +70,11 @@ class SyntrilloClinicFitnessFunctionsStack(Stack):
             apigw.LambdaIntegration(fitness_function),
         )       
 
-        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
-            zone=hosted_zone,
-            record_name="api.prod.syntrillo-clinic-backend.com",
-            target=route53.RecordTarget.from_alias(
-                route53_targets.ApiGateway(fitness_api)
-            )
-        )
+        # route53.ARecord(self, "SyntrilloCustomDomainARecord", 
+        #     zone=hosted_zone,
+        #     record_name="api.prod.syntrillo-clinic-backend.com",
+        #     target=route53.RecordTarget.from_alias(
+        #         route53_targets.ApiGateway(fitness_api)
+        #     )
+        # )
         

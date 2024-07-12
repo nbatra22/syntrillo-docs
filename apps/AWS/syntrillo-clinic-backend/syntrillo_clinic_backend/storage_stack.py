@@ -24,16 +24,22 @@ from constructs import Construct
 # STACKS
 # -----------------------------------------------------------------------------
 
-class SyntrilloClinicBackendStorageStack(Stack):
+class StorageStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, aws_environement, vpc, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.aws_environment = aws_environement
         self.vpc = vpc
 
+        if self.aws_environment == "prod":
+            self.removal_policy = RemovalPolicy.RETAIN
+        else:
+            self.removal_policy = RemovalPolicy.DESTROY
+        
         self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
             vpc=self.vpc,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=self.removal_policy
         )
 
         self.efs_access_point = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPoint",

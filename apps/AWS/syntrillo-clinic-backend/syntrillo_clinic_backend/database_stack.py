@@ -24,12 +24,18 @@ from constructs import Construct
 # STACKS
 # -----------------------------------------------------------------------------
 
-class SyntrilloClinicBackendDatabaseStack(Stack):
+class DatabaseStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, aws_environment, vpc, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.aws_environment = aws_environment
         self.vpc = vpc
+
+        if self.aws_environment == "prod":
+            self.removal_policy = RemovalPolicy.RETAIN
+        else:
+            self.removal_policy = RemovalPolicy.DESTROY
 
         self.db = rds.DatabaseInstance(self, "MySQLDatabase",
             vpc=self.vpc,
@@ -41,15 +47,18 @@ class SyntrilloClinicBackendDatabaseStack(Stack):
             storage_type=rds.StorageType.GP2,
             credentials=rds.Credentials.from_generated_secret("admin"),
             database_name="syntrillo_clinic_db",
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=self.removal_policy
         )
 
         db_security_group = self.db.connections.security_groups[0]
-    
-        db_security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(3306),
-            "Allow inbound traffic on port 3306 from any IPv4 address"
-        )
+
+        private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.vpc.private_subnets]
+
+        for cidr_block in private_subnet_cidr_blocks:
+            db_security_group.add_ingress_rule(
+                ec2.Peer.ipv4(cidr_block),
+                ec2.Port.tcp(3306),
+                description=f"Allow inbound traffic from {cidr_block} on port 3306"
+            )
 
         self.secret=self.db.secret

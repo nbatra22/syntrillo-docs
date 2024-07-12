@@ -24,60 +24,71 @@ from constructs import Construct
 # STACKS
 # -----------------------------------------------------------------------------
 
-from syntrillo_clinic_backend.network_stack import SyntrilloClinicBackendNetworkStack
-from syntrillo_clinic_backend.storage_stack import SyntrilloClinicBackendStorageStack
+from syntrillo_clinic_backend.network_stack import NetworkStack
 
-from syntrillo_clinic_backend.database_stack import SyntrilloClinicBackendDatabaseStack
-from syntrillo_clinic_backend.secrets_stack import SyntrilloClinicSecretsStack
-from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
+from syntrillo_clinic_backend.database_stack import DatabaseStack
+from syntrillo_clinic_backend.storage_stack import StorageStack
+from syntrillo_clinic_backend.secrets_stack import SecretsStack
+
+from syntrillo_clinic_backend.servers_stack import ServersStack
 
 from syntrillo_clinic_backend.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
-
-from syntrillo_clinic_backend.iframe_generator_stack import SyntrilloClinicIFrameGeneratorStack
+from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
 
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        network=SyntrilloClinicBackendNetworkStack(
-            self, "SyntrilloClinicNetworkStack"
+        # Cannot be self.environment (we get can't set attribute 'environment'), obviously resevered by the cdk
+        self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
+            self, "SyntrilloClinicAWSAccountEnvironment",
+            parameter_name="/syntrillo-clinic/aws/environment"
+        ).string_value
+
+        network=NetworkStack(
+            self, "NetworkStack",
+            self.aws_environment
         )
 
-        storage=SyntrilloClinicBackendStorageStack(
-            self, "SyntrilloClinicStorageStack", 
-            network.vpc
+        database=DatabaseStack(
+            self, "DatabaseStack",
+            self.aws_environment,
+            vpc=network.vpc
         )
 
-        database=SyntrilloClinicBackendDatabaseStack(
-            self, "SyntrilloClinicDatabaseStack", 
-            network.vpc
+        storage=StorageStack(
+            self, "StorageStack", 
+            self.aws_environment,
+            vpc=network.vpc
         )
 
-        backupStack=SyntrilloClinicBackupStack(
-            self, "BackupStack",
-            storage.efs_file_system
-        )
-
-        secrets=SyntrilloClinicSecretsStack(
+        secrets=SecretsStack(
             self, "SecretsStack"
         )
-
-        iframe_generator=SyntrilloClinicIFrameGeneratorStack(
-            self, "IFrameGeneratorStack", 
+        
+        servers=ServersStack(
+            self, "ServersStack", 
+            aws_environment=self.aws_environment,
             vpc=network.vpc,
             database=database,
             access_point=storage.efs_access_point,
             file_system=storage.efs_file_system, 
             hosted_zone=network.hosted_zone, 
             certificate=network.certificate,
-            secrets=secrets
+            secrets=secrets,
+            api_domain_name=network.api_domain_name
         )
 
-        fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
-            self, "FitnessFunctionStack",
-            vpc=network.vpc,
-            database=database,
-            efs_access_point=storage.efs_access_point,
-            secrets=secrets
-        )
+        # backupStack=SyntrilloClinicBackupStack(
+        #     self, "BackupStack",
+        #     storage.efs_file_system
+        # )
+
+        # fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
+        #     self, "FitnessFunctionStack",
+        #     vpc=network.vpc,
+        #     database=database,
+        #     efs_access_point=storage.efs_access_point,
+        #     secrets=secrets
+        # )
