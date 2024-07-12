@@ -1,12 +1,8 @@
 # Path: ./apps/PythonAnywhere/website/flask_app.py
 
-import os, sys
+import os
 
-import statsmodels.api as sm
-
-from flask import Flask, jsonify, request, render_template, send_file, url_for
-
-import markdown2
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
