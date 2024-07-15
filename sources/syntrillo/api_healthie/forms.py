@@ -99,10 +99,11 @@ class HealthieForms():
 
     def get_form_id_by_external_id(
         self,
-        external_id: str = None,
+        external_id: str = '',
+        external_id_type: str = '',
         ):
         """
-        Reteive a specific form by its id
+        Reteive a specific form by its external id or external id type
         See https://docs.gethealthie.com/docs/#retrieving-a-form
 
         Parameters:
@@ -131,6 +132,7 @@ class HealthieForms():
                 ) {
                     id
                     external_id
+                    external_id_type
                 }
             }
             '''
@@ -148,7 +150,7 @@ class HealthieForms():
         ids = []
         custom_module_forms = response.get("customModuleForms", [])
         for form in custom_module_forms:
-            if form.get("external_id") == external_id:
+            if form.get("external_id") == external_id or form.get("external_id_type") == external_id_type:
                 ids.append(form.get("id"))
 
         return ids
@@ -682,6 +684,7 @@ class HealthieForms():
                         id
                         name
                         external_id
+                        external_id_type
                         use_for_charting
                         use_for_program
                     }

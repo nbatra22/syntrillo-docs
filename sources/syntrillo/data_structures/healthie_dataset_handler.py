@@ -17,6 +17,7 @@ class DataStructureHealthieDatasetHandler:
 
     TODO : add request for completion ?
     TODO : add json to db ?
+    TODO : document external id & type
 
     """
 
@@ -46,7 +47,8 @@ class DataStructureHealthieDatasetHandler:
 
     def _list_custom_modules(self):
         """
-        Lists all the custom modules in Healthie, having our structure name as external_id.
+        Lists all the custom modules in Healthie, having our structure name as external_id_type.
+        ( external_id includes the version / external_id_type does not: it's the structure name )
 
         This is useful since we could have several versions of the same structure, and we need to get data from all of them.
 
@@ -54,7 +56,7 @@ class DataStructureHealthieDatasetHandler:
 
         """
 
-        form_ids = self.form.get_form_id_by_external_id(external_id=self.structure_name)
+        form_ids = self.form.get_form_id_by_external_id(external_id_type=self.structure_name)
 
         return form_ids
 
@@ -108,12 +110,12 @@ class DataStructureHealthieDatasetHandler:
                 user_id=healthie_user_id,
                 custom_module_form_id=custom_module_form_id
             )
-            print(json.dumps(data, indent=4, default=str))
+            # print(json.dumps(data, indent=4, default=str))
 
             # filter the data
             for formAnswerGroup in data['formAnswerGroups']:
 
-                structure_internal_name = formAnswerGroup["custom_module_form"].get("external_id", None)
+                structure_internal_name = formAnswerGroup["custom_module_form"].get("external_id_type", None)
                 if structure_internal_name != self.structure_name:
                     log["success"] = False
                     log["error"] = "Internal name mismatch"
