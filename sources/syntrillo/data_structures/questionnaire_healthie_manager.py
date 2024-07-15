@@ -84,10 +84,11 @@ class DataStructureQuestionnaireHealthieManager:
 
         """
 
-        # form name and external id
+        # form name and (our) external id
         #  : form name have to be less than 50 characters
         form_name = self.structure.get('metadata').get('name') + ' (v' + self.structure.get('metadata').get('version') + ')'
-        external_id = self.structure.get('metadata').get('internal_name')
+        external_id_type = self.structure.get('metadata').get('internal_name')  # name without version
+        external_id = external_id_type + '_v' + self.structure.get('metadata').get('version') # versioned name
 
         # form type
         use_for_charting = self.structure.get('metadata').get('use_for_charting', False)
@@ -100,6 +101,7 @@ class DataStructureQuestionnaireHealthieManager:
         response = self.forms_api.create_form_wrapper(
             form_name=form_name,
             external_id=external_id,
+            external_id_type=external_id_type,
             use_for_charting=use_for_charting,
             use_for_program=use_for_program,
             prefill=prefill,
