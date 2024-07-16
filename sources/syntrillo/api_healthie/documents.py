@@ -1,6 +1,7 @@
 # Path: ./sources/syntrillo/api_healthie/documents.py
 
 import json
+import requests
 from typing import Tuple
 
 from syntrillo.api_healthie.auth import HealthieAuth
@@ -180,15 +181,15 @@ class HealthieDocuments():
                 display_name
                 file_content_type
                 opens {
-                id
+                    id
                 }
                 owner {
-                id
-                email
+                    id
+                    email
                 }
                 users {
-                id
-                email
+                    id
+                    email
                 }
             }
             }
@@ -257,6 +258,102 @@ class HealthieDocuments():
 
         return response, log
 
+    def retrieve_document(
+        self,
+        document_id: str,
+    ) -> Tuple[dict, dict]:
+        """
+        Retrieve a document based on the specified criteria using the Healthie API.
+        https://docs.gethealthie.com/schema/document.doc
+
+        Args:
+            document_id (str): The document ID.
+
+        Returns a tuple of:
+            - dict: The document.
+            - log
+
+        """
+
+        # Set up the GraphQL query to list custom module forms
+        query = '''
+            query document(
+                $id: ID,
+                ) {
+                document(
+                    id: $id,
+                ) {
+                    id
+                    display_name
+                    file_content_type
+                    expiring_url
+                    opens {
+                        id
+                    }
+                    owner {
+                        id
+                        email
+                    }
+                    users {
+                        id
+                        email
+                    }
+                }
+            }
+        '''
+
+        # Set up the variables for the GraphQL query
+        variables = {
+            'id': document_id,
+        }
+
+        # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+        response, log = self.auth.send_query(query, variables)
+
+        return response, log
+
+    def download_document(
+        self,
+        document_id: str,
+    ) -> Tuple[bytes, dict]:
+        """
+        Download a document based on the specified criteria using the Healthie API.
+        https://docs.gethealthie.com/schema/document.doc
+
+        Args:
+            document_id (str): The document ID.
+
+        Returns a tuple of:
+            - bytes: The document content.
+            - log
+
+        """
+
+        # get temporary url
+        document, log = self.retrieve_document(document_id)
+
+        if log['success'] == False:
+            return None, log
+
+        try:
+            url = document['document']['expiring_url']
+
+            # download content o to a binary variable
+            r = requests.get(url)
+            binary = r.content
+
+        except Exception as e:
+            log['success'] = False
+            log['error'] = str(e)
+            return None, log
+
+        log = {
+            'success': True,
+            'message': 'Document downloaded',
+        }
+
+        return binary, log
+
 
 if __name__ == '__main__':
     # Test the HealthieDocuments class
@@ -290,6 +387,27 @@ if __name__ == '__main__':
         )
 
     print(json.dumps(documents, indent=4, default=str))
+
+    # ---
+    # test download document
+    document_id = documents['documents'][0]['id']
+    document, _ = healthie_documents.retrieve_document(document_id)
+    url = document['document']['expiring_url']
+    print(url)
+
+    # download the document to a file
+    import requests
+    r = requests.get(url)
+    with open('ignore_test.pdf', 'wb') as f:
+        f.write(r.content)
+    print('File downloaded')
+
+    # download the document to a binary variable
+    r = requests.get(url)
+    document = r.content
+    print('Document downloaded')
+    print(document[:100])
+    print(len(document))
 
 
 
