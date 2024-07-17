@@ -1,12 +1,14 @@
 
 import json
 import random
+import pickle
 
 from typing import Tuple
 
 from syntrillo.api_healthie.documents import HealthieDocuments
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.charting_note_prefill.jackson import ChartingNotePrefillJackson
 
 class ChartingNotePrefillHandler:
     """
@@ -33,6 +35,8 @@ class ChartingNotePrefillHandler:
         self.healthie_forms = HealthieForms()
 
         self.storage_manager = DataStructureStorageManager()
+
+        self.jackson = ChartingNotePrefillJackson()
 
 
     def list_private_folders(
@@ -222,6 +226,11 @@ class ChartingNotePrefillHandler:
 
         overall_log['len_document_binary'] = len(documents_binary)
 
+        if False:
+            # Save documents_binary to a file
+            with open('ignore_documents_binary.pkl', 'wb') as f:
+                pickle.dump(documents_binary, f)
+
         # --------------------------------------------------------------------
         # get customModuleForm metadata, related data structure and  modules
         #  : custom_module_form is the Healthie representation of our Charting  Note
@@ -324,9 +333,14 @@ class ChartingNotePrefillHandler:
             """
             form_answers_filled_out = external_AI_call(
                 form_answers_blank,
-                documents
+                documents_binary
             )
             """
+            form_answers_filled_out = self.jackson.runme(
+                form_answers_blank=form_answers_blank,
+                documents_binary=document_binary
+            )
+
             pass
 
         # log results
