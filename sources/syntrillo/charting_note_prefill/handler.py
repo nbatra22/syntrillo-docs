@@ -17,19 +17,22 @@ class ChartingNotePrefillHandler:
     """
     The ChartingNotePrefillHandler class is used to handle the prefilling of charting notes with the  AI agent.
 
+    Args:
+        healthie_user_id (str): The Healthie user ID.
+
     """
+
+    # class variables
+    healthie_user_id: str = None
+    healthie_documents: HealthieDocuments = None
+    healthie_forms: HealthieForms = None
+    storage_manager: DataStructureStorageManager = None
+    jackson: ChartingNotePrefillJackson = None
 
     def __init__(
         self,
         healthie_user_id: str,
         ) -> None:
-        """
-        Initialize the ChartingNotePrefillHandler.
-
-        Args:
-            healthie_user_id (str): The Healthie user ID.
-
-        """
 
         self.healthie_user_id = healthie_user_id
 
@@ -186,17 +189,26 @@ class ChartingNotePrefillHandler:
         folder_id: str,
     ):
         """
-        Download contents of all documents in a folder. TODO :  docs
+        Download contents of all documents in a folder.
 
         Args:
-           -
+           - folder_id (str): The folder ID.
 
 
-        Returns
-           -
+        Returns a tuple with the following elements:
+            - documents_with_binary_content (list): A list of dictionaries with the following keys
+                - content (bytes): The binary content of the document.
+                - file_name (str): The name of the file.
+                - file_type (str): The type of the file.
+            - log (dict): A dictionary with the following keys
+                - 'success': True if the operation was successful, False otherwise.
+                - 'message': A message describing the result of the operation.
+                - 'list_private_documents_in_folder': The log of the list_private_documents_in_folder operation.
+                - 'downloading_log': A list of logs for each document downloaded.
 
         """
 
+        # initialize the log
         log = {
             "success": True
         }
@@ -211,6 +223,7 @@ class ChartingNotePrefillHandler:
             log['success'] = False
             return None, log
 
+        # download the binary content of the documents
         documents_with_binary_content = []
         log['downloading_log'] = []
         for document in documents.get('documents', []):
@@ -221,6 +234,7 @@ class ChartingNotePrefillHandler:
                 log['download_document'] = log2
                 log['success'] = False
                 return None, log
+            # add the binary content to the list
             documents_with_binary_content.append({
                 "content": document_binary,
                 "file_name" : document['display_name'],

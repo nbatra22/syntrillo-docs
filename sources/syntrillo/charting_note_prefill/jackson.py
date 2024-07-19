@@ -91,8 +91,15 @@ class ChartingNotePrefillJackson:
                     "user_id": "1035117"
                 },
 
+        Returns:
+            - form_answers_filled is a list with the same structure as form_answers_blank, but with the 'answer' field filled-up based on the LLM_data information, and documents provided in the documents_with_binary_content list. The critical keys are:
+                - "answer" : The answer to the question.
+                - "custom_module_id" : The custom module ID. (ie the id of the question in the form)
+                - "user_id" : The user ID.
 
         """
+
+
 
         return form_answers_blank
 
