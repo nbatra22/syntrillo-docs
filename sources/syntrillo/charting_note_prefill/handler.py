@@ -3,6 +3,9 @@ import json
 import random
 import pickle
 
+import fitz  # TODO : pip install fitz? frontend? pymupdf ::: looks like 'import pymupdf' is enough
+import io
+
 from typing import Tuple
 
 from syntrillo.api_healthie.documents import HealthieDocuments
@@ -178,6 +181,56 @@ class ChartingNotePrefillHandler:
 
             return [], log
 
+    def download_documents_content_from_folder(
+        self,
+        folder_id: str,
+    ):
+        """
+        Download contents of all documents in a folder. TODO :  docs
+
+        Args:
+           -
+
+
+        Returns
+           -
+
+        """
+
+        log = {
+            "success": True
+        }
+
+        # --------------------------------------------------------------------
+        # download all documents in the private folder
+        # into a list of binary data
+        documents, log1 = self.list_private_documents_in_folder(folder_id=folder_id)
+        log['list_private_documents_in_folder'] = log1
+        if log1.get('success') is False:
+            log['message'] = 'Error: Unable to list private documents in folder'
+            log['success'] = False
+            return None, log
+
+        documents_with_binary_content = []
+        log['downloading_log'] = []
+        for document in documents.get('documents', []):
+            document_binary, log2 = self.healthie_documents.download_document(document_id=document['id'])
+            log['downloading_log'].append(log2)
+            if log2.get('success') is False:
+                log['message'] = 'Error: Unable to download document'
+                log['download_document'] = log2
+                log['success'] = False
+                return None, log
+            documents_with_binary_content.append({
+                "content": document_binary,
+                "file_name" : document['display_name'],
+                "file_type": document['file_content_type'],
+                })
+
+        log['message'] = "All documents downloaded successfully"
+
+        return documents_with_binary_content, log
+
 
     def run_prefill_ai_agent(
         self,
@@ -208,28 +261,19 @@ class ChartingNotePrefillHandler:
         # --------------------------------------------------------------------
         # download all documents in the private folder
         # into a list of binary data
-        documents, log1 = self.list_private_documents_in_folder(folder_id=private_folder_id)
-        overall_log['list_private_documents_in_folder'] = log1
+        documents_with_binary_content, log1 = self.download_documents_content_from_folder(folder_id=private_folder_id)
+
         if log1.get('success') is False:
-            overall_log['message'] = 'Error: Unable to list private documents in folder'
-            overall_log['success'] = False
+            overall_log['message'] = 'Error: Unable to download document'
+            overall_log['download_document'] = log1
             return overall_log
 
-        documents_binary = []
-        for document in documents.get('documents', []):
-            document_binary, log2 = self.healthie_documents.download_document(document_id=document['id'])
-            if log2.get('success') is False:
-                overall_log['message'] = 'Error: Unable to download document'
-                overall_log['download_document'] = log2
-                return overall_log
-            documents_binary.append(document_binary)
-
-        overall_log['len_document_binary'] = len(documents_binary)
+        overall_log['len_document_binary'] = len(documents_with_binary_content)
 
         if False:
-            # Save documents_binary to a file
-            with open('ignore_documents_binary.pkl', 'wb') as f:
-                pickle.dump(documents_binary, f)
+            # Save documents_with_binary_content to a file
+            with open('ignore_documents_with_binary_content.pkl', 'wb') as f:
+                pickle.dump(documents_with_binary_content, f)
 
         # --------------------------------------------------------------------
         # get customModuleForm metadata, related data structure and  modules
@@ -338,7 +382,7 @@ class ChartingNotePrefillHandler:
             """
             form_answers_filled_out = self.jackson.runme(
                 form_answers_blank=form_answers_blank,
-                documents_binary=document_binary
+                documents_binary=documents_with_binary_content
             )
 
             pass
@@ -391,18 +435,55 @@ if __name__ == '__main__':
     healthie_user_id = '1035117'
     charting_note_prefill_handler = ChartingNotePrefillHandler(healthie_user_id=healthie_user_id)
 
+    if False:
     # List private folders
-    response, log = charting_note_prefill_handler.list_private_folders()
-    print(response)
+        response, log = charting_note_prefill_handler.list_private_folders()
+        print(response)
 
+    if False:
     # List private documents in a folder
-    folder_id = '10687'
-    response, log = charting_note_prefill_handler.list_private_documents_in_folder(folder_id=folder_id)
-    print(response)
+        folder_id = '10687'
+        response, log = charting_note_prefill_handler.list_private_documents_in_folder(folder_id=folder_id)
+        print(response)
 
-    # List private folders and documents
-    response, log = charting_note_prefill_handler.list_private_folders_and_documents()
-    print(json.dumps(response, indent=4, default=str))
-    print(log)
+    if False:
+        # List private folders and documents
+        response, log = charting_note_prefill_handler.list_private_folders_and_documents()
+        print(json.dumps(response, indent=4, default=str))
+        print(log)
+
+    if False:
+    # download content
+        folder_id = '10687'
+        documents_with_binary_content, log = charting_note_prefill_handler.download_documents_content_from_folder(folder_id=folder_id)
+        print(log)
+
+        # Save documents_with_binary_content to a file
+        with open('ignore_documents_with_binary_content.pkl', 'wb') as f:
+            pickle.dump(documents_with_binary_content, f)
+            print('pickle saved')
+
+    if True:
+        # test PDF import
+
+        # Load documents_binary from the file
+        with open('ignore_documents_with_binary_content.pkl', 'rb') as f:
+            documents_with_binary_content = pickle.load(f)
+
+        # Process each binary document as if it was a file
+        for document in documents_with_binary_content:
+            # Use io.BytesIO to create a file-like object
+            file_like_object = io.BytesIO(document.get('content'))
+
+            # Use fitz to open the document from the file-like object
+            doc = fitz.open(stream=file_like_object, filetype=document.get('file_type'))
+
+            print('-----')
+            print(document.get("file_name"))
+            page = doc.load_page(1)
+            text = page.get_text("text")
+            lines = text.splitlines()
+            print(lines[0])
+
 
 
