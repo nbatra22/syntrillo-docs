@@ -19,22 +19,25 @@ from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 pio.templates.default = "plotly"
 
 class DataReportingBloodPressure:
+    """
+    Get user level reports from the remote monitoring system on blood pressure.
+
+    Based on Tenovi BPM data.
+
+    Data from the remote monitoring system is stored in our PHI database
+
+    First need to call get dataframe, to prevent several calls.
+
+    Args:
+        syntrillo_internal_key : uuid.UUID
+
+    Returns:
+        None
+
+    """
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
-        """
-        Get user level reports from the remote monitoring system on blood pressure.
 
-        Based on Tenovi BPM data.
-
-        Data from the remote monitoring system is stored in our PHI database
-
-        Args:
-            syntrillo_internal_key : uuid.UUID
-
-        Returns:
-            None
-
-        """
         self.syntrillo_internal_key = syntrillo_internal_key
 
         # set up PHI database connection for this user
@@ -57,8 +60,8 @@ class DataReportingBloodPressure:
           - blood_pressure : value_1 is systolic, value_2 is diastolic  mmHg
 
         Returns a tuple:
-            - pandas dataframe with columns: timestamp_local, systolic, diastolic
-            - log : str
+            - pandas dataframe with columns: timestamp_local (local to the patient), systolic, diastolic
+            - log : dict with success and error message
 
         """
 
@@ -130,7 +133,7 @@ class DataReportingBloodPressure:
         # ---
 
         # store the dataframe in the class
-        self.bmp_df = bpm_df
+        self.bpm_df = bpm_df
 
         # return the dataframe and the log
         return bpm_df, log
@@ -172,10 +175,10 @@ class DataReportingBloodPressure:
 
         # ---
         # check if the data is available
-        if not hasattr(self, 'bmp_df'):
+        if not hasattr(self, 'bpm_df'):
             return None, html_no_data, None
 
-        if self.bmp_df is None or self.bmp_df.empty:
+        if self.bpm_df is None or self.bpm_df.empty:
             return None, html_no_data, None
 
         # ---
@@ -189,8 +192,8 @@ class DataReportingBloodPressure:
 
         fig.add_trace(
             go.Scatter(
-                x=self.bmp_df['timestamp_local'],
-                y=self.bmp_df['systolic'],
+                x=self.bpm_df['timestamp_local'],
+                y=self.bpm_df['systolic'],
                 mode='lines+markers',
                 name='systolic',
                 line=dict(color=systolic_color)
@@ -199,8 +202,8 @@ class DataReportingBloodPressure:
 
         fig.add_trace(
             go.Scatter(
-                x=self.bmp_df['timestamp_local'],
-                y=self.bmp_df['diastolic'],
+                x=self.bpm_df['timestamp_local'],
+                y=self.bpm_df['diastolic'],
                 mode='lines+markers',
                 name='diastolic',
                 line=dict(color=diastolic_color)
@@ -231,20 +234,40 @@ class DataReportingBloodPressure:
         # return the figure as html or json
         return fig, representation_output_html, representation_output_json
 
+    def get_date_range(self) -> Tuple[datetime, datetime]:
+        """
+        Get the date range of the data.
+
+        Returns:
+            start_date : datetime
+            end_date : datetime
+
+        """
+        if hasattr(self, 'bpm_df'):
+            start_date = self.bpm_df['timestamp_local'].min()
+            end_date = self.bpm_df['timestamp_local'].max()
+            return start_date, end_date
+        else:
+            return None, None
+
 
 
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
     lookup_codes.close_connection()
 
     # ---
     # get data
     data_reporting_blood_pressure = DataReportingBloodPressure(entry['syntrillo_internal_key'])
 
-    start_date = datetime.now() - timedelta(days=30)
-    end_date = datetime.now()
+    if False:
+        start_date = datetime.now() - timedelta(days=30)
+        end_date = datetime.now()
+    else:
+        start_date = None
+        end_date = None
 
     bpm_data, log = data_reporting_blood_pressure.get_blood_pressure_dataframe(
         start_date=start_date,
@@ -256,10 +279,20 @@ if __name__ == '__main__':
     # print the first 5 rows of the dataframe
     print(bpm_data.head())
 
-    fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
-        representation='html'
-    )
+    # ---
+    if False:
+    # get the plot as html
+        fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
+            representation='html'
+        )
 
-    # print the first chars of output
-    print(output[:100])
+        # print the first chars of output
+        print(output[:100])
+
+    # ---
+    if True:
+        # print date range
+        from_date, to_date = data_reporting_blood_pressure.get_date_range()
+        print(from_date, to_date)
+
 
