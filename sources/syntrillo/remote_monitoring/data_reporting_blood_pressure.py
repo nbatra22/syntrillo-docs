@@ -270,7 +270,7 @@ class DataReportingBloodPressure:
                 - from_date
                 - to_date
                 - range_name
-                - num_datapoints
+                - num_datapoints_bp
                 - systolic_min
                 - systolic_max
                 - systolic_mean
@@ -290,9 +290,13 @@ class DataReportingBloodPressure:
         filtered_bp = self.bpm_df[(self.bpm_df['timestamp_local'] >= from_date) &
                                   (self.bpm_df['timestamp_local'] <= to_date)]
 
-        num_datapoints = len(filtered_bp)
+        num_datapoints_bp = len(filtered_bp)
 
-        if num_datapoints > 0:
+        if num_datapoints_bp == 0:
+            systolic_min = systolic_max = systolic_mean = systolic_median = None
+            diastolic_min = diastolic_max = diastolic_mean = diastolic_median = None
+            num_above_140_90 = percent_above_140_90 = 0
+        else:
             systolic_min = filtered_bp['systolic'].min()
             systolic_max = filtered_bp['systolic'].max()
             systolic_mean = filtered_bp['systolic'].mean()
@@ -305,17 +309,14 @@ class DataReportingBloodPressure:
 
             above_140_90 = filtered_bp[(filtered_bp['systolic'] >= 140) | (filtered_bp['diastolic'] >= 90)]
             num_above_140_90 = len(above_140_90)
-            percent_above_140_90 = (num_above_140_90 / num_datapoints) * 100
-        else:
-            systolic_min = systolic_max = systolic_mean = systolic_median = None
-            diastolic_min = diastolic_max = diastolic_mean = diastolic_median = None
-            num_above_140_90 = percent_above_140_90 = 0
+            percent_above_140_90 = (num_above_140_90 / num_datapoints_bp) * 100
+
 
         return pd.Series({
             'from_date': from_date,
             'to_date': to_date,
             'range_name': range_name,
-            'num_datapoints': num_datapoints,
+            'num_datapoints_bp': num_datapoints_bp,
             'systolic_min': systolic_min,
             'systolic_max': systolic_max,
             'systolic_mean': systolic_mean,
@@ -343,7 +344,7 @@ class DataReportingBloodPressure:
                 - from_date
                 - to_date
                 - range_name
-                - num_datapoints
+                - num_datapoints_bp
                 - systolic_min
                 - systolic_max
                 - systolic_mean

@@ -215,7 +215,19 @@ class DataReportingCombination:
                 return None, log1
 
         if self.heart_rate:
-            pass
+            pulse_summary_df, log2 = self.data_reporting_heart_rate.get_pulse_summary_for_date_ranges(self.date_ranges)
+
+            if log2['success']:
+                combined_summary = pd.concat(
+                    [
+                     combined_summary.set_index(['from_date', 'to_date', 'range_name']),
+                     pulse_summary_df.set_index(['from_date', 'to_date', 'range_name']),
+                     ],
+                    axis=1,
+                    join='inner',
+                   ).reset_index()
+            else:
+                return None, log2
 
 
         log = {
@@ -237,7 +249,7 @@ if __name__ == '__main__':
     # get data
     drc =  DataReportingCombination(entry['syntrillo_internal_key'])
 
-    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=False)
+    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
 
     log = drc.select_date_ranges(
         start_date=None,
