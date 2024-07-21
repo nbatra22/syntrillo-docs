@@ -36,6 +36,12 @@ class DataReportingBloodPressure:
 
     """
 
+    # class variables
+    syntrillo_internal_key : uuid.UUID = None
+    syntrillo_database_manager : SyntrilloDatabaseManager = None
+    bpm_df : pd.DataFrame = None
+
+
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
         self.syntrillo_internal_key = syntrillo_internal_key
@@ -60,7 +66,10 @@ class DataReportingBloodPressure:
           - blood_pressure : value_1 is systolic, value_2 is diastolic  mmHg
 
         Returns a tuple:
-            - pandas dataframe with columns: timestamp_local (local to the patient), systolic, diastolic
+            - pandas dataframe with columns:
+                - timestamp_local: local time to the patient, string type, using datetime isoformat (to prevent any databasing and conversion issue)
+                - systolic
+                - diastolic
             - log : dict with success and error message
 
         """
@@ -175,9 +184,6 @@ class DataReportingBloodPressure:
 
         # ---
         # check if the data is available
-        if not hasattr(self, 'bpm_df'):
-            return None, html_no_data, None
-
         if self.bpm_df is None or self.bpm_df.empty:
             return None, html_no_data, None
 
@@ -243,12 +249,140 @@ class DataReportingBloodPressure:
             end_date : datetime
 
         """
-        if hasattr(self, 'bpm_df'):
-            start_date = self.bpm_df['timestamp_local'].min()
-            end_date = self.bpm_df['timestamp_local'].max()
-            return start_date, end_date
-        else:
+        if self.bpm_df is None or self.bpm_df.empty :
             return None, None
+
+        start_date = self.bpm_df['timestamp_local'].min()
+        end_date = self.bpm_df['timestamp_local'].max()
+
+        return start_date, end_date
+
+
+    def _calculate_summary_for_a_date_range_row(self, row) -> pd.Series:
+        """
+        Function to calculate summary statistics for a given date range
+
+        Args:
+            row : pd.Series with columns from_date, to_date, range_name
+
+        Returns:
+            pd.Series with columns:
+                - from_date
+                - to_date
+                - range_name
+                - num_datapoints
+                - systolic_min
+                - systolic_max
+                - systolic_mean
+                - systolic_median
+                - diastolic_min
+                - diastolic_max
+                - diastolic_mean
+                - diastolic_median
+                - num_above_140_90 ( SBP ge 140 OR DBP ge 90)
+                - percent_above_140_90
+        """
+        from_date = row['from_date']
+        to_date = row['to_date']
+        range_name = row['range_name']
+
+        # Filter blood pressure data for the current date range
+        filtered_bp = self.bpm_df[(self.bpm_df['timestamp_local'] >= from_date) &
+                                  (self.bpm_df['timestamp_local'] <= to_date)]
+
+        num_datapoints = len(filtered_bp)
+
+        if num_datapoints > 0:
+            systolic_min = filtered_bp['systolic'].min()
+            systolic_max = filtered_bp['systolic'].max()
+            systolic_mean = filtered_bp['systolic'].mean()
+            systolic_median = filtered_bp['systolic'].median()
+
+            diastolic_min = filtered_bp['diastolic'].min()
+            diastolic_max = filtered_bp['diastolic'].max()
+            diastolic_mean = filtered_bp['diastolic'].mean()
+            diastolic_median = filtered_bp['diastolic'].median()
+
+            above_140_90 = filtered_bp[(filtered_bp['systolic'] >= 140) | (filtered_bp['diastolic'] >= 90)]
+            num_above_140_90 = len(above_140_90)
+            percent_above_140_90 = (num_above_140_90 / num_datapoints) * 100
+        else:
+            systolic_min = systolic_max = systolic_mean = systolic_median = None
+            diastolic_min = diastolic_max = diastolic_mean = diastolic_median = None
+            num_above_140_90 = percent_above_140_90 = 0
+
+        return pd.Series({
+            'from_date': from_date,
+            'to_date': to_date,
+            'range_name': range_name,
+            'num_datapoints': num_datapoints,
+            'systolic_min': systolic_min,
+            'systolic_max': systolic_max,
+            'systolic_mean': systolic_mean,
+            'systolic_median': systolic_median,
+            'diastolic_min': diastolic_min,
+            'diastolic_max': diastolic_max,
+            'diastolic_mean': diastolic_mean,
+            'diastolic_median': diastolic_median,
+            'num_above_140_90': num_above_140_90,
+            'percent_above_140_90': percent_above_140_90
+        })
+
+    def get_summary_for_date_ranges(
+        self,
+        date_ranges : pd.DataFrame,
+        ) -> Tuple[ pd.DataFrame, dict]:
+        """
+        From the blood pressure data, calculate summary statistics for each date range.
+
+        Args:
+            date_ranges : pd.DataFrame with columns from_date, to_date, range_name
+
+        Returns:
+            - summary_stats : pd.DataFrame with columns:
+                - from_date
+                - to_date
+                - range_name
+                - num_datapoints
+                - systolic_min
+                - systolic_max
+                - systolic_mean
+                - systolic_median
+                - diastolic_min
+                - diastolic_max
+                - diastolic_mean
+                - diastolic_median
+                - num_above_140_90 ( SBP ge 140 OR DBP ge 90)
+                - percent_above_140_90
+            - log : dict with success and error message
+
+        """
+
+        # check if some data is available
+        if self.bpm_df is None or self.bpm_df.empty:
+            return None, {
+                'success': False,
+                'error': 'No blood pressure data available',
+            }
+
+        # get the summary statistics for each date range
+        try:
+            summary_stats = date_ranges.apply(self._calculate_summary_for_a_date_range_row, axis=1)
+
+        except Exception as e:
+            return None, {
+                'success': False,
+                'error': f'Error calculating summary statistics: {str(e)}',
+            }
+
+        # store the summary statistics and return
+        self.summary_stats = summary_stats
+        self.date_ranges = date_ranges
+        return summary_stats, {
+            'success': True,
+            'message': 'Summary statistics calculated successfully',
+        }
+
 
 
 
@@ -280,7 +414,7 @@ if __name__ == '__main__':
     print(bpm_data.head())
 
     # ---
-    if False:
+    if True:
     # get the plot as html
         fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
             representation='html'
@@ -296,3 +430,4 @@ if __name__ == '__main__':
         print(from_date, to_date)
 
 
+    pass
