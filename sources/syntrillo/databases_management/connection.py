@@ -84,7 +84,7 @@ class DatabaseConnection:
                 'user': username,
                 'password': password,
             }
-            
+
         else:
             # paths have to be hard-coded at PythonAnywhere
             if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
@@ -184,7 +184,7 @@ class DatabaseConnection:
 
                 except sshtunnel.BaseSSHTunnelForwarderError as ssh_err:
                     print(f"SSH Tunnel Error: {ssh_err}")
-                except pymysql.MySQLError.Error as mysql_err:
+                except pymysql.MySQLError as mysql_err:
                     print(f"MySQL Error: {mysql_err}")
                 except Exception as e:
                     print(f"Unexpected Error: {e}")
