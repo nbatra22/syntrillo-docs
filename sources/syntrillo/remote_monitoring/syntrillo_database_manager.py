@@ -572,6 +572,8 @@ class SyntrilloDatabaseManager:
         # Check if records are found
         if records:
             df = pd.DataFrame(records)
+            # convert timestamp_local to datetime from isoformat
+            df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
         else:
             df = pd.DataFrame()  # Return an empty DataFrame if no records found
 
