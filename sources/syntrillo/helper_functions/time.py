@@ -106,8 +106,10 @@ def get_date_ranges_for_reporting(
     from_date: datetime,
     to_date: datetime,
     period: str = 'weekly', # or monthly
-    last_ranges_unit : str = None, # 'week', or 'month', or 'day'
+    last_ranges_unit : str = None, # 'week', or 'month', or 'day' (None will default to 'week' for weekly and 'month' for monthly)
     use_total: bool = False, # whether to use total days or weeks for range name
+    add_whole_range: bool = False, # whether to add a range for the whole period at the begining of the dataframe
+    whole_period_name: str = 'Whole Period', # name for the whole period range
     ) -> Tuple[ pd.DataFrame, dict ]:
     """
     delivers a dataframe with the date ranges for the period requested
@@ -116,7 +118,7 @@ def get_date_ranges_for_reporting(
        - from_date: datetime object, beginning of the period
        - to_date: datetime object, end of the period
        - period: str, 'weekly' or 'monthly' : the period for the ranges
-       - last_ranges_unit: str, 'month' or 'week' or 'day' : defines how to handle the last ranges
+       - last_ranges_unit: str, 'month' or 'week' or 'day' : defines how to handle the last ranges. None will default to 'week' for weekly and 'month' for monthly
             For example:
             - if period is weekly and last_ranges_unit is 'week', the last range will be a single row with the remaining days (less than 7)  (default)
             - if period is weekly and last_ranges_unit is 'day', the last ranges will be several days ranges with 1 day each
@@ -154,6 +156,18 @@ def get_date_ranges_for_reporting(
         }
         return None, log
 
+    # if dates are not datetime objects, assume they are string with isoformat and convert them
+    if not isinstance(from_date, datetime) or not isinstance(to_date, datetime):
+        try:
+            from_date = datetime.fromisoformat(from_date)
+            to_date = datetime.fromisoformat(to_date)
+        except ValueError:
+            log = {
+                'success': False,
+                'message': 'Invalid date format',
+            }
+            return None, log
+
     # assert from_date is before to_date
     if from_date > to_date:
         log = {
@@ -174,10 +188,21 @@ def get_date_ranges_for_reporting(
     # main logic for creating ranges
     date_ranges = []
 
+    # add a range for the whole period
+    if add_whole_range:
+        date_ranges.append({
+            'from_date': from_date,
+            'to_date': to_date,
+            'range_name': whole_period_name
+        })
+
+    # create ranges for the period
     if period == 'weekly':
-        date_ranges = create_date_ranges(from_date, to_date, timedelta(weeks=1), 'Week')
+        date_ranges_periods = create_date_ranges(from_date, to_date, timedelta(weeks=1), 'Week')
     elif period == 'monthly':
-        date_ranges = create_date_ranges(from_date, to_date, timedelta(days=30), 'Month')
+        date_ranges_periods = create_date_ranges(from_date, to_date, timedelta(days=30), 'Month')
+
+    date_ranges.extend(date_ranges_periods)
 
     # ------------------------------------------------------
     # handle the last range according to last_ranges_unit
@@ -201,10 +226,14 @@ def get_date_ranges_for_reporting(
                 extra_count = (to_date - from_date).days
             else:
                 extra_count = 0
+
             date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), 'Day', extra_count=extra_count))
 
-    # create DataFrame from ranges
-    df = pd.DataFrame(date_ranges)
+    # create DataFrame from ranges, with specific columns types
+    df= pd.DataFrame(date_ranges)
+    df['from_date'] = pd.to_datetime(df['from_date'])
+    df['to_date'] = pd.to_datetime(df['to_date'])
+    df['range_name'] = df['range_name'].astype(str)
 
     # log success
     log = {
@@ -240,7 +269,8 @@ if __name__ == '__main__':
     period = 'weekly'
     last_ranges_unit = 'week'
     use_total = True
-    date_ranges_df, log = get_date_ranges_for_reporting(from_date, to_date, period, last_ranges_unit, use_total)
+    add_whole_range = True
+    date_ranges_df, log = get_date_ranges_for_reporting(from_date, to_date, period, last_ranges_unit, use_total, add_whole_range)
     print(date_ranges_df)
 
 
