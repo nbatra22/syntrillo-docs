@@ -113,3 +113,25 @@ cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic
 pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v3.txt
 ```
 
+
+## Python anywhere venv p3.9
+
+PA Web : activate 3.9
+
+```text
+~/python_environments $ python3.9 -m venv p3.9_clinic_v1
+
+~/python_environments $ source p3.9_clinic_v1/bin/activate
+(p3.9_clinic) 19:35 ~/python_environments $
+
+which python
+$ which pip
+/home/syntrillo/python_environments/p3.9_clinic_v1/bin/pip
+
+cd ~/Syntrillo_Clinic/
+pip install -r requirements.txt
+
+```
+
+PA venv link : /home/syntrillo/python_environments/p3.9_clinic_v1
+
