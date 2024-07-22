@@ -54,6 +54,7 @@ class DataReportingCombination:
 
     combined_summary : pd.DataFrame = None
 
+    alpha : float = 0.5
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
         self.syntrillo_internal_key = syntrillo_internal_key
@@ -193,13 +194,14 @@ class DataReportingCombination:
                 'success': False,
                 'message': 'No date ranges selected',
             }
-            return None, log
+            return pd.DataFrame(), log
 
         # combined summary is initially a copy of date_ranges
         combined_summary = self.date_ranges.copy()
 
         # get summary for each source, if available, and append its columns to combined_summary using the date_ranges as index
         if self.blood_pressure:
+            self.data_reporting_blood_pressure.alpha = self.alpha
             blood_pressure_summary_df, log1 = self.data_reporting_blood_pressure.get_summary_for_date_ranges(self.date_ranges)
 
             if log1['success']:
@@ -212,7 +214,7 @@ class DataReportingCombination:
                     join='inner',
                    ).reset_index() # returns from_date and to_date back to columns. This is necessary to avoid problems with the index when concatenating the next source summary
             else:
-                return None, log1
+                return pd.DataFrame(), log1
 
         if self.heart_rate:
             pulse_summary_df, log2 = self.data_reporting_heart_rate.get_pulse_summary_for_date_ranges(self.date_ranges)
@@ -227,8 +229,13 @@ class DataReportingCombination:
                     join='inner',
                    ).reset_index()
             else:
-                return None, log2
+                return pd.DataFrame(), log2
 
+        # add range_name_info column, including the from_date and to_date
+        combined_summary['range_name_info'] = \
+            combined_summary['from_date'].dt.strftime('%b %d') + \
+            ' to ' + \
+            combined_summary['to_date'].dt.strftime('%b %d')
 
         log = {
             'success': True,
@@ -238,6 +245,8 @@ class DataReportingCombination:
         self.combined_summary = combined_summary
 
         return combined_summary, log
+
+
 
 if __name__ == '__main__':
 # Example usage

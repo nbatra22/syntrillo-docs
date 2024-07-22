@@ -11,6 +11,87 @@
     <span class="icon-container">
         <i class="fas fa-chevron-right"></i>
     </span>
+    Summary status
+</h2>
+
+<div class="collapsible-content">
+
+    <p class="mt-4" style="text-decoration: underline;">Summary Status Data</p>
+    <style>
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table td, .summary-table th {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+        }
+        .summary-table td:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 1;
+        }
+        .summary-table .specific-bottom-border td,
+        .summary-table .specific-bottom-border th {
+            border-bottom: 1px solid black !important;
+        }
+    </style>
+
+    <div class="table-container-data-color">
+        <table class="summary-table">
+            <thead>
+                <tr class="specific-bottom-border">
+                    <th>Period</th>
+                    <th>SBP min</th>
+                    <th>SBP mean</th>
+                    <th>SBP max</th>
+                    <th>DBP min</th>
+                    <th>DBP mean</th>
+                    <th>DBP max</th>
+                    <th>% above 130/90</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if summary_data %}
+                    {% for period in summary_data %}
+                        <tr class="{% if period.range_name == 'Whole Period' %}specific-bottom-border{% endif %}">
+                            <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
+                            <td>{{ period.systolic_min|int }} </td>
+                            <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|round(1) }}</td>
+                            <td>{{ period.systolic_max|int }} </td>
+                            <td>{{ period.diastolic_min|int }} </td>
+                            <td style="background-color: {{ period.diastolic_mean_color }};">{{ period.diastolic_mean|round(1) }}</td>
+                            <td>{{ period.diastolic_max|int }} </td>
+                            <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center;">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div> <!-- end of collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
     Medication adherence
 </h2>
 

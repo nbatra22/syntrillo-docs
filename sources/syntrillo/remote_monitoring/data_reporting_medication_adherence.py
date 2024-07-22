@@ -443,11 +443,11 @@ class DataReportingMedicationAdherence:
 if __name__ == "__main__":
     # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One" / PO: 1035117
 
     data_reported = DataReportingMedicationAdherence(entry['syntrillo_internal_key'])
 
-    if False:
+    if True:
         # Get single pillbox report
         start_date = datetime.now() - timedelta(days=7)
         end_date = datetime.now()
@@ -459,7 +459,7 @@ if __name__ == "__main__":
         print("")
         print(report['pillbox_opened_status_per_day_df'])
 
-    if True:
+    if False:
         # Get global pillbox report
         expected_pattern = "twice daily"
         report, log = data_reported.pillbox_global_report(expected_pattern)

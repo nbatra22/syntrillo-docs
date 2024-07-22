@@ -8,6 +8,10 @@ import plotly.io as pio
 import plotly.utils as pu
 from typing import Tuple
 
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+from matplotlib import colormaps
+
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
@@ -41,6 +45,8 @@ class DataReportingBloodPressure:
     syntrillo_database_manager : SyntrilloDatabaseManager = None
     bpm_df : pd.DataFrame = None
 
+    # color maps for systolic and diastolic
+    alpha : float = 0.5
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
@@ -257,6 +263,104 @@ class DataReportingBloodPressure:
 
         return start_date, end_date
 
+    def _get_color_for_systolic(self, systolic: float) -> str:
+        """
+        Function to get color for systolic blood pressure value using a colormap
+
+        Args:
+            systolic: float, the systolic blood pressure value
+
+        Returns:
+            color: str, the color corresponding to the systolic value
+        """
+        # Normalize the systolic values to the range of the colormap
+        norm_red = mcolors.Normalize(vmin=130, vmax=200)
+        norm_green = mcolors.Normalize(vmin=100, vmax=130)
+
+        # Define the colormap
+        #  get all colormaps with list(colormaps)
+        colormap_red = colormaps['Reds']
+        colormap_green = colormaps['Greens']
+
+        # Map the systolic value to a color, with a reversed colormap
+        if systolic >= 130:
+            color = colormap_red(1-norm_red(systolic))
+        elif systolic  >= 100 and systolic < 130:
+            color = colormap_green(1-norm_green(systolic))
+        else:
+            # blue
+            color = (0, 0, 1)
+
+        # Add the alpha transparency
+        color_with_alpha = (color[0], color[1], color[2], self.alpha)
+
+        # Convert the RGBA color to a hexadecimal string with alpha
+        color_hex = mcolors.to_hex(color_with_alpha, keep_alpha=True)
+
+        return color_hex
+
+
+    def _get_color_for_diastolic(self, diastolic: float) -> str:
+        """
+        Function to get color for diastolic blood pressure value using a colormap
+
+        Args:
+            diastolic: float, the diastolic blood pressure value
+
+        Returns:
+            color: str, the color corresponding to the diastolic value
+        """
+        # Normalize the diastolic values to the range of the colormap
+        norm = mcolors.Normalize(vmin=90, vmax=120)
+
+        # Define the colormap
+        #  get all colormaps with list(colormaps)
+        colormap = colormaps['tab20']
+
+        # Map the systolic value to a color, with a reversed colormap
+        color = colormap(1 - norm(diastolic))
+
+        # Add the alpha transparency
+        color_with_alpha = (color[0], color[1], color[2], self.alpha)
+
+        # Convert the RGBA color to a hexadecimal string with alpha
+        color_hex = mcolors.to_hex(color_with_alpha, keep_alpha=True)
+
+        return color_hex
+
+    def _get_color_for_percent_above_130_90(self, percent_above_130_90: float) -> str:
+        """
+        Function to get color for percent of blood pressure values above 130/90 using a colormap
+
+        Args:
+            percent_above_130_90: float, the percentage of blood pressure values above 130/90
+
+        Returns:
+            color: str, the color corresponding to the percentage of values above 130/90
+        """
+        # Normalize the percentage values to the range of the colormap
+        norm = mcolors.Normalize(vmin=0, vmax=100)
+
+        # Define the colormap
+        #  get all colormaps with list(colormaps)
+        colormap = colormaps['autumn']
+
+        # Map the systolic value to a color, with a reversed colormap
+        if percent_above_130_90 == 0:
+            # color is green
+            color = (0, 1, 0)
+        else:
+            # it is yellow to red
+            color = colormap(1 - norm(percent_above_130_90))
+
+        # Add the alpha transparency
+        color_with_alpha = (color[0], color[1], color[2], self.alpha)
+
+        # Convert the RGBA color to a hexadecimal string with alpha
+        color_hex = mcolors.to_hex(color_with_alpha, keep_alpha=True)
+
+        return color_hex
+
 
     def _calculate_summary_for_a_date_range_row(self, row) -> pd.Series:
         """
@@ -279,8 +383,11 @@ class DataReportingBloodPressure:
                 - diastolic_max
                 - diastolic_mean
                 - diastolic_median
-                - num_above_140_90 ( SBP ge 140 OR DBP ge 90)
-                - percent_above_140_90
+                - num_above_130_90 ( SBP ge 140 OR DBP ge 90)
+                - percent_above_130_90
+                - systolic_mean_color
+                - diastolic_mean_color
+                - percent_above_130_90_color
         """
         from_date = row['from_date']
         to_date = row['to_date']
@@ -295,7 +402,8 @@ class DataReportingBloodPressure:
         if num_datapoints_bp == 0:
             systolic_min = systolic_max = systolic_mean = systolic_median = None
             diastolic_min = diastolic_max = diastolic_mean = diastolic_median = None
-            num_above_140_90 = percent_above_140_90 = 0
+            num_above_130_90 = percent_above_130_90 = 0
+            systolic_mean_color = diastolic_mean_color = percent_above_130_90_color = None
         else:
             systolic_min = filtered_bp['systolic'].min()
             systolic_max = filtered_bp['systolic'].max()
@@ -307,9 +415,14 @@ class DataReportingBloodPressure:
             diastolic_mean = filtered_bp['diastolic'].mean()
             diastolic_median = filtered_bp['diastolic'].median()
 
-            above_140_90 = filtered_bp[(filtered_bp['systolic'] >= 140) | (filtered_bp['diastolic'] >= 90)]
-            num_above_140_90 = len(above_140_90)
-            percent_above_140_90 = (num_above_140_90 / num_datapoints_bp) * 100
+            above_140_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
+            num_above_130_90 = len(above_140_90)
+            percent_above_130_90 = (num_above_130_90 / num_datapoints_bp) * 100
+
+            # Add a color column to the filtered blood pressure data
+            systolic_mean_color = self._get_color_for_systolic(systolic_mean)
+            diastolic_mean_color = self._get_color_for_diastolic(diastolic_mean)
+            percent_above_130_90_color = self._get_color_for_percent_above_130_90(percent_above_130_90)
 
 
         return pd.Series({
@@ -325,8 +438,11 @@ class DataReportingBloodPressure:
             'diastolic_max': diastolic_max,
             'diastolic_mean': diastolic_mean,
             'diastolic_median': diastolic_median,
-            'num_above_140_90': num_above_140_90,
-            'percent_above_140_90': percent_above_140_90
+            'num_above_130_90': num_above_130_90,
+            'percent_above_130_90': percent_above_130_90,
+            'systolic_mean_color': systolic_mean_color,
+            'diastolic_mean_color': diastolic_mean_color,
+            'percent_above_130_90_color': percent_above_130_90_color,
         })
 
     def get_summary_for_date_ranges(
@@ -353,8 +469,11 @@ class DataReportingBloodPressure:
                 - diastolic_max
                 - diastolic_mean
                 - diastolic_median
-                - num_above_140_90 ( SBP ge 140 OR DBP ge 90)
-                - percent_above_140_90
+                - num_above_130_90 ( SBP ge 140 OR DBP ge 90)
+                - percent_above_130_90
+                - systolic_mean_color
+                - diastolic_mean_color
+                - percent_above_130_90_color
             - log : dict with success and error message
 
         """
@@ -373,7 +492,8 @@ class DataReportingBloodPressure:
         except Exception as e:
             return None, {
                 'success': False,
-                'error': f'Error calculating summary statistics: {str(e)}',
+                'error': f'Error calculating summary statistics in get_summary_for_date_ranges',
+                'exception': str(e),
             }
 
         # store the summary statistics and return
@@ -415,7 +535,7 @@ if __name__ == '__main__':
     print(bpm_data.head())
 
     # ---
-    if True:
+    if False:
     # get the plot as html
         fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
             representation='html'
@@ -425,10 +545,17 @@ if __name__ == '__main__':
         print(output[:100])
 
     # ---
-    if True:
+    if False:
         # print date range
         from_date, to_date = data_reporting_blood_pressure.get_date_range()
         print(from_date, to_date)
 
+    if True:
+        color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(0)
+        print(color)
+        color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(50)
+        print(color)
+        color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(100)
+        print(color)
 
     pass

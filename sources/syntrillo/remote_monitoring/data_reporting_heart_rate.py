@@ -722,7 +722,7 @@ class DataReportingHeartRate:
         except Exception as e:
             log = {
                 'success': False,
-                'error': 'Error calculating summary statistics',
+                'error': 'Error calculating summary statistics in get_pulse_summary_for_date_ranges',
                 'exception': str(e),
             }
             return None, log
