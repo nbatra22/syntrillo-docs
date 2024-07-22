@@ -36,7 +36,27 @@ def iframe_healthie_provider_tab_care_plan():
 
     drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
 
-    log = drc.select_date_ranges(
+    # --- Weekly summary
+    _ = drc.select_date_ranges(
+        start_date=None,
+        end_date=None,
+        period='weekly',
+        last_ranges_unit='day',
+        use_total=False,
+        add_whole_range=True,
+        whole_period_name='Whole Periods',
+    )
+
+    summary_df_weekly, _ = drc.get_summary_statistics()
+
+    # Convert DataFrame to list of dictionaries
+    if summary_df_weekly.empty:
+        summary_data_weekly = None
+    else:
+        summary_data_weekly = summary_df_weekly.to_dict(orient='records')
+
+    # --- monthly summary
+    _ = drc.select_date_ranges(
         start_date=None,
         end_date=None,
         period='monthly',
@@ -46,13 +66,16 @@ def iframe_healthie_provider_tab_care_plan():
         whole_period_name='Whole Periods',
     )
 
-    summary_df, log = drc.get_summary_statistics()
+    summary_df_monthly, _ = drc.get_summary_statistics()
 
     # Convert DataFrame to list of dictionaries
-    if summary_df.empty:
-        summary_data = None
+    if summary_df_monthly.empty:
+        summary_data_monthly = None
     else:
-        summary_data = summary_df.to_dict(orient='records')
+        summary_data_monthly = summary_df_monthly.to_dict(orient='records')
+
+
+    summary_page_to_display : str = 'weekly'
 
     # --------------------------------------------------------------------
     # Medication Adherence data
@@ -95,7 +118,9 @@ def iframe_healthie_provider_tab_care_plan():
     # Render the template
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
-        summary_data=summary_data,
+        summary_data_weekly=summary_data_weekly,
+        summary_data_monthly=summary_data_monthly,
+        summary_page_to_display=summary_page_to_display,
         tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
         pulse_moments=pulse_moments,
