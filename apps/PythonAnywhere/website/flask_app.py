@@ -6,11 +6,11 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-app.config["DEBUG"] = True
-
 # =================== tests - Only available on specified machines ==========================
 
 if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':
+
+    # app.config["DEBUG"] = True
 
     # ----------- misc stuff --------------------
     from misc import api_misc
