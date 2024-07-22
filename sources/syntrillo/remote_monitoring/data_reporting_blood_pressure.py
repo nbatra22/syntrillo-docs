@@ -48,6 +48,8 @@ class DataReportingBloodPressure:
     # color maps for systolic and diastolic
     alpha : float = 0.5
 
+    no_data_string : str = "no data"
+
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
         self.syntrillo_internal_key = syntrillo_internal_key
@@ -407,10 +409,10 @@ class DataReportingBloodPressure:
         num_datapoints_bp = len(filtered_bp)
 
         if num_datapoints_bp == 0:
-            systolic_min = systolic_max = systolic_mean = systolic_median = None
-            diastolic_min = diastolic_max = diastolic_mean = diastolic_median = None
-            num_above_130_90 = percent_above_130_90 = 0
-            systolic_mean_color = diastolic_mean_color = percent_above_130_90_color = None
+            systolic_min = systolic_max = systolic_mean = systolic_median = self.no_data_string
+            diastolic_min = diastolic_max = diastolic_mean = diastolic_median = self.no_data_string
+            num_above_130_90 = percent_above_130_90 = self.no_data_string
+            systolic_mean_color = diastolic_mean_color = percent_above_130_90_color = "white"
         else:
             systolic_min = filtered_bp['systolic'].min()
             systolic_max = filtered_bp['systolic'].max()

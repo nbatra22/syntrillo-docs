@@ -86,13 +86,13 @@
                     {% for period in summary_data_weekly %}
                         <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
-                            <td>{{ period.systolic_min|int }} </td>
-                            <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|round(1) }}</td>
-                            <td>{{ period.systolic_max|int }} </td>
-                            <td>{{ period.diastolic_min|int }} </td>
-                            <td style="background-color: {{ period.diastolic_mean_color }};">{{ period.diastolic_mean|round(1) }}</td>
-                            <td>{{ period.diastolic_max|int }} </td>
-                            <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
+                            <td>{{ period.systolic_min|none_string_data_filter(0) }} </td>
+                            <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|none_string_data_filter(1) }}</td>
+                            <td>{{ period.systolic_max|none_string_data_filter(0) }} </td>
+                            <td>{{ period.diastolic_min|none_string_data_filter(0) }} </td>
+                            <td style="background-color: {{ period.diastolic_mean_color }};">{{ period.diastolic_mean|none_string_data_filter(1) }}</td>
+                            <td>{{ period.diastolic_max|none_string_data_filter(0) }} </td>
+                            <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
                         </tr>
                     {% endfor %}
                 {% else %}

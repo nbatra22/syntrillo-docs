@@ -1,5 +1,5 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/care_plan.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 
 import json
 
@@ -33,6 +33,7 @@ def iframe_healthie_provider_tab_care_plan():
     drc = DataReportingCombination(post_manager.syntrillo_internal_key)
 
     drc.alpha = 0.4
+    drc.no_data_string = 'no data'
 
     drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
 
