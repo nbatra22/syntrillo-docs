@@ -54,7 +54,7 @@
         <table class="summary-table">
             <thead>
                 <tr class="specific-bottom-border">
-                    <th>Period</th>
+                    <th>Periods</th>
                     <th>SBP min</th>
                     <th>SBP mean</th>
                     <th>SBP max</th>
@@ -67,7 +67,7 @@
             <tbody>
                 {% if summary_data %}
                     {% for period in summary_data %}
-                        <tr class="{% if period.range_name == 'Whole Period' %}specific-bottom-border{% endif %}">
+                        <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
                             <td>{{ period.systolic_min|int }} </td>
                             <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|round(1) }}</td>

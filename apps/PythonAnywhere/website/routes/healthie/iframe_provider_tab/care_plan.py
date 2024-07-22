@@ -43,7 +43,7 @@ def iframe_healthie_provider_tab_care_plan():
         last_ranges_unit='week',
         use_total=False,
         add_whole_range=True,
-        whole_period_name='Whole Period',
+        whole_period_name='Whole Periods',
     )
 
     summary_df, log = drc.get_summary_statistics()

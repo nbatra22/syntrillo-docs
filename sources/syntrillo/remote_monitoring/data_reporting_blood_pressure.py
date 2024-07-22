@@ -278,18 +278,18 @@ class DataReportingBloodPressure:
         norm_green = mcolors.Normalize(vmin=100, vmax=130)
 
         # Define the colormap
-        #  get all colormaps with list(colormaps)
-        colormap_red = colormaps['Reds']
-        colormap_green = colormaps['Greens']
+        colormap_red = colormaps['autumn']
+        colormap_green = colormaps['summer']
 
         # Map the systolic value to a color, with a reversed colormap
+        z = 0.1
         if systolic >= 130:
-            color = colormap_red(1-norm_red(systolic))
-        elif systolic  >= 100 and systolic < 130:
-            color = colormap_green(1-norm_green(systolic))
+            color = (1 - norm_red(systolic)/4, z, z)
+        elif 100 <= systolic < 130:
+            color = (z, 1-norm_green(systolic)/4, z)
         else:
             # blue
-            color = (0, 0, 1)
+            color = (z, z, 1)
 
         # Add the alpha transparency
         color_with_alpha = (color[0], color[1], color[2], self.alpha)
@@ -310,15 +310,22 @@ class DataReportingBloodPressure:
         Returns:
             color: str, the color corresponding to the diastolic value
         """
-        # Normalize the diastolic values to the range of the colormap
-        norm = mcolors.Normalize(vmin=90, vmax=120)
+        norm_red = mcolors.Normalize(vmin=90, vmax=120)
+        norm_green = mcolors.Normalize(vmin=50, vmax=90)
 
         # Define the colormap
-        #  get all colormaps with list(colormaps)
-        colormap = colormaps['tab20']
+        colormap_red = colormaps['autumn']
+        colormap_green = colormaps['summer']
 
         # Map the systolic value to a color, with a reversed colormap
-        color = colormap(1 - norm(diastolic))
+        z = 0.1
+        if diastolic >= 90:
+            color = (1 - norm_red(diastolic)/4, z, z)
+        elif 50 <= diastolic < 90:
+            color = (z, 1-norm_green(diastolic)/4, z)
+        else:
+            # blue
+            color = (z, z, 1)
 
         # Add the alpha transparency
         color_with_alpha = (color[0], color[1], color[2], self.alpha)
