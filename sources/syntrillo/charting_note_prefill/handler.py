@@ -27,7 +27,6 @@ class ChartingNotePrefillHandler:
     healthie_documents: HealthieDocuments = None
     healthie_forms: HealthieForms = None
     storage_manager: DataStructureStorageManager = None
-    jackson: ChartingNotePrefillJackson = None
 
     def __init__(
         self,
@@ -42,7 +41,6 @@ class ChartingNotePrefillHandler:
 
         self.storage_manager = DataStructureStorageManager()
 
-        self.jackson = ChartingNotePrefillJackson()
 
 
     def list_private_folders(
@@ -368,9 +366,29 @@ class ChartingNotePrefillHandler:
 
         # --------------------------------------------------------------------
         # AI call
-        dummy_ai_call = True
+        """
+        form_answers_filled_out = external_AI_call(
+            form_answers_blank,
+            documents_binary
+        )
+        """
+        ai_call_type = 'jackson'
 
-        if dummy_ai_call:
+        if ai_call_type == 'jackson' :
+            jackson = ChartingNotePrefillJackson()
+
+            jackson.load_documents(documents_with_binary_content=documents_with_binary_content)
+
+            form_answers_filled_out, log_jackson = jackson.fill_form_from_discharge(form_answers_blank=form_answers_blank)
+
+            # log and return if error
+            overall_log['jackson_log'] = log_jackson
+            if log_jackson.get('success') is False:
+                overall_log['success'] = False
+                overall_log['message'] = 'Error: Unable to fill out form with Jackson AI'
+                return overall_log
+
+        else:
             # dummy AI call : fill out the form with random data
             form_answers_filled_out = []
             for form_answer in form_answers_blank:
@@ -387,19 +405,6 @@ class ChartingNotePrefillHandler:
                 'success': True,
                 'message': 'Successfully completed dummy AI call',
             }
-        else:
-            """
-            form_answers_filled_out = external_AI_call(
-                form_answers_blank,
-                documents_binary
-            )
-            """
-            form_answers_filled_out = self.jackson.runme(
-                form_answers_blank=form_answers_blank,
-                documents_binary=documents_with_binary_content
-            )
-
-            pass
 
         # log results
         overall_log['form_answers_filled_out'] = form_answers_filled_out
