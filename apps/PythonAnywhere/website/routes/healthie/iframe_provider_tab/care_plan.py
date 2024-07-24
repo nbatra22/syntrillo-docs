@@ -37,46 +37,54 @@ def iframe_healthie_provider_tab_care_plan():
 
     drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
 
-    # --- Weekly summary
-    _ = drc.select_date_ranges(
-        start_date=None,
-        end_date=None,
-        period='weekly',
-        last_ranges_unit='day',
-        use_total=False,
-        add_whole_range=True,
-        whole_period_name='Whole Periods',
-    )
-
-    summary_df_weekly, _ = drc.get_summary_statistics()
-
-    # Convert DataFrame to list of dictionaries
-    if summary_df_weekly.empty:
-        summary_data_weekly = None
-    else:
-        summary_data_weekly = summary_df_weekly.to_dict(orient='records')
-
-    # --- monthly summary
-    _ = drc.select_date_ranges(
-        start_date=None,
-        end_date=None,
-        period='monthly',
-        last_ranges_unit='week',
-        use_total=False,
-        add_whole_range=True,
-        whole_period_name='Whole Periods',
-    )
-
-    summary_df_monthly, _ = drc.get_summary_statistics()
-
-    # Convert DataFrame to list of dictionaries
-    if summary_df_monthly.empty:
-        summary_data_monthly = None
-    else:
-        summary_data_monthly = summary_df_monthly.to_dict(orient='records')
-
-
+    # inits
     summary_page_to_display : str = 'weekly'
+    summary_data_monthly = None
+    summary_data_weekly = None
+
+    # if there is data, get the summary
+    if drc.max_timestamp is not None and drc.min_timestamp is not None:
+
+        # --- Weekly summary
+        _ = drc.select_date_ranges(
+            start_date=None,
+            end_date=None,
+            period='weekly',
+            last_ranges_unit='day',
+            use_total=False,
+            add_whole_range=True,
+            whole_period_name='Whole Periods',
+        )
+
+        summary_df_weekly, _ = drc.get_summary_statistics()
+
+        # Convert DataFrame to list of dictionaries
+        if summary_df_weekly.empty:
+            summary_data_weekly = None
+        else:
+            summary_data_weekly = summary_df_weekly.to_dict(orient='records')
+
+        # --- monthly summary
+        _ = drc.select_date_ranges(
+            start_date=None,
+            end_date=None,
+            period='monthly',
+            last_ranges_unit='week',
+            use_total=False,
+            add_whole_range=True,
+            whole_period_name='Whole Periods',
+        )
+
+        summary_df_monthly, _ = drc.get_summary_statistics()
+
+        # Convert DataFrame to list of dictionaries
+        if summary_df_monthly.empty:
+            summary_data_monthly = None
+        else:
+            summary_data_monthly = summary_df_monthly.to_dict(orient='records')
+
+        # TODO : get best period to display from drc
+        summary_page_to_display : str = 'weekly'
 
     # --------------------------------------------------------------------
     # Medication Adherence data

@@ -78,6 +78,7 @@ class DataReportingCombination:
         self.heart_rate = heart_rate
 
         # obtain data
+        # TODO : make sure these calls return empty df instead of None
         if blood_pressure:
             self.data_reporting_blood_pressure = DataReportingBloodPressure(self.syntrillo_internal_key)
             self.blood_pressure_df, _ = self.data_reporting_blood_pressure.get_blood_pressure_dataframe()
@@ -91,27 +92,27 @@ class DataReportingCombination:
         # get min and max timestamps from all dataframes
         min_timestamp = None
         max_timestamp = None
+
+        def update_min_max(df, current_min, current_max):
+            if df is not None and not df.empty:
+                df_min = df['timestamp_local'].min()
+                df_max = df['timestamp_local'].max()
+                if current_min is None or df_min < current_min:
+                    current_min = df_min
+                if current_max is None or df_max > current_max:
+                    current_max = df_max
+            return current_min, current_max
+
         if blood_pressure:
-            min_timestamp = self.blood_pressure_df['timestamp_local'].min()
-            max_timestamp = self.blood_pressure_df['timestamp_local'].max()
+            min_timestamp, max_timestamp = update_min_max(self.blood_pressure_df, min_timestamp, max_timestamp)
         if heart_rate:
-            if min_timestamp is None:
-                min_timestamp = self.pulse_df['timestamp_local'].min()
-                max_timestamp = self.pulse_df['timestamp_local'].max()
-            else:
-                min_timestamp = min(min_timestamp, self.pulse_df['timestamp_local'].min())
-                max_timestamp = max(max_timestamp, self.pulse_df['timestamp_local'].max())
-            if min_timestamp is None:
-                min_timestamp = self.irregular_heartbeat_df['timestamp_local'].min()
-                max_timestamp = self.irregular_heartbeat_df['timestamp_local'].max()
-            else:
-                min_timestamp = min(min_timestamp, self.irregular_heartbeat_df['timestamp_local'].min())
-                max_timestamp = max(max_timestamp, self.irregular_heartbeat_df['timestamp_local'].max())
+            min_timestamp, max_timestamp = update_min_max(self.pulse_df, min_timestamp, max_timestamp)
+            min_timestamp, max_timestamp = update_min_max(self.irregular_heartbeat_df, min_timestamp, max_timestamp)
 
         # if mix or max timestampe dont have a datetime type, assume they are str with datetime isoformat and convert
-        if not isinstance(min_timestamp, datetime):
+        if not isinstance(min_timestamp, datetime) and min_timestamp is not None:
             min_timestamp = datetime.fromisoformat(min_timestamp)
-        if not isinstance(max_timestamp, datetime):
+        if not isinstance(max_timestamp, datetime) and max_timestamp is not None:
             max_timestamp = datetime.fromisoformat(max_timestamp)
 
         self.min_timestamp = min_timestamp
