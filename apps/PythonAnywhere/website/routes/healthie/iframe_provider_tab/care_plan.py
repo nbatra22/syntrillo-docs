@@ -1,9 +1,10 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/care_plan.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 
 import json
 
 from .post_management import PostManager
+from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
@@ -26,6 +27,56 @@ def iframe_healthie_provider_tab_care_plan():
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
+
+    # --------------------------------------------------------------------
+    # Summary
+    drc = DataReportingCombination(post_manager.syntrillo_internal_key)
+
+    drc.alpha = 0.4
+    drc.no_data_string = 'no data'
+
+    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
+
+    # --- Weekly summary
+    _ = drc.select_date_ranges(
+        start_date=None,
+        end_date=None,
+        period='weekly',
+        last_ranges_unit='day',
+        use_total=False,
+        add_whole_range=True,
+        whole_period_name='Whole Periods',
+    )
+
+    summary_df_weekly, _ = drc.get_summary_statistics()
+
+    # Convert DataFrame to list of dictionaries
+    if summary_df_weekly.empty:
+        summary_data_weekly = None
+    else:
+        summary_data_weekly = summary_df_weekly.to_dict(orient='records')
+
+    # --- monthly summary
+    _ = drc.select_date_ranges(
+        start_date=None,
+        end_date=None,
+        period='monthly',
+        last_ranges_unit='week',
+        use_total=False,
+        add_whole_range=True,
+        whole_period_name='Whole Periods',
+    )
+
+    summary_df_monthly, _ = drc.get_summary_statistics()
+
+    # Convert DataFrame to list of dictionaries
+    if summary_df_monthly.empty:
+        summary_data_monthly = None
+    else:
+        summary_data_monthly = summary_df_monthly.to_dict(orient='records')
+
+
+    summary_page_to_display : str = 'weekly'
 
     # --------------------------------------------------------------------
     # Medication Adherence data
@@ -68,6 +119,9 @@ def iframe_healthie_provider_tab_care_plan():
     # Render the template
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
+        summary_data_weekly=summary_data_weekly,
+        summary_data_monthly=summary_data_monthly,
+        summary_page_to_display=summary_page_to_display,
         tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
         pulse_moments=pulse_moments,
