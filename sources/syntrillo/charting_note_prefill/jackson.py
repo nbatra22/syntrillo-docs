@@ -2,7 +2,7 @@
 import os
 import json
 import io
-import fitz
+import pymupdf
 from typing import Tuple
 
 # Import OpenAI package
@@ -73,8 +73,8 @@ class ChartingNotePrefillJackson:
                 # Use io.BytesIO to create a file-like object
                 file_like_object = io.BytesIO(document.get('content'))
 
-                # Use fitz to open the document from the file-like object
-                doc = fitz.open(stream=file_like_object, filetype=document.get('file_type'))
+                # Use pymupdf to open the document from the file-like object
+                doc = pymupdf.open(stream=file_like_object, filetype=document.get('file_type'))
 
                 # extract text from the PDF
                 text = self.__pdf_to_string(doc)

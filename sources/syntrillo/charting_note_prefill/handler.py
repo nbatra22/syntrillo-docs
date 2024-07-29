@@ -3,7 +3,7 @@ import json
 import random
 import pickle
 
-import fitz  # TODO : pip install fitz? frontend? pymupdf ::: looks like 'import pymupdf' is enough
+import pymupdf  # PyMuPDF is a Python binding for MuPDF – a lightweight PDF and XPS viewer.
 import io
 
 from typing import Tuple
@@ -494,8 +494,8 @@ if __name__ == '__main__':
             # Use io.BytesIO to create a file-like object
             file_like_object = io.BytesIO(document.get('content'))
 
-            # Use fitz to open the document from the file-like object
-            doc = fitz.open(stream=file_like_object, filetype=document.get('file_type'))
+            # Use pymupdf to open the document from the file-like object
+            doc = pymupdf.open(stream=file_like_object, filetype=document.get('file_type'))
 
             print('-----')
             print(document.get("file_name"))

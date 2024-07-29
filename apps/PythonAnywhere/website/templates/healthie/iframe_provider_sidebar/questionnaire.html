@@ -30,7 +30,12 @@
                     <tr>
                         <td>{{ structure.metadata.name }}</td>
                         <td>{{ structure.metadata.version }}</td>
-                        <td><a target="_blank" href="{{ url_for('static', filename='healthie/documents/storage/' ~ structure.filename_xlsx) }}">xlsx</a></td>
+                        <td>{%if symlink_available %}
+                                <a target="_blank" href="{{ url_for('static', filename='healthie/documents/storage_symlink/' ~ structure.filename_xlsx) }}">xlsx</a>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
                         <td>{{ structure.created_at_est }}</td>
                         <td>{{ structure.number_of_variables }}</td>
                         <td>{{ structure.metadata.type }}</td>

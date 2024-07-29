@@ -32,10 +32,31 @@ def iframe_healthie_provider_sidebar_questionnaire():
     manager = DataStructureStorageManager()
     all_structures = manager.list_all_structures_with_metadata()
 
+    # ---
+    # create a storage_symlink in the static/healthie/documents/storage folder to the storage path and use it in the template
+    source_path = manager.get_storage_path()
+
+    # static_path is the path to the documents folder in the static folder from this python script
+    static_path = os.path.join(os.path.dirname(__file__), '../../../static/healthie/documents/')
+
+    # if this path exists creates a symlink to the storage path
+    if os.path.exists(static_path):
+        symlink_destination_path = os.path.join(static_path, 'storage_symlink')
+        # test if the symlink exists
+        if not os.path.exists(symlink_destination_path):
+            # src: This is the source file path for which the symbolic link will be created.
+            # dst: This is the target file path where symbolic link will be created.
+            os.symlink(dst=symlink_destination_path, src=source_path, target_is_directory=True)
+        symlink_available = True
+    else:
+        symlink_available = False
+
+    # ---
     return render_template(
         'healthie/iframe_provider_sidebar/questionnaire.html',
         healthie_provider_id=healthie_provider_id,
         all_structures=all_structures,
+        symlink_available=symlink_available,
         )
 
 # ========================= ENDPOINTS ==========================
