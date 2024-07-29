@@ -36,7 +36,7 @@ def iframe_healthie_provider_sidebar_questionnaire():
     # create a storage_symlink in the static/healthie/documents/storage folder to the storage path and use it in the template
     source_path = manager.get_storage_path()
 
-    # static_storage_path is the path to the documents folder in the static folder from this python script
+    # static_path is the path to the documents folder in the static folder from this python script
     static_path = os.path.join(os.path.dirname(__file__), '../../../static/healthie/documents/')
 
     # if this path exists creates a symlink to the storage path
