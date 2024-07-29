@@ -6,11 +6,11 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-app.config["DEBUG"] = True
-
 # =================== tests - Only available on specified machines ==========================
 
 if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':
+
+    # app.config["DEBUG"] = True
 
     # ----------- misc stuff --------------------
     from misc import api_misc
@@ -74,6 +74,33 @@ app.register_blueprint(iframe_healthie_provider_sidebar_system_bp)
 from routes.healthie.iframe_patient_sidebar.index import iframe_healthie_patient_sidebar_bp
 
 app.register_blueprint(iframe_healthie_patient_sidebar_bp)
+
+# ==================================================================================================================
+# Jinja2 filters
+
+@app.template_filter('none_string_data_filter')
+def none_string_data_filter(value, precision):
+    """
+    Used to format data in Jinja2 templates.
+
+    None values are converted to a space. Strings are returned as is. Numbers are rounded to the specified precision.
+
+    Args:
+        value: the value to format
+        precision: the number of decimal places to round to
+
+    Returns:
+        The formatted value
+    """
+    if value is None:
+        return ' '
+    elif isinstance(value, str):
+        return value
+    else:
+        if precision == 0:
+            return int(value)
+        else:
+            return round(value, precision)
 
 
 # ==================================================================================================================

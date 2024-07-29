@@ -157,7 +157,7 @@ class DataStructureXlsxQuestionnaireHandler:
 
         # ---
         # verify that the metadata dictionary has the expected keys
-        expected_keys = ['name', 'internal_name', 'type', 'description', 'prefill', 'version']
+        expected_keys = ['name', 'internal_name', 'type', 'description', 'prefill', 'version', 'addspace']
         for key in expected_keys:
             if key not in metadata_dict:
                 log['success'] = False
@@ -205,6 +205,14 @@ class DataStructureXlsxQuestionnaireHandler:
         else:
             log['success'] = False
             log['error'] = f"Prefill value '{metadata_dict.get('prefill')}' not recognized"
+
+        # ---
+        # add space after each question
+        add_space_str = str(metadata_dict.get('addspace')).lower()
+        if add_space_str == 'yes':
+            add_space_after_question = True
+        else:
+            add_space_after_question = False
 
         # --------------------------------
         # Load Excel file -- variables tab
@@ -389,6 +397,24 @@ class DataStructureXlsxQuestionnaireHandler:
                     'comment': None,
                 }
                 json_data_items.append(data_variable_comment)
+
+            if add_space_after_question:
+                data_spacer = {
+                    'internal_name': None,
+                    'question': ' ',
+                    'sublabel': None,
+                    'display': 'label',
+                    'special_values': None,
+                    'values': None,
+                    'add_unknown': None,
+                    'add_not_applicable': None,
+                    'type': 'text',
+                    'llm_prompt': None,
+                    'internal_description': None,
+                    'comment': None,
+                }
+                json_data_items.append(data_spacer)
+
 
             # end of loop over rows
 

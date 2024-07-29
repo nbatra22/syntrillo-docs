@@ -9,6 +9,8 @@
 </h2>
 <div class="collapsible-content">
 
+    <p style="color: red;">!!! Documents are sent to OpenAI. Do not use with personal identifiers. Do not use in production. !!!</p>
+
     <p>All documents from the selected private folder will be used to pre-fill the selected charting note.</p>
 
     <p>The AI agent will work on each question of the charting note where a 'LLM prompt' was added in the XLSX source file.</p>
@@ -45,10 +47,10 @@
                                     <label for="chartingNoteID" class="styled-label">Charting Note:</label>
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
-                                    <select name="charting_note_id" id="chartingNoteID" class="styled-select">
+                                    <select name="healthie_customModuleForms_id" id="chartingNoteID" class="styled-select">
                                         {% if charting_notes %}
                                             {% for charting_note in charting_notes %}
-                                                <option value="{{ charting_note.id }}">{{ charting_note.name }} [{{ charting_note.created_at }}]</option>
+                                                <option value="{{ charting_note.healthie_customModuleForms_id }}">{{ charting_note.name }} [{{ charting_note.created_at }}]</option>
                                             {% endfor %}
                                         {% else %}
                                             <option value="">No charting note available</option>

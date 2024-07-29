@@ -32,7 +32,7 @@ def iframe_healthie_provider_tab_onboarding():
     inconsistencies = onboarding_manager.get_inconsistencies(user_id=post_manager.pseudonyms['healthie_user_id'])
 
     # --------------------------------------------------------------------
-    # Charting Note Prefill
+    # Charting Note Prefill : TODO : handle log
     charting_note_prefill_handler = ChartingNotePrefillHandler(healthie_user_id=post_manager.pseudonyms['healthie_user_id'])
     private_folders_and_documents, _ = charting_note_prefill_handler.list_private_folders_and_documents()
     charting_notes, _ = charting_note_prefill_handler.get_charting_notes()
@@ -101,10 +101,16 @@ def healthie_prefill_charting_note_form():
     post_manager.get_pseudonyms_from_tab_post(request)
 
     # --------------------------------------------------------------------
+    # get data from the form
+    healthie_customModuleForms_id = request.form.to_dict().get('healthie_customModuleForms_id')
+    private_folder_id = request.form.to_dict().get('private_folder_id')
 
     charting_note_prefill_handler = ChartingNotePrefillHandler(healthie_user_id=post_manager.pseudonyms['healthie_user_id'])
 
-    log = charting_note_prefill_handler.run_prefill_ai_agent()
+    log = charting_note_prefill_handler.run_prefill_ai_agent(
+        healthie_customModuleForms_id=healthie_customModuleForms_id,
+        private_folder_id=private_folder_id
+    )
 
     return jsonify( log ), 200
 

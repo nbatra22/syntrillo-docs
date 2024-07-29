@@ -177,6 +177,32 @@ ul {
 }
 
 /* -------------------------------------------------------- */
+/* Add styles for the new table container class that handles complex tables */
+
+.table-container-data-color {
+    margin-left: 20px;
+}
+.table-container-data-color table {
+    font-size: 0.8em; /* Smaller font size for the table */
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+    border-collapse: collapse; /* Collapse table borders */
+    /* width: 100%; */
+}
+.table-container-data-color th,
+.table-container-data-color td {
+    padding: 8px; /* Smaller padding for table cells */
+    border: 1px solid lightgrey; /* Light grey cell border */
+    text-align: center; /* Left-align table cells */
+}
+
+/* Optional: Style table headers differently */
+.table-container-data-color th {
+    background-color: #f2f2f2; /* Light grey background for table headers */
+    font-weight: bold; /* Bold font for table headers */
+}
+
+/* -------------------------------------------------------- */
 .table-container-system {
     margin-left: 10px;
     width: fit-content; /* Set the width to fit the content */

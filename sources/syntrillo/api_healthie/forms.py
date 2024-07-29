@@ -99,10 +99,11 @@ class HealthieForms():
 
     def get_form_id_by_external_id(
         self,
-        external_id: str = None,
+        external_id: str = '',
+        external_id_type: str = '',
         ):
         """
-        Reteive a specific form by its id
+        Reteive a specific form by its external id or external id type
         See https://docs.gethealthie.com/docs/#retrieving-a-form
 
         Parameters:
@@ -131,6 +132,7 @@ class HealthieForms():
                 ) {
                     id
                     external_id
+                    external_id_type
                 }
             }
             '''
@@ -148,7 +150,7 @@ class HealthieForms():
         ids = []
         custom_module_forms = response.get("customModuleForms", [])
         for form in custom_module_forms:
-            if form.get("external_id") == external_id:
+            if form.get("external_id") == external_id or form.get("external_id_type") == external_id_type:
                 ids.append(form.get("id"))
 
         return ids
@@ -169,6 +171,38 @@ class HealthieForms():
             dict:   Returns a CustomModuleForm object, with all CustomModule objects
                   : https://docs.gethealthie.com/schema/custommoduleform.doc
                   : https://docs.gethealthie.com/schema/custommodule.doc
+
+            For example:
+                {
+                "customModuleForm": {
+                    "id": "1377148",
+                    "is_video": false,
+                    "name": "Tenovi Pillbox Expectations (v0.2)",
+                    "prefill": false,
+                    "uploaded_by_healthie_team": false,
+                    "created_at": "2024-07-11 17:51:16 +0200",
+                    "external_id": "tenovi_pillbox_expectations",
+                    "external_id_type": null,
+                    "has_matrix_field": false,
+                    "has_non_readonly_modules": true,
+                    "updated_at": "2024-07-15 01:20:49 +0200",
+                    "use_for_charting": true,
+                    "use_for_program": false,
+                    "custom_modules": [
+                        {
+                            "id": "11843042",
+                            "external_id": "openings_pm",
+                            "external_id_type": null,
+                            "label": "Number of PM opening(s)",
+                            "sublabel": "Leave blank if you have to use daily total",
+                            "is_custom": false,
+                            "mod_type": "number",
+                            "options": null,
+                            "options_array": [],
+                            "position": 4000000000.0,
+                            "required": false
+                        },
+
         """
         # Set up the GraphQL query to list custom module forms
         query = '''
@@ -650,6 +684,7 @@ class HealthieForms():
                         id
                         name
                         external_id
+                        external_id_type
                         use_for_charting
                         use_for_program
                     }
@@ -1069,6 +1104,70 @@ class HealthieForms():
         return form_requested, request_date
 
 
+    def create_a_filled_out_form(
+        self,
+        user_id: str,
+        custom_module_form_id: str,
+        form_answers: list,
+        finished: bool = True,
+    ):
+        """
+        Takes a form,  makes it patient specific and fill-it up with some data
+
+        TODO : add parameters, see API doc
+
+        See: https://docs.gethealthie.com/docs/#creating-a-filled-out-form-e-g-a-chart-note-or-intake-form
+
+        Returns a FormAnswerGroup id and the log
+
+        """
+
+        # Set up the GraphQL mutation to create a filled-out form
+        mutation = '''
+            mutation createFormAnswerGroup(
+            # Should almost always true
+            $finished: Boolean,
+            # ID of the custom_module_form (e.g "100")
+            $custom_module_form_id: String,
+            # ID of the patient (e.g "61")
+            $user_id: String,
+            # e.g [{custom_module_id: "1", answer: "foo", user_id: "61"}, {custom_module_id: "2", answer: "bar", user_id: "61"}]
+            $form_answers: [FormAnswerInput!]!
+            ) {
+            createFormAnswerGroup(
+                input: {
+                    finished: $finished,
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id,
+                    form_answers: $form_answers,
+                }
+            ) {
+                form_answer_group {
+                    id
+                }
+                messages {
+                    field
+                    message
+                }
+            }
+            }
+        '''
+
+        # Set up the variables for the GraphQL mutation
+        # Form anwsers : "form_answers is an array containing all the individual answers. Each submitted form answer needs to have a custom_module_id, user_id, and an answer. "
+        variables = {
+            "user_id": user_id,
+            "custom_module_form_id": custom_module_form_id,
+            "form_answers": form_answers,
+            "finished": finished,
+        }
+
+        # Make the GraphQL mutation request using the send_query method inherited from HealthieAPI
+        response, log = self.auth.send_query(mutation, variables)
+
+        return response, log
+
+
 
 
 if __name__ == "__main__":
@@ -1121,7 +1220,11 @@ if __name__ == "__main__":
         HealthieAuth.print_pretty_json(response)
 
 
-    if True:
+    if False:
+        """
+        testing various mod types for html display
+
+        """
 
         text_string = """
         These variables will be used to assess medical adherence. It is recommended to monitor only medications of interest for stroke rehabilitation and prevention. If possible, for a higher accuracy, split in AM and PM openings. If not (eg 'as needed', or '3 times a day'), use a 'daily total' number of openings (and leave am and pm openings blank).
@@ -1167,11 +1270,102 @@ if __name__ == "__main__":
 
         print(json.dumps(new_form, indent=4, default=str))
 
-    if False:
-        form = forms.get_form_by_id(form_id='1360846')
+    if True:
+        form = forms.get_form_by_id(form_id='1377148')
 
         print(json.dumps(form, indent=4, default=str))
 
+        """
+
+
+
+        """
+
+
+    if False:
+        """
+        testing creation of filled out form
+
+        """
+
+        # -----------------
+        # create new form
+
+        # modules
+        modules = [
+            {
+                'label': 'some label',
+                'mod_type': 'label',
+            },
+            {
+                'label': 'some text',
+                'mod_type': 'text',
+            },
+            {
+                'label': 'some number',
+                'mod_type': 'number',
+            },
+        ]
+
+        new_form = forms.create_form_wrapper(
+            form_name='testing filled-out form',
+            modules=modules,
+            use_for_charting=True,
+            use_for_program=False,
+        )
+
+        print(json.dumps(new_form, indent=4, default=str))
+
+        """
+        newform response:
+                    {
+                "form_response": {
+                    "createCustomModuleForm": {
+                        "customModuleForm": {
+                            "id": "1385154"
+                        },
+                        "messages": null
+                    }
+                },
+                "modules_responses": [
+                    {
+                        "createCustomModule": {
+                            "customModule": {
+                                "id": "11911634",
+                                "external_id": null,
+                                "label": "some label",
+                                "mod_type": "label"
+                            },
+                            "messages": null
+                        }
+                    },
+                    {
+                        "createCustomModule": {
+                            "customModule": {
+                                "id": "11911635",
+                                "external_id": null,
+                                "label": "some text",
+                                "mod_type": "text"
+                            },
+                            "messages": null
+                        }
+                    },
+                    {
+                        "createCustomModule": {
+                            "customModule": {
+                                "id": "11911636",
+                                "external_id": null,
+                                "label": "some number",
+                                "mod_type": "number"
+                            },
+                            "messages": null
+                        }
+                    }
+                ]
+            }
+        """
+
+        pass
 
 
 

@@ -30,6 +30,7 @@ class VirtualCareNavigator():
         organization: str = 'staging',
         dotenv_path: str = '.env'
     ):
+        # TODO ; fix call to HealthieAuth and HealthieUtils
         self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
         self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
 

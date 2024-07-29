@@ -19,22 +19,32 @@ from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 pio.templates.default = "plotly"
 
 class DataReportingHeartRate:
+    """
+    Get user level reports from the remote monitoring system on heart rate.
+
+    Based on Tenovi Watch (heart_rate_statistics) and BPM data (pulse, irregular_heartbeat).
+
+    Data from the remote monitoring system is stored in our PHI database
+
+    Args:
+        syntrillo_internal_key : uuid.UUID
+
+    Returns:
+        None
+
+    """
+
+    # class variables
+    syntrillo_internal_key : uuid.UUID = None
+    syntrillo_database_manager : SyntrilloDatabaseManager = None
+
+    pulse_df : pd.DataFrame = None
+    irregular_heartbeat_df : pd.DataFrame = None
+    heart_rate_statistics_df : pd.DataFrame = None
+
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
-        """
-        Get user level reports from the remote monitoring system on heart rate.
 
-        Based on Tenovi Watch (heart_rate_statistics) and BPM data (pulse, irregular_heartbeat).
-
-        Data from the remote monitoring system is stored in our PHI database
-
-        Args:
-            syntrillo_internal_key : uuid.UUID
-
-        Returns:
-            None
-
-        """
         self.syntrillo_internal_key = syntrillo_internal_key
 
         # set up PHI database connection for this user
@@ -368,9 +378,6 @@ class DataReportingHeartRate:
 
         # ---
         # check if pulse_df data is available
-        if not hasattr(self, 'pulse_df'):
-            return None, html_no_data, None
-
         if self.pulse_df is None or self.pulse_df.empty:
             return None, html_no_data, None
 
@@ -393,7 +400,7 @@ class DataReportingHeartRate:
                 )
             )
 
-        if hasattr(self, 'irregular_heartbeat_df') and self.irregular_heartbeat_df is not None and not self.irregular_heartbeat_df.empty:
+        if self.irregular_heartbeat_df is not None and not self.irregular_heartbeat_df.empty:
             fig.add_trace(
                 go.Scatter(
                     x=self.irregular_heartbeat_df['timestamp_local'],
@@ -464,9 +471,6 @@ class DataReportingHeartRate:
 
         # ---
         # check if pulse_df data is available
-        if not hasattr(self, 'heart_rate_statistics_df'):
-            return None, html_no_data, None
-
         if self.heart_rate_statistics_df is None or self.heart_rate_statistics_df.empty:
             return None, html_no_data, None
 
@@ -528,7 +532,7 @@ class DataReportingHeartRate:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-    ):
+    ) :
         """
         get stat moments of the pulse data: average, std, min, max, median, 25%, 75%, kurtoisis, skewness
 
@@ -537,7 +541,7 @@ class DataReportingHeartRate:
         """
 
         # ---
-        if not hasattr(self, 'pulse_df') and self.pulse_df is None and not self.pulse_df.empty:
+        if self.pulse_df is None and not self.pulse_df.empty:
             return None
 
         # ---
@@ -587,7 +591,7 @@ class DataReportingHeartRate:
 
         # ---
         # check dataframe exists and is not empty
-        if not hasattr(self, 'heart_rate_statistics_df') and self.heart_rate_statistics_df is None and not self.heart_rate_statistics_df.empty:
+        if self.heart_rate_statistics_df is None and not self.heart_rate_statistics_df.empty:
             return None
 
         # ---
@@ -629,6 +633,107 @@ class DataReportingHeartRate:
         return rmssd
 
 
+    def _calculate_pulse_summary_for_a_date_range_row(self, row) -> pd.Series:
+        """
+          Function to calculate summary statistics for a given date range
+
+        Args:
+            row : pd.Series with columns from_date, to_date, range_name
+
+        Returns:
+            pd.Series with columns:
+                - from_date
+                - to_date
+                - range_name
+                - num_datapoints_pulse
+                - pulse_min
+                - pulse_max
+                - pulse_mean
+                - pulse_median
+                - pulse_sdnn
+        """
+        from_date = row['from_date']
+        to_date = row['to_date']
+        range_name = row['range_name']
+
+        # Filter pulse data for the current date range
+        filtered_pulse = self.pulse_df[(self.pulse_df['timestamp_local'] >= from_date) &
+                                       (self.pulse_df['timestamp_local'] <= to_date)]
+
+        num_datapoints_pulse = len(filtered_pulse)
+
+        if num_datapoints_pulse == 0:
+            pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = None
+        else:
+            pulse_min = filtered_pulse['pulse'].min()
+            pulse_max = filtered_pulse['pulse'].max()
+            pulse_mean = filtered_pulse['pulse'].mean()
+            pulse_median = filtered_pulse['pulse'].median()
+            pulse_sdnn = filtered_pulse['pulse'].std()
+
+        return pd.Series({
+            'from_date': from_date,
+            'to_date': to_date,
+            'range_name': range_name,
+            'num_datapoints_pulse': num_datapoints_pulse,
+            'pulse_min': pulse_min,
+            'pulse_max': pulse_max,
+            'pulse_mean': pulse_mean,
+            'pulse_median': pulse_median,
+            'pulse_sdnn': pulse_sdnn
+        })
+
+    def get_pulse_summary_for_date_ranges(
+        self,
+        date_ranges : pd.DataFrame,
+        ) -> Tuple[ pd.DataFrame, dict]:
+        """
+        From the pulse data, calculate summary statistics for each date range.
+
+        Args:
+            date_ranges : pd.DataFrame with columns from_date, to_date, range_name
+
+        Returns:
+            - summary_stats : pd.DataFrame with columns:
+                - from_date
+                - to_date
+                - range_name
+                - num_datapoints_pulse
+                - pulse_min
+                - pulse_max
+                - pulse_mean
+                - pulse_median
+                - pulse_sdnn
+            - log : dict
+
+        """
+        # check if some data is available
+        if self.pulse_df is None or self.pulse_df.empty:
+            log = {
+                'success': False,
+                'error': 'No pulse data available',
+            }
+            return None, log
+
+        # calculate summary statistics for each date range
+        try:
+            summary_stats = date_ranges.apply(self._calculate_pulse_summary_for_a_date_range_row, axis=1)
+
+        except Exception as e:
+            log = {
+                'success': False,
+                'error': 'Error calculating summary statistics in get_pulse_summary_for_date_ranges',
+                'exception': str(e),
+            }
+            return None, log
+
+        # store the summary statistics and return
+        self.summary_stats_pulse = summary_stats
+        self.date_ranges_pulse = date_ranges
+        return summary_stats, {
+            'success': True,
+            'message': 'Summary statistics calculated successfully',
+        }
 
 
 

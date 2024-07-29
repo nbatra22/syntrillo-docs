@@ -61,13 +61,16 @@ class DataStructureStorageManager:
         return data_structures
 
 
-
-
     def retrieve_structure(self, structure_name: str) -> Tuple[dict, dict]:
         """
         Retrieves a specific data structure.
 
-        :param structure_name: The name of the data structure to retrieve.
+        For now, it is obtained from the JSON files stored in self.storage_path.
+
+        TODO : consider moving JSON and XLSX to a database
+
+        Args
+        - structure_name: The name of the data structure to retrieve.
 
         Returns a tuple:
         - The data structure as a dictionary.
@@ -83,6 +86,8 @@ class DataStructureStorageManager:
         log = {
             'success': True,
         }
+
+        data_structure = {}
 
         try:
             with open(file_path, 'r') as file:
