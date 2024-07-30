@@ -20,103 +20,39 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-# -----------------------------------------------------------------------------
-# STACKS
-# -----------------------------------------------------------------------------
-import boto3
-
-class ServersStack(Stack):
-
-    def get_latest_layer_version_arn(self, layer_name: str) -> str:
-        lambda_client = boto3.client('lambda')
-        response = lambda_client.list_layer_versions(LayerName=layer_name)
-        
-        if not response['LayerVersions']:
-            raise ValueError(f"No versions found for layer: {layer_name}")
-        
-        # The versions are returned in descending order, so the first one is the latest
-        latest_version = response['LayerVersions'][0]
-        return latest_version['LayerVersionArn'] 
-        
-    def __init__(self, scope: Construct, id: str, 
-            aws_environment,
-            vpc,
-            database,
-            hosted_zone, 
-            certificate, 
-            file_system, 
-            access_point,
-            secrets,
-            api_domain_name,
-            **kwargs) -> None:
+class IFrameGeneratorAPI(Construct):
+    def __init__(self, scope: Construct, id: str, aws_environment: str, network: Construct, **kwargs):
         super().__init__(scope, id, **kwargs)
-    
-        self.aws_environment = aws_environment
-        self.vpc = vpc
-        self.database = database
-        self.hosted_zone = hosted_zone
-        self.certificate = certificate
-        self.access_point = access_point
-        self.file_system = file_system
-        self.secrets = secrets
-        self.api_domain_name = api_domain_name
 
-        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
-            cache_size=500,
-            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
-        )
-
-        iframe_generator_function = _lambda.Function(self, "IFrameGeneratorFunction",
-            function_name="IFrameGeneratorFunction",
-            vpc = self.vpc,
-            handler="handler.handler",
-            runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env']),
-            params_and_secrets=params_and_secrets,
-            filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.access_point,
-                "/mnt/python_modules"
-            ),
-            environment={
-                "POWERTOOLS_LOG_LEVEL": "DEBUG",
-                "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
-                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
-            },
-            tracing=_lambda.Tracing.ACTIVE,
-            memory_size=512,
-            timeout=Duration.seconds(60),
-        )
-
-        self.database.secret.grant_read(iframe_generator_function)
-        self.secrets.tenovi_hwi_secrets.grant_read(iframe_generator_function)
-        self.secrets.healthie_secrets.grant_read(iframe_generator_function)
-
-        iframe_generator_api = apigw.RestApi(self, "IFramGeneratorAPI", 
+        self.rest_api = apigw.RestApi(
+            self, "IFramGeneratorAPI",
             rest_api_name="IFramGeneratorAPI",
             domain_name=apigw.DomainNameOptions(
-                domain_name="api.prod.syntrillo-clinic-backend.com",
-                certificate=self.certificate
+                domain_name=f"api.{aws_environment}.syntrillo-clinic-backend.com",
+                certificate=network.certificate
             ),
-            deploy_options= apigw.StageOptions(
+            deploy_options=apigw.StageOptions(
                 tracing_enabled=True,
-                stage_name="prod"
+                stage_name=aws_environment
             )
         )
 
-        # ---------------------------------------------------------------------
-        # API RESOURCES & METHODES (START)
-        # ---------------------------------------------------------------------
-        root_resource = iframe_generator_api.root
-
-        root_method = root_resource.add_method(
+    def create_root_resources(self, iframe_generator_function: _lambda.Function):
+        self.rest_api.root.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # /static
-        static = root_resource.add_resource("static")
+        self.healthie_resource = self.rest_api.root.add_resource("healthie")
+
+        iframe_healthie_provider_tab = self.rest_api.root.add_resource("iframe_healthie_provider_sidebar")
+        iframe_healthie_provider_tab.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+    def create_static_resources(self, iframe_generator_function: _lambda.Function):
+        static = self.rest_api.root.add_resource("static")
 
         # /static/healthie/iframe_provider.css
         static_healthie_iframe_provider_css = static.add_resource("healthie").add_resource("iframe_provider.css")
@@ -124,58 +60,22 @@ class ServersStack(Stack):
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
-        
-        # /healthie
-        healthie = root_resource.add_resource("healthie")
 
-        # -------------------
-        # IFRAMES / HTML PAGE (PROVIDER_SIDEBAR)
-        # -------------------
+    def create_provider_tab_resources(self, iframe_generator_function: _lambda.Function):
 
-        # /iframe_healthie_provider_tab
-        iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_sidebar")
-        iframe_healthie_provider_tab.add_method(
-            "GET",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_sidebar
-        healthie_iframe_provider_sidebar = healthie.add_resource("iframe_provider_sidebar")
-
-        # /healthie/iframe_provider_sidebar/status
-        iframe_healthie_provider_tab = healthie_iframe_provider_sidebar.add_resource("status")
-        iframe_healthie_provider_tab.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_sidebar/system
-        iframe_healthie_provider_tab = healthie_iframe_provider_sidebar.add_resource("system")
-        iframe_healthie_provider_tab.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_sidebar/questionnaire
-        iframe_healthie_provider_tab = healthie_iframe_provider_sidebar.add_resource("questionnaire")
-        iframe_healthie_provider_tab.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # -------------------
-        # IFRAMES / HTML PAGE (PROVIDER_TAB)
-        # -------------------
+        # ---------------------------------------------------------------------
+        # PROVIDER TAB HTML RESOURCES
+        # ---------------------------------------------------------------------
 
         # /iframe_healthie_provider_tab
-        iframe_healthie_provider_tab = root_resource.add_resource("iframe_healthie_provider_tab")
+        iframe_healthie_provider_tab = self.rest_api.root.add_resource("iframe_healthie_provider_tab")
         iframe_healthie_provider_tab.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
         # /iframe_healthie_provider_tab/healthie/iframe_provider_tab
-        healthie_iframe_provider_tab = healthie.add_resource("iframe_provider_tab")
+        healthie_iframe_provider_tab = self.healthie_resource.add_resource("iframe_provider_tab")
 
         # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/status
         healthie_iframe_provider_tab_status = healthie_iframe_provider_tab.add_resource("status")
@@ -226,9 +126,16 @@ class ServersStack(Stack):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
-        # -------------------
-        # IFRAMES / DATA API
-        # -------------------
+        # ---------------------------------------------------------------------
+        # PROVIDER TAB DATA RESOURCES
+        # ---------------------------------------------------------------------
+
+        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form
+        healthie_iframe_provider_tab_system_devices_sync_measurements_form = healthie_iframe_provider_tab_system_devices.add_resource("sync_measurements_form")
+        healthie_iframe_provider_tab_system_devices_sync_measurements_form.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
         # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form
         healthie_iframe_provider_tab_system_devices_tenovi_generate_temporary_pairing_code_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
@@ -286,14 +193,116 @@ class ServersStack(Stack):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+    def create_provider_sidebar_resources(self, iframe_generator_function: _lambda.Function):
+        provider_sidebar_resource = self.healthie_resource.add_resource("iframe_provider_sidebar")
+
+        # provider_sidebar_resource.add_resource("status").add_method(
+        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
+        # )
+        # provider_sidebar_resource.add_resource("system").add_method(
+        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
+        # )
+        # provider_sidebar_resource.add_resource("questionnaire").add_method(
+        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
+        # )
+
+class IFrameGeneratorFunction(Construct):
+    def __init__(self, scope: Construct, id: str, 
+                 aws_environment: str, 
+                 network: Construct, 
+                 database: Construct,
+                 storage: Construct,
+                 secrets: Construct,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        self.network = network
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
+
+        self.function = _lambda.Function(self, "IFrameGeneratorFunction",
+            function_name="IFrameGeneratorFunction",
+            vpc = self.network.vpc,
+            handler="handler.handler",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env']),
+            params_and_secrets=params_and_secrets,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.storage.efs_access_point,
+                "/mnt/python_modules"
+            ),
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "/mnt/python_modules",
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
+            },
+            tracing=_lambda.Tracing.ACTIVE,
+            memory_size=512,
+            timeout=Duration.seconds(60),
+        )
+
+        self.database.secret.grant_read(self.function)
+        self.secrets.tenovi_hwi_secrets.grant_read(self.function)
+        self.secrets.healthie_secrets.grant_read(self.function)
+
+# -----------------------------------------------------------------------------
+# STACKS
+# -----------------------------------------------------------------------------
+# import boto3
+
+class ServersStack(Stack):
+        
+    def __init__(self, scope: Construct, id: str, 
+            aws_environment,
+            network,
+            database,
+            storage,
+            secrets,
+            **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+    
+        self.aws_environment = aws_environment
+        self.network = network
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
+
+        iframe_generator_function = IFrameGeneratorFunction(
+            self, "IFrameGeneratorFunction",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets
+        )
+
+        iframe_generator_api = IFrameGeneratorAPI(
+            self, "IFrameGeneratorAPI",
+            aws_environment=self.aws_environment,
+            network=self.network
+        )
+
+        iframe_generator_api.create_root_resources(iframe_generator_function.function)
+        iframe_generator_api.create_static_resources(iframe_generator_function.function)
+        iframe_generator_api.create_provider_tab_resources(iframe_generator_function.function)
+        iframe_generator_api.create_provider_sidebar_resources(iframe_generator_function.function)
+
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)
         # ---------------------------------------------------------------------
 
         # route53.ARecord(self, "SyntrilloCustomDomainARecord", 
         #     zone=hosted_zone,
-        #     record_name="api.prod.syntrillo-clinic-backend.com",
+        #     record_name=f"api.{self.aws_environment}.syntrillo-clinic-backend.com",
         #     target=route53.RecordTarget.from_alias(
-        #         route53_targets.ApiGateway(iframe_generator_api)
+        #         route53_targets.ApiGateway(iframe_generator_api.rest_api)
         #     )
         # )

@@ -41,10 +41,12 @@ class SyntrilloClinicBackendStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Cannot be self.environment (we get can't set attribute 'environment'), obviously resevered by the cdk
-        self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
-            self, "SyntrilloClinicAWSAccountEnvironment",
-            parameter_name="/syntrillo-clinic/aws/environment"
-        ).string_value
+        # self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
+        #     self, "SyntrilloClinicAWSAccountEnvironment",
+        #     parameter_name="/syntrillo-clinic/aws/environment"
+        # ).string_value
+
+        self.aws_environment = 'prod'
 
         network=NetworkStack(
             self, "NetworkStack",
@@ -70,14 +72,10 @@ class SyntrilloClinicBackendStack(Stack):
         servers=ServersStack(
             self, "ServersStack", 
             aws_environment=self.aws_environment,
-            vpc=network.vpc,
+            network=network,
             database=database,
-            access_point=storage.efs_access_point,
-            file_system=storage.efs_file_system, 
-            hosted_zone=network.hosted_zone, 
-            certificate=network.certificate,
+            storage=storage,
             secrets=secrets,
-            api_domain_name=network.api_domain_name
         )
 
         # backupStack=SyntrilloClinicBackupStack(
