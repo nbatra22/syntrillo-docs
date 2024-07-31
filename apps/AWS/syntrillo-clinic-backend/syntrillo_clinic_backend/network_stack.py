@@ -27,17 +27,7 @@ from constructs import Construct
 class NetworkStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, aws_environment, **kwargs) -> None:
-        super().__init__(scope, construct_id, **kwargs)
-        
-        # parameters
-        self.aws_environment = aws_environment
-        self.route_53_domain_name = f'{self.aws_environment}.syntrillo-clinic-backend.com'
-        self.api_domain_name = f'api.{self.aws_environment}.syntrillo-clinic-backend.com'
-
-        self.route53_hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
-            self, "SyntrilloClinicRoute53HostedZoneId",
-            parameter_name="/syntrillo-clinic/aws/route53/hosted_zone_id"
-        ).string_value        
+        super().__init__(scope, construct_id, **kwargs)   
 
         # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
         # Nat gateway is necessary for lambda functions to communicates outside the vpc
@@ -46,19 +36,4 @@ class NetworkStack(Stack):
             self, "SyntrilloClinicBackendVPC",
             vpc_name = "SyntrilloClinicBackendVPC",
             nat_gateways=1
-        )
-
-        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
-            self, "SyntrilloClinicBackendHostedZone",
-            zone_name=f"{self.aws_environment}.{self.route53_hosted_zone_id}",
-            hosted_zone_id=self.route53_hosted_zone_id
-        )
-
-        self.certificate = acm.Certificate(
-            self, "SyntrilloClinicBackendSSLCertificate",
-            domain_name=self.route_53_domain_name,
-            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
-            subject_alternative_names=[
-                self.api_domain_name
-            ]
         )

@@ -20,22 +20,63 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class IFrameGeneratorAPI(Construct):
-    def __init__(self, scope: Construct, id: str, aws_environment: str, network: Construct, **kwargs):
+# -----------------------------------------------------------------------------
+# CONSTRUCTS
+# -----------------------------------------------------------------------------
+
+class IFrameGeneratorApiEndpoint(Construct):
+    def __init__(self, scope: Construct, id: str, aws_environment: str, **kwargs):
         super().__init__(scope, id, **kwargs)
+
+        self.aws_environment = aws_environment
+        self.route_53_domain_name = f'{self.aws_environment}.syntrillo-clinic-backend.com'
+        self.api_domain_name = f'api.{self.aws_environment}.syntrillo-clinic-backend.com'
+
+        self.route53_hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
+            self, "SyntrilloClinicRoute53HostedZoneId",
+            parameter_name="/syntrillo-clinic/aws/route53/hosted_zone_id"
+        ).string_value      
+
+        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
+            self, "SyntrilloClinicBackendHostedZone",
+            zone_name=f"{self.aws_environment}.{self.route53_hosted_zone_id}",
+            hosted_zone_id=self.route53_hosted_zone_id
+        )
+
+        self.certificate = acm.Certificate(
+            self, "SyntrilloClinicBackendSSLCertificate",
+            domain_name=self.route_53_domain_name,
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone),
+            subject_alternative_names=[
+                self.api_domain_name
+            ]
+        )
 
         self.rest_api = apigw.RestApi(
             self, "IFramGeneratorAPI",
             rest_api_name="IFramGeneratorAPI",
             domain_name=apigw.DomainNameOptions(
                 domain_name=f"api.{aws_environment}.syntrillo-clinic-backend.com",
-                certificate=network.certificate
+                certificate=self.certificate
             ),
             deploy_options=apigw.StageOptions(
                 tracing_enabled=True,
                 stage_name=aws_environment
             )
         )
+
+        # This resource is a minimum for this construct to work on its own
+        # this ping resource can also be used for a minimalistic test of the api endpoint
+        # jsut to make sure the endpoint is there
+        self.rest_api.root.add_resource("ping").add_method(
+            "GET",
+        ) 
+
+class IFrameGeneratorAPIRoutes(Construct):
+    def __init__(self, scope: Construct, id: str, aws_environment: str, api_endpoint: Construct, network: Construct, **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        self.rest_api = api_endpoint.rest_api
 
     def create_root_resources(self, iframe_generator_function: _lambda.Function):
         self.rest_api.root.add_method(
@@ -256,7 +297,6 @@ class IFrameGeneratorFunction(Construct):
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
-# import boto3
 
 class ServersStack(Stack):
         
@@ -275,7 +315,7 @@ class ServersStack(Stack):
         self.storage = storage
         self.secrets = secrets
 
-        iframe_generator_function = IFrameGeneratorFunction(
+        self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
             aws_environment=self.aws_environment,
             network=self.network,
@@ -284,16 +324,22 @@ class ServersStack(Stack):
             secrets=self.secrets
         )
 
-        iframe_generator_api = IFrameGeneratorAPI(
-            self, "IFrameGeneratorAPI",
+        self.iframe_generator_api_endpoint = IFrameGeneratorApiEndpoint(
+            self, "IFrameGeneratorApiEndpoint",
+            aws_environment=self.aws_environment
+        )
+
+        self.iframe_generator_api_routes = IFrameGeneratorAPIRoutes(
+            self, "IFrameGeneratorApiRoutes",
             aws_environment=self.aws_environment,
+            api_endpoint=self.iframe_generator_api_endpoint,
             network=self.network
         )
 
-        iframe_generator_api.create_root_resources(iframe_generator_function.function)
-        iframe_generator_api.create_static_resources(iframe_generator_function.function)
-        iframe_generator_api.create_provider_tab_resources(iframe_generator_function.function)
-        iframe_generator_api.create_provider_sidebar_resources(iframe_generator_function.function)
+        self.iframe_generator_api_routes.create_root_resources(self.iframe_generator_function.function)
+        self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function)
+        self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function)
+        self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function)
 
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)
