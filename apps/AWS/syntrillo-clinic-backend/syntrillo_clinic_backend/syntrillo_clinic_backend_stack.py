@@ -32,6 +32,7 @@ from syntrillo_clinic_backend.secrets_stack import SecretsStack
 
 from syntrillo_clinic_backend.servers_stack import ServersStack
 
+from syntrillo_clinic_backend.task_scheduling_stack import SyntrilloClinicTaskSchedulingStack
 from syntrillo_clinic_backend.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
 from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
 
@@ -44,7 +45,7 @@ class SyntrilloClinicBackendStack(Stack):
         # self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
         #     self, "SyntrilloClinicAWSAccountEnvironment",
         #     parameter_name="/syntrillo-clinic/aws/environment"
-        # ).string_value
+        # )
 
         self.aws_environment = 'prod'
 
@@ -76,6 +77,16 @@ class SyntrilloClinicBackendStack(Stack):
             database=database,
             storage=storage,
             secrets=secrets,
+        )
+
+        scheduled_tasks=SyntrilloClinicTaskSchedulingStack(
+            self, "TaskSchedulingStack",
+            aws_environment=self.aws_environment,
+            network=network,
+            database=database,
+            storage=storage,
+            secrets=secrets,
+            lambda_function=servers.iframe_generator_function.function
         )
 
         # backupStack=SyntrilloClinicBackupStack(
