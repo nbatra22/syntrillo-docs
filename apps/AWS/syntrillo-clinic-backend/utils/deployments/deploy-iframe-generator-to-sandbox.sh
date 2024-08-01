@@ -1,2 +1,2 @@
 cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend
-cdk deploy SyntrilloClinicBackendStack/IFrameGeneratorStack --profile syntrillo-clinic-sandbox
+cdk deploy SyntrilloClinicBackendStack/ServersStack --profile syntrillo-clinic-sandbox
