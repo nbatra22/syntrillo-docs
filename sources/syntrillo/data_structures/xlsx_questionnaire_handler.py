@@ -343,6 +343,14 @@ class DataStructureXlsxQuestionnaireHandler:
                 display = row['display']
 
             # ---
+            # if display is checkbox, radio, horizontal_radio, dropdown : make sure values are defined
+            if display in ['checkbox', 'radio', 'horizontal_radio', 'dropdown', 'read_only']:
+                if values_list is None:
+                    log['success'] = False
+                    log['error'] = f"Values are not defined for variable '{row['internal_name']}'"
+                    return None, log
+
+            # ---
             # Create a dictionary for the data variable
             data_variable = {
                 'internal_name': self.nan2null(row['internal_name']),
