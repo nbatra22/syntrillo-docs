@@ -290,6 +290,18 @@ class IFrameGeneratorFunction(Construct):
             timeout=Duration.seconds(60),
         )
 
+        self.function_version = _lambda.Version(
+            self, "LambdaVersion",
+            lambda_=self.function,
+        )
+
+        self.function_alias = _lambda.Alias(
+            self, "LambdaAlias",
+            alias_name="provisionned-concurrency",
+            version=self.function_version,
+            provisioned_concurrent_executions=10
+        )
+
         self.database.secret.grant_read(self.function)
         self.secrets.tenovi_hwi_secrets.grant_read(self.function)
         self.secrets.healthie_secrets.grant_read(self.function)
@@ -336,10 +348,10 @@ class ServersStack(Stack):
             network=self.network
         )
 
-        self.iframe_generator_api_routes.create_root_resources(self.iframe_generator_function.function)
-        self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function)
-        self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function)
-        self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function)
+        self.iframe_generator_api_routes.create_root_resources(self.iframe_generator_function.function_alias)
+        self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function_alias)
+        self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
+        self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
 
         # ---------------------------------------------------------------------
         # API RESOURCES & METHODES (END)

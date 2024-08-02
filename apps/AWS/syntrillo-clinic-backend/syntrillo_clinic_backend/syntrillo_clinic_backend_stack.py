@@ -95,7 +95,7 @@ class SyntrilloClinicBackendStack(Stack):
         # )
 
         # fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
-        #     self, "FitnessFunctionStack",
+        #     self, "FitnessFunctionsStack",
         #     vpc=network.vpc,
         #     database=database,
         #     efs_access_point=storage.efs_access_point,
