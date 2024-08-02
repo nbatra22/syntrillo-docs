@@ -1,8 +1,6 @@
 import sys
 import os
 
-sys.path.append('/mnt/python_modules')
-
 modules_to_control=["requests", "pandas", "plotly", "kaleido"]
 import requests
 import pandas

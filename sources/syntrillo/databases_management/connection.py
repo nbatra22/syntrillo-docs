@@ -20,6 +20,38 @@ try:
 except ImportError:
     pass
 
+def get_secrets(secret_arn):
+    try:
+        get_secret_value_response = requests.get(
+            f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
+            headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
+        )
+        get_secret_value_response.raise_for_status()  # Raise an exception for non-2xx status codes
+    except requests.exceptions.RequestException as e:
+        # Handle exceptions related to the HTTP request
+        # if "an unexpected error occurred while executing request" in the response text => check lammbda permissions to read in secrets manager
+        raise Exception(f"Error fetching secret [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secret_value = get_secret_value_response.text
+        secret_dict = json.loads(secret_value)
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to JSON decoding
+        raise Exception(f"Error decoding secret value [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secrets_string = secret_dict["SecretString"]
+    except KeyError as e:
+        # Handle exceptions related to missing "SecretString" key
+        raise Exception(f"Error retrieving SecretString: {e}")
+    
+    try:
+        secrets_dict=json.loads(secrets_string)
+        return secrets_dict
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to not well formated secret string (non json)
+        raise Exception(f"Error decoding secrets (should be in json format in aws secrets manager): {e}")
+
 class DatabaseConnection:
     """
     A class to manage connections to different databases in the Syntrillo system.
@@ -59,25 +91,13 @@ class DatabaseConnection:
 
         if os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN') != None:
             # This test means we are in the lambda function
-            # We use AWS Secrets Manager to retreive the database secrets
-            # TAWS Secrets Manager should be accessible only by the lambda function and/or and admin user
 
             secret_arn = os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN')
+            database_secrets = get_secrets(secret_arn)
 
-            # This uses the lambda extension layer for secrets and parameters
-            # This uses a cache and avoid calling the secrets manager each time (it reduces cost & latency)
-            get_secret_value_response = requests.get(
-                f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
-                headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
-            )
-
-            secret_value = get_secret_value_response.text
-            secret_dict = json.loads(secret_value)
-            secret_string = secret_dict["SecretString"]
-
-            host=json.loads(secret_string)['host']
-            username=json.loads(secret_string)['username']
-            password=json.loads(secret_string)['password']
+            host=database_secrets['host']
+            username=database_secrets['username']
+            password=database_secrets['password']
 
             self.AWS_DB_CONFIG = {
                 'host': host,

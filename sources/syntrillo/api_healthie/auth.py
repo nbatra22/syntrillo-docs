@@ -10,6 +10,38 @@ from datetime import datetime
 
 from syntrillo.system.dot_env_loader import DotEnvFileLoader
 
+def get_secrets(secret_arn):
+    try:
+        get_secret_value_response = requests.get(
+            f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
+            headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
+        )
+        get_secret_value_response.raise_for_status()  # Raise an exception for non-2xx status codes
+    except requests.exceptions.RequestException as e:
+        # Handle exceptions related to the HTTP request
+        # if "an unexpected error occurred while executing request" in the response text => check lammbda permissions to read in secrets manager
+        raise Exception(f"Error fetching secret [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secret_value = get_secret_value_response.text
+        secret_dict = json.loads(secret_value)
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to JSON decoding
+        raise Exception(f"Error decoding secret value [{get_secret_value_response.text}]: {e}")
+
+    try:
+        secrets_string = secret_dict["SecretString"]
+    except KeyError as e:
+        # Handle exceptions related to missing "SecretString" key
+        raise Exception(f"Error retrieving SecretString: {e}")
+    
+    try:
+        secrets_dict=json.loads(secrets_string)
+        return secrets_dict
+    except json.JSONDecodeError as e:
+        # Handle exceptions related to not well formated secret string (non json)
+        raise Exception(f"Error decoding secrets (should be in json format in aws secrets manager): {e}")
+
 class HealthieAuth:
     """
     A class for interacting with the Healthie API.
@@ -46,35 +78,69 @@ class HealthieAuth:
             ValueError: If API key is missing or organization is invalid.
         """
 
-        # Load the .env file based on the environment to retrieve the client domain and API key
-        _ = DotEnvFileLoader()
+        if os.getenv('AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN') != None:
+            # If this test passes, it means we are in the lambda function
 
-        # ------------------------------
-        # Retrieve the organization from the environment variables
-        self.organization = os.getenv('HEALTHIE_ORGANIZATION')
+            # retrieve secrets in aws secrets manager
+            healthie_secrets=get_secrets(os.getenv('AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'))
 
-        # Set up the GraphQL endpoint URL based on organization
-        if self.organization == 'staging':
-            self.url = 'https://staging-api.gethealthie.com/graphql'
+            # ------------------------------
+            # Retrieve the organization
+            self.organization = healthie_secrets['healthieOrganization']
 
-        elif self.organization == 'production':
-            self.url = 'https://api.gethealthie.com/graphql'
+            # Set up the GraphQL endpoint URL based on organization
+            if self.organization == 'staging':
+                self.url = 'https://staging-api.gethealthie.com/graphql'
+
+            elif self.organization == 'production':
+                self.url = 'https://api.gethealthie.com/graphql'
+            else:
+                # raise error if organization is not staging or production
+                raise ValueError("Invalid Healthie organization. Must be 'staging' or 'production'.")
+
+            # ------------------------------
+            # get the API key based
+            self.api_key = healthie_secrets['healthieApiKey']
+
+            # Check if the API key is available
+            if self.api_key is None:
+                raise ValueError("API key not found. Make sure it's defined in the .env file.")
+
+            # ------------------------------
+            self.verbose = verbose
+            if self.verbose:
+                print(self.organization)
+
         else:
-            # raise error if organization is not staging or production
-            raise ValueError("Invalid Healthie organization. Must be 'staging' or 'production'.")
+            # Load the .env file based on the environment to retrieve the client domain and API key
+            _ = DotEnvFileLoader()
 
-        # ------------------------------
-        # get the API key based
-        self.api_key = os.getenv('HEALTHIE_API_KEY')
+            # ------------------------------
+            # Retrieve the organization from the environment variables
+            self.organization = os.getenv('HEALTHIE_ORGANIZATION')
 
-        # Check if the API key is available
-        if self.api_key is None:
-            raise ValueError("API key not found. Make sure it's defined in the .env file.")
+            # Set up the GraphQL endpoint URL based on organization
+            if self.organization == 'staging':
+                self.url = 'https://staging-api.gethealthie.com/graphql'
 
-        # ------------------------------
-        self.verbose = verbose
-        if self.verbose:
-            print(self.organization)
+            elif self.organization == 'production':
+                self.url = 'https://api.gethealthie.com/graphql'
+            else:
+                # raise error if organization is not staging or production
+                raise ValueError("Invalid Healthie organization. Must be 'staging' or 'production'.")
+
+            # ------------------------------
+            # get the API key based
+            self.api_key = os.getenv('HEALTHIE_API_KEY')
+
+            # Check if the API key is available
+            if self.api_key is None:
+                raise ValueError("API key not found. Make sure it's defined in the .env file.")
+
+            # ------------------------------
+            self.verbose = verbose
+            if self.verbose:
+                print(self.organization)
 
     def send_query(
         self,
