@@ -87,7 +87,7 @@
             <tbody>
                 {% if summary_data_weekly %}
                     {% for period in summary_data_weekly %}
-                        <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
+                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
                             <td>{{ period.systolic_min|int }} / {{ period.diastolic_min|int }}</td>
@@ -130,7 +130,7 @@
             <tbody>
                 {% if summary_data_monthly %}
                     {% for period in summary_data_monthly %}
-                        <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
+                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
                             <td>{{ period.systolic_min|int }} / {{ period.diastolic_min|int }}</td>
