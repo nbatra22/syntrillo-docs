@@ -50,8 +50,10 @@ class SyntrilloClinicBackendStack(Stack):
         self.environment_context = self.node.try_get_context(self.aws_environment)
 
         print("--------------------------------------")
-        print(f"Deploying to AWS environement : {self.aws_environment}")
-        print(f"Environment Context :")
+        print(f"SyntrilloBackendStack AWS Environement : <{self.aws_environment}>")
+        print(f"")
+        print("--------------------------------------")
+        print(f"SyntrilloBackendStack AWS Environment Context :")
         print(json.dumps(self.environment_context, indent=4))
         print("--------------------------------------")
 
