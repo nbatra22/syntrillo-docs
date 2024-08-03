@@ -11,14 +11,14 @@
         "origin": "https://api.sandbox.syntrillo-clinic-backend.com",
         "priority": "u=1, i",
         "referer": "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab",
-        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua": "\"Not)A;Brand\";v=\"99\", \"Google Chrome\";v=\"127\", \"Chromium\";v=\"127\"",
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": "\"Windows\"",
         "sec-fetch-dest": "empty",
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-        "X-Amzn-Trace-Id": "Root=1-668bee46-55e18ac15dcd563f10cc130f",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-66ae1120-7d0825281a9d92f96879cce2",
         "X-Forwarded-For": "109.9.46.184",
         "X-Forwarded-Port": "443",
         "X-Forwarded-Proto": "https",
@@ -50,7 +50,7 @@
             "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab"
         ],
         "sec-ch-ua": [
-            "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\""
+            "\"Not)A;Brand\";v=\"99\", \"Google Chrome\";v=\"127\", \"Chromium\";v=\"127\""
         ],
         "sec-ch-ua-mobile": [
             "?0"
@@ -68,10 +68,10 @@
             "same-origin"
         ],
         "User-Agent": [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
         ],
         "X-Amzn-Trace-Id": [
-            "Root=1-668bee46-55e18ac15dcd563f10cc130f"
+            "Root=1-66ae1120-7d0825281a9d92f96879cce2"
         ],
         "X-Forwarded-For": [
             "109.9.46.184"
@@ -91,18 +91,18 @@
     "pathParameters": null,
     "stageVariables": null,
     "requestContext": {
-        "resourceId": "xt6b0k",
+        "resourceId": "911gmm",
         "resourcePath": "/healthie/iframe_provider_tab/devices",
         "httpMethod": "POST",
-        "extendedRequestId": "amIq_ErHIAMEfnQ=",
-        "requestTime": "08/Jul/2024:13:48:54 +0000",
+        "extendedRequestId": "b7edLG25IAMEMNA=",
+        "requestTime": "03/Aug/2024:11:14:40 +0000",
         "path": "/healthie/iframe_provider_tab/devices",
         "accountId": "730335351683",
         "protocol": "HTTP/1.1",
         "stage": "sandbox",
         "domainPrefix": "api",
-        "requestTimeEpoch": 1720446534067,
-        "requestId": "b53a951c-c7c3-42b2-bdb6-09dbe73b6fb4",
+        "requestTimeEpoch": 1722683680875,
+        "requestId": "5cda1762-dbf6-4aa7-8155-03cd772347a8",
         "identity": {
             "cognitoIdentityPoolId": null,
             "accountId": null,
@@ -114,13 +114,13 @@
             "cognitoAuthenticationType": null,
             "cognitoAuthenticationProvider": null,
             "userArn": null,
-            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
             "user": null
         },
         "domainName": "api.sandbox.syntrillo-clinic-backend.com",
-        "deploymentId": "6ggkqi",
-        "apiId": "1gj504dz91"
+        "deploymentId": "yi4mss",
+        "apiId": "athdqpk08c"
     },
-    "body": "healthie_provider_id=1033222&healthie_user_id=Not+transmitted&temporary_lookup_code=29e0f13a-0c23-4411-b149-e35d2b7cf46f&patient_not_registered_at_syntrillo=False",
+    "body": "healthie_provider_id=1033222&healthie_user_id=Not+transmitted&temporary_lookup_code=a5ad50c9-25a3-485b-b91a-32dca68cda62&patient_not_registered_at_syntrillo=False",
     "isBase64Encoded": false
 }
