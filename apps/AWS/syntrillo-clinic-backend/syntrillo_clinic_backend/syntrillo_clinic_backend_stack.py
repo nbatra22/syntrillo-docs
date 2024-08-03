@@ -36,18 +36,24 @@ from syntrillo_clinic_backend.task_scheduling_stack import SyntrilloClinicTaskSc
 from syntrillo_clinic_backend.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
 from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
 
+import json
+
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Cannot be self.environment (we get can't set attribute 'environment'), obviously resevered by the cdk
-        # self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
-        #     self, "SyntrilloClinicAWSAccountEnvironment",
-        #     parameter_name="/syntrillo-clinic/aws/environment"
-        # )
+        self.aws_environment = self.node.try_get_context("environment")
+        if self.aws_environment == None:
+            self.aws_environment = "sandbox"
+        
+        self.environment_context = self.node.try_get_context(self.aws_environment)
 
-        self.aws_environment = 'prod'
+        print("--------------------------------------")
+        print(f"Deploying to AWS environement : {self.aws_environment}")
+        print(f"Environment Context :")
+        print(json.dumps(self.environment_context, indent=4))
+        print("--------------------------------------")
 
         network=NetworkStack(
             self, "NetworkStack",
@@ -73,6 +79,7 @@ class SyntrilloClinicBackendStack(Stack):
         servers=ServersStack(
             self, "ServersStack", 
             aws_environment=self.aws_environment,
+            environment_context=self.environment_context,
             network=network,
             database=database,
             storage=storage,

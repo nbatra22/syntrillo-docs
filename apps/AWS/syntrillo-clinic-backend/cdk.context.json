@@ -1,0 +1,17 @@
+{
+  "sandbox": {
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 0
+    }
+  },
+  "staging": {
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 0
+    }
+  },
+  "prod": {
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 10
+    }
+  }
+}

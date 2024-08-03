@@ -248,8 +248,8 @@ class IFrameGeneratorAPIRoutes(Construct):
         # )
 
 class IFrameGeneratorFunction(Construct):
-    def __init__(self, scope: Construct, id: str, 
-                 aws_environment: str, 
+    def __init__(self, scope: Construct, id: str,
+                 environment_context: dict,
                  network: Construct, 
                  database: Construct,
                  storage: Construct,
@@ -257,6 +257,7 @@ class IFrameGeneratorFunction(Construct):
                  **kwargs):
         super().__init__(scope, id, **kwargs)
 
+        self.environment_context = environment_context
         self.network = network
         self.database = database
         self.storage = storage
@@ -299,7 +300,7 @@ class IFrameGeneratorFunction(Construct):
             self, "LambdaAlias",
             alias_name="provisionned-concurrency",
             version=self.function_version,
-            provisioned_concurrent_executions=10
+            provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
         )
 
         self.database.secret.grant_read(self.function)
@@ -314,6 +315,7 @@ class ServersStack(Stack):
         
     def __init__(self, scope: Construct, id: str, 
             aws_environment,
+            environment_context,
             network,
             database,
             storage,
@@ -322,6 +324,7 @@ class ServersStack(Stack):
         super().__init__(scope, id, **kwargs)
     
         self.aws_environment = aws_environment
+        self.environment_context = environment_context
         self.network = network
         self.database = database
         self.storage = storage
@@ -329,7 +332,7 @@ class ServersStack(Stack):
 
         self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
-            aws_environment=self.aws_environment,
+            environment_context=self.environment_context,
             network=self.network,
             database=self.database,
             storage=self.storage,
