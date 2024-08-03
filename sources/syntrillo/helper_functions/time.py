@@ -220,13 +220,19 @@ def get_date_ranges_for_reporting(
         last_from = last_range['from_date']
         last_to = last_range['to_date']
 
+        # get last range label if use_total is False
+        if use_total:
+            last_range_label = ""
+        else:
+            last_range_label = last_range['range_name'] + ' - '
+
         if last_ranges_unit == 'week':
             extra_count = (to_date - from_date).days // 7 if use_total else 0
-            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(weeks=1), 'Week', extra_count=extra_count))
+            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(weeks=1), last_range_label + 'Week', extra_count=extra_count))
 
         elif last_ranges_unit == 'day':
             extra_count = (to_date - from_date).days if use_total else 0
-            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), 'Day', extra_count=extra_count))
+            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), last_range_label + 'Day', extra_count=extra_count))
 
     # ------------------------------------------------------
     # Handle the maximum number of rows
