@@ -52,8 +52,8 @@ def iframe_healthie_provider_tab_care_plan():
             period='weekly',
             last_ranges_unit='day',
             use_total=False,
-            add_whole_range=True,
-            whole_period_name='Whole Time',
+            add_entire_range=True,
+            entire_range_label='Whole Time',
         )
 
         summary_df_weekly, _ = drc.get_summary_statistics()
@@ -71,8 +71,8 @@ def iframe_healthie_provider_tab_care_plan():
             period='monthly',
             last_ranges_unit='week',
             use_total=False,
-            add_whole_range=True,
-            whole_period_name='Whole Time',
+            add_entire_range=True,
+            entire_range_label='Whole Time',
         )
 
         summary_df_monthly, _ = drc.get_summary_statistics()

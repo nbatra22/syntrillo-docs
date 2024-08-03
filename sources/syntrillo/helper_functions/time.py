@@ -54,28 +54,27 @@ def create_date_ranges(
     delta: timedelta,
     range_name_prefix: str,
     extra_count: int = 0,
-    ) -> List[dict]:
+) -> List[dict]:
     """
-    Create date ranges from a start date to an end date with a given delta.
+    Create date ranges from a start date to an end date with a specified interval.
 
     Args:
-         - from_date: datetime object, beginning of the period
-         - to_date: datetime object, end of the period
-         - delta: timedelta object, the length of each range
-         - range_name_prefix: str, the prefix for the range name : Month, Week, Day
-         - extra_count : number to add to the range count
+        from_date (datetime): The start date of the period.
+        to_date (datetime): The end date of the period.
+        delta (timedelta): The length of each range.
+        range_name_prefix (str): The prefix for each range name (e.g., 'Month', 'Week', 'Day').
+        extra_count (int, optional): An additional number to add to the range count. Defaults to 0.
 
     Returns:
-        List[dict]: a list of dictionaries with the following keys
-            - from_date: datetime object, beginning of the range
-            - to_date: datetime object, end of the range
-            - range_name: str, the name of the range
-
+        List[dict]: A list of dictionaries, each containing:
+            - 'from_date' (datetime): The start date of the range.
+            - 'to_date' (datetime): The end date of the range.
+            - 'range_name' (str): The name of the range.
     """
-    # force from_date to be at midnight to have even ranges
+    # Align the start date to midnight to ensure even ranges
     from_date = from_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # force to_date to be at 23:59:59 to have even ranges
+    # Align the end date to the end of the day to ensure even ranges
     to_date = to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     ranges = []
@@ -105,42 +104,46 @@ def create_date_ranges(
 def get_date_ranges_for_reporting(
     from_date: datetime,
     to_date: datetime,
-    period: str = 'weekly', # or monthly
-    last_ranges_unit : str = None, # 'week', or 'month', or 'day' (None will default to 'week' for weekly and 'month' for monthly)
-    use_total: bool = False, # whether to use total days or weeks for range name
-    add_whole_range: bool = False, # whether to add a range for the whole period at the begining of the dataframe
-    whole_period_name: str = 'Whole Period', # name for the whole period range
-    ) -> Tuple[ pd.DataFrame, dict ]:
+    period: str = 'weekly',  # 'weekly' or 'monthly'
+    last_ranges_unit: str = None,  # 'week', 'month', 'day' (default: 'week' for 'weekly', 'month' for 'monthly')
+    use_total: bool = False,  # whether to use total days or weeks for range name
+    add_entire_range: bool = False,  # whether to add a range for the entire period at the beginning
+    entire_range_label: str = 'Entire range',  # name for the whole period range
+    max_number_of_rows: int = 8  # max number of rows in the output (not counting the entire range)
+) -> Tuple[pd.DataFrame, dict]:
     """
-    delivers a dataframe with the date ranges for the period requested
+    Creates a dataframe with date ranges for the requested period.
 
     Args:
-       - from_date: datetime object, beginning of the period
-       - to_date: datetime object, end of the period
-       - period: str, 'weekly' or 'monthly' : the period for the ranges
-       - last_ranges_unit: str, 'month' or 'week' or 'day' : defines how to handle the last ranges. None will default to 'week' for weekly and 'month' for monthly
-            For example:
-            - if period is weekly and last_ranges_unit is 'week', the last range will be a single row with the remaining days (less than 7)  (default)
-            - if period is weekly and last_ranges_unit is 'day', the last ranges will be several days ranges with 1 day each
-            - if period is monthly and last_ranges_unit is 'month', the last range will be a single row with the remaining days (less than 30) (default)
-            - if period is monthly and last_ranges_unit is 'week', the last ranges will be several weeks ranges with 7 days each
-            - if period is monthly and last_ranges_unit is 'day', the last ranges will be several days ranges with 1 day each
-        - use_total: bool, whether to use total days or weeks for range name
+        from_date (datetime): Start date of the period.
+        to_date (datetime): End date of the period.
+        period (str): 'weekly' or 'monthly' to define the period for the ranges.
+        last_ranges_unit (str): Defines how to handle the last ranges: 'month', 'week', 'day'.
+                               Defaults to 'week' for 'weekly' and 'month' for 'monthly'.
+                               Examples:
+                                 - 'weekly' period with 'week' last_ranges_unit: Remaining days grouped as a single range.
+                                 - 'weekly' period with 'day' last_ranges_unit: Remaining days as individual ranges.
+                                 - 'monthly' period with 'month' last_ranges_unit: Remaining days grouped as a single range.
+                                 - 'monthly' period with 'week' last_ranges_unit: Remaining days grouped in weeks.
+                                 - 'monthly' period with 'day' last_ranges_unit: Remaining days as individual ranges.
+        use_total (bool): Whether to use total days or weeks for range names.
+        add_entire_range (bool): Whether to add a range for the entire period at the beginning.
+        entire_range_label (str): Name for the entire period range.
+        max_number_of_rows (int): Maximum number of rows in the output (not counting the entire range).
+                                  If the number of ranges exceeds this value, the first ranges will be collapsed
 
-    Returns a Tuple
-       - pd.DataFrame: dataframe with
-           - the date ranges, columns are 'from_date' and 'to_date', both datetime objects.
-           - a meaningful name for the range, column 'range_name' : Month 1, Week 1, etc.
-       - log: dict with the following keys: success, message
-
+    Returns:
+        Tuple[pd.DataFrame, dict]:
+            - pd.DataFrame: Dataframe with 'from_date', 'to_date', and 'range_name' columns.
+            - dict: Log with 'success' and 'message' keys.
     """
 
     # ------------------------------------------------------
-    # manage last_ranges_unit
+    # Determine default value for last_ranges_unit
     if last_ranges_unit is None:
         last_ranges_unit = 'week' if period == 'weekly' else 'month'
 
-    # assert last_ranges_unit is valid
+    # Validate last_ranges_unit
     if last_ranges_unit not in ['week', 'month', 'day']:
         log = {
             'success': False,
@@ -148,7 +151,7 @@ def get_date_ranges_for_reporting(
         }
         return None, log
 
-    # assert period is valid
+    # Validate period
     if period not in ['weekly', 'monthly']:
         log = {
             'success': False,
@@ -156,7 +159,7 @@ def get_date_ranges_for_reporting(
         }
         return None, log
 
-    # if dates are not datetime objects, assume they are string with isoformat and convert them
+    # Convert dates from string to datetime if necessary
     if not isinstance(from_date, datetime) or not isinstance(to_date, datetime):
         try:
             from_date = datetime.fromisoformat(from_date)
@@ -168,7 +171,7 @@ def get_date_ranges_for_reporting(
             }
             return None, log
 
-    # assert from_date is before to_date
+    # Ensure from_date is before to_date
     if from_date > to_date:
         log = {
             'success': False,
@@ -177,26 +180,32 @@ def get_date_ranges_for_reporting(
         return None, log
 
     # ------------------------------------------------------
-    # force from_date to be at midnight to have even ranges
+    # Align from_date to the start of the day
     from_date = from_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # force to_date to be at 23:59:59 to have even ranges
+    # Align to_date to the end of the day
     to_date = to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-
     # ------------------------------------------------------
-    # main logic for creating ranges
+    # Main logic for creating ranges
     date_ranges = []
 
-    # add a range for the whole period
-    if add_whole_range:
+    # row id to collapse from
+    collapse_from_row : int = 0
+
+    # Add a range for the entire period if requested
+    if add_entire_range:
         date_ranges.append({
             'from_date': from_date,
             'to_date': to_date,
-            'range_name': whole_period_name
+            'range_name': entire_range_label
         })
+        if max_number_of_rows is not None:
+            # this entire range row at the top does not count towards the max_number_of_rows
+            max_number_of_rows += 1
+            collapse_from_row = 1
 
-    # create ranges for the period
+    # Create ranges based on the period
     if period == 'weekly':
         date_ranges_periods = create_date_ranges(from_date, to_date, timedelta(weeks=1), 'Week')
     elif period == 'monthly':
@@ -205,37 +214,53 @@ def get_date_ranges_for_reporting(
     date_ranges.extend(date_ranges_periods)
 
     # ------------------------------------------------------
-    # handle the last range according to last_ranges_unit
+    # Handle the last range according to last_ranges_unit
     if date_ranges and last_ranges_unit != period[:-2]:
         last_range = date_ranges.pop()
         last_from = last_range['from_date']
         last_to = last_range['to_date']
 
         if last_ranges_unit == 'week':
-            if use_total:
-                # count number of weeks to add
-                extra_count = (to_date - from_date).days // 7
-            else:
-                extra_count = 0
-
+            extra_count = (to_date - from_date).days // 7 if use_total else 0
             date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(weeks=1), 'Week', extra_count=extra_count))
 
         elif last_ranges_unit == 'day':
-            if use_total:
-                # count number of days to add
-                extra_count = (to_date - from_date).days
-            else:
-                extra_count = 0
-
+            extra_count = (to_date - from_date).days if use_total else 0
             date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), 'Day', extra_count=extra_count))
 
-    # create DataFrame from ranges, with specific columns types
-    df= pd.DataFrame(date_ranges)
+    # ------------------------------------------------------
+    # Handle the maximum number of rows
+    if max_number_of_rows is not None and len(date_ranges) > max_number_of_rows:
+        # Determine how many ranges to collapse at the top
+        num_to_collapse = len(date_ranges) - max_number_of_rows + 2  # +2 to account for the entire range and the last range
+
+        # Collapse the top ranges
+        collapsed_from_date = date_ranges[collapse_from_row]['from_date']
+        collapsed_to_date = date_ranges[num_to_collapse - 1]['to_date']
+        collapsed_range_name = f"{date_ranges[collapse_from_row]['range_name']} - {date_ranges[num_to_collapse - 1]['range_name']}"
+
+        # Create the collapsed range
+        collapsed_range = {
+            'from_date': collapsed_from_date,
+            'to_date': collapsed_to_date,
+            'range_name': collapsed_range_name
+        }
+
+        # Update date_ranges with the collapsed range
+        if collapse_from_row == 0:
+            date_ranges = [collapsed_range] + date_ranges[num_to_collapse:]
+        else:
+            date_ranges = date_ranges[:collapse_from_row] + [collapsed_range] + date_ranges[num_to_collapse:]
+
+
+    # ------------------------------------------------------
+    # Create DataFrame from ranges
+    df = pd.DataFrame(date_ranges)
     df['from_date'] = pd.to_datetime(df['from_date'])
     df['to_date'] = pd.to_datetime(df['to_date'])
     df['range_name'] = df['range_name'].astype(str)
 
-    # log success
+    # Log success
     log = {
         'success': True,
         'message': 'Date ranges created successfully',
@@ -264,13 +289,22 @@ if __name__ == '__main__':
 
     # Test 3: Get date ranges for reporting
     print("\nTest 3: Get date ranges for reporting")
-    from_date = datetime(2022, 1, 1)
-    to_date = datetime(2022, 2, 15)
-    period = 'weekly'
+    from_date = datetime(2022, 6, 1)
+    to_date = datetime(2023, 2, 15)
+    period = 'monthly'
     last_ranges_unit = 'week'
     use_total = True
-    add_whole_range = True
-    date_ranges_df, log = get_date_ranges_for_reporting(from_date, to_date, period, last_ranges_unit, use_total, add_whole_range)
+    add_entire_range = True
+    date_ranges_df, log = get_date_ranges_for_reporting(
+        from_date,
+        to_date,
+        period,
+        last_ranges_unit,
+        use_total,
+        add_entire_range,
+        entire_range_label='Entire Time',
+        max_number_of_rows=8,
+        )
     print(date_ranges_df)
 
 
