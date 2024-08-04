@@ -57,45 +57,45 @@ class SyntrilloClinicBackendStack(Stack):
         print(json.dumps(self.environment_context, indent=4))
         print("--------------------------------------")
 
-        network=NetworkStack(
+        self.network = NetworkStack(
             self, "NetworkStack",
             self.aws_environment
         )
 
-        database=DatabaseStack(
+        self.database = DatabaseStack(
             self, "DatabaseStack",
             self.aws_environment,
-            vpc=network.vpc
+            vpc=self.network.vpc
         )
 
-        storage=StorageStack(
+        self.storage = StorageStack(
             self, "StorageStack", 
             self.aws_environment,
-            vpc=network.vpc
+            vpc=self.network.vpc
         )
 
-        secrets=SecretsStack(
+        self.secrets = SecretsStack(
             self, "SecretsStack"
         )
         
-        servers=ServersStack(
+        self.servers = ServersStack(
             self, "ServersStack", 
             aws_environment=self.aws_environment,
             environment_context=self.environment_context,
-            network=network,
-            database=database,
-            storage=storage,
-            secrets=secrets,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
         )
 
-        scheduled_tasks=SyntrilloClinicTaskSchedulingStack(
+        self.scheduled_tasks = SyntrilloClinicTaskSchedulingStack(
             self, "TaskSchedulingStack",
             aws_environment=self.aws_environment,
-            network=network,
-            database=database,
-            storage=storage,
-            secrets=secrets,
-            lambda_function=servers.iframe_generator_function.function
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+            lambda_function=self.servers.iframe_generator_function.function
         )
 
         # backupStack=SyntrilloClinicBackupStack(
