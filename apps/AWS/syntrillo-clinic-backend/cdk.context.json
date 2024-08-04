@@ -5,6 +5,9 @@
     },
     "database": {
       "removal-policy": "DESTROY"
+    },
+    "storage": {
+      "removal-policy": "DESTROY"
     }
   },
   "staging": {
@@ -12,6 +15,9 @@
       "provisioned_concurrency_executions": 0
     },
     "database": {
+      "removal-policy": "DESTROY"
+    },
+    "storage": {
       "removal-policy": "DESTROY"
     }
   },
@@ -21,6 +27,9 @@
     },
     "database": {
       "removal-policy": "RETAIN"
+    },
+    "storage": {
+      "removal-policy": "DESTROY"
     }
   }
 }

@@ -70,7 +70,7 @@ class SyntrilloClinicBackendStack(Stack):
 
         self.storage = StorageStack(
             self, "StorageStack", 
-            self.aws_environment,
+            environment_context=self.environment_context,
             vpc=self.network.vpc
         )
 

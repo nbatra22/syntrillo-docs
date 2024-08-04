@@ -28,7 +28,7 @@ def test_snapshot_database_stack(snapshot):
     assert template.to_json() == snapshot
   
 def test_snapshot_storage_stack(snapshot):
-    stack = syntrillo_clinic_backend_stack.database
+    stack = syntrillo_clinic_backend_stack.storage
     template = assertions.Template.from_stack(stack)
     assert template.to_json() == snapshot
 
