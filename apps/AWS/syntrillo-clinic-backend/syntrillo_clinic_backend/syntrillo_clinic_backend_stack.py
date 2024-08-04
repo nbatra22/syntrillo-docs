@@ -24,17 +24,17 @@ from constructs import Construct
 # STACKS
 # -----------------------------------------------------------------------------
 
-from syntrillo_clinic_backend.network_stack import NetworkStack
+from syntrillo_clinic_backend.substacks.network_stack import NetworkStack
 
-from syntrillo_clinic_backend.database_stack import DatabaseStack
-from syntrillo_clinic_backend.storage_stack import StorageStack
-from syntrillo_clinic_backend.secrets_stack import SecretsStack
+from syntrillo_clinic_backend.substacks.database_stack import DatabaseStack
+from syntrillo_clinic_backend.substacks.storage_stack import StorageStack
+from syntrillo_clinic_backend.substacks.secrets_stack import SecretsStack
 
-from syntrillo_clinic_backend.servers_stack import ServersStack
+from syntrillo_clinic_backend.substacks.servers_stack import ServersStack
 
-from syntrillo_clinic_backend.task_scheduling_stack import SyntrilloClinicTaskSchedulingStack
-from syntrillo_clinic_backend.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
-from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
+from syntrillo_clinic_backend.substacks.task_scheduling_stack import SyntrilloClinicTaskSchedulingStack
+from syntrillo_clinic_backend.substacks.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
+from syntrillo_clinic_backend.substacks.backup_stack import SyntrilloClinicBackupStack
 
 import json
 
