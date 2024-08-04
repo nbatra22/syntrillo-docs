@@ -79,8 +79,7 @@ class SyntrilloClinicBackendStack(Stack):
         )
         
         self.servers = ServersStack(
-            self, "ServersStack", 
-            aws_environment=self.aws_environment,
+            self, "ServersStack",
             environment_context=self.environment_context,
             network=self.network,
             database=self.database,

@@ -37,8 +37,7 @@ from syntrillo_clinic_backend.constructs.iframe_generator_function_construct imp
 
 class ServersStack(Stack):
         
-    def __init__(self, scope: Construct, id: str, 
-            aws_environment,
+    def __init__(self, scope: Construct, id: str,
             environment_context,
             network,
             database,
@@ -47,7 +46,6 @@ class ServersStack(Stack):
             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
     
-        self.aws_environment = aws_environment
         self.environment_context = environment_context
         self.network = network
         self.database = database
@@ -65,12 +63,12 @@ class ServersStack(Stack):
 
         self.iframe_generator_api_endpoint = IFrameGeneratorApiEndpoint(
             self, "IFrameGeneratorApiEndpoint",
-            aws_environment=self.aws_environment
+            environment_context=self.environment_context
         )
 
         self.iframe_generator_api_routes = IFrameGeneratorAPIRoutes(
             self, "IFrameGeneratorApiRoutes",
-            aws_environment=self.aws_environment,
+            environment_context=self.environment_context,
             api_endpoint=self.iframe_generator_api_endpoint,
             network=self.network
         )

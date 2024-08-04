@@ -21,12 +21,14 @@ from aws_cdk import (
 from constructs import Construct
 
 class IFrameGeneratorApiEndpoint(Construct):
-    def __init__(self, scope: Construct, id: str, aws_environment: str, **kwargs):
+    def __init__(self, scope: Construct, id: str, environment_context: str, **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        self.aws_environment = aws_environment
-        self.route_53_domain_name = f'{self.aws_environment}.syntrillo-clinic-backend.com'
-        self.api_domain_name = f'api.{self.aws_environment}.syntrillo-clinic-backend.com'
+        self.environment_context = environment_context
+        self.environment_name = self.environment_context["environment_name"]
+
+        self.route_53_domain_name = f'{self.environment_name}.syntrillo-clinic-backend.com'
+        self.api_domain_name = f'api.{self.environment_name}.syntrillo-clinic-backend.com'
 
         self.route53_hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
             self, "SyntrilloClinicRoute53HostedZoneId",
@@ -35,7 +37,7 @@ class IFrameGeneratorApiEndpoint(Construct):
 
         self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
             self, "SyntrilloClinicBackendHostedZone",
-            zone_name=f"{self.aws_environment}.{self.route53_hosted_zone_id}",
+            zone_name=f"{self.environment_name}.{self.route53_hosted_zone_id}",
             hosted_zone_id=self.route53_hosted_zone_id
         )
 
@@ -52,12 +54,12 @@ class IFrameGeneratorApiEndpoint(Construct):
             self, "IFramGeneratorAPI",
             rest_api_name="IFramGeneratorAPI",
             domain_name=apigw.DomainNameOptions(
-                domain_name=f"api.{aws_environment}.syntrillo-clinic-backend.com",
+                domain_name=f"api.{self.environment_name}.syntrillo-clinic-backend.com",
                 certificate=self.certificate
             ),
             deploy_options=apigw.StageOptions(
                 tracing_enabled=True,
-                stage_name=aws_environment
+                stage_name=self.environment_name
             )
         )
 

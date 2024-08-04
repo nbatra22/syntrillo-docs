@@ -1,5 +1,6 @@
 {
   "sandbox": {
+    "environment_name": "sandbox",
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
@@ -11,6 +12,7 @@
     }
   },
   "staging": {
+    "environment_name": "staging",
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
@@ -22,6 +24,7 @@
     }
   },
   "prod": {
+    "environment_name": "prod",
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 10
     },
@@ -29,7 +32,7 @@
       "removal-policy": "RETAIN"
     },
     "storage": {
-      "removal-policy": "DESTROY"
+      "removal-policy": "RETAIN"
     }
   }
 }

@@ -21,7 +21,7 @@ from aws_cdk import (
 from constructs import Construct
 
 class IFrameGeneratorAPIRoutes(Construct):
-    def __init__(self, scope: Construct, id: str, aws_environment: str, api_endpoint: Construct, network: Construct, **kwargs):
+    def __init__(self, scope: Construct, id: str, environment_context: dict, api_endpoint: Construct, network: Construct, **kwargs):
         super().__init__(scope, id, **kwargs)
 
         self.rest_api = api_endpoint.rest_api
