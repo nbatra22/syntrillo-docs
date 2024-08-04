@@ -37,7 +37,7 @@ class IFrameGeneratorApiEndpoint(Construct):
 
         self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
             self, "SyntrilloClinicBackendHostedZone",
-            zone_name=f"{self.environment_name}.{self.route53_hosted_zone_id}",
+            zone_name=f"{self.environment_name}.syntrillo-clinic-backend.com",
             hosted_zone_id=self.route53_hosted_zone_id
         )
 
@@ -63,9 +63,17 @@ class IFrameGeneratorApiEndpoint(Construct):
             )
         )
 
+        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
+            zone=self.hosted_zone,
+            record_name=f"api.{self.environment_name}.syntrillo-clinic-backend.com",
+            target=route53.RecordTarget.from_alias(
+                route53_targets.ApiGateway(self.rest_api)
+            )
+        )
+
         # This resource is a minimum for this construct to work on its own
         # this ping resource can also be used for a minimalistic test of the api endpoint
         # jsut to make sure the endpoint is there
         self.rest_api.root.add_resource("ping").add_method(
             "GET",
-        ) 
+        )

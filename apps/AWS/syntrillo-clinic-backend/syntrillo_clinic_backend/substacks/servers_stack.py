@@ -77,15 +77,3 @@ class ServersStack(Stack):
         self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
-
-        # ---------------------------------------------------------------------
-        # API RESOURCES & METHODES (END)
-        # ---------------------------------------------------------------------
-
-        # route53.ARecord(self, "SyntrilloCustomDomainARecord", 
-        #     zone=hosted_zone,
-        #     record_name=f"api.{self.aws_environment}.syntrillo-clinic-backend.com",
-        #     target=route53.RecordTarget.from_alias(
-        #         route53_targets.ApiGateway(iframe_generator_api.rest_api)
-        #     )
-        # )
