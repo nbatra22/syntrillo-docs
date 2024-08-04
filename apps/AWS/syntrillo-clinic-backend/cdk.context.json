@@ -2,16 +2,25 @@
   "sandbox": {
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
+    },
+    "database": {
+      "removal-policy": "DESTROY"
     }
   },
   "staging": {
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
+    },
+    "database": {
+      "removal-policy": "DESTROY"
     }
   },
   "prod": {
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 10
+    },
+    "database": {
+      "removal-policy": "RETAIN"
     }
   }
 }

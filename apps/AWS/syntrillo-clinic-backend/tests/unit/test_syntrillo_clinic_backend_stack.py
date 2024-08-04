@@ -3,13 +3,12 @@ import aws_cdk.assertions as assertions
 
 from syntrillo_clinic_backend.syntrillo_clinic_backend_stack import SyntrilloClinicBackendStack
 
-TEST_CONTEXT = {
-  "sandbox": {
-    "iframe_generator_function": {
-      "provisioned_concurrency_executions": 0
-    }
-  }
-}
+import json
+
+with open('cdk.context.json', 'r') as f:
+    TEST_CONTEXT = json.load(f)
+
+TEST_CONTEXT['environment']="sandbox"
 
 def test_sqs_queue_created():
     app = core.App(context=TEST_CONTEXT)

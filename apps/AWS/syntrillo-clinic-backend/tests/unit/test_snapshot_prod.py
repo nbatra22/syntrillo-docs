@@ -1,13 +1,14 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
 
+from syntrillo_clinic_backend.syntrillo_clinic_backend_stack import SyntrilloClinicBackendStack
+
 import json
+
 with open('cdk.context.json', 'r') as f:
     TEST_CONTEXT = json.load(f)
 
-from syntrillo_clinic_backend.syntrillo_clinic_backend_stack import SyntrilloClinicBackendStack
-
-TEST_CONTEXT['environment']="sandbox"
+TEST_CONTEXT['environment']="prod"
 
 app = core.App(context=TEST_CONTEXT)
 syntrillo_clinic_backend_stack = SyntrilloClinicBackendStack(app, "syntrillo-clinic-backend")

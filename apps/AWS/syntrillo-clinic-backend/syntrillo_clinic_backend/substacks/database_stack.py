@@ -26,16 +26,14 @@ from constructs import Construct
 
 class DatabaseStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, aws_environment, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, vpc, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.aws_environment = aws_environment
+        self.environment_context = environment_context
         self.vpc = vpc
 
-        if self.aws_environment == "prod":
-            self.removal_policy = RemovalPolicy.RETAIN
-        else:
-            self.removal_policy = RemovalPolicy.DESTROY
+        removal_policy_value = self.environment_context["database"]["removal-policy"]
+        self.removal_policy = RemovalPolicy[removal_policy_value]
 
         self.db = rds.DatabaseInstance(self, "MySQLDatabase",
             vpc=self.vpc,
