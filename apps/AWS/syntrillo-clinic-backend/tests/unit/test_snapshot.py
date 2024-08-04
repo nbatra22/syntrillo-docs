@@ -1,15 +1,13 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
 
+import json
+with open('cdk.context.json', 'r') as f:
+    TEST_CONTEXT = json.load(f)
+
 from syntrillo_clinic_backend.syntrillo_clinic_backend_stack import SyntrilloClinicBackendStack
 
-TEST_CONTEXT = {
-  "sandbox": {
-    "iframe_generator_function": {
-      "provisioned_concurrency_executions": 0
-    }
-  }
-}
+TEST_CONTEXT['environment']="sandbox"
 
 app = core.App(context=TEST_CONTEXT)
 syntrillo_clinic_backend_stack = SyntrilloClinicBackendStack(app, "syntrillo-clinic-backend")
