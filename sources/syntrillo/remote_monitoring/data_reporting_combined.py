@@ -269,7 +269,7 @@ if __name__ == '__main__':
     log = drc.select_date_ranges(
         start_date=None,
         end_date=None,
-        period='monthly',
+        period='weekly',
         last_ranges_unit='week',
         use_total=False,
         add_entire_range=True,
