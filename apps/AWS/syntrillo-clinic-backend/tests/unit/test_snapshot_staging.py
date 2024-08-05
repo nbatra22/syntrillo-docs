@@ -46,3 +46,8 @@ def test_snapshot_schedule_tasks(snapshot):
     stack = syntrillo_clinic_backend_stack.scheduled_tasks
     template = assertions.Template.from_stack(stack)
     assert template.to_json() == snapshot
+
+def test_snapshot_bastion_stack(snapshot):
+    stack = syntrillo_clinic_backend_stack.bastion
+    template = assertions.Template.from_stack(stack)
+    assert template.to_json() == snapshot

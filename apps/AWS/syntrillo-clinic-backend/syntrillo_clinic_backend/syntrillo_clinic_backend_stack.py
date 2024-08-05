@@ -36,6 +36,8 @@ from syntrillo_clinic_backend.substacks.task_scheduling_stack import SyntrilloCl
 from syntrillo_clinic_backend.substacks.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
 from syntrillo_clinic_backend.substacks.backup_stack import SyntrilloClinicBackupStack
 
+from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
+
 import json
 
 class SyntrilloClinicBackendStack(Stack):
@@ -95,6 +97,12 @@ class SyntrilloClinicBackendStack(Stack):
             storage=self.storage,
             secrets=self.secrets,
             lambda_function=self.servers.iframe_generator_function.function
+        )
+
+        self.bastion=SyntrilloClinicBastionStack(
+            self, "BastionStack",
+            network=self.network,
+            storage=self.storage,
         )
 
         # backupStack=SyntrilloClinicBackupStack(
