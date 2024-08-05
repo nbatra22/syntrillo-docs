@@ -651,6 +651,7 @@ class DataReportingHeartRate:
                 - pulse_mean
                 - pulse_median
                 - pulse_sdnn
+                - irregular_pulse_count
         """
         from_date = row['from_date']
         to_date = row['to_date']
@@ -663,13 +664,21 @@ class DataReportingHeartRate:
         num_datapoints_pulse = len(filtered_pulse)
 
         if num_datapoints_pulse == 0:
-            pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = None
+            pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = irregular_pulse_count = None
         else:
             pulse_min = filtered_pulse['pulse'].min()
             pulse_max = filtered_pulse['pulse'].max()
             pulse_mean = filtered_pulse['pulse'].mean()
             pulse_median = filtered_pulse['pulse'].median()
             pulse_sdnn = filtered_pulse['pulse'].std()
+
+            # count irregular heartbeat events
+            if self.irregular_heartbeat_df is not None and not self.irregular_heartbeat_df.empty:
+                filtered_irregular_pulse = self.irregular_heartbeat_df[(self.irregular_heartbeat_df['timestamp_local'] >= from_date) &
+                                                                    (self.irregular_heartbeat_df['timestamp_local'] <= to_date)]
+                irregular_pulse_count = len(filtered_irregular_pulse)
+            else:
+                irregular_pulse_count = 0
 
         return pd.Series({
             'from_date': from_date,
@@ -680,7 +689,8 @@ class DataReportingHeartRate:
             'pulse_max': pulse_max,
             'pulse_mean': pulse_mean,
             'pulse_median': pulse_median,
-            'pulse_sdnn': pulse_sdnn
+            'pulse_sdnn': pulse_sdnn,
+            'irregular_pulse_count': irregular_pulse_count,
         })
 
     def get_pulse_summary_for_date_ranges(
@@ -704,6 +714,7 @@ class DataReportingHeartRate:
                 - pulse_mean
                 - pulse_median
                 - pulse_sdnn
+                - irregular_pulse_count
             - log : dict
 
         """
@@ -734,6 +745,11 @@ class DataReportingHeartRate:
             'success': True,
             'message': 'Summary statistics calculated successfully',
         }
+
+
+
+
+
 
 
 
