@@ -102,6 +102,7 @@ class SyntrilloClinicBackendStack(Stack):
         self.bastion=SyntrilloClinicBastionStack(
             self, "BastionStack",
             network=self.network,
+            database=self.database,
             storage=self.storage,
         )
 

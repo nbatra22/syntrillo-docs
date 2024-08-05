@@ -18,6 +18,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_iam as iam
 )
 from constructs import Construct
 
@@ -26,10 +27,11 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class SyntrilloClinicBastionStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, network: Construct, storage: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, network: Construct, database: Construct, storage: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.network = network
+        self.database = database
         self.storage = storage
 
         security_group = ec2.SecurityGroup(
@@ -42,14 +44,36 @@ class SyntrilloClinicBastionStack(Stack):
         bastion_host = ec2.BastionHostLinux(
             self, "BastionHost",
             vpc=self.network.vpc,
-            instance_type=ec2.InstanceType("t3.micro"),
+            instance_type=ec2.InstanceType("t3.small"),
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),
-            security_group=security_group
+            security_group=security_group,
+            machine_image=ec2.MachineImage.latest_amazon_linux2023(),
         )
 
-        # Get the security group associated with the EFS file system
+        # # Create an IAM role for SSM
+        # ssm_role = iam.Role(
+        #     self, "SSMRole",
+        #     assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+        #     managed_policies=[
+        #         iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")
+        #     ]
+        # )
+
+        # public_subnets = [subnet for subnet in self.network.vpc.public_subnets]
+
+        # instance = ec2.Instance(
+        #     self,
+        #     "Instance",
+        #     instance_type=ec2.InstanceType("t3.micro"),
+        #     machine_image=ec2.MachineImage.latest_amazon_linux2023(),
+        #     vpc_subnets=ec2.SubnetSelection(subnets=public_subnets),
+        #     vpc=self.network.vpc,
+        #     role=ssm_role 
+        # )
+
+        # # Get the security group associated with the EFS file system
         efs_security_group = self.storage.efs_file_system.connections.security_groups[0]
 
         # Allow NFS traffic from the bastion host to the EFS file system
@@ -58,3 +82,11 @@ class SyntrilloClinicBastionStack(Stack):
             connection=ec2.Port.tcp(2049),
             description="Allow NFS from bastion host"
         )
+
+        db_security_group = self.database.db_security_group
+
+        db_security_group.add_ingress_rule(
+            security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        )       

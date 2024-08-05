@@ -48,12 +48,12 @@ class DatabaseStack(Stack):
             removal_policy=self.removal_policy
         )
 
-        db_security_group = self.db.connections.security_groups[0]
+        self.db_security_group = self.db.connections.security_groups[0]
 
         private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.vpc.private_subnets]
 
         for cidr_block in private_subnet_cidr_blocks:
-            db_security_group.add_ingress_rule(
+            self.db_security_group.add_ingress_rule(
                 ec2.Peer.ipv4(cidr_block),
                 ec2.Port.tcp(3306),
                 description=f"Allow inbound traffic from {cidr_block} on port 3306"
