@@ -278,6 +278,7 @@ class ColorCodingBloodPressureCategories:
         self,
         systolic: float = None,
         diastolic: float = None,
+        round_values: int = None,
         ):
         """
         Get the entry for the combination of systolic and diastolic blood pressure.
@@ -297,6 +298,10 @@ class ColorCodingBloodPressureCategories:
         if diastolic is not None:
             self.diastolic = diastolic
 
+        # update the round_values if provided
+        if round_values is not None:
+            self.round_values = round_values
+
         # get the category of the combination
         category = self.get_combination_category()
         if category is None:
@@ -305,8 +310,9 @@ class ColorCodingBloodPressureCategories:
         systolic_entry = self.get_systolic_entry()
         diastolic_entry = self.get_diastolic_entry()
 
-        systolic_entry_rounded = round(systolic_entry['value'], self.round_values)
-        diastolic_entry_rounded = round(diastolic_entry['value'], self.round_values)
+        # round the values and format as needed
+        systolic_entry_rounded = f"{systolic_entry['value']:.{self.round_values}f}"
+        diastolic_entry_rounded = f"{diastolic_entry['value']:.{self.round_values}f}"
 
         if self.html_highlight == 'bold':
             systolic_html = f"<b>{systolic_entry_rounded}</b>" if not systolic_entry['normal'] else f"{systolic_entry_rounded}"

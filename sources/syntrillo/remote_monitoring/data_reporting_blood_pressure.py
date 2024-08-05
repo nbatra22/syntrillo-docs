@@ -396,6 +396,10 @@ class DataReportingBloodPressure:
                 - diastolic_max
                 - diastolic_mean
                 - diastolic_median
+                - bp_min : combination of systolic_min and diastolic_min, json string
+                - bp_mean : combination of systolic_mean and diastolic_mean, json string
+                - bp_median : combination of systolic_median and diastolic_median, json string
+                - bp_max : combination of systolic_max and diastolic_max, json string
                 - num_above_130_90 ( SBP ge 140 OR DBP ge 90)
                 - percent_above_130_90
                 - systolic_mean_color
@@ -436,10 +440,10 @@ class DataReportingBloodPressure:
             diastolic_mean = filtered_bp['diastolic'].mean()
             diastolic_median = filtered_bp['diastolic'].median()
 
-            bp_min = ccbp.get_combination_entry(filtered_bp['systolic'].min(), filtered_bp['diastolic'].min())
-            bp_mean = ccbp.get_combination_entry(filtered_bp['systolic'].mean(), filtered_bp['diastolic'].mean())
-            bp_median = ccbp.get_combination_entry(filtered_bp['systolic'].median(), filtered_bp['diastolic'].median())
-            bp_max = ccbp.get_combination_entry(filtered_bp['systolic'].max(), filtered_bp['diastolic'].max())
+            bp_min = ccbp.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            bp_mean = ccbp.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            bp_median = ccbp.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            bp_max = ccbp.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             above_130_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
             num_above_130_90 = len(above_130_90)
