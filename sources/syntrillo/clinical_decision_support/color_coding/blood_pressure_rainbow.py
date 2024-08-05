@@ -1,7 +1,6 @@
 # get rainbow color for blood pressure
 
 from matplotlib import colors as mcolors
-from matplotlib import colormaps
 
 class ColorCodingBloodPressureRainbows:
 
@@ -30,6 +29,26 @@ class ColorCodingBloodPressureRainbows:
         self.diastolic = diastolic
         self.alpha = alpha
 
+    def set_values(
+        self,
+        systolic: float = None,
+        diastolic: float = None,
+        alpha: float = None,
+        ):
+        """
+        Set the systolic and diastolic blood pressure values and the alpha value for the color code.
+
+        Args:
+            systolic (float): Systolic blood pressure value.
+            diastolic (float): Diastolic blood pressure value.
+            alpha (float): Alpha value for the color code.
+        """
+        if systolic is not None:
+            self.systolic = systolic
+        if diastolic is not None:
+            self.diastolic = diastolic
+        if alpha is not None:
+            self.alpha = alpha
 
 
     def get_color_for_systolic(self) -> str:

@@ -17,7 +17,8 @@ from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
-from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories
+from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories, ColorCodingBloodPressureCategoriesWrapper
+from syntrillo.clinical_decision_support.color_coding.blood_pressure_rainbow import ColorCodingBloodPressureRainbows
 
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 
@@ -269,78 +270,6 @@ class DataReportingBloodPressure:
 
         return start_date, end_date
 
-    def _get_color_for_systolic(self, systolic: float) -> str:
-        """
-        Function to get color for systolic blood pressure value using a colormap
-
-        Args:
-            systolic: float, the systolic blood pressure value
-
-        Returns:
-            color: str, the color corresponding to the systolic value
-        """
-        # Normalize the systolic values to the range of the colormap
-        norm_red = mcolors.Normalize(vmin=130, vmax=200)
-        norm_green = mcolors.Normalize(vmin=100, vmax=130)
-
-        # Define the colormap
-        colormap_red = colormaps['autumn']
-        colormap_green = colormaps['summer']
-
-        # Map the systolic value to a color, with a reversed colormap
-        z = 0.1
-        if systolic >= 130:
-            color = (1 - norm_red(systolic)/4, z, z)
-        elif 100 <= systolic < 130:
-            color = (z, 1-norm_green(systolic)/4, z)
-        else:
-            # blue
-            color = (z, z, 1)
-
-        # Add the alpha transparency
-        color_with_alpha = (color[0], color[1], color[2], self.alpha)
-
-        # Convert the RGBA color to a hexadecimal string with alpha
-        color_hex = mcolors.to_hex(color_with_alpha, keep_alpha=True)
-
-        return color_hex
-
-
-    def _get_color_for_diastolic(self, diastolic: float) -> str:
-        """
-        Function to get color for diastolic blood pressure value using a colormap
-
-        Args:
-            diastolic: float, the diastolic blood pressure value
-
-        Returns:
-            color: str, the color corresponding to the diastolic value
-        """
-        norm_red = mcolors.Normalize(vmin=90, vmax=120)
-        norm_green = mcolors.Normalize(vmin=50, vmax=90)
-
-        # Define the colormap
-        colormap_red = colormaps['autumn']
-        colormap_green = colormaps['summer']
-
-        # Map the systolic value to a color, with a reversed colormap
-        z = 0.1
-        if diastolic >= 90:
-            color = (1 - norm_red(diastolic)/4, z, z)
-        elif 50 <= diastolic < 90:
-            color = (z, 1-norm_green(diastolic)/4, z)
-        else:
-            # blue
-            color = (z, z, 1)
-
-        # Add the alpha transparency
-        color_with_alpha = (color[0], color[1], color[2], self.alpha)
-
-        # Convert the RGBA color to a hexadecimal string with alpha
-        color_hex = mcolors.to_hex(color_with_alpha, keep_alpha=True)
-
-        return color_hex
-
     def _get_color_for_percent_above_130_90(self, percent_above_130_90: float) -> str:
         """
         Function to get color for percent of blood pressure values above 130/90 using a colormap
@@ -416,19 +345,30 @@ class DataReportingBloodPressure:
 
         num_datapoints_bp = len(filtered_bp)
 
-        # Initialize the color coding for blood pressure categories
-        ccbp = ColorCodingBloodPressureCategories(color_category_name='default')
-        ccbp.alpha = self.alpha
-        ccbp.no_data_string = self.no_data_string
-        ccbp.no_data_color = 'white'
+        # Initialize the color coding for blood pressure categories - internal1
+        ccbp_category_internal1 = ColorCodingBloodPressureCategories(color_category_name='internal1')
+        ccbp_category_internal1.alpha = self.alpha
+        ccbp_category_internal1.no_data_string = self.no_data_string
+        ccbp_category_internal1.no_data_color = 'white'
+
+        # Initialize the color coding for blood pressure categories - internal1
+        ccbp_category_aha = ColorCodingBloodPressureCategories(color_category_name='american_heart_association')
+        ccbp_category_aha.alpha = self.alpha
+        ccbp_category_aha.no_data_string = self.no_data_string
+        ccbp_category_aha.no_data_color = 'white'
+
+        # Initialize the color coding for blood pressure rainbow
+        ccbp_rainbow = ColorCodingBloodPressureRainbows()
+        ccbp_rainbow.alpha = self.alpha
 
         # Calculate summary statistics for the blood pressure data
         if num_datapoints_bp == 0:
             systolic_min = systolic_max = systolic_mean = systolic_median = self.no_data_string
             diastolic_min = diastolic_max = diastolic_mean = diastolic_median = self.no_data_string
-            bp_min = bp_mean = bp_median = bp_max = ccbp.get_no_data_combination_entry()
+            internal1_color_bp_min = internal1_color_bp_mean = internal1_color_bp_median = internal1_color_bp_max = ccbp_category_internal1.get_no_data_combination_entry()
+            aha_color_bp_min = aha_color_bp_mean = aha_color_bp_median = aha_color_bp_max = ccbp_category_aha.get_no_data_combination_entry()
             num_above_130_90 = percent_above_130_90 = self.no_data_string
-            systolic_mean_color = diastolic_mean_color = percent_above_130_90_color = "white"
+            rainbow_color_bp_mean = rainbow_color_systolic_mean = rainbow_color_diastolic_mean = percent_above_130_90_color = "white"
         else:
             systolic_min = filtered_bp['systolic'].min()
             systolic_max = filtered_bp['systolic'].max()
@@ -440,18 +380,28 @@ class DataReportingBloodPressure:
             diastolic_mean = filtered_bp['diastolic'].mean()
             diastolic_median = filtered_bp['diastolic'].median()
 
-            bp_min = ccbp.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            bp_mean = ccbp.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            bp_median = ccbp.get_combination_entry(systolic_median, diastolic_median, round_values=1)
-            bp_max = ccbp.get_combination_entry(systolic_max, diastolic_max, round_values=0)
+            # SBP/DBP combinations with categories
+            internal1_color_bp_min = ccbp_category_internal1.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            internal1_color_bp_max = ccbp_category_internal1.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
+            # SBP/DBP combinations with categories
+            aha_color_bp_min = ccbp_category_aha.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            aha_color_bp_max = ccbp_category_aha.get_combination_entry(systolic_max, diastolic_max, round_values=0)
+
+            # Rainbow colors
+            ccbp_rainbow.set_values(systolic=systolic_mean, diastolic=diastolic_mean)
+            rainbow_color_systolic_mean = ccbp_rainbow.get_color_for_systolic()
+            rainbow_color_diastolic_mean = ccbp_rainbow.get_color_for_diastolic()
+            rainbow_color_bp_mean = ccbp_rainbow.get_color_for_blood_pressure()
+
+            # Blood pressure values above 130/90
             above_130_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
             num_above_130_90 = len(above_130_90)
             percent_above_130_90 = (num_above_130_90 / num_datapoints_bp) * 100
-
-            # Add a color column to the filtered blood pressure data
-            systolic_mean_color = self._get_color_for_systolic(systolic_mean)
-            diastolic_mean_color = self._get_color_for_diastolic(diastolic_mean)
             percent_above_130_90_color = self._get_color_for_percent_above_130_90(percent_above_130_90)
 
 
@@ -468,14 +418,19 @@ class DataReportingBloodPressure:
             'diastolic_max': diastolic_max,
             'diastolic_mean': diastolic_mean,
             'diastolic_median': diastolic_median,
-            'bp_min': bp_min,
-            'bp_mean': bp_mean,
-            'bp_median': bp_median,
-            'bp_max': bp_max,
+            'internal1_color_bp_min': internal1_color_bp_min,
+            'internal1_color_bp_mean': internal1_color_bp_mean,
+            'internal1_color_bp_median': internal1_color_bp_median,
+            'internal1_color_bp_max': internal1_color_bp_max,
+            'aha_color_bp_min': aha_color_bp_min,
+            'aha_color_bp_mean': aha_color_bp_mean,
+            'aha_color_bp_median': aha_color_bp_median,
+            'aha_color_bp_max': aha_color_bp_max,
+            'rainbow_color_systolic_mean': rainbow_color_systolic_mean,
+            'rainbow_color_diastolic_mean': rainbow_color_diastolic_mean,
+            'rainbow_color_bp_mean': rainbow_color_bp_mean,
             'num_above_130_90': num_above_130_90,
             'percent_above_130_90': percent_above_130_90,
-            'systolic_mean_color': systolic_mean_color,
-            'diastolic_mean_color': diastolic_mean_color,
             'percent_above_130_90_color': percent_above_130_90_color,
         })
 

@@ -1,6 +1,7 @@
 # Path: ./apps/PythonAnywhere/website/flask_app.py
 
 import os
+from math import isnan
 
 from flask import Flask, render_template
 
@@ -79,7 +80,7 @@ app.register_blueprint(iframe_healthie_patient_sidebar_bp)
 # Jinja2 filters
 
 @app.template_filter('none_string_data_filter')
-def none_string_data_filter(value, precision):
+def none_string_data_filter(value, precision, none_string='no data'):
     """
     Used to format data in Jinja2 templates.
 
@@ -92,8 +93,8 @@ def none_string_data_filter(value, precision):
     Returns:
         The formatted value
     """
-    if value is None:
-        return ' '
+    if value is None or (isinstance(value, float) and isnan(value)):
+        return none_string
     elif isinstance(value, str):
         return value
     else:

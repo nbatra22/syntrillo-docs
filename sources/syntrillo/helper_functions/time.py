@@ -243,7 +243,7 @@ def get_date_ranges_for_reporting(
         # Collapse the top ranges
         collapsed_from_date = date_ranges[collapse_from_row]['from_date']
         collapsed_to_date = date_ranges[num_to_collapse - 1]['to_date']
-        collapsed_range_name = f"{date_ranges[collapse_from_row]['range_name']} - {date_ranges[num_to_collapse - 1]['range_name']}"
+        collapsed_range_name = f"{date_ranges[collapse_from_row]['range_name']} to {date_ranges[num_to_collapse - 1]['range_name']}"
 
         # Create the collapsed range
         collapsed_range = {
