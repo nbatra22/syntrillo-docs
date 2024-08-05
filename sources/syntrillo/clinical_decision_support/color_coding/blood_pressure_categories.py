@@ -1,13 +1,15 @@
 
 from json import dumps as json_dumps
 
+from syntrillo.clinical_decision_support.color_coding.color_remapping import ColorReMapping
+
 class ColorCodingBloodPressureCategories:
     """
     A class to handle color coding categories for blood pressure values.
 
     Attributes:
-        COLOR_CODES (list): List of dictionaries with color code configurations.
-        color_code (dict): Currently selected color code.
+        COLOR_CATEGORIES (list): List of dictionaries with color code configurations.
+        color_category (dict): Currently selected color code.
         systolic (float): Systolic blood pressure value.
         diastolic (float): Diastolic blood pressure value.
 
@@ -44,7 +46,7 @@ class ColorCodingBloodPressureCategories:
     """
 
     # Predefined color code configurations
-    COLOR_CODES = [{
+    COLOR_CATEGORIES = [{
                         'name': 'default',
                         'systolic': {
                             'thresholds': (120, 140),
@@ -94,13 +96,24 @@ class ColorCodingBloodPressureCategories:
                    ]
 
     # current color code selected
-    color_code = None
+    color_category = None
+
+    # default options for the get_combination_entry method
+    html_highlight: str = 'underline'
+    round_values: int = 0
+    html_separator: str = ' / '
+
+    # no data combination
+    no_data_string = 'no data'
+    no_data_color = 'White'
+
 
     def __init__(
         self,
         systolic: float = None,
         diastolic: float = None,
-        color_code_name: str = 'default',
+        color_category_name: str = 'default',
+        alpha: float = 0.5,
     ):
         """
         Initializes an instance with specified systolic and diastolic blood pressure values and a color code name.
@@ -109,18 +122,20 @@ class ColorCodingBloodPressureCategories:
             systolic (float): Systolic blood pressure value.
             diastolic (float): Diastolic blood pressure value.
             color_code_name (str): The name of the color code to use. Defaults to 'default'.
+            alpha (float): Alpha value for the color code. Defaults to 0.5.
         """
         self.systolic = systolic
         self.diastolic = diastolic
+        self.alpha = alpha
 
         # Select the appropriate color code based on the provided name
-        for color_code in self.COLOR_CODES:
-            if color_code['name'] == color_code_name:
-                self.color_code = color_code
+        for color_category in self.COLOR_CATEGORIES:
+            if color_category['name'] == color_category_name:
+                self.color_category = color_category
                 break
 
-        if self.color_code is None:
-            raise ValueError(f'Color code {color_code_name} not found')
+        if self.color_category is None:
+            raise ValueError(f'Color code {color_category_name} not found')
 
     def get_thresholds(self):
         """
@@ -130,8 +145,8 @@ class ColorCodingBloodPressureCategories:
             dict: A dictionary with systolic and diastolic thresholds.
         """
         return {
-            'systolic': self.color_code['systolic']['thresholds'],
-            'diastolic': self.color_code['diastolic']['thresholds'],
+            'systolic': self.color_category['systolic']['thresholds'],
+            'diastolic': self.color_category['diastolic']['thresholds'],
         }
 
     def get_systolic_category(self):
@@ -144,7 +159,7 @@ class ColorCodingBloodPressureCategories:
         if self.systolic is None:
             return None
 
-        thresholds = self.color_code['systolic']['thresholds']
+        thresholds = self.color_category['systolic']['thresholds']
         for i, threshold in enumerate(thresholds):
             if self.systolic < threshold:
                 return i
@@ -164,9 +179,9 @@ class ColorCodingBloodPressureCategories:
         return {
             'value': self.systolic,
             'category': category,
-            'normal': self.color_code['systolic']['normal'][category],
-            'color': self.color_code['systolic']['colors'][category],
-            'label': self.color_code['systolic']['labels'][category],
+            'normal': self.color_category['systolic']['normal'][category],
+            'color': ColorReMapping.get_color(self.color_category['systolic']['colors'][category], self.alpha),
+            'label': self.color_category['systolic']['labels'][category],
         }
 
     def get_diastolic_category(self):
@@ -179,7 +194,7 @@ class ColorCodingBloodPressureCategories:
         if self.diastolic is None:
             return None
 
-        thresholds = self.color_code['diastolic']['thresholds']
+        thresholds = self.color_category['diastolic']['thresholds']
         for i, threshold in enumerate(thresholds):
             if self.diastolic < threshold:
                 return i
@@ -199,9 +214,9 @@ class ColorCodingBloodPressureCategories:
         return {
             'value': self.diastolic,
             'category': category,
-            'normal': self.color_code['diastolic']['normal'][category],
-            'color': self.color_code['diastolic']['colors'][category],
-            'label': self.color_code['diastolic']['labels'][category],
+            'normal': self.color_category['diastolic']['normal'][category],
+            'color': ColorReMapping.get_color(self.color_category['diastolic']['colors'][category], self.alpha),
+            'label': self.color_category['diastolic']['labels'][category],
         }
 
     def get_combination_category(self):
@@ -215,8 +230,8 @@ class ColorCodingBloodPressureCategories:
         systolic_category = self.get_systolic_category()
         diastolic_category = self.get_diastolic_category()
 
-        logic = self.color_code['combinations']['logic']
-        colors = self.color_code['combinations']['colors']
+        logic = self.color_category['combinations']['logic']
+        colors = self.color_category['combinations']['colors']
 
         # logic and colors should have the same length
         if len(logic) != len(colors):
@@ -240,55 +255,97 @@ class ColorCodingBloodPressureCategories:
 
         return len(logic) - 1
 
-    def get_combination_entry(
+    def set_combination_entry_options(
         self,
         html_highlight: str = 'underline',
         round_values: int = 0,
         html_separator: str = ' / ',
         ):
         """
-        Get the entry for the combination of systolic and diastolic blood pressure.
+        Set the options for the get_combination_entry method.
 
         Args:
             html_highlight (str): The type of HTML highlighting to use for the values. Defaults to 'underline'.
             round_values (int): The number of decimal places to round the values to. Defaults to 0.
             html_separator (str): The separator to use between the systolic and diastolic values. Defaults to ' / '.
+        """
+        self.html_highlight = html_highlight
+        self.round_values = round_values
+        self.html_separator = html_separator
+
+
+    def get_combination_entry(
+        self,
+        systolic: float = None,
+        diastolic: float = None,
+        ):
+        """
+        Get the entry for the combination of systolic and diastolic blood pressure.
+
+        Args:
+            systolic (float): The systolic blood pressure value. Defaults to the value provided during initialization.
+            diastolic (float): The diastolic blood pressure value. Defaults to the value provided during initialization.
 
         Returns:
             dict: A dictionary containing the category, normal, color, label, and HTML representation of the combination of systolic and diastolic blood pressure.
         """
 
+        # update the systolic and diastolic values if provided
+        if systolic is not None:
+            self.systolic = systolic
+
+        if diastolic is not None:
+            self.diastolic = diastolic
+
+        # get the category of the combination
         category = self.get_combination_category()
         if category is None:
-            return None
+            return self.get_no_data_combination_entry()
 
         systolic_entry = self.get_systolic_entry()
         diastolic_entry = self.get_diastolic_entry()
 
-        systolic_entry_rounded = round(systolic_entry['value'], round_values)
-        diastolic_entry_rounded = round(diastolic_entry['value'], round_values)
+        systolic_entry_rounded = round(systolic_entry['value'], self.round_values)
+        diastolic_entry_rounded = round(diastolic_entry['value'], self.round_values)
 
-        if html_highlight == 'bold':
+        if self.html_highlight == 'bold':
             systolic_html = f"<b>{systolic_entry_rounded}</b>" if not systolic_entry['normal'] else f"{systolic_entry_rounded}"
             diastolic_html = f"<b>{diastolic_entry_rounded}</b>" if not diastolic_entry['normal'] else f"{diastolic_entry_rounded}"
-        elif html_highlight == 'underline':
+        elif self.html_highlight == 'underline':
             systolic_html = f"<u>{systolic_entry_rounded}</u>" if not systolic_entry['normal'] else f"{systolic_entry_rounded}"
             diastolic_html = f"<u>{diastolic_entry_rounded}</u>" if not diastolic_entry['normal'] else f"{diastolic_entry_rounded}"
-        elif html_highlight == 'color':
+        elif self.html_highlight == 'color':
             systolic_html = f"<span style='color: {systolic_entry['color']}'>{systolic_entry_rounded}</span>" if not systolic_entry['normal'] else f"{systolic_entry_rounded}"
             diastolic_html = f"<span style='color: {diastolic_entry['color']}'>{diastolic_entry_rounded}</span>" if not diastolic_entry['normal'] else f"{diastolic_entry_rounded}"
         else:
-            raise ValueError(f'Invalid html_highlight {html_highlight}')
+            raise ValueError(f'Invalid html_highlight {self.html_highlight}')
 
-        html = f"{systolic_html}{html_separator}{diastolic_html}"
+        html = f"{systolic_html}{self.html_separator}{diastolic_html}"
 
         return {
             'category': category,
-            'normal': self.color_code['combinations']['normal'][category],
-            'color': self.color_code['combinations']['colors'][category],
-            'label': self.color_code['combinations']['labels'][category],
+            'normal': self.color_category['combinations']['normal'][category],
+            'color': ColorReMapping.get_color(self.color_category['combinations']['colors'][category], self.alpha),
+            'label': self.color_category['combinations']['labels'][category],
             'html': html,
         }
+
+    def get_no_data_combination_entry(self):
+        """
+        Get the entry for the combination of systolic and diastolic blood pressure when no data is available.
+
+        Returns:
+            dict: A dictionary containing the category, normal, color, and label of the combination of systolic and diastolic blood pressure.
+        """
+        self.no_data_combination_entry = {
+            'category': None,
+            'normal': None,
+            'color': self.no_data_color,
+            'label': self.no_data_string,
+            'html': self.no_data_string,
+        }
+
+        return self.no_data_combination_entry
 
     def get_references(self):
         """
@@ -297,7 +354,7 @@ class ColorCodingBloodPressureCategories:
         Returns:
             list: A list of references for the blood pressure categories.
         """
-        return self.color_code['references']
+        return self.color_category['references']
 
     def get_entries(self):
         """
@@ -320,11 +377,11 @@ if __name__ == '__main__':
 
     if True:
 
-        def test_color_coding(ccbp_class, color_code_name, test_entries):
-            print(f'Testing color code: {color_code_name}')
+        def test_color_coding(ccbp_class, color_category_name, test_entries):
+            print(f'Testing color code: {color_category_name}')
 
             for sbp, dbp, expected_category in test_entries:
-                ccbp = ccbp_class(systolic=sbp, diastolic=dbp, color_code_name=color_code_name)
+                ccbp = ccbp_class(systolic=sbp, diastolic=dbp, color_category_name=color_category_name)
                 entry = ccbp.get_combination_entry()
                 actual_category = entry['category']
 
@@ -333,7 +390,7 @@ if __name__ == '__main__':
                 else:
                     print(f'FAIL: systolic={sbp}, diastolic={dbp}, expected={expected_category}, got={actual_category}')
 
-        # Define expected entries for each color_code_name
+        # Define expected entries for each color_category_name
         expected_entries_default = [
             (115, 75, 0), (115, 85, 1), (115, 95, 2), (115, 125, 2),
             (125, 75, 1), (125, 85, 1), (125, 95, 2), (125, 125, 2),
@@ -357,20 +414,20 @@ if __name__ == '__main__':
 
     if True:
         print('\n\n')
-        for color_code_name in ['american_heart_association', 'default']:
+        for color_category_name in ['american_heart_association', 'default']:
 
-            print(f'Color code: {color_code_name}')
+            print(f'Color code: {color_category_name}')
 
-            ccbp = ColorCodingBloodPressureCategories(systolic=120, diastolic=80, color_code_name=color_code_name)
+            ccbp = ColorCodingBloodPressureCategories(systolic=120, diastolic=80, color_category_name=color_category_name)
             print(json_dumps(ccbp.get_entries(), indent=4))
 
             # loop
             print(ccbp.get_thresholds())
             entries = []
+            ccbp = ColorCodingBloodPressureCategories(color_category_name=color_category_name)
             for sbp in [115, 125, 135, 145, 185]:
                 for dbp in [75, 85, 95, 125]:
-                    ccbp = ColorCodingBloodPressureCategories(systolic=sbp, diastolic=dbp, color_code_name=color_code_name)
-                    entry = ccbp.get_combination_entry()
+                    entry = ccbp.get_combination_entry(systolic=sbp, diastolic=dbp)
                     entries.append({
                         'systolic': sbp,
                         'diastolic': dbp,
@@ -381,7 +438,7 @@ if __name__ == '__main__':
                     })
 
             df = pd.DataFrame(entries)
-            print(f'Color code: {color_code_name}')
+            print(f'Color code: {color_category_name}')
             print(df.to_string(index=False))
             print('\n\n')
 

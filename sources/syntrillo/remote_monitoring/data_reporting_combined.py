@@ -283,6 +283,8 @@ if __name__ == '__main__':
 
     print(log)
 
+    print(df['bp_mean'].head(5))
+
     print(df)
 
     pass
