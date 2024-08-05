@@ -1,0 +1,127 @@
+
+{
+    "resource": "/healthie/iframe_provider_tab/system_devices/sync_measurements_form",
+    "path": "/healthie/iframe_provider_tab/system_devices/sync_measurements_form",
+    "httpMethod": "POST",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Host": "api.sandbox.syntrillo-clinic-backend.com",
+        "origin": "https://api.sandbox.syntrillo-clinic-backend.com",
+        "priority": "u=1, i",
+        "referer": "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab",
+        "sec-ch-ua": "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "X-Amzn-Trace-Id": "Root=1-66aa5b3c-265a315c47c20ca101dd61d3",
+        "X-Forwarded-For": "109.9.46.184",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "x-requested-with": "XMLHttpRequest"
+    },
+    "multiValueHeaders": {
+        "accept": [
+            "*/*"
+        ],
+        "accept-encoding": [
+            "gzip, deflate, br, zstd"
+        ],
+        "accept-language": [
+            "en-US,en;q=0.9"
+        ],
+        "content-type": [
+            "application/x-www-form-urlencoded; charset=UTF-8"
+        ],
+        "Host": [
+            "api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "origin": [
+            "https://api.sandbox.syntrillo-clinic-backend.com"
+        ],
+        "priority": [
+            "u=1, i"
+        ],
+        "referer": [
+            "https://api.sandbox.syntrillo-clinic-backend.com/iframe_healthie_provider_tab"
+        ],
+        "sec-ch-ua": [
+            "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\""
+        ],
+        "sec-ch-ua-mobile": [
+            "?0"
+        ],
+        "sec-ch-ua-platform": [
+            "\"Windows\""
+        ],
+        "sec-fetch-dest": [
+            "empty"
+        ],
+        "sec-fetch-mode": [
+            "cors"
+        ],
+        "sec-fetch-site": [
+            "same-origin"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-66aa5b3c-265a315c47c20ca101dd61d3"
+        ],
+        "X-Forwarded-For": [
+            "109.9.46.184"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "x-requested-with": [
+            "XMLHttpRequest"
+        ]
+    },
+    "queryStringParameters": "",
+    "multiValueQueryStringParameters": "",
+    "pathParameters": "",
+    "stageVariables": "",
+    "requestContext": {
+        "resourceId": "nbho3x",
+        "resourcePath": "/healthie/iframe_provider_tab/system_devices/sync_measurements_form",
+        "httpMethod": "POST",
+        "extendedRequestId": "byMxhE3bIAMEDEA=",
+        "requestTime": "31/Jul/2024:15:41:48 +0000",
+        "path": "/healthie/iframe_provider_tab/system_devices/sync_measurements_form",
+        "accountId": "730335351683",
+        "protocol": "HTTP/1.1",
+        "stage": "sandbox",
+        "domainPrefix": "api",
+        "requestTimeEpoch": "1722440508659",
+        "requestId": "698793d3-6eb9-441a-9e38-1e383b02119d",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "sourceIp": "109.9.46.184",
+            "principalOrgId": "",
+            "accessKey": "",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "user": ""
+        },
+        "domainName": "api.sandbox.syntrillo-clinic-backend.com",
+        "deploymentId": "8y5wqe",
+        "apiId": "athdqpk08c"
+    },
+    "body": "temporary_lookup_code=711761ac-a7c6-4483-8750-075a2f292ea2",
+    "isBase64Encoded": "false"
+}

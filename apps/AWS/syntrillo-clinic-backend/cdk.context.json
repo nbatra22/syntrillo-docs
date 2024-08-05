@@ -1,0 +1,38 @@
+{
+  "sandbox": {
+    "environment_name": "sandbox",
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 0
+    },
+    "database": {
+      "removal-policy": "DESTROY"
+    },
+    "storage": {
+      "removal-policy": "DESTROY"
+    }
+  },
+  "staging": {
+    "environment_name": "staging",
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 0
+    },
+    "database": {
+      "removal-policy": "DESTROY"
+    },
+    "storage": {
+      "removal-policy": "DESTROY"
+    }
+  },
+  "prod": {
+    "environment_name": "prod",
+    "iframe_generator_function": {
+      "provisioned_concurrency_executions": 10
+    },
+    "database": {
+      "removal-policy": "RETAIN"
+    },
+    "storage": {
+      "removal-policy": "RETAIN"
+    }
+  }
+}
