@@ -25,7 +25,7 @@ class DataReportingCombination:
 
     This class call the other data reporting classes of thie remote_monitoring module to get the data and combine it.
 
-    Typically this class is instantited once and all data is gatheres. Then the date ranges are selected and the data is filtered. This prevents multiple calls to the database.
+    Typically this class is instantited once and all data is gathered. Then the date ranges are selected and the data is filtered. This prevents multiple calls to the database.
 
     Args:
         syntrillo_internal_key: The internal key of the user in the Syntrillo database.
@@ -125,8 +125,9 @@ class DataReportingCombination:
         period: str = 'weekly', # or monthly
         last_ranges_unit : str = None, # 'week', or 'month', or 'day'
         use_total: bool = False, # whether to use total days or weeks for range name
-        add_whole_range: bool = True, # whether to add a range for the whole period at the begining of the dataframe
-        whole_period_name: str = 'Whole Period', # name for the whole period range
+        add_entire_range: bool = True, # whether to add a range for the whole period at the begining of the dataframe
+        entire_range_label: str = 'Whole Time', # name for the whole period range
+        max_number_of_rows: int = 8  # max number of rows in the output (not counting the entire range)
     ) -> dict :
         """
         - Give date ranges. If none: all will be selected from all sources, and min/max dates will be used.
@@ -146,6 +147,9 @@ class DataReportingCombination:
                 - if period is monthly and last_ranges_unit is 'week', the last ranges will be several weeks ranges with 7 days each
                 - if period is monthly and last_ranges_unit is 'day', the last ranges will be several days ranges with 1 day each
             - use_total: bool, whether to use total days or weeks for range name
+        - add_entire_range: bool, whether to add a range for the whole period at the begining of the dataframe
+        - entire_range_label: str, name for the whole period range
+        - max_number_of_rows: int, max number of rows in the output (not counting the entire range)
 
         Returns:
             - log: dict with the following keys: success, message
@@ -173,8 +177,9 @@ class DataReportingCombination:
             period=period,
             last_ranges_unit=last_ranges_unit,
             use_total=use_total,
-            add_whole_range=add_whole_range,
-            whole_period_name=whole_period_name,
+            add_entire_range=add_entire_range,
+            entire_range_label=entire_range_label,
+            max_number_of_rows=max_number_of_rows,
         )
 
         return log
@@ -267,8 +272,8 @@ if __name__ == '__main__':
         period='monthly',
         last_ranges_unit='week',
         use_total=False,
-        add_whole_range=True,
-        whole_period_name='Whole Period',
+        add_entire_range=True,
+        entire_range_label='Whole Period',
     )
     print(log)
     print(drc.date_ranges.head(5))
@@ -277,6 +282,8 @@ if __name__ == '__main__':
     df, log = drc.get_summary_statistics()
 
     print(log)
+
+    print(df['bp_mean'].head(5))
 
     print(df)
 

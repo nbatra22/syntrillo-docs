@@ -71,39 +71,27 @@
         <table class="summary-table">
             <thead>
                 <tr class="specific-bottom-border">
-                    <th>Time Frames</th>
+                    <th style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th>% above 130/90</th>
                     <th>BP min</th>
                     <th>BP average</th>
                     <th>BP max</th>
-                    <th>SBP min</th>
-                    <th>SBP mean</th>
-                    <th>SBP max</th>
-                    <th>DBP min</th>
-                    <th>DBP mean</th>
-                    <th>DBP max</th>
                 </tr>
             </thead>
             <tbody>
                 {% if summary_data_weekly %}
                     {% for period in summary_data_weekly %}
-                        <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
-                            <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
+                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
+                            <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
-                            <td>{{ period.systolic_min|int }} / {{ period.diastolic_min|int }}</td>
-                            <td>{{ period.systolic_mean|int }} / {{ period.diastolic_mean|int }}</td>
-                            <td>{{ period.systolic_max|int }} / {{ period.diastolic_max|int }}</td>
-                            <td>{{ period.systolic_min|none_string_data_filter(0) }} </td>
-                            <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|none_string_data_filter(1) }}</td>
-                            <td>{{ period.systolic_max|none_string_data_filter(0) }} </td>
-                            <td>{{ period.diastolic_min|none_string_data_filter(0) }} </td>
-                            <td style="background-color: {{ period.diastolic_mean_color }};">{{ period.diastolic_mean|none_string_data_filter(1) }}</td>
-                            <td>{{ period.diastolic_max|none_string_data_filter(0) }} </td>
+                            <td style="background-color: {{ period.bp_min.color }};">{{ period.bp_min.html|safe }}</td>
+                            <td style="background-color: {{ period.bp_mean.color }};">{{ period.bp_mean.html|safe }}</td>
+                            <td style="background-color: {{ period.bp_max.color }};">{{ period.bp_max.html|safe }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="11" style="text-align: center;">No data available</td>
+                        <td colspan="5" style="text-align: center;">No data available</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -114,39 +102,27 @@
         <table class="summary-table">
             <thead>
                 <tr class="specific-bottom-border">
-                    <th>Time Frames</th>
+                    <th style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th>% above 130/90</th>
                     <th>BP min</th>
                     <th>BP average</th>
                     <th>BP max</th>
-                    <th>SBP min</th>
-                    <th>SBP average</th>
-                    <th>SBP max</th>
-                    <th>DBP min</th>
-                    <th>DBP average</th>
-                    <th>DBP max</th>
                 </tr>
             </thead>
             <tbody>
                 {% if summary_data_monthly %}
                     {% for period in summary_data_monthly %}
-                        <tr class="{% if period.range_name == 'Whole Periods' %}specific-bottom-border{% endif %}">
-                            <td data-tooltip="{{ period.range_name_info }}">{{ period.range_name }}</td>
+                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
+                            <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
-                            <td>{{ period.systolic_min|int }} / {{ period.diastolic_min|int }}</td>
-                            <td>{{ period.systolic_mean|int }} / {{ period.diastolic_mean|int }}</td>
-                            <td>{{ period.systolic_max|int }} / {{ period.diastolic_max|int }}</td>
-                            <td>{{ period.systolic_min|int }} </td>
-                            <td style="background-color: {{ period.systolic_mean_color }};">{{ period.systolic_mean|round(1) }}</td>
-                            <td>{{ period.systolic_max|int }} </td>
-                            <td>{{ period.diastolic_min|int }} </td>
-                            <td style="background-color: {{ period.diastolic_mean_color }};">{{ period.diastolic_mean|round(1) }}</td>
-                            <td>{{ period.diastolic_max|int }} </td>
+                            <td style="background-color: {{ period.bp_min.color }};">{{ period.bp_min.html|safe }}</td>
+                            <td style="background-color: {{ period.bp_mean.color }};">{{ period.bp_mean.html|safe }}</td>
+                            <td style="background-color: {{ period.bp_max.color }};">{{ period.bp_max.html|safe }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="8" style="text-align: center;">No data available</td>
+                        <td colspan="5" style="text-align: center;">No data available</td>
                     </tr>
                 {% endif %}
             </tbody>

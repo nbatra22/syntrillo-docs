@@ -17,6 +17,8 @@ from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
+from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories
+
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 
 # Set a default template
@@ -30,7 +32,7 @@ class DataReportingBloodPressure:
 
     Data from the remote monitoring system is stored in our PHI database
 
-    First need to call get dataframe, to prevent several calls.
+    First need to call get dataframe, to prevent several DB calls.
 
     Args:
         syntrillo_internal_key : uuid.UUID
@@ -48,7 +50,9 @@ class DataReportingBloodPressure:
     # color maps for systolic and diastolic
     alpha : float = 0.5
 
+    # no data string
     no_data_string : str = "no data"
+
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
@@ -392,6 +396,10 @@ class DataReportingBloodPressure:
                 - diastolic_max
                 - diastolic_mean
                 - diastolic_median
+                - bp_min : combination of systolic_min and diastolic_min, json string
+                - bp_mean : combination of systolic_mean and diastolic_mean, json string
+                - bp_median : combination of systolic_median and diastolic_median, json string
+                - bp_max : combination of systolic_max and diastolic_max, json string
                 - num_above_130_90 ( SBP ge 140 OR DBP ge 90)
                 - percent_above_130_90
                 - systolic_mean_color
@@ -408,9 +416,17 @@ class DataReportingBloodPressure:
 
         num_datapoints_bp = len(filtered_bp)
 
+        # Initialize the color coding for blood pressure categories
+        ccbp = ColorCodingBloodPressureCategories(color_category_name='default')
+        ccbp.alpha = self.alpha
+        ccbp.no_data_string = self.no_data_string
+        ccbp.no_data_color = 'white'
+
+        # Calculate summary statistics for the blood pressure data
         if num_datapoints_bp == 0:
             systolic_min = systolic_max = systolic_mean = systolic_median = self.no_data_string
             diastolic_min = diastolic_max = diastolic_mean = diastolic_median = self.no_data_string
+            bp_min = bp_mean = bp_median = bp_max = ccbp.get_no_data_combination_entry()
             num_above_130_90 = percent_above_130_90 = self.no_data_string
             systolic_mean_color = diastolic_mean_color = percent_above_130_90_color = "white"
         else:
@@ -424,8 +440,13 @@ class DataReportingBloodPressure:
             diastolic_mean = filtered_bp['diastolic'].mean()
             diastolic_median = filtered_bp['diastolic'].median()
 
-            above_140_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
-            num_above_130_90 = len(above_140_90)
+            bp_min = ccbp.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            bp_mean = ccbp.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            bp_median = ccbp.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            bp_max = ccbp.get_combination_entry(systolic_max, diastolic_max, round_values=0)
+
+            above_130_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
+            num_above_130_90 = len(above_130_90)
             percent_above_130_90 = (num_above_130_90 / num_datapoints_bp) * 100
 
             # Add a color column to the filtered blood pressure data
@@ -447,6 +468,10 @@ class DataReportingBloodPressure:
             'diastolic_max': diastolic_max,
             'diastolic_mean': diastolic_mean,
             'diastolic_median': diastolic_median,
+            'bp_min': bp_min,
+            'bp_mean': bp_mean,
+            'bp_median': bp_median,
+            'bp_max': bp_max,
             'num_above_130_90': num_above_130_90,
             'percent_above_130_90': percent_above_130_90,
             'systolic_mean_color': systolic_mean_color,
@@ -478,6 +503,10 @@ class DataReportingBloodPressure:
                 - diastolic_max
                 - diastolic_mean
                 - diastolic_median
+                - bp_min
+                - bp_mean
+                - bp_median
+                - bp_max
                 - num_above_130_90 ( SBP ge 140 OR DBP ge 90)
                 - percent_above_130_90
                 - systolic_mean_color
@@ -559,7 +588,7 @@ if __name__ == '__main__':
         from_date, to_date = data_reporting_blood_pressure.get_date_range()
         print(from_date, to_date)
 
-    if True:
+    if False:
         color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(0)
         print(color)
         color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(50)
