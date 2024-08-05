@@ -70,12 +70,19 @@
     <div class="table-container-data-color summary-table-hidden" id="summary-weekly">
         <table class="summary-table">
             <thead>
+                <tr>
+                    <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
+                    <th colspan="4">BP</th>
+                    <th colspan="3">Pulse (with BPM device)</th>
+                </tr>
                 <tr class="specific-bottom-border">
-                    <th style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th>% above 130/90</th>
-                    <th>BP min</th>
-                    <th>BP average</th>
-                    <th>BP max</th>
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,9 +91,12 @@
                         <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
-                            <td style="background-color: {{ period.bp_min.color }};">{{ period.bp_min.html|safe }}</td>
-                            <td style="background-color: {{ period.bp_mean.color }};">{{ period.bp_mean.html|safe }}</td>
-                            <td style="background-color: {{ period.bp_max.color }};">{{ period.bp_max.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
+                            <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
+                            <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
+                            <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -101,12 +111,19 @@
     <div class="table-container-data-color summary-table-hidden" id="summary-monthly">
         <table class="summary-table">
             <thead>
+                <tr>
+                    <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
+                    <th colspan="4">BP</th>
+                    <th colspan="3">Pulse (with BPM device)</th>
+                </tr>
                 <tr class="specific-bottom-border">
-                    <th style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th>% above 130/90</th>
-                    <th>BP min</th>
-                    <th>BP average</th>
-                    <th>BP max</th>
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,9 +132,12 @@
                         <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
-                            <td style="background-color: {{ period.bp_min.color }};">{{ period.bp_min.html|safe }}</td>
-                            <td style="background-color: {{ period.bp_mean.color }};">{{ period.bp_mean.html|safe }}</td>
-                            <td style="background-color: {{ period.bp_max.color }};">{{ period.bp_max.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
+                            <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
+                            <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
+                            <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
+                            <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
                         </tr>
                     {% endfor %}
                 {% else %}

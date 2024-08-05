@@ -47,7 +47,7 @@ class ColorCodingBloodPressureCategories:
 
     # Predefined color code configurations
     COLOR_CATEGORIES = [{
-                        'name': 'default',
+                        'name': 'internal1',
                         'systolic': {
                             'thresholds': (120, 140),
                             'colors': ('green', 'orange', 'red'),
@@ -375,6 +375,60 @@ class ColorCodingBloodPressureCategories:
             'combination': self.get_combination_entry(),
         }
 
+class ColorCodingBloodPressureCategoriesWrapper:
+
+    # default options for the get_combination_entry method
+    html_highlight: str = 'underline'
+    round_values: int = 0
+    html_separator: str = ' / '
+
+    # no data combination
+    no_data_string = 'no data'
+    no_data_color = 'White'
+
+    def __init__(self):
+        pass
+
+    def get_no_data_combination_entry(self):
+        """
+        Get the entry for the combination of systolic and diastolic blood pressure when no data is available.
+
+        Returns:
+            dict: A dictionary containing the category, normal, color, and label of the combination of systolic and diastolic blood pressure.
+        """
+        self.no_data_combination_entry = {
+            'category': None,
+            'normal': None,
+            'color': self.no_data_color,
+            'label': self.no_data_string,
+            'html': self.no_data_string,
+        }
+
+        return self.no_data_combination_entry
+
+
+    def get_combination_entry(
+        self,
+        systolic: float = None,
+        diastolic: float = None,
+        round_values: int = None,
+        ):
+
+        ccbp_internal1 = ColorCodingBloodPressureCategories(color_category_name='internal1')
+        ccbp_internal1.set_combination_entry_options(html_highlight=self.html_highlight, round_values=self.round_values, html_separator=self.html_separator)
+        entry_internal1 = ccbp_internal1.get_combination_entry(systolic=systolic, diastolic=diastolic, round_values=round_values)
+
+        ccbp_aha = ColorCodingBloodPressureCategories(color_category_name='american_heart_association')
+        ccbp_aha.set_combination_entry_options(html_highlight=self.html_highlight, round_values=self.round_values, html_separator=self.html_separator)
+        entry_aha = ccbp_aha.get_combination_entry(systolic=systolic, diastolic=diastolic, round_values=round_values)
+
+        return {
+            'internal1': entry_internal1,
+            'american_heart_association': entry_aha,
+        }
+
+
+
 
 # test the class
 if __name__ == '__main__':
@@ -397,7 +451,7 @@ if __name__ == '__main__':
                     print(f'FAIL: systolic={sbp}, diastolic={dbp}, expected={expected_category}, got={actual_category}')
 
         # Define expected entries for each color_category_name
-        expected_entries_default = [
+        expected_entries_internal1 = [
             (115, 75, 0), (115, 85, 1), (115, 95, 2), (115, 125, 2),
             (125, 75, 1), (125, 85, 1), (125, 95, 2), (125, 125, 2),
             (135, 75, 1), (135, 85, 1), (135, 95, 2), (135, 125, 2),
@@ -414,13 +468,13 @@ if __name__ == '__main__':
         ]
 
         # Test cases
-        test_color_coding(ColorCodingBloodPressureCategories, 'default', expected_entries_default)
+        test_color_coding(ColorCodingBloodPressureCategories, 'internal1', expected_entries_internal1)
         print('\n')
         test_color_coding(ColorCodingBloodPressureCategories, 'american_heart_association', expected_entries_american_heart_association)
 
-    if True:
+    if False:
         print('\n\n')
-        for color_category_name in ['american_heart_association', 'default']:
+        for color_category_name in ['american_heart_association', 'internal1']:
 
             print(f'Color code: {color_category_name}')
 
@@ -447,6 +501,12 @@ if __name__ == '__main__':
             print(f'Color code: {color_category_name}')
             print(df.to_string(index=False))
             print('\n\n')
+
+    if True:
+        wrapper = ColorCodingBloodPressureCategoriesWrapper()
+        entry = wrapper.get_combination_entry(systolic=120, diastolic=80, round_values=0)
+        print(json_dumps(entry, indent=4))
+
 
 
 """

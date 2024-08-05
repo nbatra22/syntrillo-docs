@@ -17,7 +17,7 @@ from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
-from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories
+from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories, ColorCodingBloodPressureCategoriesWrapper
 from syntrillo.clinical_decision_support.color_coding.blood_pressure_rainbow import ColorCodingBloodPressureRainbows
 
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
@@ -345,11 +345,17 @@ class DataReportingBloodPressure:
 
         num_datapoints_bp = len(filtered_bp)
 
-        # Initialize the color coding for blood pressure categories
-        ccbp_category = ColorCodingBloodPressureCategories(color_category_name='default')
-        ccbp_category.alpha = self.alpha
-        ccbp_category.no_data_string = self.no_data_string
-        ccbp_category.no_data_color = 'white'
+        # Initialize the color coding for blood pressure categories - internal1
+        ccbp_category_internal1 = ColorCodingBloodPressureCategories(color_category_name='internal1')
+        ccbp_category_internal1.alpha = self.alpha
+        ccbp_category_internal1.no_data_string = self.no_data_string
+        ccbp_category_internal1.no_data_color = 'white'
+
+        # Initialize the color coding for blood pressure categories - internal1
+        ccbp_category_aha = ColorCodingBloodPressureCategories(color_category_name='american_heart_association')
+        ccbp_category_aha.alpha = self.alpha
+        ccbp_category_aha.no_data_string = self.no_data_string
+        ccbp_category_aha.no_data_color = 'white'
 
         # Initialize the color coding for blood pressure rainbow
         ccbp_rainbow = ColorCodingBloodPressureRainbows()
@@ -359,9 +365,10 @@ class DataReportingBloodPressure:
         if num_datapoints_bp == 0:
             systolic_min = systolic_max = systolic_mean = systolic_median = self.no_data_string
             diastolic_min = diastolic_max = diastolic_mean = diastolic_median = self.no_data_string
-            bp_min = bp_mean = bp_median = bp_max = ccbp_category.get_no_data_combination_entry()
+            internal1_color_bp_min = internal1_color_bp_mean = internal1_color_bp_median = internal1_color_bp_max = ccbp_category_internal1.get_no_data_combination_entry()
+            aha_color_bp_min = aha_color_bp_mean = aha_color_bp_median = aha_color_bp_max = ccbp_category_aha.get_no_data_combination_entry()
             num_above_130_90 = percent_above_130_90 = self.no_data_string
-            bp_mean_rainbow_color = systolic_mean_rainbow_color = diastolic_mean_rainbow_color = percent_above_130_90_color = "white"
+            rainbow_color_bp_mean = rainbow_color_systolic_mean = rainbow_color_diastolic_mean = percent_above_130_90_color = "white"
         else:
             systolic_min = filtered_bp['systolic'].min()
             systolic_max = filtered_bp['systolic'].max()
@@ -374,16 +381,22 @@ class DataReportingBloodPressure:
             diastolic_median = filtered_bp['diastolic'].median()
 
             # SBP/DBP combinations with categories
-            bp_min = ccbp_category.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            bp_mean = ccbp_category.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            bp_median = ccbp_category.get_combination_entry(systolic_median, diastolic_median, round_values=1)
-            bp_max = ccbp_category.get_combination_entry(systolic_max, diastolic_max, round_values=0)
+            internal1_color_bp_min = ccbp_category_internal1.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            internal1_color_bp_max = ccbp_category_internal1.get_combination_entry(systolic_max, diastolic_max, round_values=0)
+
+            # SBP/DBP combinations with categories
+            aha_color_bp_min = ccbp_category_aha.get_combination_entry(systolic_min, diastolic_min, round_values=0)
+            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
+            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            aha_color_bp_max = ccbp_category_aha.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             # Rainbow colors
             ccbp_rainbow.set_values(systolic=systolic_mean, diastolic=diastolic_mean)
-            systolic_mean_rainbow_color = ccbp_rainbow.get_color_for_systolic()
-            diastolic_mean_rainbow_color = ccbp_rainbow.get_color_for_diastolic()
-            bp_mean_rainbow_color = ccbp_rainbow.get_color_for_blood_pressure()
+            rainbow_color_systolic_mean = ccbp_rainbow.get_color_for_systolic()
+            rainbow_color_diastolic_mean = ccbp_rainbow.get_color_for_diastolic()
+            rainbow_color_bp_mean = ccbp_rainbow.get_color_for_blood_pressure()
 
             # Blood pressure values above 130/90
             above_130_90 = filtered_bp[(filtered_bp['systolic'] >= 130) | (filtered_bp['diastolic'] >= 90)]
@@ -405,13 +418,17 @@ class DataReportingBloodPressure:
             'diastolic_max': diastolic_max,
             'diastolic_mean': diastolic_mean,
             'diastolic_median': diastolic_median,
-            'bp_min': bp_min,
-            'bp_mean': bp_mean,
-            'bp_median': bp_median,
-            'bp_max': bp_max,
-            'systolic_mean_rainbow_color': systolic_mean_rainbow_color,
-            'diastolic_mean_rainbow_color': diastolic_mean_rainbow_color,
-            'bp_mean_rainbow_color': bp_mean_rainbow_color,
+            'internal1_color_bp_min': internal1_color_bp_min,
+            'internal1_color_bp_mean': internal1_color_bp_mean,
+            'internal1_color_bp_median': internal1_color_bp_median,
+            'internal1_color_bp_max': internal1_color_bp_max,
+            'aha_color_bp_min': aha_color_bp_min,
+            'aha_color_bp_mean': aha_color_bp_mean,
+            'aha_color_bp_median': aha_color_bp_median,
+            'aha_color_bp_max': aha_color_bp_max,
+            'rainbow_color_systolic_mean': rainbow_color_systolic_mean,
+            'rainbow_color_diastolic_mean': rainbow_color_diastolic_mean,
+            'rainbow_color_bp_mean': rainbow_color_bp_mean,
             'num_above_130_90': num_above_130_90,
             'percent_above_130_90': percent_above_130_90,
             'percent_above_130_90_color': percent_above_130_90_color,

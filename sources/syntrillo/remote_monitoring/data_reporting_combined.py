@@ -283,8 +283,12 @@ if __name__ == '__main__':
 
     print(log)
 
-    print(df['bp_mean'].head(5))
+    print(df['internal1_color_bp_mean'].head(5))
 
     print(df)
+
+    d = df.to_dict(orient='records')
+
+    print(json.dumps(d, indent=4, default=str))
 
     pass
