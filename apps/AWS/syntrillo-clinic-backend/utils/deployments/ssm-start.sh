@@ -1,8 +1,23 @@
+#!/bin/bash
+
+if [ "$1" == "" -o "$2" == "" ]; then
+  echo "usage: $0 <environment> <session-type>"
+  echo "environments: sandbox, staging"
+  echo "session-types: session, ssh-tunnel, mysql-tunnel" 
+  exit
+fi
+
 ENVIRONMENT=$1
 SESSION_TYPE=$2
 
-# FOR SSH CONNECTION: INSTALL session-manager-plugin
-# https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html
+if [ "$(which session-manager-plugin)" == "" ]; then
+  echo "!!!Please install session-manager-plugin"
+  echo "Documentation link: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html"
+  echo "Example on ubuntu or debian:"
+  echo '$> curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb'
+  echo "$> sudo dpkg -i session-manager-plugin.deb"
+  exit
+fi
 
 PROFILE="syntrillo-clinic-$ENVIRONMENT"
 
@@ -34,6 +49,8 @@ fi
 if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
     echo "-----"
     echo "$> mysql -h 127.0.0.1 -P 3307 -u admin -p # => To excute in another terminal"
+    echo "OR"
+    echo "$> ./mysql-connect $ENVIRONMENT # => To excute in another terminal"
     echo "-----"
     if [ $ENVIRONMENT == 'sandbox' ]; then
         hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-5kt0pwavmcmm.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
