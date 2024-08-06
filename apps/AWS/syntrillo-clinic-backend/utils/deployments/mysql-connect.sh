@@ -21,13 +21,23 @@ if [ "$(which jq)" == "" ]; then
   exit
 fi
 
+username=$(aws secretsmanager --profile syntrillo-clinic-$ENVIRONMENT \
+		get-secret-value \
+		--secret-id $SECRET_NAME \
+		--query 'SecretString' \
+		--output text | jq -r '.username')
+
 password=$(aws secretsmanager --profile syntrillo-clinic-$ENVIRONMENT \
 		get-secret-value \
 		--secret-id $SECRET_NAME \
 		--query 'SecretString' \
 		--output text | jq -r '.password')
 
+local_port='3307'
+
 echo '---'
+echo "ENVIRONEMENT: $ENVIRONMENT"
+echo "MYSQL DATABASE $ENVIRONMENT USER NAME: $username"
 echo "MYSQL DATABASE $ENVIRONMENT PASSWORD: $password"
 echo "!!! N.B. : Using password is temporary, we should connect with IAM roles in the future"
 echo '---'
@@ -36,8 +46,7 @@ echo "If the connection 'hangs', make sure that you have started the ssm session
 echo "For example if you use did an ssm-start 'sanbox', and a mysql-connect 'staging' it will not work, and hang"
 
 echo "---"
-#password=$(aws secretsmanager --profile syntrillo-clinic-sandbox get-secret-value --secret-id SyntrilloClinicBackendStack-oSWB6kcdQXhb --query 'SecretString' --output text | jq -r '.password')
-mysql -h 127.0.0.1 -P 3307 -u admin -p$password
+mysql -h 127.0.0.1 -P $local_port -u $username -p$password
 if [ $? != 0 ]; then
   echo "!!!"
   echo "Make sure you have opened the sql-tunnel"

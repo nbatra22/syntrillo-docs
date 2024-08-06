@@ -47,23 +47,24 @@ if [ "$SESSION_TYPE" == "ssh-tunnel" ]; then
 fi
 
 if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
-    echo "-----"
-    echo "$> mysql -h 127.0.0.1 -P 3307 -u admin -p # => To excute in another terminal"
-    echo "OR"
-    echo "$> ./mysql-connect $ENVIRONMENT # => To excute in another terminal"
-    echo "-----"
     if [ $ENVIRONMENT == 'sandbox' ]; then
         hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-5kt0pwavmcmm.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
     fi
     if [ $ENVIRONMENT == 'staging' ]; then
         hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-k1mp4rbufthl.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
     fi
-    
+   
+    local_port=3307
+
+    echo "-----"
+    echo "$> mysql -h 127.0.0.1 -P $local_port -u admin -p # => To excute in another terminal"
+    echo "OR"
+    echo "$> ./mysql-connect $ENVIRONMENT # => To excute in another terminal"
+    echo "-----"
+
     aws ssm --profile $PROFILE \
         start-session \
     --target $INSTANCE_ID \
         --document-name AWS-StartPortForwardingSessionToRemoteHost \
-        --parameters '{"host":["syntrilloclinicbackendstackd-mysqldatabase22bdac80-k1mp4rbufthl.cv68uwgwk82p.us-east-1.rds.amazonaws.com"],"portNumber":["3306"], "localPortNumber":["3307"]}'
-    # ---
-    # THEN: 
+        --parameters '{"host":["'$hostname'"],"portNumber":["3306"], "localPortNumber":["'$local_port'"]}'
 fi
