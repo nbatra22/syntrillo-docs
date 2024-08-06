@@ -382,14 +382,14 @@ class DataReportingBloodPressure:
 
             # SBP/DBP combinations with categories
             internal1_color_bp_min = ccbp_category_internal1.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=0)
+            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=0)
             internal1_color_bp_max = ccbp_category_internal1.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             # SBP/DBP combinations with categories
             aha_color_bp_min = ccbp_category_aha.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=0)
+            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=0)
             aha_color_bp_max = ccbp_category_aha.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             # Rainbow colors
