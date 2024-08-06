@@ -342,25 +342,6 @@ class DataReportingCombination:
 
                 combined_summary_list.append(result)
 
-            # ------------------------------------------------
-            # get overall information
-            if self.blood_pressure:
-                bp_information = self.data_reporting_blood_pressure.get_report_information()
-            else:
-                bp_information = None
-
-            if self.heart_rate:
-                heart_rate_information = self.data_reporting_heart_rate.get_report_information()
-            else:
-                heart_rate_information = None
-
-            # ------------------------------------------------
-            combined_summary_and_information = {
-                'combined_summary_data': combined_summary_list,
-                'blood_pressure_information': bp_information,
-                'heart_rate_information': heart_rate_information,
-            }
-
             log = {
                 'success': True,
                 'message': 'Summary statistics and information obtained',
@@ -371,7 +352,26 @@ class DataReportingCombination:
                 'success': False,
                 'message': 'Error obtaining summary statistics and information: ' + str(e),
             }
-            combined_summary_and_information = None
+            combined_summary_list = None
+
+        # ------------------------------------------------
+        # get overall information
+        if self.blood_pressure:
+            bp_information = self.data_reporting_blood_pressure.get_report_information()
+        else:
+            bp_information = None
+
+        if self.heart_rate:
+            heart_rate_information = self.data_reporting_heart_rate.get_report_information()
+        else:
+            heart_rate_information = None
+
+        # ------------------------------------------------
+        combined_summary_and_information = {
+            'combined_summary_data': combined_summary_list,
+            'blood_pressure_information': bp_information,
+            'heart_rate_information': heart_rate_information,
+        }
 
         return combined_summary_and_information, log
 
