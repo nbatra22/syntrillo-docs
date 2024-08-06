@@ -633,15 +633,15 @@ class DataReportingHeartRate:
         return rmssd
 
 
-    def _calculate_pulse_summary_for_a_date_range_row(self, row) -> pd.Series:
+    def get_pulse_summary_for_a_date_range_row(self, row) -> dict:
         """
-          Function to calculate summary statistics for a given date range
+        Function to calculate summary statistics for a given date range
 
         Args:
             row : pd.Series with columns from_date, to_date, range_name
 
         Returns:
-            pd.Series with columns:
+            dict with keys:
                 - from_date
                 - to_date
                 - range_name
@@ -680,7 +680,7 @@ class DataReportingHeartRate:
             else:
                 irregular_pulse_count = 0
 
-        return pd.Series({
+        return {
             'from_date': from_date,
             'to_date': to_date,
             'range_name': range_name,
@@ -691,7 +691,7 @@ class DataReportingHeartRate:
             'pulse_median': pulse_median,
             'pulse_sdnn': pulse_sdnn,
             'irregular_pulse_count': irregular_pulse_count,
-        })
+        }
 
     def get_pulse_summary_for_date_ranges(
         self,
@@ -728,7 +728,8 @@ class DataReportingHeartRate:
 
         # calculate summary statistics for each date range
         try:
-            summary_stats = date_ranges.apply(self._calculate_pulse_summary_for_a_date_range_row, axis=1)
+            summary_stats_dict = date_ranges.apply(self.get_pulse_summary_for_a_date_range_row, axis=1)
+            summary_stats = pd.DataFrame(summary_stats_dict.tolist())
 
         except Exception as e:
             log = {
@@ -747,7 +748,27 @@ class DataReportingHeartRate:
         }
 
 
+    def get_report_information(self) -> dict:
+        """
+        Retrieves the report information for heart rate data.
 
+        Returns:
+            A dictionary containing the report information for heart rate data.
+
+        """
+        info = {
+            'pulse' : {
+                'general' : 'Pulse data from the Tenovi BPM device',
+            },
+            'irregular_heartbeat' : {
+                'general' : 'Irregular heartbeat data from the Tenovi BPM device',
+            },
+            'heart_rate' : {
+                'general' : 'Hourly heart rate statistics from the Tenovi Watch device',
+            },
+        }
+
+        return info
 
 
 

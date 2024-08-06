@@ -56,13 +56,7 @@ def iframe_healthie_provider_tab_care_plan():
             entire_range_label='Whole Time',
         )
 
-        summary_df_weekly, _ = drc.get_summary_statistics()
-
-        # Convert DataFrame to list of dictionaries
-        if summary_df_weekly.empty:
-            summary_data_weekly = None
-        else:
-            summary_data_weekly = summary_df_weekly.to_dict(orient='records')
+        summary_information_weekly, log_drc_weekly = drc.get_combined_summary_and_information()
 
         # --- monthly summary
         _ = drc.select_date_ranges(
@@ -75,16 +69,11 @@ def iframe_healthie_provider_tab_care_plan():
             entire_range_label='Whole Time',
         )
 
-        summary_df_monthly, _ = drc.get_summary_statistics()
+        summary_information_monthly, log_drc_monthly = drc.get_combined_summary_and_information()
 
-        # Convert DataFrame to list of dictionaries
-        if summary_df_monthly.empty:
-            summary_data_monthly = None
-        else:
-            summary_data_monthly = summary_df_monthly.to_dict(orient='records')
-
-        # TODO : get best period to display from drc
-        summary_page_to_display : str = 'weekly'
+        # ---
+        # get best period to display from drc
+        summary_page_to_display : str = drc.get_best_period_to_display()
 
     # --------------------------------------------------------------------
     # Medication Adherence data
@@ -127,8 +116,8 @@ def iframe_healthie_provider_tab_care_plan():
     # Render the template
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
-        summary_data_weekly=summary_data_weekly,
-        summary_data_monthly=summary_data_monthly,
+        summary_information_weekly=summary_information_weekly,
+        summary_information_monthly=summary_information_monthly,
         summary_page_to_display=summary_page_to_display,
         tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
