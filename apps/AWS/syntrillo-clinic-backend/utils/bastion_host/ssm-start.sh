@@ -59,7 +59,7 @@ if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
     echo "-----"
     echo "$> mysql -h 127.0.0.1 -P $local_port -u admin -p # => To excute in another terminal"
     echo "OR"
-    echo "$> ./mysql-connect $ENVIRONMENT # => To excute in another terminal"
+    echo "$> mysql-connect $ENVIRONMENT # => To excute in another terminal, in the utils/database folder"
     echo "-----"
 
     aws ssm --profile $PROFILE \
