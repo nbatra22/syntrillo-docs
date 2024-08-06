@@ -205,6 +205,7 @@ class DataReportingCombination:
         # combined summary is initially a copy of date_ranges
         combined_summary = self.date_ranges.copy()
 
+        # ------------------------------------------------
         # get summary for each source, if available, and append its columns to combined_summary using the date_ranges as index
         if self.blood_pressure:
             self.data_reporting_blood_pressure.alpha = self.alpha
@@ -237,6 +238,7 @@ class DataReportingCombination:
             else:
                 return pd.DataFrame(), log2
 
+        # ------------------------------------------------
         # add range_name_info column, including the from_date and to_date
         combined_summary['range_name_info'] = \
             combined_summary['from_date'].dt.strftime('%b %d') + \

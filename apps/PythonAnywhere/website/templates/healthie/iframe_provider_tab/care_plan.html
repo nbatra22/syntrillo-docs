@@ -73,16 +73,30 @@
                 <tr>
                     <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th colspan="4">BP</th>
-                    <th colspan="3">Pulse (with BPM device)</th>
+                    <th colspan="4">Pulse<br>(with BPM device)</th>
+                    <th colspan="4">Heart rate<br>(with Watch)</th>
+                    <th colspan="1">Steps</th>
+                    <th colspan="1">Medication<br>Adherence</th>
                 </tr>
                 <tr class="specific-bottom-border">
                     <th>% above 130/90</th>
                     <th>min</th>
                     <th>average</th>
                     <th>max</th>
+
                     <th>min</th>
                     <th>average</th>
                     <th>max</th>
+                    <th>irregular</th>
+
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
+                    <th>rmssd</th>
+
+                    <th>average</th>
+
+                    <th>average</th>
                 </tr>
             </thead>
             <tbody>
@@ -90,13 +104,25 @@
                     {% for period in summary_data_weekly %}
                         <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
+
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
                             <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
                             <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
                             <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
+
                             <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
                             <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
                             <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
+                            <td>{{ period.irregular_pulse_count|none_string_data_filter(0) }}</td>
+
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+
+                            <td></td>
+
+                            <td></td>
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -114,16 +140,30 @@
                 <tr>
                     <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
                     <th colspan="4">BP</th>
-                    <th colspan="3">Pulse (with BPM device)</th>
+                    <th colspan="4">Pulse<br>(with BPM device)</th>
+                    <th colspan="4">Heart rate<br>(with Watch)</th>
+                    <th colspan="1">Steps</th>
+                    <th colspan="1">Medication<br>Adherence</th>
                 </tr>
                 <tr class="specific-bottom-border">
                     <th>% above 130/90</th>
                     <th>min</th>
                     <th>average</th>
                     <th>max</th>
+
                     <th>min</th>
                     <th>average</th>
                     <th>max</th>
+                    <th>irregular</th>
+
+                    <th>min</th>
+                    <th>average</th>
+                    <th>max</th>
+                    <th>rmssd</th>
+
+                    <th>average</th>
+
+                    <th>average</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,13 +171,25 @@
                     {% for period in summary_data_monthly %}
                         <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
                             <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
+
                             <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
                             <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
                             <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
                             <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
+
                             <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
                             <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
                             <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
+                            <td>{{ period.irregular_pulse_count|none_string_data_filter(0) }}</td>
+
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+
+                            <td></td>
+
+                            <td></td>
                         </tr>
                     {% endfor %}
                 {% else %}
@@ -197,7 +249,7 @@
         </table>
     </div>
 
-    <p class="mt-4" style="text-decoration: underline;">Medical Adherence Data</p>
+    <p class="mt-4" style="text-decoration: underline;">Medication Adherence Data</p>
     <style>
         .medical-adherence-table {
             width: 100%;
