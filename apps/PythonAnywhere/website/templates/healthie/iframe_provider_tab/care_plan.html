@@ -104,6 +104,22 @@
         .summary-table .tooltip-cell:hover {
            border: 2px solid rgb(155, 120, 252);  /* Change border color and thickness on hover */
         }
+
+        .summary-table .tooltip-icon {
+            display: inline-block;
+                width: 10px;
+                height: 10px;
+                background-color: white;
+                color: blue;
+                text-align: center;
+                border-radius: 50%;
+                font-size: 0.6em;
+                line-height: 10px;
+                margin-left: 5px;
+                cursor: pointer;
+                top: -0.5em;
+                position: relative;
+        }
     </style>
 
     {# --- Loop through each period type (weekly and monthly) --- #}
@@ -123,7 +139,7 @@
                     <tr>
                         <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
                         <th colspan="4" class="tooltip-cell">
-                            BP
+                            BP <span class="tooltip-icon">i</span>
                             <div class="tooltip-content">
                                 {{ summary_information.blood_pressure_information.general|safe }}
                             </div>
@@ -153,7 +169,7 @@
                             </div>
                         </th>
                         <th class="tooltip-cell">
-                            average
+                            avg
                             <div class="tooltip-content">
                                 Average SBP / Average DBP<br><br>
                                 {{ summary_information.blood_pressure_information.internal1|safe }}
@@ -167,9 +183,27 @@
                             </div>
                         </th>
 
-                        <th>min</th>
-                        <th>average</th>
-                        <th>max</th>
+                        <th class="tooltip-cell">
+                            min
+                            <div class="tooltip-content">
+                                Minimal pulse from BPM device<br><br>
+                                {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                            </div>
+                        </th>
+                        <th class="tooltip-cell">
+                            avg
+                            <div class="tooltip-content">
+                                Average pulse from BPM device<br><br>
+                                {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                            </div>
+                        </th>
+                        <th class="tooltip-cell">
+                            max
+                            <div class="tooltip-content">
+                                Maximal pulse from BPM device<br><br>
+                                {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                            </div>
+                        </th>
                         <th>irregular</th>
 
                         <th>min</th>
@@ -206,14 +240,14 @@
                                     {{ period.bp_summary_data.internal1_color_bp_max.html|safe }}
                                 </td>
 
-                                <td>
-                                    {{ period.heart_rate_summary_data.pulse_min|none_string_data_filter(0) }}
+                                <td style="background-color: {{ period.heart_rate_summary_data.pulse_min.color }};">
+                                    {{ period.heart_rate_summary_data.pulse_min.html|safe }}
                                 </td>
-                                <td>
-                                    {{ period.heart_rate_summary_data.pulse_mean|none_string_data_filter(0) }}
+                                <td style="background-color: {{ period.heart_rate_summary_data.pulse_mean.color }};">
+                                    {{ period.heart_rate_summary_data.pulse_mean.html|safe }}
                                 </td>
-                                <td>
-                                    {{ period.heart_rate_summary_data.pulse_max|none_string_data_filter(0) }}
+                                <td style="background-color: {{ period.heart_rate_summary_data.pulse_max.color }};">
+                                    {{ period.heart_rate_summary_data.pulse_max.html|safe }}
                                 </td>
                                 <td>
                                     {{ period.heart_rate_summary_data.irregular_pulse_count|none_string_data_filter(0) }}

@@ -13,6 +13,8 @@ from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
+from syntrillo.clinical_decision_support.color_coding.pulse_categories import ColorCodingPulseCategories
+
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 
 # Set a default template
@@ -42,6 +44,11 @@ class DataReportingHeartRate:
     irregular_heartbeat_df : pd.DataFrame = None
     heart_rate_statistics_df : pd.DataFrame = None
 
+    # color maps for systolic and diastolic
+    alpha : float = 0.5
+
+    # no data string
+    no_data_string : str = "no data"
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
@@ -663,6 +670,12 @@ class DataReportingHeartRate:
 
         num_datapoints_pulse = len(filtered_pulse)
 
+        # color coding
+        cc_pulse_category_internal1 = ColorCodingPulseCategories(color_category_name='internal1')
+        cc_pulse_category_internal1.alpha = self.alpha
+        cc_pulse_category_internal1.no_data_string = self.no_data_string
+        cc_pulse_category_internal1.no_data_color = 'white'
+
         if num_datapoints_pulse == 0:
             pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = irregular_pulse_count = None
         else:
@@ -685,10 +698,10 @@ class DataReportingHeartRate:
             'to_date': to_date,
             'range_name': range_name,
             'num_datapoints_pulse': num_datapoints_pulse,
-            'pulse_min': pulse_min,
-            'pulse_max': pulse_max,
-            'pulse_mean': pulse_mean,
-            'pulse_median': pulse_median,
+            'pulse_min': cc_pulse_category_internal1.get_pulse_entry(pulse_min),
+            'pulse_max': cc_pulse_category_internal1.get_pulse_entry(pulse_max),
+            'pulse_mean': cc_pulse_category_internal1.get_pulse_entry(pulse_mean),
+            'pulse_median': cc_pulse_category_internal1.get_pulse_entry(pulse_median),
             'pulse_sdnn': pulse_sdnn,
             'irregular_pulse_count': irregular_pulse_count,
         }
@@ -758,7 +771,8 @@ class DataReportingHeartRate:
         """
         info = {
             'pulse' : {
-                'general' : 'Pulse data from the Tenovi BPM device',
+                'general' : 'Pulse data from the Tenovi BPM device<br>( likely at rest )',
+                'internal1' : ColorCodingPulseCategories.get_html_information('internal1'),
             },
             'irregular_heartbeat' : {
                 'general' : 'Irregular heartbeat data from the Tenovi BPM device',
