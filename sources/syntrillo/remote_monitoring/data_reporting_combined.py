@@ -315,7 +315,8 @@ class DataReportingCombination:
                 date_range = pd.Series({
                     'from_date': row['from_date'],
                     'to_date': row['to_date'],
-                    'range_name': row['range_name']
+                    'range_name': row['range_name'],
+                    'previous_consecutive_range': row['previous_consecutive_range'],
                 })
 
                 if self.blood_pressure:
@@ -353,6 +354,9 @@ class DataReportingCombination:
                 }
 
                 combined_summary_list.append(result)
+
+            # TODO: compute trends
+
 
             log = {
                 'success': True,

@@ -674,7 +674,7 @@ class DataReportingHeartRate:
 
         # color coding pulse
         cc_pulse_category_internal1 = ColorCodingPulseCategories(color_category_name='internal1')
-        cc_pulse_category_internal1.alpha = self.alpha
+        cc_pulse_category_internal1.alpha = self.alpha / 4 # to make it clear it may not be at rest
         cc_pulse_category_internal1.no_data_string = self.no_data_string
         cc_pulse_category_internal1.no_data_color = 'white'
 
@@ -769,7 +769,7 @@ class DataReportingHeartRate:
         }
 
     # ------------------------------------------------------
-    # ------ PULSE SUMMARY STATISTICS ----------------------
+    # ------ HEART RATE STATS SUMMARY ----------------------
     def get_heart_rate_stats_summary_for_a_date_range_row(self, row) -> dict:
         """
         Function to calculate summary statistics for a given date range
@@ -783,6 +783,7 @@ class DataReportingHeartRate:
         from_date = row['from_date']
         to_date = row['to_date']
         range_name = row['range_name']
+        previous_consecutive_range = row['previous_consecutive_range']
 
         # Filter pulse data for the current date range
         filtered_heart_rate_stats = self.heart_rate_statistics_df[(self.heart_rate_statistics_df['timestamp_local'] >= from_date) &
@@ -791,7 +792,7 @@ class DataReportingHeartRate:
         num_datapoints_heart_rate_stats = len(filtered_heart_rate_stats)
 
         if num_datapoints_heart_rate_stats == 0:
-            hr_hourly_stats_average_average = hr_hourly_stats_max_max = hr_hourly_stats_rmssd = None
+            hr_hourly_stats_average_average = hr_hourly_stats_max_max = hr_hourly_stats_rmssd = hr_hourly_stats_rmssd_trend_pct = None
         else:
             # getting mean of hourly_average_pulse and max of hourly_maximum_pulse
             hr_hourly_stats_average_average = filtered_heart_rate_stats['hourly_average_pulse'].mean()
@@ -799,6 +800,20 @@ class DataReportingHeartRate:
 
             # hrv stats
             hr_hourly_stats_rmssd = self.get_rmssd(start_date=from_date, end_date=to_date)
+
+            # calculate hrv trend
+            if previous_consecutive_range is None:
+                hr_hourly_stats_rmssd_trend_pct = None
+            else:
+                previous_hr_hourly_stats_rmssd = self.get_rmssd(
+                    start_date=pd.to_datetime(previous_consecutive_range['from_date']),
+                    end_date=pd.to_datetime(previous_consecutive_range['to_date'])
+                    )
+
+                if hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd != 0:
+                    hr_hourly_stats_rmssd_trend_pct = 100 * (hr_hourly_stats_rmssd - previous_hr_hourly_stats_rmssd) / previous_hr_hourly_stats_rmssd
+                else:
+                    hr_hourly_stats_rmssd_trend_pct = None
 
         return {
             'from_date': from_date,
@@ -808,6 +823,7 @@ class DataReportingHeartRate:
             'hr_hourly_stats_average_average': hr_hourly_stats_average_average,
             'hr_hourly_stats_max_max': hr_hourly_stats_max_max,
             'hr_hourly_stats_rmssd': hr_hourly_stats_rmssd,
+            'hr_hourly_stats_rmssd_trend_pct': hr_hourly_stats_rmssd_trend_pct,
         }
 
     def get_heart_rate_stats_summary_for_date_ranges(
