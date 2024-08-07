@@ -510,7 +510,7 @@ class DataReportingBloodPressure:
                 - 'american_heart_association': HTML information for American Heart Association category
             """
             info = {
-                'general' : 'Blood pressure from Tenovi BPM device',
+                'general' : 'Blood pressure from Tenovi BPM device<br>( likely at rest )',
                 'internal1' : ColorCodingBloodPressureCategories.get_html_information('internal1'),
                 'american_heart_association' : ColorCodingBloodPressureCategories.get_html_information('american_heart_association'),
             }
