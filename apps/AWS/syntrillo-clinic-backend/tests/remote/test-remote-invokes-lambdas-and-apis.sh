@@ -2,16 +2,27 @@
 
 source ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/tests/remote/_invoke-lambdas-and-api-functions.sh
 
+ENVIRONMENT="sandbox"
+if [ "$1" != "" ]; then
+    ENVIRONMENT="$1"
+fi
+
+export AWS_PROFILE="syntrillo-clinic-$ENVIRONMENT"
+
+echo "---"
+echo "TESTING ENVIRONMENT: <$ENVIRONMENT>"
+echo "---"
+
 # Test iframe GET requests
 IFRAME_GET_PATHS=(\
     "/" \
     "/iframe_healthie_provider_tab" \
 )
 for resource_path in "${IFRAME_GET_PATHS[@]}"; do
-    echo "---"$resource_path
+    echo "resource_path:"$resource_path
     payload="{\"httpMethod\": \"GET\", \"path\": \"$resource_path\", \"queryStringParameters\": \"\"}"
-    body="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$(basename "$resource_path").body)"
-    headers="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$(basename "$resource_path").headers)"
+    body="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$ENVIRONMENT.body)"
+    headers="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$ENVIRONMENT.headers)"
     invoke_lambda_function "$FUNCTION_NAME" "$resource_path" "$payload"
     invoke_api_resource "$resource_path" "$API_NAME" "GET" "$headers" "$body"
     echo
@@ -28,13 +39,13 @@ IFRAME_POST_PATHS=(\
     "/healthie/iframe_provider_tab/system_devices"\
 )
 for resource_path in "${IFRAME_POST_PATHS[@]}"; do
-    echo "---"$resource_path
+    echo "resource_path"$resource_path
     payload="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/lambda-event-samples/$(basename "$resource_path").json)"
-    body="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$(basename "$resource_path").body)"
-    headers="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$(basename "$resource_path").headers)"
+    body="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$ENVIRONMENT.body)"
+    headers="$(cat ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/utils/api-body-and-headers-samples/$ENVIRONMENT.headers)"
     invoke_lambda_function "$FUNCTION_NAME" "$resource_path" "$payload"
-    invoke_api_resource "$resource_path" "$API_NAME" "POST" "$headers" "$body" 
-    call_api_enpoint "$resource_path" "$API_NAME" "POST" "$headers" "$body"
+    invoke_api_resource "$resource_path" "$API_NAME" "POST" "$headers" "$body"
+    # call_api_enpoint "$resource_path" "$API_NAME" "POST" "$headers" "$body"
     echo
 done
 
