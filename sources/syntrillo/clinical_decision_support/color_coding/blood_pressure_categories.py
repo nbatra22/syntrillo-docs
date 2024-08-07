@@ -151,7 +151,7 @@ class ColorCodingBloodPressureCategories:
         self,
         systolic: float = None,
         diastolic: float = None,
-        color_category_name: str = 'default',
+        color_category_name: str = 'internal1',
         alpha: float = 0.5,
     ):
         """
@@ -160,7 +160,7 @@ class ColorCodingBloodPressureCategories:
         Args:
             systolic (float): Systolic blood pressure value.
             diastolic (float): Diastolic blood pressure value.
-            color_code_name (str): The name of the color code to use. Defaults to 'default'.
+            color_code_name (str): The name of the color code to use. Defaults to 'internal1'.
             alpha (float): Alpha value for the color code. Defaults to 0.5.
         """
         self.systolic = systolic
