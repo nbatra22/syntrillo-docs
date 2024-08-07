@@ -14,6 +14,7 @@ from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 from syntrillo.clinical_decision_support.color_coding.pulse_categories import ColorCodingPulseCategories
+from syntrillo.clinical_decision_support.color_coding.irregular_pulse_categories import ColorCodingIrregularPulseCategories
 
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 
@@ -670,11 +671,17 @@ class DataReportingHeartRate:
 
         num_datapoints_pulse = len(filtered_pulse)
 
-        # color coding
+        # color coding pulse
         cc_pulse_category_internal1 = ColorCodingPulseCategories(color_category_name='internal1')
         cc_pulse_category_internal1.alpha = self.alpha
         cc_pulse_category_internal1.no_data_string = self.no_data_string
         cc_pulse_category_internal1.no_data_color = 'white'
+
+        # color coding pulse
+        cc_irregular_pulse_category_internal1 = ColorCodingIrregularPulseCategories(color_category_name='internal1')
+        cc_irregular_pulse_category_internal1.alpha = self.alpha
+        cc_irregular_pulse_category_internal1.no_data_string = self.no_data_string
+        cc_irregular_pulse_category_internal1.no_data_color = 'white'
 
         if num_datapoints_pulse == 0:
             pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = irregular_pulse_count = None
@@ -703,7 +710,7 @@ class DataReportingHeartRate:
             'pulse_mean': cc_pulse_category_internal1.get_pulse_entry(pulse_mean),
             'pulse_median': cc_pulse_category_internal1.get_pulse_entry(pulse_median),
             'pulse_sdnn': pulse_sdnn,
-            'irregular_pulse_count': irregular_pulse_count,
+            'irregular_pulse_count': cc_irregular_pulse_category_internal1.get_irregular_pulse_entry(irregular_pulse_count),
         }
 
     def get_pulse_summary_for_date_ranges(
@@ -774,8 +781,9 @@ class DataReportingHeartRate:
                 'general' : 'Pulse data from the Tenovi BPM device<br>( likely at rest )',
                 'internal1' : ColorCodingPulseCategories.get_html_information('internal1'),
             },
-            'irregular_heartbeat' : {
-                'general' : 'Irregular heartbeat data from the Tenovi BPM device',
+            'irregular_pulse' : {
+                'general' : 'Irregular pulse data from the Tenovi BPM device',
+                'internal1' : ColorCodingIrregularPulseCategories.get_html_information('internal1'),
             },
             'heart_rate' : {
                 'general' : 'Hourly heart rate statistics from the Tenovi Watch device',

@@ -204,7 +204,13 @@
                                 {{ summary_information.heart_rate_information.pulse.internal1|safe }}
                             </div>
                         </th>
-                        <th>irregular</th>
+                        <th class="tooltip-cell">
+                            irregular
+                            <div class="tooltip-content">
+                                Count of irregular pulse from BPM device<br><br>
+                                {{ summary_information.heart_rate_information.irregular_pulse.internal1|safe }}
+                            </div>
+                        </th>
 
                         <th>min</th>
                         <th>average</th>
@@ -249,8 +255,8 @@
                                 <td style="background-color: {{ period.heart_rate_summary_data.pulse_max.color }};">
                                     {{ period.heart_rate_summary_data.pulse_max.html|safe }}
                                 </td>
-                                <td>
-                                    {{ period.heart_rate_summary_data.irregular_pulse_count|none_string_data_filter(0) }}
+                                <td style="background-color: {{ period.heart_rate_summary_data.irregular_pulse_count.color }};">
+                                    {{ period.heart_rate_summary_data.irregular_pulse_count.html|safe }}
                                 </td>
 
                                 <td></td>
