@@ -1,3 +1,11 @@
+#!/bin/bash
+
+if [ "$1" == "" ]; then
+ cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend
+ cdk ls
+ exit
+fi
+
 read -rp "!!! You are deploying to PRODUCTION, are you sure (Yes/no)? " confirmation
 
 if [ "$confirmation" == "Yes" ]; then
