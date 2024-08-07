@@ -43,6 +43,8 @@ def iframe_healthie_provider_tab_care_plan():
     summary_information_monthly = None
 
     # if there is data, get the summary
+    # TODO : transfer logs to the template
+    # TODO : get information to display table headers
     if drc.max_timestamp is not None and drc.min_timestamp is not None:
 
         # --- Weekly summary

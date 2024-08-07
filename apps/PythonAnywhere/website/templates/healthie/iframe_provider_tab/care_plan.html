@@ -157,13 +157,19 @@
                                     {{ summary_information.heart_rate_information.heart_rate.general|safe }}
                                 </div>
                             </th>
-                            <th colspan="1">Steps</th>
+                            <th colspan="2">Activity</th>
                             <th colspan="1">Medication<br>Adherence</th>
                         </tr>
                         <tr class="specific-bottom-border">
 
                             <!-- Blood pressure -->
-                            <th>% above 130/90</th>
+                            <th class="tooltip-cell">
+                                % above<br>130/90
+                                <div class="tooltip-content">
+                                    Percentage SBP above 120 or DBP above 80.<br><br>
+                                    Green to red color scale.
+                                </div>
+                            </th>
                             <th class="tooltip-cell">
                                 min
                                 <div class="tooltip-content">
@@ -244,8 +250,9 @@
                                 </div>
                             </th>
 
-                            <!-- Steps -->
-                            <th>avg</th>
+                            <!-- Activity -->
+                            <th>steps<br>daily avg</th>
+                            <th>self<br>reported</th>
 
                             <!-- Medication adherence -->
                             <th>avg</th>
@@ -296,7 +303,8 @@
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd|none_string_data_filter(1) }}</td>
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct|none_string_data_filter(0) }} %</td>
 
-                                    <!-- Steps -->
+                                    <!-- Activity -->
+                                    <td></td>
                                     <td></td>
 
                                     <!-- Medication adherence -->
