@@ -54,6 +54,7 @@ def create_date_ranges(
     delta: timedelta,
     range_name_prefix: str,
     extra_count: int = 0,
+    previous_consecutive_range : dict = None
 ) -> List[dict]:
     """
     Create date ranges from a start date to an end date with a specified interval.
@@ -91,8 +92,15 @@ def create_date_ranges(
         ranges.append({
             'from_date': current_start,
             'to_date': current_end,
-            'range_name': range_name
+            'range_name': range_name,
+            'previous_consecutive_range': previous_consecutive_range
         })
+
+        previous_consecutive_range = {
+            'from_date': current_start,
+            'to_date': current_end,
+            'range_name': range_name,
+        }
 
         current_start = current_end + timedelta(microseconds=1)
         range_count += 1
@@ -133,7 +141,7 @@ def get_date_ranges_for_reporting(
                                   If the number of ranges exceeds this value, the first ranges will be collapsed
 
     Returns:
-        Tuple[pd.DataFrame, dict]:
+        Tuple (pd.DataFrame, dict):
             - pd.DataFrame: Dataframe with 'from_date', 'to_date', and 'range_name' columns.
             - dict: Log with 'success' and 'message' keys.
     """
@@ -198,7 +206,8 @@ def get_date_ranges_for_reporting(
         date_ranges.append({
             'from_date': from_date,
             'to_date': to_date,
-            'range_name': entire_range_label
+            'range_name': entire_range_label,
+            'previous_consecutive_range': None
         })
         if max_number_of_rows is not None:
             # this entire range row at the top does not count towards the max_number_of_rows
@@ -226,13 +235,18 @@ def get_date_ranges_for_reporting(
         else:
             last_range_label = last_range['range_name'] + ' - '
 
+        # previous_consecutive_range is the last in date_ranges
+        previous_consecutive_range = date_ranges[-1] if date_ranges else None
+
         if last_ranges_unit == 'week':
             extra_count = (to_date - from_date).days // 7 if use_total else 0
-            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(weeks=1), last_range_label + 'Week', extra_count=extra_count))
+            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(weeks=1), last_range_label + 'Week',
+                                                  extra_count=extra_count, previous_consecutive_range=previous_consecutive_range))
 
         elif last_ranges_unit == 'day':
             extra_count = (to_date - from_date).days if use_total else 0
-            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), last_range_label + 'Day', extra_count=extra_count))
+            date_ranges.extend(create_date_ranges(last_from, last_to, timedelta(days=1), last_range_label + 'Day',
+                                                  extra_count=extra_count, previous_consecutive_range=previous_consecutive_range))
 
     # ------------------------------------------------------
     # Handle the maximum number of rows
@@ -249,7 +263,8 @@ def get_date_ranges_for_reporting(
         collapsed_range = {
             'from_date': collapsed_from_date,
             'to_date': collapsed_to_date,
-            'range_name': collapsed_range_name
+            'range_name': collapsed_range_name,
+            'previous_consecutive_range': None
         }
 
         # Update date_ranges with the collapsed range

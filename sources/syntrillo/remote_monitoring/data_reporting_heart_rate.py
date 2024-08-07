@@ -13,6 +13,9 @@ from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
+from syntrillo.clinical_decision_support.color_coding.pulse_categories import ColorCodingPulseCategories
+from syntrillo.clinical_decision_support.color_coding.irregular_pulse_categories import ColorCodingIrregularPulseCategories
+
 from syntrillo.helper_functions.plotly import plotly_fig_to_dict
 
 # Set a default template
@@ -42,6 +45,11 @@ class DataReportingHeartRate:
     irregular_heartbeat_df : pd.DataFrame = None
     heart_rate_statistics_df : pd.DataFrame = None
 
+    # color maps for systolic and diastolic
+    alpha : float = 0.5
+
+    # no data string
+    no_data_string : str = "no data"
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
@@ -632,16 +640,17 @@ class DataReportingHeartRate:
 
         return rmssd
 
-
-    def _calculate_pulse_summary_for_a_date_range_row(self, row) -> pd.Series:
+    # ------------------------------------------------------
+    # ------ PULSE SUMMARY STATISTICS ----------------------
+    def get_pulse_summary_for_a_date_range_row(self, row) -> dict:
         """
-          Function to calculate summary statistics for a given date range
+        Function to calculate summary statistics for a given date range
 
         Args:
             row : pd.Series with columns from_date, to_date, range_name
 
         Returns:
-            pd.Series with columns:
+            dict with keys:
                 - from_date
                 - to_date
                 - range_name
@@ -651,6 +660,7 @@ class DataReportingHeartRate:
                 - pulse_mean
                 - pulse_median
                 - pulse_sdnn
+                - irregular_pulse_count
         """
         from_date = row['from_date']
         to_date = row['to_date']
@@ -662,8 +672,20 @@ class DataReportingHeartRate:
 
         num_datapoints_pulse = len(filtered_pulse)
 
+        # color coding pulse
+        cc_pulse_category_internal1 = ColorCodingPulseCategories(color_category_name='internal1')
+        cc_pulse_category_internal1.alpha = self.alpha / 4 # to make it clear it may not be at rest
+        cc_pulse_category_internal1.no_data_string = self.no_data_string
+        cc_pulse_category_internal1.no_data_color = 'white'
+
+        # color coding pulse
+        cc_irregular_pulse_category_internal1 = ColorCodingIrregularPulseCategories(color_category_name='internal1')
+        cc_irregular_pulse_category_internal1.alpha = self.alpha
+        cc_irregular_pulse_category_internal1.no_data_string = self.no_data_string
+        cc_irregular_pulse_category_internal1.no_data_color = 'white'
+
         if num_datapoints_pulse == 0:
-            pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = None
+            pulse_mean = pulse_max = pulse_min = pulse_median = pulse_sdnn = irregular_pulse_count = None
         else:
             pulse_min = filtered_pulse['pulse'].min()
             pulse_max = filtered_pulse['pulse'].max()
@@ -671,17 +693,26 @@ class DataReportingHeartRate:
             pulse_median = filtered_pulse['pulse'].median()
             pulse_sdnn = filtered_pulse['pulse'].std()
 
-        return pd.Series({
+            # count irregular heartbeat events
+            if self.irregular_heartbeat_df is not None and not self.irregular_heartbeat_df.empty:
+                filtered_irregular_pulse = self.irregular_heartbeat_df[(self.irregular_heartbeat_df['timestamp_local'] >= from_date) &
+                                                                    (self.irregular_heartbeat_df['timestamp_local'] <= to_date)]
+                irregular_pulse_count = len(filtered_irregular_pulse)
+            else:
+                irregular_pulse_count = 0
+
+        return {
             'from_date': from_date,
             'to_date': to_date,
             'range_name': range_name,
             'num_datapoints_pulse': num_datapoints_pulse,
-            'pulse_min': pulse_min,
-            'pulse_max': pulse_max,
-            'pulse_mean': pulse_mean,
-            'pulse_median': pulse_median,
-            'pulse_sdnn': pulse_sdnn
-        })
+            'pulse_min': cc_pulse_category_internal1.get_pulse_entry(pulse_min),
+            'pulse_max': cc_pulse_category_internal1.get_pulse_entry(pulse_max),
+            'pulse_mean': cc_pulse_category_internal1.get_pulse_entry(pulse_mean),
+            'pulse_median': cc_pulse_category_internal1.get_pulse_entry(pulse_median),
+            'pulse_sdnn': pulse_sdnn,
+            'irregular_pulse_count': cc_irregular_pulse_category_internal1.get_irregular_pulse_entry(irregular_pulse_count),
+        }
 
     def get_pulse_summary_for_date_ranges(
         self,
@@ -704,6 +735,7 @@ class DataReportingHeartRate:
                 - pulse_mean
                 - pulse_median
                 - pulse_sdnn
+                - irregular_pulse_count
             - log : dict
 
         """
@@ -717,7 +749,8 @@ class DataReportingHeartRate:
 
         # calculate summary statistics for each date range
         try:
-            summary_stats = date_ranges.apply(self._calculate_pulse_summary_for_a_date_range_row, axis=1)
+            summary_stats_dict = date_ranges.apply(self.get_pulse_summary_for_a_date_range_row, axis=1)
+            summary_stats = pd.DataFrame(summary_stats_dict.tolist())
 
         except Exception as e:
             log = {
@@ -734,6 +767,142 @@ class DataReportingHeartRate:
             'success': True,
             'message': 'Summary statistics calculated successfully',
         }
+
+    # ------------------------------------------------------
+    # ------ HEART RATE STATS SUMMARY ----------------------
+    def get_heart_rate_stats_summary_for_a_date_range_row(self, row) -> dict:
+        """
+        Function to calculate summary statistics for a given date range
+
+        Args:
+            row : pd.Series with columns from_date, to_date, range_name
+
+        Returns:
+            dict with keys:
+        """
+        from_date = row['from_date']
+        to_date = row['to_date']
+        range_name = row['range_name']
+        previous_consecutive_range = row['previous_consecutive_range']
+
+        # Filter pulse data for the current date range
+        filtered_heart_rate_stats = self.heart_rate_statistics_df[(self.heart_rate_statistics_df['timestamp_local'] >= from_date) &
+                                       (self.heart_rate_statistics_df['timestamp_local'] <= to_date)]
+
+        num_datapoints_heart_rate_stats = len(filtered_heart_rate_stats)
+
+        if num_datapoints_heart_rate_stats == 0:
+            hr_hourly_stats_average_average = hr_hourly_stats_max_max = hr_hourly_stats_rmssd = hr_hourly_stats_rmssd_trend_pct = None
+        else:
+            # getting mean of hourly_average_pulse and max of hourly_maximum_pulse
+            hr_hourly_stats_average_average = filtered_heart_rate_stats['hourly_average_pulse'].mean()
+            hr_hourly_stats_max_max = filtered_heart_rate_stats['hourly_maximum_pulse'].max()
+
+            # hrv stats
+            hr_hourly_stats_rmssd = self.get_rmssd(start_date=from_date, end_date=to_date)
+
+            # calculate hrv trend
+            if previous_consecutive_range is None:
+                hr_hourly_stats_rmssd_trend_pct = None
+            else:
+                previous_hr_hourly_stats_rmssd = self.get_rmssd(
+                    start_date=pd.to_datetime(previous_consecutive_range['from_date']),
+                    end_date=pd.to_datetime(previous_consecutive_range['to_date'])
+                    )
+
+                if hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd != 0:
+                    hr_hourly_stats_rmssd_trend_pct = 100 * (hr_hourly_stats_rmssd - previous_hr_hourly_stats_rmssd) / previous_hr_hourly_stats_rmssd
+                else:
+                    hr_hourly_stats_rmssd_trend_pct = None
+
+        return {
+            'from_date': from_date,
+            'to_date': to_date,
+            'range_name': range_name,
+            'num_datapoints_heart_rate_stats': num_datapoints_heart_rate_stats,
+            'hr_hourly_stats_average_average': hr_hourly_stats_average_average,
+            'hr_hourly_stats_max_max': hr_hourly_stats_max_max,
+            'hr_hourly_stats_rmssd': hr_hourly_stats_rmssd,
+            'hr_hourly_stats_rmssd_trend_pct': hr_hourly_stats_rmssd_trend_pct,
+        }
+
+    def get_heart_rate_stats_summary_for_date_ranges(
+        self,
+        date_ranges : pd.DataFrame,
+        ) -> Tuple[ pd.DataFrame, dict]:
+        """
+        From the pulse data, calculate summary statistics for each date range.
+
+        Args:
+            date_ranges : pd.DataFrame with columns from_date, to_date, range_name
+
+        Returns:
+            - summary_stats : pd.DataFrame with columns:
+                - from_date
+                - to_date
+                - range_name
+                - num_datapoints_heart_rate_stats
+                - hourly_average_pulse
+                - hourly_maximum_pulse
+            - log : dict
+        """
+        # check if some data is available
+        if self.heart_rate_statistics_df is None or self.heart_rate_statistics_df.empty:
+            log = {
+                'success': False,
+                'error': 'No heart rate statistics data available',
+            }
+            return None, log
+
+        # calculate summary statistics for each date range
+        try:
+            summary_stats_dict = date_ranges.apply(self.get_heart_rate_stats_summary_for_a_date_range_row, axis=1)
+            summary_stats = pd.DataFrame(summary_stats_dict.tolist())
+
+        except Exception as e:
+            log = {
+                'success': False,
+                'error': 'Error calculating summary statistics in get_heart_rate_stats_summary_for_date_ranges',
+                'exception': str(e),
+            }
+            return None, log
+
+        # store the summary statistics and return
+        self.summary_stats_heart_rate_stats = summary_stats
+        self.date_ranges_heart_rate_stats = date_ranges
+        return summary_stats, {
+            'success': True,
+            'message': 'Summary statistics calculated successfully',
+        }
+
+
+
+    # ------------------------------------------------------
+    def get_report_information(self) -> dict:
+        """
+        Retrieves the report information for heart rate data.
+
+        Returns:
+            A dictionary containing the report information for heart rate data.
+
+        """
+        info = {
+            'pulse' : {
+                'general' : 'Pulse data from the Tenovi BPM device<br>( likely at rest )',
+                'internal1' : ColorCodingPulseCategories.get_html_information('internal1'),
+            },
+            'irregular_pulse' : {
+                'general' : 'Irregular pulse data from the Tenovi BPM device',
+                'internal1' : ColorCodingIrregularPulseCategories.get_html_information('internal1'),
+            },
+            'heart_rate' : {
+                'general' : 'Hourly heart rate statistics from the Tenovi Watch device',
+            },
+        }
+
+        return info
+
+
 
 
 
@@ -773,4 +942,5 @@ if __name__ == '__main__':
     rmssd = data_reporting_heart_rate.get_rmssd(start_date=start_date, end_date=end_date)
     print("rmssd:", rmssd)
 
+    print('--------------------------------')
 

@@ -8,6 +8,7 @@ from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCom
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
+from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
 from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
@@ -35,14 +36,16 @@ def iframe_healthie_provider_tab_care_plan():
     drc.alpha = 0.4
     drc.no_data_string = 'no data'
 
-    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
+    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True, activity=True)
 
     # inits
     summary_page_to_display : str = 'weekly'
-    summary_data_monthly = None
-    summary_data_weekly = None
+    summary_information_weekly = None
+    summary_information_monthly = None
 
     # if there is data, get the summary
+    # TODO : transfer logs to the template
+    # TODO : get information to display table headers
     if drc.max_timestamp is not None and drc.min_timestamp is not None:
 
         # --- Weekly summary
@@ -56,13 +59,7 @@ def iframe_healthie_provider_tab_care_plan():
             entire_range_label='Whole Time',
         )
 
-        summary_df_weekly, _ = drc.get_summary_statistics()
-
-        # Convert DataFrame to list of dictionaries
-        if summary_df_weekly.empty:
-            summary_data_weekly = None
-        else:
-            summary_data_weekly = summary_df_weekly.to_dict(orient='records')
+        summary_information_weekly, log_drc_weekly = drc.get_combined_summary_and_information()
 
         # --- monthly summary
         _ = drc.select_date_ranges(
@@ -75,16 +72,11 @@ def iframe_healthie_provider_tab_care_plan():
             entire_range_label='Whole Time',
         )
 
-        summary_df_monthly, _ = drc.get_summary_statistics()
+        summary_information_monthly, log_drc_monthly = drc.get_combined_summary_and_information()
 
-        # Convert DataFrame to list of dictionaries
-        if summary_df_monthly.empty:
-            summary_data_monthly = None
-        else:
-            summary_data_monthly = summary_df_monthly.to_dict(orient='records')
-
-        # TODO : get best period to display from drc
-        summary_page_to_display : str = 'weekly'
+        # ---
+        # get best period to display from drc
+        summary_page_to_display : str = drc.get_best_period_to_display()
 
     # --------------------------------------------------------------------
     # Medication Adherence data
@@ -127,8 +119,8 @@ def iframe_healthie_provider_tab_care_plan():
     # Render the template
     return render_template(
         'healthie/iframe_provider_tab/care_plan.html',
-        summary_data_weekly=summary_data_weekly,
-        summary_data_monthly=summary_data_monthly,
+        summary_information_weekly=summary_information_weekly,
+        summary_information_monthly=summary_information_monthly,
         summary_page_to_display=summary_page_to_display,
         tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
@@ -278,6 +270,50 @@ def get_heart_rate_statistics_plot():
         html_returned = 'No data'
     else:
         _, html_returned, json_returned = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation=json_or_html)
+
+    return jsonify({'json': json_returned, 'html': html_returned })
+
+
+
+@iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_daily_steps_plot', methods=['POST'])
+def get_daily_steps_plot():
+    """
+    This endpoint returns the daily steps plot as html or json
+
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+
+    # ---
+    # get type of return to generate
+    json_or_html = request.form.get('json_or_html')
+
+    # must be 'html' or 'json'
+    if json_or_html not in ['html', 'json', 'both']:
+        return jsonify({'html': 'Internal error: must be json or html or both' })
+
+    # ---
+    # Get the data and generate plot
+
+    data_reporting_steps = DataReportingSteps(post_manager.syntrillo_internal_key)
+
+    # get all available data
+    _, _, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
+        start_date=None,
+        end_date=None,
+    )
+
+    # if no data, return None
+    # if data, return the plot as html or json as requested
+    if log['success'] == False:
+        json_returned = None
+        html_returned = 'No data'
+    else:
+        _, html_returned, json_returned = data_reporting_steps.get_daily_steps_plotly(representation=json_or_html)
 
     return jsonify({'json': json_returned, 'html': html_returned })
 

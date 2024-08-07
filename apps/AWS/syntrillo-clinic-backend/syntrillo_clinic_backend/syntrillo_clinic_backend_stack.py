@@ -24,60 +24,86 @@ from constructs import Construct
 # STACKS
 # -----------------------------------------------------------------------------
 
-from syntrillo_clinic_backend.network_stack import NetworkStack
+from syntrillo_clinic_backend.substacks.network_stack import NetworkStack
 
-from syntrillo_clinic_backend.database_stack import DatabaseStack
-from syntrillo_clinic_backend.storage_stack import StorageStack
-from syntrillo_clinic_backend.secrets_stack import SecretsStack
+from syntrillo_clinic_backend.substacks.database_stack import DatabaseStack
+from syntrillo_clinic_backend.substacks.storage_stack import StorageStack
+from syntrillo_clinic_backend.substacks.secrets_stack import SecretsStack
 
-from syntrillo_clinic_backend.servers_stack import ServersStack
+from syntrillo_clinic_backend.substacks.servers_stack import ServersStack
 
-from syntrillo_clinic_backend.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
-from syntrillo_clinic_backend.backup_stack import SyntrilloClinicBackupStack
+from syntrillo_clinic_backend.substacks.task_scheduling_stack import SyntrilloClinicTaskSchedulingStack
+from syntrillo_clinic_backend.substacks.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
+from syntrillo_clinic_backend.substacks.backup_stack import SyntrilloClinicBackupStack
+
+from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
+
+import json
 
 class SyntrilloClinicBackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Cannot be self.environment (we get can't set attribute 'environment'), obviously resevered by the cdk
-        self.aws_environment = ssm.StringParameter.from_string_parameter_attributes(
-            self, "SyntrilloClinicAWSAccountEnvironment",
-            parameter_name="/syntrillo-clinic/aws/environment"
-        ).string_value
+        self.aws_environment = self.node.try_get_context("environment")
+        if self.aws_environment == None:
+            self.aws_environment = "sandbox"
+        
+        self.environment_context = self.node.try_get_context(self.aws_environment)
 
-        network=NetworkStack(
+        print("--------------------------------------")
+        print(f"SyntrilloBackendStack AWS Environement : <{self.aws_environment}>")
+        print(f"")
+        print("--------------------------------------")
+        print(f"SyntrilloBackendStack AWS Environment Context :")
+        print(json.dumps(self.environment_context, indent=4))
+        print("--------------------------------------")
+
+        self.network = NetworkStack(
             self, "NetworkStack",
             self.aws_environment
         )
 
-        database=DatabaseStack(
+        self.database = DatabaseStack(
             self, "DatabaseStack",
-            self.aws_environment,
-            vpc=network.vpc
+            environment_context=self.environment_context,
+            vpc=self.network.vpc
         )
 
-        storage=StorageStack(
+        self.storage = StorageStack(
             self, "StorageStack", 
-            self.aws_environment,
-            vpc=network.vpc
+            environment_context=self.environment_context,
+            vpc=self.network.vpc
         )
 
-        secrets=SecretsStack(
+        self.secrets = SecretsStack(
             self, "SecretsStack"
         )
         
-        servers=ServersStack(
-            self, "ServersStack", 
+        self.servers = ServersStack(
+            self, "ServersStack",
+            environment_context=self.environment_context,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+        )
+
+        self.scheduled_tasks = SyntrilloClinicTaskSchedulingStack(
+            self, "TaskSchedulingStack",
             aws_environment=self.aws_environment,
-            vpc=network.vpc,
-            database=database,
-            access_point=storage.efs_access_point,
-            file_system=storage.efs_file_system, 
-            hosted_zone=network.hosted_zone, 
-            certificate=network.certificate,
-            secrets=secrets,
-            api_domain_name=network.api_domain_name
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+            lambda_function=self.servers.iframe_generator_function.function
+        )
+
+        self.bastion=SyntrilloClinicBastionStack(
+            self, "BastionStack",
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
         )
 
         # backupStack=SyntrilloClinicBackupStack(
@@ -86,7 +112,7 @@ class SyntrilloClinicBackendStack(Stack):
         # )
 
         # fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
-        #     self, "FitnessFunctionStack",
+        #     self, "FitnessFunctionsStack",
         #     vpc=network.vpc,
         #     database=database,
         #     efs_access_point=storage.efs_access_point,
