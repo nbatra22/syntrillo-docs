@@ -39,8 +39,8 @@ def iframe_healthie_provider_tab_care_plan():
 
     # inits
     summary_page_to_display : str = 'weekly'
-    summary_data_monthly = None
-    summary_data_weekly = None
+    summary_information_weekly = None
+    summary_information_monthly = None
 
     # if there is data, get the summary
     if drc.max_timestamp is not None and drc.min_timestamp is not None:
