@@ -8,6 +8,7 @@ from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCom
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
 from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
+from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
 from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
@@ -35,7 +36,7 @@ def iframe_healthie_provider_tab_care_plan():
     drc.alpha = 0.4
     drc.no_data_string = 'no data'
 
-    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True)
+    drc.select_sources_and_obtain_data(blood_pressure=True, heart_rate=True, activity=True)
 
     # inits
     summary_page_to_display : str = 'weekly'
@@ -269,6 +270,50 @@ def get_heart_rate_statistics_plot():
         html_returned = 'No data'
     else:
         _, html_returned, json_returned = data_reporting_heart_rate.get_heart_rate_statistics_plotly(representation=json_or_html)
+
+    return jsonify({'json': json_returned, 'html': html_returned })
+
+
+
+@iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan/get_daily_steps_plot', methods=['POST'])
+def get_daily_steps_plot():
+    """
+    This endpoint returns the daily steps plot as html or json
+
+    """
+
+    # get all pseudonyms from post temporary identifier
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # --------------------------------------------------------------------
+
+    # ---
+    # get type of return to generate
+    json_or_html = request.form.get('json_or_html')
+
+    # must be 'html' or 'json'
+    if json_or_html not in ['html', 'json', 'both']:
+        return jsonify({'html': 'Internal error: must be json or html or both' })
+
+    # ---
+    # Get the data and generate plot
+
+    data_reporting_steps = DataReportingSteps(post_manager.syntrillo_internal_key)
+
+    # get all available data
+    _, _, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
+        start_date=None,
+        end_date=None,
+    )
+
+    # if no data, return None
+    # if data, return the plot as html or json as requested
+    if log['success'] == False:
+        json_returned = None
+        html_returned = 'No data'
+    else:
+        _, html_returned, json_returned = data_reporting_steps.get_daily_steps_plotly(representation=json_or_html)
 
     return jsonify({'json': json_returned, 'html': html_returned })
 

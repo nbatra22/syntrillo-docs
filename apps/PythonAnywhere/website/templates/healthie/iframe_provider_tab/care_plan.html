@@ -251,7 +251,12 @@
                             </th>
 
                             <!-- Activity -->
-                            <th>steps<br>daily avg</th>
+                            <th class="tooltip-cell">
+                                steps<br>daily avg
+                                <div class="tooltip-content">
+                                    {{ summary_information.steps_information.general|safe }}
+                                </div>
+                            </th>
                             <th>self<br>reported</th>
 
                             <!-- Medication adherence -->
@@ -304,7 +309,7 @@
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct|none_string_data_filter(0) }} %</td>
 
                                     <!-- Activity -->
-                                    <td></td>
+                                    <td>{{ period.steps_summary_data.daily_steps_average|none_string_data_filter(0) }}</td>
                                     <td></td>
 
                                     <!-- Medication adherence -->
@@ -549,6 +554,11 @@
 
 <div class="collapsible-content">
 
+    <div id="daily-steps-plot-container-json">
+        <p>Loading daily steps plot as json...</p>
+    </div>
+
+
 </div>
 
 
@@ -638,6 +648,11 @@
         // Load heart rate statistics plot when the document is ready
         var target = '#heart-rate-statistics-plot-container-json';
         var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load daily steps plot when the document is ready
+        var target = '#daily-steps-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_daily_steps_plot") }}';
         loadPlotContent(url, target, json_or_html='json');
 
     });

@@ -382,7 +382,7 @@ class DataReportingSteps:
                 - 'general':
             """
             info = {
-                'general' : 'Count of daily steps from Tenovi Watch device',
+                'general' : 'Average of number of daily steps from Tenovi Watch device',
             }
 
             return info
