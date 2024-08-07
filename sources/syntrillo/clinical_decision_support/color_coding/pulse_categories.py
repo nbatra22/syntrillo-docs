@@ -55,7 +55,7 @@ class ColorCodingPulseCategories:
 
                 # add thresholds
                 information += '<br>'
-                information += 'Thresholds:' + ', '.join(map(str, color_category['pulse']['thresholds'])) + '<br>'
+                information += 'Thresholds: ' + ', '.join(map(str, color_category['pulse']['thresholds'])) + '<br>'
 
                 # add combination colors
                 information += '<br>'
