@@ -324,7 +324,19 @@ class DataReportingCombination:
                     bp_summary_data = None
 
                 if self.heart_rate:
-                    heart_rate_summary_data = self.data_reporting_heart_rate.get_pulse_summary_for_a_date_range_row(date_range)
+                    # getting BPM and Watch data
+                    pulse_summary_data = self.data_reporting_heart_rate.get_pulse_summary_for_a_date_range_row(date_range)
+                    heart_rate_stats_summary_data = self.data_reporting_heart_rate.get_heart_rate_stats_summary_for_a_date_range_row(date_range)
+
+                    # combine both dictionaries
+                    if pulse_summary_data is not None and heart_rate_stats_summary_data is not None:
+                        heart_rate_summary_data = {**pulse_summary_data, **heart_rate_stats_summary_data}
+                    elif pulse_summary_data is not None:
+                        heart_rate_summary_data = pulse_summary_data
+                    elif heart_rate_stats_summary_data is not None:
+                        heart_rate_summary_data = heart_rate_stats_summary_data
+                    else:
+                        heart_rate_summary_data = None
                 else:
                     heart_rate_summary_data = None
 
