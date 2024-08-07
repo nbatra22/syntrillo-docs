@@ -181,6 +181,8 @@ class DataReportingSteps:
             daily_steps=pd.NamedAgg(column='hourly_steps', aggfunc='sum')
         ).reset_index()
 
+        # TODO : manage number of data points per day
+
         self.daily_steps_df = daily_steps_df
 
         return daily_steps_df
