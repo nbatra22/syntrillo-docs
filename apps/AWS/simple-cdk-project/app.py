@@ -4,6 +4,7 @@ import os
 import aws_cdk as cdk
 
 from simple_cdk_project.simple_cdk_project_stack import SimpleCdkProjectStack
+from simple_cdk_project.prepare_rds_s3_export_stack import PrepareRDSS3ExportStack
 
 
 app = cdk.App()
@@ -24,5 +25,8 @@ SimpleCdkProjectStack(app, "SimpleCdkProjectStack",
 
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
+
+
+PrepareRDSS3ExportStack(app, "PrepareRDSS3ExportStack")
 
 app.synth()
