@@ -36,6 +36,7 @@ class DataStructureXlsxQuestionnaireHandler:
     }
 
     # Allowed display types for Healthie questionaires
+    #  : most are mod_type, which can be obtained by running api_healthie.forms.get_form_by_id on a form with all types of questions
     HEALTHIE_ALLOWED_DISPLAYS = {
         'text' : 'Open Answer(Short)',
         'textarea' : 'Open Answer(Long)',
@@ -49,7 +50,8 @@ class DataStructureXlsxQuestionnaireHandler:
         'number': 'Number',
         'label': 'used to display a title (no data retrieved)',
         'read_only': 'used to display a read-only *HTML* value (no data retrieved)',
-        'html': 'used to display a read-only *HTML* value (no data retrieved) -- html value in question item',
+        'html': 'not a mod_type. It is used to display a read-only mod_type *HTML* value (no data retrieved), but the html value is in the question item in Excel',
+        'medications': 'Medications questions from Charting bank',
     }
 
 
@@ -241,7 +243,7 @@ class DataStructureXlsxQuestionnaireHandler:
                 xls_variables.rename(columns={colname: 'question'}, inplace=True)
 
         # verify that the columns are as expected
-        expected_columns = ['internal_name', 'question', 'sublabel', 'display', 'special_values', 'values', 'add_unknown', 'add_not_applicable', 'add_other', 'add_comment_box', 'type', 'llm_prompt', 'internal_description', 'comment']
+        expected_columns = ['internal_name', 'question', 'sublabel', 'display', 'special_values', 'values', 'add_unknown', 'add_not_available', 'add_not_applicable', 'add_other', 'add_comment_box', 'type', 'llm_prompt', 'internal_description', 'comment']
         for column in expected_columns:
             if column not in xls_variables.columns:
                 log['success'] = False
@@ -301,6 +303,10 @@ class DataStructureXlsxQuestionnaireHandler:
             if values_list is not None:
                 if row['add_unknown'] == 'yes':
                     values_list.append('unknown')
+
+                if row['add_not_available'] == 'yes':
+                    values_list.append('not available')
+
                 if row['add_not_applicable'] == 'yes':
                     values_list.append('not applicable')
 
@@ -327,7 +333,7 @@ class DataStructureXlsxQuestionnaireHandler:
                     question = ' '
 
                 if question == 'separator':
-                    question = '_' * 30
+                    question = '- ' * 60
                 elif question == 'space':
                     question = ' '
 
