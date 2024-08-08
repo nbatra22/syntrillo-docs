@@ -304,7 +304,7 @@ class DataReportingBloodPressure:
         return color_hex
 
 
-    def _calculate_summary_for_a_date_range_row(self, row) -> pd.Series:
+    def get_summary_for_a_date_range_row(self, row) -> dict:
         """
         Function to calculate summary statistics for a given date range
 
@@ -312,7 +312,7 @@ class DataReportingBloodPressure:
             row : pd.Series with columns from_date, to_date, range_name
 
         Returns:
-            pd.Series with columns:
+            dict with keys:
                 - from_date
                 - to_date
                 - range_name
@@ -382,14 +382,14 @@ class DataReportingBloodPressure:
 
             # SBP/DBP combinations with categories
             internal1_color_bp_min = ccbp_category_internal1.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            internal1_color_bp_mean = ccbp_category_internal1.get_combination_entry(systolic_mean, diastolic_mean, round_values=0)
+            internal1_color_bp_median = ccbp_category_internal1.get_combination_entry(systolic_median, diastolic_median, round_values=0)
             internal1_color_bp_max = ccbp_category_internal1.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             # SBP/DBP combinations with categories
             aha_color_bp_min = ccbp_category_aha.get_combination_entry(systolic_min, diastolic_min, round_values=0)
-            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=1)
-            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=1)
+            aha_color_bp_mean = ccbp_category_aha.get_combination_entry(systolic_mean, diastolic_mean, round_values=0)
+            aha_color_bp_median = ccbp_category_aha.get_combination_entry(systolic_median, diastolic_median, round_values=0)
             aha_color_bp_max = ccbp_category_aha.get_combination_entry(systolic_max, diastolic_max, round_values=0)
 
             # Rainbow colors
@@ -405,7 +405,7 @@ class DataReportingBloodPressure:
             percent_above_130_90_color = self._get_color_for_percent_above_130_90(percent_above_130_90)
 
 
-        return pd.Series({
+        return {
             'from_date': from_date,
             'to_date': to_date,
             'range_name': range_name,
@@ -432,7 +432,8 @@ class DataReportingBloodPressure:
             'num_above_130_90': num_above_130_90,
             'percent_above_130_90': percent_above_130_90,
             'percent_above_130_90_color': percent_above_130_90_color,
-        })
+        }
+
 
     def get_summary_for_date_ranges(
         self,
@@ -480,7 +481,8 @@ class DataReportingBloodPressure:
 
         # get the summary statistics for each date range
         try:
-            summary_stats = date_ranges.apply(self._calculate_summary_for_a_date_range_row, axis=1)
+            summary_stats_dict = date_ranges.apply(self.get_summary_for_a_date_range_row, axis=1)
+            summary_stats = pd.DataFrame(summary_stats_dict.tolist())
 
         except Exception as e:
             return None, {
@@ -497,7 +499,23 @@ class DataReportingBloodPressure:
             'message': 'Summary statistics calculated successfully',
         }
 
+    def get_report_information(self) -> dict:
+            """
+            Retrieves the report information for blood pressure data.
 
+            Returns:
+                A dictionary containing the report information:
+                - 'general': None
+                - 'internal1': HTML information for internal1 category
+                - 'american_heart_association': HTML information for American Heart Association category
+            """
+            info = {
+                'general' : 'Blood pressure from Tenovi BPM device<br>( likely at rest )',
+                'internal1' : ColorCodingBloodPressureCategories.get_html_information('internal1'),
+                'american_heart_association' : ColorCodingBloodPressureCategories.get_html_information('american_heart_association'),
+            }
+
+            return info
 
 
 if __name__ == '__main__':
@@ -550,5 +568,19 @@ if __name__ == '__main__':
         print(color)
         color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(100)
         print(color)
+
+    if True:
+
+        from_date, to_date = data_reporting_blood_pressure.get_date_range()
+
+        # Define the date ranges
+        date_ranges = pd.DataFrame({
+            'from_date': [from_date, from_date + timedelta(days=7), from_date + timedelta(days=14)],
+            'to_date': [from_date + timedelta(days=6), from_date + timedelta(days=13), to_date],
+            'range_name': ['Week 1', 'Week 2', 'Week 3'],
+        })
+
+        df = data_reporting_blood_pressure.get_summary_for_date_ranges(date_ranges)
+        print(df)
 
     pass

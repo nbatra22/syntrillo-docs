@@ -49,24 +49,25 @@ class ColorCodingBloodPressureCategories:
     COLOR_CATEGORIES = [{
                         'name': 'internal1',
                         'systolic': {
-                            'thresholds': (120, 140),
-                            'colors': ('green', 'orange', 'red'),
+                            'thresholds': (130, 140),
+                            'colors': ('green', 'yellow', 'red'),
                             'labels': ('Within range', 'Close to being out of range', 'Out of range'),
                             'normal' : ( True, False, False),
                             },
                         'diastolic': {
                             'thresholds': (80, 90),
-                            'colors': ('green', 'orange', 'red'),
+                            'colors': ('green', 'yellow', 'red'),
                             'labels': ('Within range', 'Close to being out of range', 'Out of range'),
                             'normal' : ( True, False, False),
                             },
                         'combinations': {
                             'logic': ('and', 'or', 'or'),
-                            'colors': ('green', 'orange', 'red'),
+                            'colors': ('green', 'yellow', 'red'),
                             'labels': ('Within range', 'Close to being out of range', 'Out of range'),
                             'normal' : ( True, False, False),
                             },
-                        'references': ['internal']
+                        'description' : 'Internal color scheme',
+                        'references': None
                     },
                    {
                         'name': 'american_heart_association',
@@ -88,6 +89,7 @@ class ColorCodingBloodPressureCategories:
                             'labels': ('Normal', 'Elevated', 'High blood pressure stage 1', 'High blood pressure stage 2', 'Hypertensive crisis'),
                             'normal' : ( True, False, False, False, False),
                             },
+                        'description' : '',
                         'references': [
                             'https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings',
                             'https://www.mayoclinic.org/diseases-conditions/high-blood-pressure/in-depth/blood-pressure/art-20050982'
@@ -107,12 +109,49 @@ class ColorCodingBloodPressureCategories:
     no_data_string = 'no data'
     no_data_color = 'White'
 
+    @staticmethod
+    def get_html_information(color_category_name: str):
+        """
+        Get the information of the color code.
+
+        Args:
+            color_category_name (str): The name of the color code.
+
+        Returns:
+            str: The information of the color code.
+        """
+        for color_category in ColorCodingBloodPressureCategories.COLOR_CATEGORIES:
+            if color_category['name'] == color_category_name:
+                information = color_category['description'] + '<br>'
+
+                # add references if any
+                if color_category['references'] is not None:
+                    information += 'References:<br>'
+                    for reference in color_category['references']:
+                        information += f'<a href="{reference}">{reference}</a><br>'
+
+                # add thresholds
+                information += '<br>'
+                information += 'Thresholds:<br>'
+                information += ' Systolic: ' + ', '.join(map(str, color_category['systolic']['thresholds'])) + '<br>'
+                information += ' Diastolic: ' + ', '.join(map(str, color_category['diastolic']['thresholds'])) + '<br>'
+
+                # add combination colors
+                information += '<br>'
+                information += 'Colors: ' + ', '.join(color_category['combinations']['colors']) + '<br>'
+
+                information += '<br>'
+
+                return information
+
+        return None
+
 
     def __init__(
         self,
         systolic: float = None,
         diastolic: float = None,
-        color_category_name: str = 'default',
+        color_category_name: str = 'internal1',
         alpha: float = 0.5,
     ):
         """
@@ -121,7 +160,7 @@ class ColorCodingBloodPressureCategories:
         Args:
             systolic (float): Systolic blood pressure value.
             diastolic (float): Diastolic blood pressure value.
-            color_code_name (str): The name of the color code to use. Defaults to 'default'.
+            color_code_name (str): The name of the color code to use. Defaults to 'internal1'.
             alpha (float): Alpha value for the color code. Defaults to 0.5.
         """
         self.systolic = systolic
@@ -353,14 +392,6 @@ class ColorCodingBloodPressureCategories:
 
         return self.no_data_combination_entry
 
-    def get_references(self):
-        """
-        Get the references for the blood pressure categories.
-
-        Returns:
-            list: A list of references for the blood pressure categories.
-        """
-        return self.color_category['references']
 
     def get_entries(self):
         """
@@ -436,6 +467,13 @@ if __name__ == '__main__':
     import pandas as pd
 
     if True:
+        information = ColorCodingBloodPressureCategories.get_html_information('internal1')
+        print(information)
+
+        information = ColorCodingBloodPressureCategories.get_html_information('american_heart_association')
+        print(information)
+
+    if False:
 
         def test_color_coding(ccbp_class, color_category_name, test_entries):
             print(f'Testing color code: {color_category_name}')
@@ -502,7 +540,7 @@ if __name__ == '__main__':
             print(df.to_string(index=False))
             print('\n\n')
 
-    if True:
+    if False:
         wrapper = ColorCodingBloodPressureCategoriesWrapper()
         entry = wrapper.get_combination_entry(systolic=120, diastolic=80, round_values=0)
         print(json_dumps(entry, indent=4))

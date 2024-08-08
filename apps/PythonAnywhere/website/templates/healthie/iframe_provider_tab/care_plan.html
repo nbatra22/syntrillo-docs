@@ -1,12 +1,5 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/care_plan.html -->
 
-<h2>Care Plan</h2>
-<div class="ml-4">
-    <p>Care plans for this patient can be generated here and updated over time.</p>
-    <p>Known risk factors can be listed.</p>
-    <p>Progress can be reported.</p>
-</div>
-
 <h2 class="collapsible">
     <span class="icon-container">
         <i class="fas fa-chevron-right"></i>
@@ -23,6 +16,22 @@
     </p>
 
     <style>
+
+        /* Table styling : weekly/monthly links */
+        .summary-table-hidden {
+            display: none;
+        }
+        .summary-table-toggle-link {
+            cursor: pointer;
+            color: blue;
+            font-size: 0.8em;
+        }
+        .summary-table-toggle-link.active {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        /* Table styling : summary table */
         .summary-table {
             width: 100%;
             border-collapse: collapse;
@@ -36,7 +45,9 @@
             border: 1px solid #ccc;
             white-space: nowrap;
         }
-        .summary-table td:hover::after {
+        /*
+        .summary-table td:hover::after,
+        .summary-table th:hover::after {
             content: attr(data-tooltip);
             position: absolute;
             background-color: #333;
@@ -45,161 +56,275 @@
             border-radius: 5px;
             top: -5px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-100%);
             white-space: nowrap;
             z-index: 1;
         }
+        */
         .summary-table .specific-bottom-border td,
         .summary-table .specific-bottom-border th {
             border-bottom: 1px solid black !important;
         }
-        .summary-table-hidden {
+
+        .summary-table .tooltip-cell {
+            position: relative;
+            cursor: grab;
+        }
+
+        .summary-table .tooltip-content {
             display: none;
-        }
-        .summary-table-toggle-link {
-            cursor: pointer;
-            color: blue;
+            position: absolute;
+            background-color: #f3eefff0;
+            color: #1c1c1e;
+            padding: 5px;
+            border-radius: 5px;
+            left: 50%;
+            bottom: 100%;  /* Position tooltip just above the cell */
+            transform: translateX(-50%) translateY(-5px);
+            white-space: nowrap;
+            z-index: 1;
             font-size: 0.8em;
-        }
-        .summary-table-toggle-link.active {
-            text-decoration: underline;
             font-weight: bold;
+            border-color: rgb(155, 120, 252);
+            border-style: solid;
+            border-width: 2px;
+        }
+
+        .summary-table .tooltip-cell:hover .tooltip-content {
+            display: block;
+        }
+
+        .summary-table .tooltip-cell:hover {
+           border: 2px solid rgb(155, 120, 252) !important;  /* Change border color and thickness on hover */
+        }
+
+        .summary-table .tooltip-icon {
+            display: inline-block;
+                width: 10px;
+                height: 10px;
+                background-color: white;
+                color: blue;
+                text-align: center;
+                border-radius: 50%;
+                font-size: 0.6em;
+                line-height: 10px;
+                margin-left: 5px;
+                cursor: pointer;
+                top: -0.5em;
+                position: relative;
         }
     </style>
 
-    <div class="table-container-data-color summary-table-hidden" id="summary-weekly">
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
-                    <th colspan="4">BP</th>
-                    <th colspan="4">Pulse<br>(with BPM device)</th>
-                    <th colspan="4">Heart rate<br>(with Watch)</th>
-                    <th colspan="1">Steps</th>
-                    <th colspan="1">Medication<br>Adherence</th>
-                </tr>
-                <tr class="specific-bottom-border">
-                    <th>% above 130/90</th>
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
+    {# --- Loop through each period type (weekly and monthly) --- #}
+    {% for period_type in ['weekly', 'monthly'] %}
 
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
-                    <th>irregular</th>
+        {# --- Get the summary information based on the period type --- #}
+        {% if period_type == 'weekly' %}
+            {% set summary_information = summary_information_weekly %}
+        {% elif period_type == 'monthly' %}
+            {% set summary_information = summary_information_monthly %}
+        {% endif %}
 
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
-                    <th>rmssd</th>
-
-                    <th>average</th>
-
-                    <th>average</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if summary_data_weekly %}
-                    {% for period in summary_data_weekly %}
-                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
-                            <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
-
-                            <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|none_string_data_filter(0) }} %</td>
-                            <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
-                            <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
-                            <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
-
-                            <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
-                            <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
-                            <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
-                            <td>{{ period.irregular_pulse_count|none_string_data_filter(0) }}</td>
-
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-
-                            <td></td>
-
-                            <td></td>
+        <!-- Container for each table, hidden by default -->
+         {% if summary_information %}
+            <div class="table-container-data-color summary-table-hidden" id="summary-{{ period_type }}">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
+                            <th colspan="4" class="tooltip-cell">
+                                BP <span class="tooltip-icon">i</span>
+                                <div class="tooltip-content">
+                                    {{ summary_information.blood_pressure_information.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="4" class="tooltip-cell">
+                                Pulse
+                                <div class="tooltip-content">
+                                    {{ summary_information.heart_rate_information.pulse.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="4"  class="tooltip-cell">
+                                Heart rate
+                                <div class="tooltip-content">
+                                    {{ summary_information.heart_rate_information.heart_rate.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="2">Activity</th>
+                            <th colspan="1">Medication<br>Adherence</th>
                         </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="5" style="text-align: center;">No data available</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+                        <tr class="specific-bottom-border">
 
-    <div class="table-container-data-color summary-table-hidden" id="summary-monthly">
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
-                    <th colspan="4">BP</th>
-                    <th colspan="4">Pulse<br>(with BPM device)</th>
-                    <th colspan="4">Heart rate<br>(with Watch)</th>
-                    <th colspan="1">Steps</th>
-                    <th colspan="1">Medication<br>Adherence</th>
-                </tr>
-                <tr class="specific-bottom-border">
-                    <th>% above 130/90</th>
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
+                            <!-- Blood pressure -->
+                            <th class="tooltip-cell">
+                                % above<br>130/90
+                                <div class="tooltip-content">
+                                    Percentage SBP above 120 or DBP above 80.<br><br>
+                                    Green to red color scale.
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                min
+                                <div class="tooltip-content">
+                                    Minimal SBP / Minimal DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average SBP / Average DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximal SBP / Maximal DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
 
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
-                    <th>irregular</th>
+                            <!-- Pulse -->
+                            <th class="tooltip-cell">
+                                min
+                                <div class="tooltip-content">
+                                    Minimal pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximal pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                irregular
+                                <div class="tooltip-content">
+                                    Count of irregular pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.irregular_pulse.internal1|safe }}
+                                </div>
+                            </th>
 
-                    <th>min</th>
-                    <th>average</th>
-                    <th>max</th>
-                    <th>rmssd</th>
+                            <!-- Heart rate - using hourly averages -->
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average of hourly averages
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximum of hourly maxima
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                rmssd
+                                <div class="tooltip-content">
+                                    Root mean square of successive differences (RMSSD).
+                                    <br><br>
+                                    Approximation using differences between successive hourly averages.
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                rmssd<br>trend
+                                <div class="tooltip-content">
+                                    RMSSD trend from previous consecutive time frame.
+                                </div>
+                            </th>
 
-                    <th>average</th>
+                            <!-- Activity -->
+                            <th class="tooltip-cell">
+                                steps<br>daily avg
+                                <div class="tooltip-content">
+                                    {{ summary_information.steps_information.general|safe }}
+                                </div>
+                            </th>
+                            <th>self<br>reported</th>
 
-                    <th>average</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if summary_data_monthly %}
-                    {% for period in summary_data_monthly %}
-                        <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
-                            <td data-tooltip="{{ period.range_name_info }}" style="text-align: left; padding-left: 20px;">{{ period.range_name }}</td>
-
-                            <td style="background-color: {{ period.percent_above_130_90_color }};">{{ period.percent_above_130_90|int }} %</td>
-                            <td style="background-color: {{ period.internal1_color_bp_min.color }};">{{ period.internal1_color_bp_min.html|safe }}</td>
-                            <td style="background-color: {{ period.internal1_color_bp_mean.color }};">{{ period.internal1_color_bp_mean.html|safe }}</td>
-                            <td style="background-color: {{ period.internal1_color_bp_max.color }};">{{ period.internal1_color_bp_max.html|safe }}</td>
-
-                            <td>{{ period.pulse_min|none_string_data_filter(0) }}</td>
-                            <td>{{ period.pulse_mean|none_string_data_filter(0) }}</td>
-                            <td>{{ period.pulse_max|none_string_data_filter(0) }}</td>
-                            <td>{{ period.irregular_pulse_count|none_string_data_filter(0) }}</td>
-
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-
-                            <td></td>
-
-                            <td></td>
+                            <!-- Medication adherence -->
+                            <th>avg</th>
                         </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="5" style="text-align: center;">No data available</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+                    </thead>
+                    <tbody>
+                        {% if summary_information.combined_summary_data %}
+                            {% for period in summary_information.combined_summary_data %}
+                                <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
+                                    <td class="tooltip-cell" style="text-align: left; padding-left: 20px;">
+                                        {{ period.range_name }}
+                                        <div class="tooltip-content">
+                                            {{ period.range_name_info|safe }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Blood pressure -->
+                                    <td style="background-color: {{ period.bp_summary_data.percent_above_130_90_color }};">
+                                        {{ period.bp_summary_data.percent_above_130_90|none_string_data_filter(0) }} %
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_min.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_min.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_mean.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_mean.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_max.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_max.html|safe }}
+                                    </td>
+
+                                    <!-- Pulse -->
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_min.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_min.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_mean.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_mean.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_max.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_max.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.irregular_pulse_count.color }};">
+                                        {{ period.heart_rate_summary_data.irregular_pulse_count.html|safe }}
+                                    </td>
+
+                                    <!-- Heart rate - using hourly averages -->
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_average_average|none_string_data_filter(0) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_max_max|none_string_data_filter(0) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd|none_string_data_filter(1) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct|none_string_data_filter(0) }} %</td>
+
+                                    <!-- Activity -->
+                                    <td>{{ period.steps_summary_data.daily_steps_average|none_string_data_filter(0) }}</td>
+                                    <td></td>
+
+                                    <!-- Medication adherence -->
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="15" style="text-align: center;">No data available</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div>
+                <p>No data available</p>
+            </div>
+        {% endif %}
+
+    {% endfor %}
 
 </div> <!-- end of collapsible-content -->
 
@@ -422,6 +547,11 @@
 
 <div class="collapsible-content">
 
+    <div id="daily-steps-plot-container-json">
+        <p>Loading daily steps plot as json...</p>
+    </div>
+
+
 </div>
 
 
@@ -511,6 +641,11 @@
         // Load heart rate statistics plot when the document is ready
         var target = '#heart-rate-statistics-plot-container-json';
         var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load daily steps plot when the document is ready
+        var target = '#daily-steps-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_daily_steps_plot") }}';
         loadPlotContent(url, target, json_or_html='json');
 
     });

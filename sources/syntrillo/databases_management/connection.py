@@ -44,7 +44,7 @@ def get_secrets(secret_arn):
     except KeyError as e:
         # Handle exceptions related to missing "SecretString" key
         raise Exception(f"Error retrieving SecretString: {e}")
-    
+
     try:
         secrets_dict=json.loads(secrets_string)
         return secrets_dict
@@ -123,6 +123,7 @@ class DatabaseConnection:
                     'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
                     'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
                     'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
+                    'port': os.getenv('AWS_DATABASE_CONFIG_LOCAL_PORT'),
                 }
 
             elif self.database_server == 'PythonAnywhere':
