@@ -26,20 +26,20 @@ from constructs import Construct
 
 class DatabaseStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.environment_context = environment_context
-        self.vpc = vpc
+        self.network = network
 
         removal_policy_value = self.environment_context["database"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
 
         self.db = rds.DatabaseInstance(self, "MySQLDatabase",
-            vpc=self.vpc,
+            vpc=self.network.vpc,
             engine=rds.DatabaseInstanceEngine.MYSQL,
             instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
-            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
+            vpc_subnets=ec2.SubnetSelection(subnets=self.network.vpc.private_subnets),
             multi_az=False,
             allocated_storage=20,
             storage_type=rds.StorageType.GP2,
@@ -50,7 +50,7 @@ class DatabaseStack(Stack):
 
         self.db_security_group = self.db.connections.security_groups[0]
 
-        private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.vpc.private_subnets]
+        private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.network.vpc.private_subnets]
 
         for cidr_block in private_subnet_cidr_blocks:
             self.db_security_group.add_ingress_rule(
@@ -60,3 +60,10 @@ class DatabaseStack(Stack):
             )
 
         self.secret=self.db.secret
+
+        # AllOW BASTION HOST TO ACCESS MYSQL DB
+        self.db_security_group.add_ingress_rule(
+            self.network.bastion_host_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        )  

@@ -37,3 +37,9 @@ class NetworkStack(Stack):
             vpc_name = "SyntrilloClinicBackendVPC",
             nat_gateways=1
         )
+
+        self.bastion_host_security_group = ec2.SecurityGroup(
+            self,
+            "BastionHostSecurityGroup",
+            vpc=self.vpc,
+        )

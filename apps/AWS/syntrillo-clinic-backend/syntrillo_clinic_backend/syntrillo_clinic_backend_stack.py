@@ -67,13 +67,13 @@ class SyntrilloClinicBackendStack(Stack):
         self.database = DatabaseStack(
             self, "DatabaseStack",
             environment_context=self.environment_context,
-            vpc=self.network.vpc
+            network=self.network
         )
 
         self.storage = StorageStack(
             self, "StorageStack", 
             environment_context=self.environment_context,
-            vpc=self.network.vpc
+            network=self.network
         )
 
         self.secrets = SecretsStack(
