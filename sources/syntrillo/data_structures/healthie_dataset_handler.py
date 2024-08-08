@@ -170,7 +170,9 @@ class DataStructureHealthieDatasetHandler:
 
 if __name__ == "__main__":
     # Test the class
-    data_structure = DataStructureHealthieDatasetHandler(structure_name="tenovi_pillbox_expectations")
+    #  : enrollment_patient_information
+    #  : tenovi_pillbox_expectations
+    data_structure = DataStructureHealthieDatasetHandler(structure_name="enrollment_patient_information")
 
     syntrillo_internal_key = data_structure.lookup_codes.retrieve_entry_by_healthie_user_id(healthie_user_id="1035117").get("syntrillo_internal_key", None)
 
