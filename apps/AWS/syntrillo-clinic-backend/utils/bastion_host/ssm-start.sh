@@ -21,9 +21,9 @@ fi
 
 PROFILE="syntrillo-clinic-$ENVIRONMENT"
 
-# Find instance id with name as BastionHost
+# Find instance id with name as BastionHost that is Running
 INSTANCE_ID=$(aws ec2 describe-instances --profile $PROFILE \
-    --filters "Name=tag:Name,Values=BastionHost" \
+    --filters "Name=tag:Name,Values=BastionHost" "Name=instance-state-name,Values=running" \
     --query "Reservations[*].Instances[*].InstanceId" \
     --output text)
 
