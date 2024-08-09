@@ -64,15 +64,10 @@ class IFrameGeneratorFunction(Construct):
             timeout=Duration.seconds(60),
         )
 
-        self.function_version = _lambda.Version(
-            self, "LambdaVersion",
-            lambda_=self.function,
-        )
-
         self.function_alias = _lambda.Alias(
             self, "LambdaAlias",
             alias_name="provisionned-concurrency",
-            version=self.function_version,
+            version=self.function.current_version,
             provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
         )
 
