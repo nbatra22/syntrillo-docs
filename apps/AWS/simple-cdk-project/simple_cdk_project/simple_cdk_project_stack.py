@@ -22,7 +22,21 @@ class SimpleCdkProjectStack(Stack):
             "SimpleLambdaFunction",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda"),
-            handler="lambda_function.lambda_handler",
+            handler="lambda_function.simple_handler",
+        )
+
+        self.function_version = _lambda.Version(
+            self, "SimpleLambdaVersionX",
+            lambda_=lambda_function,
+        )
+
+        current_version = lambda_function.current_version
+
+        self.function_alias = _lambda.Alias(
+            self, "SimpleLambdaAlias",
+            alias_name="provisionned-concurrency",
+            version=current_version,
+            provisioned_concurrent_executions=0
         )
 
         self.environment_name = 'sandbox'
@@ -71,4 +85,4 @@ class SimpleCdkProjectStack(Stack):
         )
 
         # add get method to the root resource of the api gateway
-        self.api.root.add_method("GET", integration=apigateway.LambdaIntegration(lambda_function))
+        self.api.root.add_method("GET", integration=apigateway.LambdaIntegration(self.function_alias))
