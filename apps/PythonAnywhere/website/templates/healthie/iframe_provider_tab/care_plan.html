@@ -269,7 +269,7 @@
 
                                     <!-- Blood pressure -->
                                     <td style="background-color: {{ period.bp_summary_data.percent_above_130_90_color }};">
-                                        {{ period.bp_summary_data.percent_above_130_90|none_string_data_filter(0) }} %
+                                        {{ period.bp_summary_data.percent_above_130_90|none_string_data_filter(0) }}%
                                     </td>
                                     <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_min.color }};">
                                         {{ period.bp_summary_data.internal1_color_bp_min.html|safe }}
@@ -299,7 +299,7 @@
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_average_average|none_string_data_filter(0) }}</td>
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_max_max|none_string_data_filter(0) }}</td>
                                     <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd|none_string_data_filter(1) }}</td>
-                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct|none_string_data_filter(0) }} %</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct }}</td>
 
                                     <!-- Activity -->
                                     <td>{{ period.steps_summary_data.daily_steps_average|none_string_data_filter(0) }}</td>
