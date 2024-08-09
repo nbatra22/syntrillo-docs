@@ -34,12 +34,6 @@ class SyntrilloClinicBastionStack(Stack):
         self.database = database
         self.storage = storage
 
-        security_group = ec2.SecurityGroup(
-            self,
-            id="bastion_security_group",
-            vpc=self.network.vpc,
-        )
-
         # Create the bastion host
         bastion_host = ec2.BastionHostLinux(
             self, "BastionHost",
@@ -48,45 +42,18 @@ class SyntrilloClinicBastionStack(Stack):
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),
-            security_group=security_group,
+            security_group=self.network.bastion_host_security_group,
             machine_image=ec2.MachineImage.latest_amazon_linux2023(),
         )
 
-        # # Create an IAM role for SSM
-        # ssm_role = iam.Role(
-        #     self, "SSMRole",
-        #     assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
-        #     managed_policies=[
-        #         iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")
-        #     ]
-        # )
+        # Mount efs file system on the bastion host
+        efs_file_system_id = self.storage.efs_file_system.file_system_id
 
-        # public_subnets = [subnet for subnet in self.network.vpc.public_subnets]
-
-        # instance = ec2.Instance(
-        #     self,
-        #     "Instance",
-        #     instance_type=ec2.InstanceType("t3.micro"),
-        #     machine_image=ec2.MachineImage.latest_amazon_linux2023(),
-        #     vpc_subnets=ec2.SubnetSelection(subnets=public_subnets),
-        #     vpc=self.network.vpc,
-        #     role=ssm_role 
-        # )
-
-        # # Get the security group associated with the EFS file system
-        efs_security_group = self.storage.efs_file_system.connections.security_groups[0]
-
-        # Allow NFS traffic from the bastion host to the EFS file system
-        efs_security_group.add_ingress_rule(
-            peer=security_group,
-            connection=ec2.Port.tcp(2049),
-            description="Allow NFS from bastion host"
+        user_data = ec2.UserData.for_linux()
+        user_data.add_commands(
+            "set -xe",
+            "cd /home/ec2-user", 
+            "mkdir -p efs",
+            f"sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport {efs_file_system_id}.efs.us-east-1.amazonaws.com:/ efs",
         )
-
-        db_security_group = self.database.db_security_group
-
-        db_security_group.add_ingress_rule(
-            security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
-        )       
+        bastion_host.instance.add_user_data(user_data.render())

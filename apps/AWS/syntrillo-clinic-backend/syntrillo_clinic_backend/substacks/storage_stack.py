@@ -26,17 +26,17 @@ from constructs import Construct
 
 class StorageStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.environment_context = environment_context
-        self.vpc = vpc
+        self.network = network
 
         removal_policy_value = self.environment_context["storage"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
         
         self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
-            vpc=self.vpc,
+            vpc=self.network.vpc,
             removal_policy=self.removal_policy
         )
 
@@ -47,4 +47,13 @@ class StorageStack(Stack):
                 uid="1001",
                 gid="1001"
             )
+        )
+
+        # ALLOW BASTION HOST TO ACCESS EFS FILE SYSTEM
+        efs_security_group = self.efs_file_system.connections.security_groups[0]
+
+        efs_security_group.add_ingress_rule(
+            peer=self.network.bastion_host_security_group,
+            connection=ec2.Port.tcp(2049),
+            description="Allow NFS from bastion host"
         )

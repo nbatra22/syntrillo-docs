@@ -27,7 +27,7 @@ class SimpleCdkProjectStack(Stack):
 
         self.environment_name = 'sandbox'
         self.route_53_domain_name = f'{self.environment_name}.syntrillo-clinic-backend.com'
-        self.api_domain_name = f'api-2.{self.environment_name}.syntrillo-clinic-backend.com'
+        self.api_domain_name = f'simple-domain.{self.environment_name}.syntrillo-clinic-backend.com'
 
         self.route53_hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
             self, "HostedZoneId",
@@ -54,15 +54,15 @@ class SimpleCdkProjectStack(Stack):
         self.api = apigateway.RestApi(
             self,
             "SimpleApiGateway",
-            rest_api_name="Simple API",
-            deploy_options=apigateway.StageOptions(stage_name="prod"),
+            rest_api_name="SimpleAPI",
+            deploy_options=apigateway.StageOptions(stage_name="sandbox"),
             domain_name=apigateway.DomainNameOptions(
                 domain_name=f"{self.api_domain_name}",
                 certificate=self.certificate
             ),
         )
 
-        route53.ARecord(self, "ARecord", 
+        route53.ARecord(self, "SimpleARecord", 
             zone=self.hosted_zone,
             record_name=f"{self.api_domain_name}",
             target=route53.RecordTarget.from_alias(
