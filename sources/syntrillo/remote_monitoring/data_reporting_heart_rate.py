@@ -792,7 +792,8 @@ class DataReportingHeartRate:
         num_datapoints_heart_rate_stats = len(filtered_heart_rate_stats)
 
         if num_datapoints_heart_rate_stats == 0:
-            hr_hourly_stats_average_average = hr_hourly_stats_max_max = hr_hourly_stats_rmssd = hr_hourly_stats_rmssd_trend_pct = None
+            hr_hourly_stats_average_average = hr_hourly_stats_max_max = hr_hourly_stats_rmssd = hr_hourly_stats_rmssd_trend = None
+            hr_hourly_stats_rmssd_trend_pct = '-'
         else:
             # getting mean of hourly_average_pulse and max of hourly_maximum_pulse
             hr_hourly_stats_average_average = filtered_heart_rate_stats['hourly_average_pulse'].mean()
@@ -803,7 +804,8 @@ class DataReportingHeartRate:
 
             # calculate hrv trend
             if previous_consecutive_range is None:
-                hr_hourly_stats_rmssd_trend_pct = None
+                hr_hourly_stats_rmssd_trend = None
+                hr_hourly_stats_rmssd_trend_pct = '-'
             else:
                 previous_hr_hourly_stats_rmssd = self.get_rmssd(
                     start_date=pd.to_datetime(previous_consecutive_range['from_date']),
@@ -811,9 +813,11 @@ class DataReportingHeartRate:
                     )
 
                 if hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd != 0:
-                    hr_hourly_stats_rmssd_trend_pct = 100 * (hr_hourly_stats_rmssd - previous_hr_hourly_stats_rmssd) / previous_hr_hourly_stats_rmssd
+                    hr_hourly_stats_rmssd_trend = (hr_hourly_stats_rmssd - previous_hr_hourly_stats_rmssd) / previous_hr_hourly_stats_rmssd
+                    hr_hourly_stats_rmssd_trend_pct = str(int(100*hr_hourly_stats_rmssd_trend)) + '%'
                 else:
-                    hr_hourly_stats_rmssd_trend_pct = None
+                    hr_hourly_stats_rmssd_trend = None
+                    hr_hourly_stats_rmssd_trend_pct = '-'
 
         return {
             'from_date': from_date,
@@ -823,6 +827,7 @@ class DataReportingHeartRate:
             'hr_hourly_stats_average_average': hr_hourly_stats_average_average,
             'hr_hourly_stats_max_max': hr_hourly_stats_max_max,
             'hr_hourly_stats_rmssd': hr_hourly_stats_rmssd,
+            'hr_hourly_stats_rmssd_trend': hr_hourly_stats_rmssd_trend,
             'hr_hourly_stats_rmssd_trend_pct': hr_hourly_stats_rmssd_trend_pct,
         }
 

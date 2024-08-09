@@ -7,6 +7,9 @@ class HealthInformationTablesManager:
     A class to manage the creation and deletion of health information tables in a MySQL database.
     """
 
+    # TODO : list of tables to be managed, as class variables
+
+
     def __init__(self):
         """
         Initialize the HealthInformationTablesManager by creating a database connection.

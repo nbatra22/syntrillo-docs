@@ -1271,7 +1271,10 @@ if __name__ == "__main__":
         print(json.dumps(new_form, indent=4, default=str))
 
     if True:
-        form = forms.get_form_by_id(form_id='1377148')
+        # give form details: especially mod_type
+        # 1500028
+        # 1377148 : Tenovi Pillbox Expectations (v0.2)
+        form = forms.get_form_by_id(form_id='1500028')
 
         print(json.dumps(form, indent=4, default=str))
 

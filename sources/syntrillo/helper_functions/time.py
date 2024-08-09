@@ -235,8 +235,10 @@ def get_date_ranges_for_reporting(
         else:
             last_range_label = last_range['range_name'] + ' - '
 
-        # previous_consecutive_range is the last in date_ranges
-        previous_consecutive_range = date_ranges[-1] if date_ranges else None
+        # previous_consecutive_range is the last in date_ranges, unless special case of whole period
+        previous_consecutive_range = date_ranges[-1]
+        if previous_consecutive_range['range_name'] == entire_range_label:
+            previous_consecutive_range = None
 
         if last_ranges_unit == 'week':
             extra_count = (to_date - from_date).days // 7 if use_total else 0
@@ -310,11 +312,11 @@ if __name__ == '__main__':
 
     # Test 3: Get date ranges for reporting
     print("\nTest 3: Get date ranges for reporting")
-    from_date = datetime(2022, 6, 1)
-    to_date = datetime(2023, 2, 15)
+    from_date = datetime(2024, 6, 19)
+    to_date = datetime(2024, 7, 9)
     period = 'monthly'
     last_ranges_unit = 'week'
-    use_total = True
+    use_total = False
     add_entire_range = True
     date_ranges_df, log = get_date_ranges_for_reporting(
         from_date,
