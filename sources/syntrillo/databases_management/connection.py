@@ -123,7 +123,7 @@ class DatabaseConnection:
                     'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
                     'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
                     'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
-                    'port': os.getenv('AWS_DATABASE_CONFIG_LOCAL_PORT'),
+                    'port': int(os.getenv('AWS_DATABASE_CONFIG_LOCAL_PORT')),
                 }
 
             elif self.database_server == 'PythonAnywhere':
