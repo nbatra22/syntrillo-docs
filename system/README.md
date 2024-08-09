@@ -133,6 +133,9 @@ pip install -r requirements_v5_freeze.txt
 # install new package found in requirements_v6.txt (from Olivier L)
 pip install aws-wsgi==0.2.7
 
+# install AWS CDK dev packages
+pip install -r apps/AWS/syntrillo-clinic-backend/requirements.txt
+
 # Create new requirements files
 pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v6_new.txt
 pip freeze > requirements_v6_freeze.txt
