@@ -37,6 +37,7 @@ IFRAME_POST_PATHS=(\
     "/healthie/iframe_provider_tab/cdss" \
     "/healthie/iframe_provider_tab/system" \
     "/healthie/iframe_provider_tab/system_devices"\
+    "/healthie/iframe_provider_sidebar/questionnaire" \
 )
 for resource_path in "${IFRAME_POST_PATHS[@]}"; do
     echo "resource_path"$resource_path
