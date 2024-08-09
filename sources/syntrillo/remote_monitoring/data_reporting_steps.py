@@ -117,7 +117,7 @@ class DataReportingSteps:
                 'success': False,
                 'error': 'Report period is too short',
             }
-            return None, log
+            return None, None, log
 
         # ---
         # get data from PHI database, ordered by timestamp
@@ -135,7 +135,7 @@ class DataReportingSteps:
                 'error': 'No BPM blood_pressure data found',
                 'log': log,
             }
-            return None, overall_log
+            return None, None, overall_log
 
         # ---
         # rename columns :
