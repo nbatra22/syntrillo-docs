@@ -99,12 +99,13 @@ class SyntrilloClinicBackendStack(Stack):
             lambda_function=self.servers.iframe_generator_function.function
         )
 
-        self.bastion=SyntrilloClinicBastionStack(
-            self, "BastionStack",
-            network=self.network,
-            database=self.database,
-            storage=self.storage,
-        )
+        if self.aws_environment != "prod":
+            self.bastion=SyntrilloClinicBastionStack(
+                self, "BastionStack",
+                network=self.network,
+                database=self.database,
+                storage=self.storage,
+            )
 
         # backupStack=SyntrilloClinicBackupStack(
         #     self, "BackupStack",
