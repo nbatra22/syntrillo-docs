@@ -113,6 +113,36 @@ cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic
 pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v3.txt
 ```
 
+## Example v5 to v6
+
+```bash
+# Navigate to your python environments
+cd /home/olivier/projects/Syntrillo/python_environments
+
+# Create a new virtual environment
+python3.9 -m venv p3.9_Syntrillo_Clinic_v6
+
+# Activate the virtual environment
+#  : gives : "(p3.9_Syntrillo_Clinic_v6) /home/olivier/projects/Syntrillo/python_environments"
+source p3.9_Syntrillo_Clinic_v6/bin/activate
+
+# Install previous environement packages in SyntrilloClinic v6
+cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic
+pip install -r requirements_v5_freeze.txt
+
+# install new package found in requirements_v6.txt (from Olivier L)
+pip install aws-wsgi==0.2.7
+
+# Create new requirements files
+pipreqs ./ --ignore ./apps/AWS/ --savepath requirements_v6_new.txt
+pip freeze > requirements_v6_freeze.txt
+
+# update settings.json and reload VSCode with 'Clear cache and window reload'
+# test with 'start debugging'
+
+```
+
+
 
 ## Python anywhere venv p3.9
 
