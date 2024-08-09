@@ -26,7 +26,7 @@
   "prod": {
     "environment_name": "prod",
     "iframe_generator_function": {
-      "provisioned_concurrency_executions": 10
+      "provisioned_concurrency_executions": 6
     },
     "database": {
       "removal-policy": "RETAIN"

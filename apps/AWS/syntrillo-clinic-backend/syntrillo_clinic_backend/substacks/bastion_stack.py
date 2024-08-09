@@ -44,7 +44,7 @@ class SyntrilloClinicBastionStack(Stack):
         bastion_host = ec2.BastionHostLinux(
             self, "BastionHost",
             vpc=self.network.vpc,
-            instance_type=ec2.InstanceType("t3.small"),
+            instance_type=ec2.InstanceType("t3.micro"),
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),

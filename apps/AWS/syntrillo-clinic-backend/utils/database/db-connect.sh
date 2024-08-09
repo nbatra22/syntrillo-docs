@@ -1,2 +1,0 @@
-# in case you need to access mysql as root (wsl2 - ubuntu) => sudo mysql -u root
-mysql -h syntrilloclinicbackendstack-mysqldatabase22bdac80-zt8ez017ewyk.cf60aoaem0ky.us-east-1.rds.amazonaws.com -u admin -pSqt8wlAss7UpE7A-86xWR-5ltPXfB. -D 'syntrillo$PseudonymManagement'
