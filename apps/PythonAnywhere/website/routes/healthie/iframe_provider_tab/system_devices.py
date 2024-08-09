@@ -18,11 +18,11 @@ iframe_healthie_provider_tab_system_devices_bp = Blueprint('iframe_healthie_prov
 from aws_lambda_powertools import Logger
 logger = Logger(service="SYSTEM_DEVICES")
 
-from aws_xray_sdk.core import patch_all, xray_recorder
-patch_all()
+# from aws_xray_sdk.core import patch_all, xray_recorder
+# patch_all()
 
 @iframe_healthie_provider_tab_system_devices_bp.route('/healthie/iframe_provider_tab/system_devices', methods=['POST'])
-@xray_recorder.capture('iframe_healthie_provider_tab_system_devices')
+# @xray_recorder.capture('iframe_healthie_provider_tab_system_devices')
 def iframe_healthie_provider_tab_system_devices():
     """
     This endpoint is used to display the devices page in the provider tab iframe.
