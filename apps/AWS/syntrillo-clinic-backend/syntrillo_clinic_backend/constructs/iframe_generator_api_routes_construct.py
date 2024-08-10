@@ -48,6 +48,13 @@ class IFrameGeneratorAPIRoutes(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        # /download
+        download_resource = self.rest_api.root.add_resource("download")
+        download_resource.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
     def create_static_resources(self, iframe_generator_function: _lambda.Function):
         static = self.rest_api.root.add_resource("static")
 
