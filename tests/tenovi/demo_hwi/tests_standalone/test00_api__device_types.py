@@ -1,3 +1,4 @@
+# Path: ./tests/tenovi/demo_hwi/tests_standalone/test00_api__device_types.py
 # Path: ./tests/tenovi/tests_standalone/test00_api.py
 import requests
 from dotenv import load_dotenv

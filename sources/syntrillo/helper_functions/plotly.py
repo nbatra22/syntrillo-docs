@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/helper_functions/plotly.py
 import json
 import plotly.utils as pu
 from plotly.graph_objs import Figure

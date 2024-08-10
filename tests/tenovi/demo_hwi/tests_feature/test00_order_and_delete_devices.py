@@ -1,3 +1,4 @@
+# Path: ./tests/tenovi/demo_hwi/tests_feature/test00_order_and_delete_devices.py
 
 import uuid
 import random

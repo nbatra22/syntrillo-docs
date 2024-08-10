@@ -27,6 +27,7 @@ class NewPatientCreated():
         self.auth = HealthieAuth()
         self.utils = HealthieUtils()
 
+        # TODO : use system > dotenvloader instead of this
         # paths have to be hard-coded at PythonAnywhere
         if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
             dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'

@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/remote_monitoring/data_reporting_steps.py
 import uuid
 import json
 import pandas as pd

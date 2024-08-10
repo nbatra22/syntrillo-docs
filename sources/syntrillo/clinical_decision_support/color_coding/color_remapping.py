@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/clinical_decision_support/color_coding/color_remapping.py
 import matplotlib.colors as mcolors
 
 class ColorReMapping:

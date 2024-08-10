@@ -1,3 +1,4 @@
+# Path: ./tests/misc/plot_ly_hello_world.py
 import kaleido
 import plotly
 
