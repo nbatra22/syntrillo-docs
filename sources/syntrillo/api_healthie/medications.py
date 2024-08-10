@@ -12,6 +12,8 @@ class HealthieMedications:
 
     https://help.gethealthie.com/article/790-client-medication-history
 
+    Other queries are available if needed (Fetch count of medications for a given patient, ...). See https://docs.gethealthie.com/schema/query.doc
+
 
     """
 
