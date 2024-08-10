@@ -1,4 +1,6 @@
 
+import json
+
 from typing import Tuple
 
 from syntrillo.api_healthie.auth import HealthieAuth
@@ -53,24 +55,24 @@ class HealthieMedications:
                 $active: Boolean,
                 $patient_id: ID
                 ) {
-                medications(
-                    active: $active,
-                    patient_id: $patient_id
-                ) {
-                    id
-                    name
-                    code            # CCDA code for this medication
-                    active
-                    route           # The way this medication is administered
-                    dosage          # Dosage of medication entered by provider
-                    frequency       # Frequency of this medication
-                    directions      # Directions to use medication entered by provider
-                    comment         # Comments entered by provider
-                    start_date      # First active date of medication
-                    end_date        # last date patient should be able to use medication
-                    created_at      # Date medication was created
-                    updated_at      # Date medication was last updated
-                }
+                    medications(
+                        active: $active,
+                        patient_id: $patient_id
+                    ) {
+                        id
+                        name
+                        code            # CCDA code for this medication
+                        active
+                        route           # The way this medication is administered
+                        dosage          # Dosage of medication entered by provider
+                        frequency       # Frequency of this medication
+                        directions      # Directions to use medication entered by provider
+                        comment         # Comments entered by provider
+                        start_date      # First active date of medication
+                        end_date        # last date patient should be able to use medication
+                        created_at      # Date medication was created
+                        updated_at      # Date medication was last updated
+                    }
                 }
         '''
 
@@ -85,6 +87,13 @@ class HealthieMedications:
 
         return response, log
 
+
+
+if __name__ == '__main__':
+    healthie_medications = HealthieMedications()
+    response, log = healthie_medications.list_user_medications(healthie_user_id='1035117', active=True)
+
+    print(json.dumps(response, indent=4, default=str))
 
 
 

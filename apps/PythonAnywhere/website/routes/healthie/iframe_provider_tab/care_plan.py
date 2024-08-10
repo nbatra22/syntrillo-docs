@@ -11,6 +11,8 @@ from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingH
 from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
 from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
 
+from syntrillo.api_healthie.medications import HealthieMedications
+
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
 @iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan', methods=['POST'])
@@ -89,6 +91,11 @@ def iframe_healthie_provider_tab_care_plan():
     data_reporting_medical_adherence = DataReportingMedicationAdherence(post_manager.syntrillo_internal_key)
     medication_adherence_data, _ = data_reporting_medical_adherence.pillbox_global_report(expected_pattern='twice daily')
 
+    # medications
+    medications = HealthieMedications()
+    response, _ = medications.list_user_medications(healthie_user_id=post_manager.get_healthie_user_id() , active=True)
+    medication_history = response['medications']
+
     # --------------------------------------------------------------------
     # Heart Rate moments and stats
 
@@ -122,6 +129,7 @@ def iframe_healthie_provider_tab_care_plan():
         summary_information_weekly=summary_information_weekly,
         summary_information_monthly=summary_information_monthly,
         summary_page_to_display=summary_page_to_display,
+        medication_history=medication_history,
         tenovi_pillbox_expectations_dataset=tenovi_pillbox_expectations_dataset,
         medication_adherence_data=medication_adherence_data,
         pulse_moments=pulse_moments,
