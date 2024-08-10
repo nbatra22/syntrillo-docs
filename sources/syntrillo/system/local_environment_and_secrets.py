@@ -33,7 +33,7 @@ class LocalEnvironmentAndSecrets:
             'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization' ),
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey' ),
         },
-        'tenovi' : {
+        'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN', 'tenoviHwiClientDomain' ),
             'api_key'       : ( 'TENOVI_API_KEY',       'tenoviHwiApiKey' ),
         },
@@ -41,7 +41,7 @@ class LocalEnvironmentAndSecrets:
             'host'          : ( 'AWS_DATABASE_CONFIG_HOST',        'host' ),
             'user'          : ( 'AWS_DATABASE_CONFIG_USER',        'username' ),
             'password'      : ( 'AWS_DATABASE_CONFIG_PASSWORD',    'password' ),
-            'port'          : ( 'AWS_DATABASE_CONFIG_LOCAL_PORT',  None ),
+            'local_port'    : ( 'AWS_DATABASE_CONFIG_LOCAL_PORT',  None ),
         },
     }
 
@@ -81,7 +81,9 @@ class LocalEnvironmentAndSecrets:
         try:
             # ------------------------------
             # determine the environment where the code is running
-            if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None:
+            if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
+            or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
+            or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None:
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -186,11 +188,11 @@ class LocalEnvironmentAndSecrets:
     def get_healthie_api_key(self):
         return self.get_secret_value('healthie', 'api_key')
 
-    def get_tenovi_client_domain(self):
-        return self.get_secret_value('tenovi', 'client_domain')
+    def get_tenovi_hwi_client_domain(self):
+        return self.get_secret_value('tenovi_hwi', 'client_domain')
 
-    def get_tenovi_api_key(self):
-        return self.get_secret_value('tenovi', 'api_key')
+    def get_tenovi_hwi_api_key(self):
+        return self.get_secret_value('tenovi_hwi', 'api_key')
 
     def get_aws_database_host(self):
         return self.get_secret_value('aws_database', 'host')
@@ -201,8 +203,8 @@ class LocalEnvironmentAndSecrets:
     def get_aws_database_password(self):
         return self.get_secret_value('aws_database', 'password')
 
-    def get_aws_database_port(self):
-        return self.get_secret_value('aws_database', 'port')
+    def get_aws_database_local_port(self):
+        return self.get_secret_value('aws_database', 'local_port')
 
     # ------------------------------
     # Are we in a production environment
@@ -235,14 +237,15 @@ if __name__ == '__main__':
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
     healthie_organization = secrets.get_secret_value('healthie', 'organization')
 
-    tenovi_api_key = secrets.get_secret_value('tenovi', 'api_key')
-    tenovi_client_domain = secrets.get_secret_value('tenovi', 'client_domain')
+    tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
+    tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
 
     aws_database_host = secrets.get_secret_value('aws_database', 'host')
     aws_database_user = secrets.get_secret_value('aws_database', 'user')
     aws_database_password = secrets.get_secret_value('aws_database', 'password')
-    aws_database_port = secrets.get_secret_value('aws_database', 'port')
+    aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
+    print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
     print(f"healthie_organization : {healthie_organization}")
 

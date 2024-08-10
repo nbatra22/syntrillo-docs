@@ -5,10 +5,6 @@ import os
 import time
 from dotenv import load_dotenv
 
-# modules used to retrieve secrets in aws secrets manager:
-import requests
-import json
-
 # https://help.pythonanywhere.com/pagesAccessingMySQLFromOutsidePythonAnywhere/
 
 import pymysql
@@ -20,37 +16,7 @@ try:
 except ImportError:
     pass
 
-def get_secrets(secret_arn):
-    try:
-        get_secret_value_response = requests.get(
-            f"http://localhost:2773/secretsmanager/get?secretId={secret_arn}",
-            headers={"X-AWS-Parameters-Secrets-Token": os.environ.get('AWS_SESSION_TOKEN')},
-        )
-        get_secret_value_response.raise_for_status()  # Raise an exception for non-2xx status codes
-    except requests.exceptions.RequestException as e:
-        # Handle exceptions related to the HTTP request
-        # if "an unexpected error occurred while executing request" in the response text => check lammbda permissions to read in secrets manager
-        raise Exception(f"Error fetching secret [{get_secret_value_response.text}]: {e}")
-
-    try:
-        secret_value = get_secret_value_response.text
-        secret_dict = json.loads(secret_value)
-    except json.JSONDecodeError as e:
-        # Handle exceptions related to JSON decoding
-        raise Exception(f"Error decoding secret value [{get_secret_value_response.text}]: {e}")
-
-    try:
-        secrets_string = secret_dict["SecretString"]
-    except KeyError as e:
-        # Handle exceptions related to missing "SecretString" key
-        raise Exception(f"Error retrieving SecretString: {e}")
-
-    try:
-        secrets_dict=json.loads(secrets_string)
-        return secrets_dict
-    except json.JSONDecodeError as e:
-        # Handle exceptions related to not well formated secret string (non json)
-        raise Exception(f"Error decoding secrets (should be in json format in aws secrets manager): {e}")
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class DatabaseConnection:
     """
@@ -89,31 +55,21 @@ class DatabaseConnection:
                 - PA_SSH_TUNNEL: SSH tunnel configuration parameters.
         """
 
-        if os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN') != None:
-            # This test means we are in the lambda function
+        # ------------------------------
+        # load aws databases secrets
+        env_secrets = LocalEnvironmentAndSecrets(load_aws_database_secrets=True)
 
-            secret_arn = os.getenv('AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN')
-            database_secrets = get_secrets(secret_arn)
-
-            host=database_secrets['host']
-            username=database_secrets['username']
-            password=database_secrets['password']
-
+        # ------------------------------
+        if env_secrets.is_lambda():
+            # we are in the lambda function, and we use the AWS database
             self.AWS_DB_CONFIG = {
-                'host': host,
-                'user': username,
-                'password': password,
+                'host': env_secrets.get_aws_database_host(),
+                'user': env_secrets.get_aws_database_user(),
+                'password': env_secrets.get_aws_database_password(),
             }
 
         else:
-            # TODO : use system > dotenvloader instead of this
-            # paths have to be hard-coded at PythonAnywhere
-            if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
-                dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
-            else:
-                dotenv_path = ".env"
-
-            load_dotenv(dotenv_path=dotenv_path)
+            # we are not in the lambda function, the dotenv file is used to define the database configuration
 
             # select database to use
             self.database_server = os.getenv('DATABASE_SERVER')
@@ -121,10 +77,10 @@ class DatabaseConnection:
             if self.database_server == 'AWS':
 
                 self.AWS_DB_CONFIG = {
-                    'host': os.getenv('AWS_DATABASE_CONFIG_HOST'),
-                    'user': os.getenv('AWS_DATABASE_CONFIG_USER'),
-                    'password': os.getenv('AWS_DATABASE_CONFIG_PASSWORD'),
-                    'port': int(os.getenv('AWS_DATABASE_CONFIG_LOCAL_PORT')),
+                    'host': env_secrets.get_aws_database_host(),
+                    'user': env_secrets.get_aws_database_user(),
+                    'password': env_secrets.get_aws_database_password(),
+                    'port': int(env_secrets.get_aws_database_local_port()),
                 }
 
             elif self.database_server == 'PythonAnywhere':
@@ -140,6 +96,7 @@ class DatabaseConnection:
                 }
             else:
                 raise ValueError("Invalid database server configuration")
+
 
     def create_connection(self, verbose=False, retries=3, delay=5):
         """
