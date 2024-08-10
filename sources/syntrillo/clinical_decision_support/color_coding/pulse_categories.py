@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/clinical_decision_support/color_coding/pulse_categories.py
 from json import dumps as json_dumps
 
 from syntrillo.clinical_decision_support.color_coding.color_remapping import ColorReMapping

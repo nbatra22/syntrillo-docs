@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/system/local_environment_and_secrets.py
 import os
 import json
 import requests

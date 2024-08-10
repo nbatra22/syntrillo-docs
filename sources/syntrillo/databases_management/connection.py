@@ -106,6 +106,7 @@ class DatabaseConnection:
             }
 
         else:
+            # TODO : use system > dotenvloader instead of this
             # paths have to be hard-coded at PythonAnywhere
             if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_'):
                 dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
