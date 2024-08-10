@@ -64,8 +64,6 @@ def healthie_endpoint_post():
     with open('ignore_healthie_endpoint_post_logs.txt', 'a') as f:
         f.write(json.dumps(data) + '\n\n')
 
-    # Load environment variables from .env file
-    dotenv_path = ".env"
 
     # --------------------------------------------
     # Dispatch
@@ -74,14 +72,14 @@ def healthie_endpoint_post():
     #   {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note" and data['event_type'] == "message.created":
         log_this(message="VCN endpoint : Note : message.created")
-        vcn = VirtualCareNavigator(dotenv_path=dotenv_path)
+        vcn = VirtualCareNavigator()
         vcn.endpoint(data=data)
 
     # Patient created on the provider 'Add Client' page. The webhook fires before the patient logs in for the first time.
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}
     elif data['resource_id_type'] == "User" and data['event_type'] == "patient.created":
         log_this(message="VCN endpoint : User : patient.created")
-        npc = NewPatientCreated(dotenv_path=dotenv_path)
+        npc = NewPatientCreated()
         npc.endpoint(data=data)
 
 
@@ -109,12 +107,10 @@ def healthie_test_org() :
 
     Returns organization details as JSON
     """
-    # Load environment variables from .env file
-    dotenv_path = ".env"
 
     try:
         # Create an instance of HealthieAPI with the provided API key and organization
-        utils_api = HealthieUtils(dotenv_path=dotenv_path)
+        utils_api = HealthieUtils()
 
         # Example: Get organization details
         organization_details = utils_api.get_organization_details()
@@ -125,7 +121,7 @@ def healthie_test_org() :
         # Construct detailed error response
         error_details = {
             'message': str(e),  # Get string representation of the exception
-            'dotenv_path': dotenv_path
+            'type': type(e).__name__,  # Get the name of the exception class
         }
 
         # Return JSON response with error details and appropriate HTTP status code (e.g., 500 for internal server error)
