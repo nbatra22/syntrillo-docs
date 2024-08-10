@@ -1,3 +1,5 @@
+#!/bin/bash -e
+
 # Load configuration from environment variables
 FUNCTION_NAME="${FUNCTION_NAME:-IFrameGeneratorFunction}"
 API_NAME="${API_NAME:-IFramGeneratorAPI}"
@@ -43,13 +45,22 @@ invoke_api_resource() {
     local invoke_method="$3"
     local headers="$4"
     local body="$5"
-    
+
+    local resource_id_path="$resource_path"
+
+    # if for example we get /healthie/iframe_provider_tab/status, the resource id will be found at /healthie/iframe_provider_tab/{proxy+}
+    # so we replace what is after the last / with {proxy+}
+    local base_path=${resource_path%/*}
+    if [ "$base_path" != "" ]; then
+       resource_id_path="$base_path/{proxy+}"
+    fi
+
     local rest_api_id
     rest_api_id="$(aws apigateway get-rest-apis --query "items[?name=='$api_name'].id" --output text)"
 
     local resource_id
-    resource_id="$(aws apigateway get-resources --rest-api-id "$rest_api_id" --query "items[?path=='$resource_path'].id" --output text)"
-
+    resource_id="$(aws apigateway get-resources --rest-api-id "$rest_api_id" --query "items[?path=='$resource_id_path'].id" --output text)"
+        
     local test_result
     test_result="$(aws apigateway test-invoke-method \
         --rest-api-id "$rest_api_id" \

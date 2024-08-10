@@ -1,1 +1,0 @@
-aws logs tail /aws/lambda/IFrameGeneratorFunction --follow

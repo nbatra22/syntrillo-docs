@@ -38,7 +38,7 @@ class IFrameGeneratorFunction(Construct):
 
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
-            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+            log_level=_lambda.ParamsAndSecretsLogLevel.NONE
         )
 
         self.function = _lambda.Function(self, "IFrameGeneratorFunction",
@@ -53,7 +53,7 @@ class IFrameGeneratorFunction(Construct):
                 "/mnt/python_modules"
             ),
             environment={
-                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "POWERTOOLS_LOG_LEVEL": "INFO",
                 "PYTHONPATH": "/mnt/python_modules",
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
