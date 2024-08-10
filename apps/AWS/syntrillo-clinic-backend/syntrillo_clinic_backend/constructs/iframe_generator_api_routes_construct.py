@@ -34,7 +34,15 @@ class IFrameGeneratorAPIRoutes(Construct):
 
         self.healthie_resource = self.rest_api.root.add_resource("healthie")
 
+        # /iframe_healthie_provider_sidebar
         iframe_healthie_provider_tab = self.rest_api.root.add_resource("iframe_healthie_provider_sidebar")
+        iframe_healthie_provider_tab.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
+        # /iframe_healthie_provider_tab
+        iframe_healthie_provider_tab = self.rest_api.root.add_resource("iframe_healthie_provider_tab")
         iframe_healthie_provider_tab.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
@@ -43,9 +51,8 @@ class IFrameGeneratorAPIRoutes(Construct):
     def create_static_resources(self, iframe_generator_function: _lambda.Function):
         static = self.rest_api.root.add_resource("static")
 
-        # /static/healthie/iframe_provider.css
-        static_healthie_iframe_provider_css = static.add_resource("healthie").add_resource("iframe_provider.css")
-        static_healthie_iframe_provider_css.add_method(
+        static_proxy_resources = static.add_resource("{proxy+}")
+        static_proxy_resources.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
@@ -56,141 +63,20 @@ class IFrameGeneratorAPIRoutes(Construct):
         # PROVIDER TAB HTML RESOURCES
         # ---------------------------------------------------------------------
 
-        # /iframe_healthie_provider_tab
-        iframe_healthie_provider_tab = self.rest_api.root.add_resource("iframe_healthie_provider_tab")
-        iframe_healthie_provider_tab.add_method(
-            "GET",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
         # /iframe_healthie_provider_tab/healthie/iframe_provider_tab
         healthie_iframe_provider_tab = self.healthie_resource.add_resource("iframe_provider_tab")
 
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/status
-        healthie_iframe_provider_tab_status = healthie_iframe_provider_tab.add_resource("status")
-        healthie_iframe_provider_tab_status.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices
-        healthie_iframe_provider_tab_devices = healthie_iframe_provider_tab.add_resource("devices")
-        healthie_iframe_provider_tab_devices.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/onboarding
-        healthie_iframe_provider_tab_care_plan = healthie_iframe_provider_tab.add_resource("onboarding")
-        healthie_iframe_provider_tab_care_plan.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/care_plan
-        healthie_iframe_provider_tab_care_plan = healthie_iframe_provider_tab.add_resource("care_plan")
-        healthie_iframe_provider_tab_care_plan.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/cdss
-        healthie_iframe_provider_tab_cdss = healthie_iframe_provider_tab.add_resource("cdss")
-        healthie_iframe_provider_tab_cdss.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system
-        healthie_iframe_provider_tab_system = healthie_iframe_provider_tab.add_resource("system")
-        healthie_iframe_provider_tab_system.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system_devices
-        healthie_iframe_provider_tab_system_devices = healthie_iframe_provider_tab.add_resource("system_devices")
-        healthie_iframe_provider_tab_system_devices.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # ---------------------------------------------------------------------
-        # PROVIDER TAB DATA RESOURCES
-        # ---------------------------------------------------------------------
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form
-        healthie_iframe_provider_tab_system_devices_sync_measurements_form = healthie_iframe_provider_tab_system_devices.add_resource("sync_measurements_form")
-        healthie_iframe_provider_tab_system_devices_sync_measurements_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices/tenovi_generate_temporary_pairing_code_form
-        healthie_iframe_provider_tab_system_devices_tenovi_generate_temporary_pairing_code_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_generate_temporary_pairing_code_form")
-        healthie_iframe_provider_tab_system_devices_tenovi_generate_temporary_pairing_code_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/devices/tenovi_pair_devices_form
-        healthie_iframe_provider_tab_system_devices_tenovi_pair_devices_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_pair_devices_form")
-        healthie_iframe_provider_tab_system_devices_tenovi_pair_devices_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        ) 
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system/register_patient_at_syntrillo_form
-        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form = healthie_iframe_provider_tab_system.add_resource("register_patient_at_syntrillo_form")
-        healthie_iframe_provider_tab_system_register_patient_at_syntrillo_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /iframe_healthie_provider_tab/healthie/iframe_provider_tab/system_devices/tenovi_dummy_data_generator_form
-        healthie_iframe_provider_tab_system_devices_tenovi_dummy_data_generator_form = healthie_iframe_provider_tab_system_devices.add_resource("tenovi_dummy_data_generator_form")
-        healthie_iframe_provider_tab_system_devices_tenovi_dummy_data_generator_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_tab/devices/tenovi_order_new_devices_form
-        healthie_iframe_provider_tab_devices_tenovi_order_new_devices_form= healthie_iframe_provider_tab_devices.add_resource("tenovi_order_new_devices_form")
-        healthie_iframe_provider_tab_devices_tenovi_order_new_devices_form.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_tab/care_plan/get_blood_pressure_plot
-        healthie_iframe_provider_tab_care_plan_get_blood_pressure_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_blood_pressure_plot")
-        healthie_iframe_provider_tab_care_plan_get_blood_pressure_plot.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_tab/care_plan/get_pulse_plot
-        healthie_iframe_provider_tab_care_plan_get_pulse_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_pulse_plot")
-        healthie_iframe_provider_tab_care_plan_get_pulse_plot.add_method(
-            "POST",
-            apigw.LambdaIntegration(iframe_generator_function),
-        )
-
-        # /healthie/iframe_provider_tab/care_plan/get_heart_rate_statistics_plot
-        healthie_iframe_provider_tab_care_plan_get_heart_rate_statistics_plot = healthie_iframe_provider_tab_care_plan.add_resource("get_heart_rate_statistics_plot")
-        healthie_iframe_provider_tab_care_plan_get_heart_rate_statistics_plot.add_method(
+        healthie_iframe_provider_tab_proxy_resources = healthie_iframe_provider_tab.add_resource("{proxy+}")
+        healthie_iframe_provider_tab_proxy_resources.add_method(
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
     def create_provider_sidebar_resources(self, iframe_generator_function: _lambda.Function):
-        provider_sidebar_resource = self.healthie_resource.add_resource("iframe_provider_sidebar")
+        healthie_iframe_provider_side_bar = self.healthie_resource.add_resource("iframe_provider_sidebar")
 
-        # provider_sidebar_resource.add_resource("status").add_method(
-        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
-        # )
-        # provider_sidebar_resource.add_resource("system").add_method(
-        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
-        # )
-        # provider_sidebar_resource.add_resource("questionnaire").add_method(
-        #     "POST", apigw.LambdaIntegration(iframe_generator_function)
-        # )
+        healthie_iframe_provider_side_bar_proxy_resources = healthie_iframe_provider_side_bar.add_resource("{proxy+}")
+        healthie_iframe_provider_side_bar_proxy_resources.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
