@@ -26,7 +26,7 @@ class OpenAICall:
     def send_messages(
         self,
         messages: list,
-        temperature: float = 0.0,
+        temperature: float = 0.05,
         seed: int = 12,
         max_tokens: int = None,
         model: str = "gpt-4o",

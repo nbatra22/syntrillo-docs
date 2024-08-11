@@ -122,7 +122,7 @@ class AfterHoursSupportChatBot:
         response_step1 = self.openai_call.send_messages(messages=messages_step1)
 
         # manage the response
-        is_follow_up = ( 'followup' in response_step1 )
+        is_follow_up = ( 'follow' in response_step1 )
         is_technical = ( 'technical' in response_step1 )
         is_medical = ( 'medical' in response_step1 )
         if not is_follow_up:
