@@ -206,7 +206,11 @@ class AfterHoursSupportChatBot:
         # call LLM
         response_step2 = self.openai_call.send_messages(messages=messages_step2)
 
-        answer_step2 = self.INTRO_LINE_SHORT + " <div> " + str(response_step2) + " </div> "
+        # add the intro line if not already present in the response
+        if self.INTRO_LINE_SHORT not in response_step2:
+            answer_step2 = self.INTRO_LINE_SHORT + " <div> " + str(response_step2) + " </div> "
+        else:
+            answer_step2 = str(response_step2)
 
         # send the answer
         self._convo_wrapper.create_note(

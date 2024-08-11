@@ -29,12 +29,17 @@ class OpenAICall:
         temperature: float = 0.0,
         seed: int = 12,
         max_tokens: int = None,
-        model: str = "gpt-3.5-turbo-1106",
+        model: str = "gpt-4o",
     ) -> str:
         """
         Send messages to the OpenAI API and return the assistant's reply.
 
-        model="gpt-3.5-turbo-1106"  # default, 30 times less expensive than gpt 4 : https://openai.com/pricing , 16K context window
+        model="gpt-3.5-turbo-1106"
+           - 30 times less expensive than gpt 4 : https://openai.com/pricing , 16K context window
+
+        "gpt-4o" : $5.00 / 1M input tokens
+
+        "gpt-4-turbo" : $10.00 / 1M tokens
 
         Args:
             messages (list): The list of messages to send to the OpenAI API, where each message is a dictionary with the keys 'role' and 'content'. Roles can be 'system', 'user' or 'assistant'.
