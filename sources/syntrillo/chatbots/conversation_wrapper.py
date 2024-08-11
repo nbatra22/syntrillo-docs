@@ -281,17 +281,99 @@ class ChatBotConversationWrapper:
 
         return message, log
 
+    def get_all_notes_for_llm(
+        self,
+        chatbot_user_id: str = None,
+        keyword_to_remove_from_content: str = None
+        ) -> Tuple[dict, dict]:
+        """
+        Returns all notes from the conversation as a list of dictionaries having the following format:
+            {
+                'who': 'patient', 'provider' or 'chatbot'
+                'content': 'content',
+                'created_at': 'created_at',
+            }
+
+        Args:
+            chatbot_user_id (str): The chatbot user id.
+
+        Returns:
+            notes (list[dict]): The notes from the conversation.
+
+        """
+        notes = []
+        for note in self._conversation['notes']:
+            if note['creator']['is_patient']:
+                who = 'patient'
+            else:
+                if chatbot_user_id is None:
+                    who = 'provider or chatbot'
+                else:
+                    if note['user_id'] == chatbot_user_id:
+                        who = 'chatbot'
+                    else:
+                        who = 'provider'
+
+            # remove keyword from content
+            if keyword_to_remove_from_content:
+                content = note['content'].replace(keyword_to_remove_from_content, '')
+            else:
+                content = note['content']
+
+            notes.append({
+                'who': who,
+                'content': content,
+                'created_at': note['created_at']
+            })
+
+        return notes
+
+    def get_all_notes_for_llm_as_openai_messages(
+        self,
+        chatbot_user_id: str = None,
+        keyword_to_remove_from_content: str = None,
+    ):
+        """
+
+        Returns a list of messages in the format of OpenAI messages:
+        {
+            "role": "user" or "assistant",
+            "content": assistant_message or patient/provider_message as json { who , content, created_at }
+        }
+
+        """
+        notes = self.get_all_notes_for_llm(chatbot_user_id, keyword_to_remove_from_content)
+        messages = []
+        for note in notes:
+            if note['who'] == 'chatbot':
+                role = "assistant"
+                content = note['content']
+            else:
+                role = "user"
+                content = json.dumps(note, indent=4, default=str)
+            messages.append({
+                "role": role,
+                "content": str(content)
+            })
+
+        return messages
+
+
 
 if __name__ == '__main__':
 
     # test ChatBotConversationWrapper from a conversation_id
-    conversation_id = 1532185
+    conversation_id = '1532277'
     wrapper = ChatBotConversationWrapper()
     log = wrapper.load_conversation_from_conversation_id(conversation_id)
 
     print(json.dumps(wrapper.get_conversation(), indent=4, default=str))
 
     print("owner is provider:" , wrapper.get_conversation_owner().is_provider())
+
+    print('---------------')
+    notes = wrapper.get_all_notes_for_llm(chatbot_user_id='1459460')
+    print(json.dumps(notes, indent=4, default=str))
 
 
 

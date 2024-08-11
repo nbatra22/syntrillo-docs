@@ -145,6 +145,11 @@ class HealthieConversations:
                             id
                             content
                             user_id
+                            created_at
+                            creator {
+                                id
+                                is_patient
+                            }
                         }
                     }
                 }
