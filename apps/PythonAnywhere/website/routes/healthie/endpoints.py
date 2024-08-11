@@ -17,7 +17,7 @@ import json
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.api_healthie.misc import log_this
-from syntrillo.virtual_care_navigator.virtual_care_navigator import VirtualCareNavigator
+from syntrillo.chatbots.dispatcher import ChatBotsDispatcher
 from syntrillo.patient_initialization.new_patient_created import NewPatientCreated
 
 # -------------------------------------------------
@@ -72,8 +72,8 @@ def healthie_endpoint_post():
     #   {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note" and data['event_type'] == "message.created":
         log_this(message="VCN endpoint : Note : message.created")
-        vcn = VirtualCareNavigator()
-        vcn.endpoint(data=data)
+        chatbot = ChatBotsDispatcher()
+        chatbot.endpoint(data=data)
 
     # Patient created on the provider 'Add Client' page. The webhook fires before the patient logs in for the first time.
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}

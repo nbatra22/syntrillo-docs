@@ -57,6 +57,22 @@ class HealthieUtils():
         response, log = self.auth.send_query(query, variables)
         return response
 
+    def is_org_staging(self):
+        """
+        Check if the organization is a staging environment.
+
+        Returns:
+            bool: True if the organization is a staging environment, False otherwise.
+        """
+
+        # Retrieve organization details
+        organization_details = self.get_organization_details()
+
+        # Check if the organization id is 57057 (staging environment)
+        if organization_details['organization']['id'] == '57057':
+            return True
+        else:
+            return False
 
     def get_module_types(self):
         """
@@ -220,3 +236,6 @@ if __name__ == "__main__":
     response = utils_api.list_patients()
     HealthieAuth.print_pretty_json(response)
 
+    # staging org check
+    response = utils_api.is_org_staging()
+    print(response)

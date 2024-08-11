@@ -109,7 +109,7 @@ class HealthieUser:
             return self.get_provider_information()['active_tags']
 
     def if_user_has_tag(self, tag_name):
-        """Check if the user has a specific tag
+        """Check if the user has a specific tag. Patient and providers have tags.
 
         Args:
             tag_name (str): name of the tag
@@ -118,9 +118,10 @@ class HealthieUser:
             bool: True if the user has the tag, False otherwise
         """
         tags = self.get_user_tags()
-        for tag in tags:
-            if tag['name'] == tag_name:
-                return True
+        if tags is not None:
+            for tag in tags:
+                if tag['name'] == tag_name:
+                    return True
         return False
 
 
