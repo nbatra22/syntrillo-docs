@@ -80,7 +80,8 @@ class ChatBotsDispatcher:
                 if note_content_clean.startswith(AfterHoursSupportChatBot.MANUAL_KICK_START_TAG_KEYWORD):
                     start_after_hours_support_chatbot = True
                 elif not is_within_working_hours:
-                    start_after_hours_support_chatbot = True
+                    # TODO : implement after hours support for patients
+                    start_after_hours_support_chatbot = False
 
         # start the chatbot with the conversationWrapper
         if start_after_hours_support_chatbot:
