@@ -363,7 +363,7 @@ class ChatBotConversationWrapper:
 if __name__ == '__main__':
 
     # test ChatBotConversationWrapper from a conversation_id
-    conversation_id = '1532277'
+    conversation_id = '1532279'
     wrapper = ChatBotConversationWrapper()
     log = wrapper.load_conversation_from_conversation_id(conversation_id)
 

@@ -71,14 +71,14 @@ def healthie_endpoint_post():
     # Message created in the chat. The webhook fires when a message is sent in the chat.
     #   {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note" and data['event_type'] == "message.created":
-        log_this(message="VCN endpoint : Note : message.created")
+        log_this(message="Endpoint : Note : message.created")
         chatbot = ChatBotsDispatcher()
         chatbot.endpoint(data=data)
 
     # Patient created on the provider 'Add Client' page. The webhook fires before the patient logs in for the first time.
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}
     elif data['resource_id_type'] == "User" and data['event_type'] == "patient.created":
-        log_this(message="VCN endpoint : User : patient.created")
+        log_this(message="Endpoint : User : patient.created")
         npc = NewPatientCreated()
         npc.endpoint(data=data)
 
