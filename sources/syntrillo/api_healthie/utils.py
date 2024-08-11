@@ -60,7 +60,7 @@ class HealthieUtils():
 
     def get_module_types(self):
         """
-        Retrieve organization details using GraphQL query.
+        Retrieve questionnaire modules details using GraphQL query.
 
         Returns:
             dict: CustomModule
