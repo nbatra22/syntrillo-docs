@@ -206,11 +206,11 @@ class AfterHoursSupportChatBot:
         # call LLM
         response_step2 = self.openai_call.send_messages(messages=messages_step2)
 
-        response_step2_with_intro = self.INTRO_LINE_SHORT + " <div> " + str(response_step2) + " </div> "
+        answer_step2 = self.INTRO_LINE_SHORT + " <div> " + str(response_step2) + " </div> "
 
         # send the answer
         self._convo_wrapper.create_note(
-            content=response_step2_with_intro,
+            content=answer_step2,
             healthie_user_id=self.answer_by_id
         )
 

@@ -66,4 +66,4 @@ class OpenAICall:
         # Extract the assistant's reply from the new structure
         assistant_reply = transform_to_safe_html(response.choices[0].message.content.strip())
 
-        return transform_to_safe_html(assistant_reply)
+        return str(transform_to_safe_html(assistant_reply))

@@ -2,6 +2,7 @@ import re
 import bleach
 import markdown
 from markupsafe import Markup
+from bleach.css_sanitizer import CSSSanitizer
 
 
 def remove_html_tags(text: str) -> str:
@@ -52,10 +53,14 @@ def transform_to_safe_html(response : str) -> str:
                              'div' : ['style'],  # for LaTex
                              }
 
+    # ---
     # Use bleach with custom allowed tags and attributes
-    cleaned_html = bleach.clean(response, tags=my_allowed_tags, attributes=my_allowed_attributes)
+    # Initialize a CSSSanitizer
+    css_sanitizer = CSSSanitizer(allowed_css_properties=["color", "font-size", "background-color"])
 
-    html_output = bleach.clean(markdown.markdown(response), tags=my_allowed_tags, attributes=my_allowed_attributes)
+    cleaned_html = bleach.clean(response, tags=my_allowed_tags, attributes=my_allowed_attributes, css_sanitizer=css_sanitizer)
 
-    return Markup(html_output)
+    html_output = bleach.clean(markdown.markdown(response), tags=my_allowed_tags, attributes=my_allowed_attributes, css_sanitizer=css_sanitizer)
+
+    return str(Markup(html_output))
 

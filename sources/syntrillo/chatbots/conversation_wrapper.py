@@ -30,7 +30,10 @@ class ChatBotConversationWrapper:
     # HealthieUser class array
     _patients = None  # typically one patient
     _members = None
+    _creators = None  # every note creator
 
+    # all creators ids
+    _creators_ids = None
 
     def __init__(self) -> None:
         """
@@ -134,10 +137,20 @@ class ChatBotConversationWrapper:
                 if temp_user.is_patient():
                     self._patients.append(temp_user)
 
-            # get all members
+            # get conversation members
             self._members = []
             for member in self._conversation['conversation_memberships']:
                 self._members.append(HealthieUser(healthie_user_id=member['user_id']))
+
+            # get all unique creators from all the notes in the conversation
+            self._creators = []
+            self._creators_ids = []
+            for note in self._conversation['notes']:
+                creator = HealthieUser(healthie_user_id=note['creator']['id'])
+                if creator.healthie_user_id not in self._creators_ids:
+                    self._creators.append(creator)
+                    self._creators_ids.append(creator.healthie_user_id)
+
 
         except Exception as e:
             self.log['success'] = False
@@ -228,14 +241,14 @@ class ChatBotConversationWrapper:
 
         return ids
 
-    def get_all_convo_members(self) -> list:
+    def get_all_convo_creators(self) -> list:
         """
-        Get all the conversation members.
+        Get all the conversation note creators.
 
         Returns:
-            members (list[HealthieUser]): The conversation members.
+            creators (list[HealthieUser]): The conversation creators.
         """
-        return self._members
+        return self._creators
 
     def is_user_in_convo(self, healthie_user_id: str) -> bool:
         """
@@ -247,7 +260,7 @@ class ChatBotConversationWrapper:
         Returns:
             bool: True if the user is in the conversation, False otherwise.
         """
-        return healthie_user_id in self.list_convo_member_ids()
+        return healthie_user_id in self._creators_ids
 
 
     def create_note(
@@ -350,7 +363,7 @@ class ChatBotConversationWrapper:
                 content = note['content']
             else:
                 role = "user"
-                content = json.dumps(note, indent=4, default=str)
+                content = json.dumps(note, default=str)
             messages.append({
                 "role": role,
                 "content": str(content)
@@ -363,7 +376,7 @@ class ChatBotConversationWrapper:
 if __name__ == '__main__':
 
     # test ChatBotConversationWrapper from a conversation_id
-    conversation_id = '1532279'
+    conversation_id = '1532280'
     wrapper = ChatBotConversationWrapper()
     log = wrapper.load_conversation_from_conversation_id(conversation_id)
 
@@ -374,6 +387,12 @@ if __name__ == '__main__':
     print('---------------')
     notes = wrapper.get_all_notes_for_llm(chatbot_user_id='1459460')
     print(json.dumps(notes, indent=4, default=str))
+
+    print('---------------')
+    # show all note creators
+    creators = wrapper.get_all_convo_creators()
+    for member in creators:
+        print(member.healthie_user_id , member.get_patient_information()['name'])
 
 
 
