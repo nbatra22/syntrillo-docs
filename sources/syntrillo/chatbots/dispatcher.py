@@ -93,7 +93,7 @@ if __name__ == "__main__":
     # dummy run, to test the dispatcher
     # using a real note, which is already in the conversation.
     # Get conversation_id from browser and use conversation wrapper to get the note_id
-    note_id = '270848'
+    note_id = '270867'
 
     data = {"resource_id": note_id, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     dispatcher = ChatBotsDispatcher()
