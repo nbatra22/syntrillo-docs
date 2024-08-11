@@ -28,6 +28,19 @@ class HealthieUser:
         if self.is_provider():
             self._provider = self._get_provider_information()
 
+    def get_log(self):
+        """
+        Get the log of the HealthieUser instance
+
+        """
+        return self.log
+
+    def is_success(self):
+        """
+        Check if the HealthieUser instance was successful
+
+        """
+        return self.log['success']
 
     # --------------------------------------------
     # Main user type (Patient or Provider) and methods
@@ -306,8 +319,8 @@ if __name__ == '__main__':
     #  - 1051518 : a provider : Omar
     user = HealthieUser(healthie_user_id='1035117')
 
-    if user.log['success'] is False:
-        print(json.dumps(user.log, indent=4))
+    if user.is_success() is False:
+        print(json.dumps(user.get_log(), indent=4))
 
     if user.is_patient():
         info = user.get_patient_information()
