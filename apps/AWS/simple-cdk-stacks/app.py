@@ -3,12 +3,12 @@ import os
 
 import aws_cdk as cdk
 
-from simple_cdk_project.simple_cdk_project_stack import SimpleCdkProjectStack
-from simple_cdk_project.prepare_rds_s3_export_stack import PrepareRDSS3ExportStack
-
+from simple_cdk_stacks.simple_api_lambda_stack import SimpleApiLambdaStack
+from simple_cdk_stacks.simple_rds_s3_export_stack import SimpleRDSS3ExportStack
+from simple_cdk_stacks.simple_http_resolver_stack import SimpleHttpResolverStack
 
 app = cdk.App()
-SimpleCdkProjectStack(app, "SimpleCdkProjectStack",
+SimpleApiLambdaStack(app, "SimpleApiLambdaStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.
@@ -26,7 +26,7 @@ SimpleCdkProjectStack(app, "SimpleCdkProjectStack",
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
 
-
-PrepareRDSS3ExportStack(app, "PrepareRDSS3ExportStack")
+SimpleRDSS3ExportStack(app, "SimpleRDSS3ExportStack")
+SimpleHttpResolverStack(app, "SimpleHttpResolverStack")
 
 app.synth()

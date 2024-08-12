@@ -1,0 +1,23 @@
+# INSTALL
+
+pip install localstack
+localstack start
+
+vi ~/.aws/credentials
+[localstack]
+aws_access_key_id = test
+aws_secret_access_key = test
+
+vi ~/.aws/config
+[profile localstack]
+region=us-east-1
+output=json
+endpoint_url = http://localhost:4566
+
+aws s3 ls --profile localstack
+
+npm install -g aws-cdk-local aws-cdk
+
+# IN A CDK PROJECT
+cdklocal bootstrap
+cdklocal deploy

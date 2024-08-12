@@ -11,28 +11,23 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class SimpleCdkProjectStack(Stack):
+class SimpleApiLambdaStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # create a lambda function with python 3.9 runtime
-        lambda_function = _lambda.Function(
+        self.lambda_function = _lambda.Function(
             self,
             "SimpleLambdaFunction",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda"),
+            code=_lambda.Code.from_asset("lambda/simple_api_lambda_function"),
             handler="lambda_function.simple_handler",
         )
 
-        self.function_version = _lambda.Version(
-            self, "SimpleLambdaVersionX",
-            lambda_=lambda_function,
-        )
+        current_version = self.lambda_function.current_version
 
-        current_version = lambda_function.current_version
-
-        self.function_alias = _lambda.Alias(
+        self.lambda_function_alias = _lambda.Alias(
             self, "SimpleLambdaAlias",
             alias_name="provisionned-concurrency",
             version=current_version,
@@ -85,4 +80,5 @@ class SimpleCdkProjectStack(Stack):
         )
 
         # add get method to the root resource of the api gateway
-        self.api.root.add_method("GET", integration=apigateway.LambdaIntegration(self.function_alias))
+        self.api.root.add_method("GET", integration=apigateway.LambdaIntegration(self.lambda_function))
+
