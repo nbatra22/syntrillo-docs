@@ -21,50 +21,93 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+from aws_cdk import Stack, CfnOutput
+from constructs import Construct
+import aws_cdk.aws_apigateway as apigateway
+import aws_cdk.aws_route53 as route53
+import aws_cdk.aws_certificatemanager as acm
+import aws_cdk.aws_ssm as ssm
+
 class IFrameGeneratorApiEndpoint(Construct):
-    def __init__(self, scope: Construct, id: str, environment_context: str, **kwargs):
+    def __init__(self, scope: Construct, id: str, environment_context: dict, **kwargs):
         super().__init__(scope, id, **kwargs)
 
         self.environment_context = environment_context
         self.environment_name = self.environment_context["environment_name"]
 
-        self.route_53_domain_name = f'{self.environment_name}.syntrillo-clinic-backend.com'
-        self.api_domain_name = f'api.{self.environment_name}.syntrillo-clinic-backend.com'
-
-        self.route53_hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
+        self.hosted_zone = self._setup_hosted_zone()
+        self.certificate = self._setup_ssl_certificate()
+        self.rest_api = self._setup_api_gateway()
+        
+    def _setup_hosted_zone(self):
+        hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
             self, "SyntrilloClinicRoute53HostedZoneId",
             parameter_name="/syntrillo-clinic/aws/route53/hosted_zone_id"
-        ).string_value      
+        ).string_value
 
-        self.hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
+        return route53.HostedZone.from_hosted_zone_attributes(
             self, "SyntrilloClinicBackendHostedZone",
             zone_name=f"{self.environment_name}.syntrillo-clinic-backend.com",
-            hosted_zone_id=self.route53_hosted_zone_id
+            hosted_zone_id=hosted_zone_id
         )
 
-        self.certificate = acm.Certificate(
+    def _setup_ssl_certificate(self):
+        domain_name = f"{self.environment_name}.syntrillo-clinic-backend.com"
+        api_domain_name = f"api.{self.environment_name}.syntrillo-clinic-backend.com"
+
+        return acm.Certificate(
             self, "SyntrilloClinicBackendSSLCertificate",
-            domain_name=self.route_53_domain_name,
+            domain_name=domain_name,
             validation=acm.CertificateValidation.from_dns(self.hosted_zone),
-            subject_alternative_names=[
-                self.api_domain_name
-            ]
+            subject_alternative_names=[api_domain_name]
         )
 
-        # Add IP restrictions to the API endpoint
-        allowed_ip_addresses = []
-        for ip_info in self.environment_context["iframe_generator_api"]["allowed_api_adresses"]:
-            allowed_ip_addresses.append(ip_info["ip"])
+    def _setup_api_gateway(self):
+        api_domain_name = f"api.{self.environment_name}.syntrillo-clinic-backend.com"
 
-        # Create the IAM policy statement
+        api = apigateway.RestApi(
+            self, "IFramGeneratorAPI",
+            rest_api_name="IFramGeneratorAPI",
+            domain_name=apigateway.DomainNameOptions(
+                domain_name=api_domain_name,
+                certificate=self.certificate
+            ),
+            deploy_options=apigateway.StageOptions(
+                tracing_enabled=True,
+                stage_name=self.environment_name,
+                throttling_rate_limit=1000,
+                throttling_burst_limit=500
+            ),
+            policy=self._resource_policy()
+        )
+
+        route53.ARecord(
+            self, "SyntrilloCustomDomainARecord",
+            zone=self.hosted_zone,
+            record_name=api_domain_name,
+            target=route53.RecordTarget.from_alias(
+                route53_targets.ApiGateway(api)
+            )
+        )
+
+        api.root.add_resource("ping").add_method("GET")
+
+        return api
+
+    def _resource_policy(self):
+        allowed_ip_addresses = set(
+            ip_info["ip"]
+            for ip_info in self.environment_context["iframe_generator_api"]["allowed_api_adresses"]
+        )
+
         allow_all_invokes_policy_statement = iam.PolicyStatement(
             effect=iam.Effect.DENY,
             principals=[iam.AnyPrincipal()],
             actions=["execute-api:Invoke"],
-            resources=[f"execute-api:/*/*/*"],
+            resources=["execute-api:/*/*/*"],
             conditions={
                 "NotIpAddress": {
-                    "aws:SourceIp": allowed_ip_addresses,
+                    "aws:SourceIp": list(allowed_ip_addresses),
                 }
             },
         )
@@ -73,41 +116,10 @@ class IFrameGeneratorApiEndpoint(Construct):
             effect=iam.Effect.ALLOW,
             principals=[iam.AnyPrincipal()],
             actions=["execute-api:Invoke"],
-            resources=[f"execute-api:/*/*/*"]
+            resources=["execute-api:/*/*/*"]
         )
 
-        # Create rest api
-        self.rest_api = apigw.RestApi(
-            self, "IFramGeneratorAPI",
-            rest_api_name="IFramGeneratorAPI",
-            domain_name=apigw.DomainNameOptions(
-                domain_name=f"api.{self.environment_name}.syntrillo-clinic-backend.com",
-                certificate=self.certificate
-            ),
-            deploy_options=apigw.StageOptions(
-                tracing_enabled=True,
-                stage_name=self.environment_name,
-                throttling_rate_limit=1000,
-                throttling_burst_limit=500
-            ),
-            policy=iam.PolicyDocument(statements=[
+        return iam.PolicyDocument(statements=[
                 allow_all_invokes_policy_statement, 
                 allowed_ips_policy_statement
-            ])
-        )
-
-        route53.ARecord(self, "SyntrilloCustomDomainARecord", 
-            zone=self.hosted_zone,
-            record_name=f"api.{self.environment_name}.syntrillo-clinic-backend.com",
-            target=route53.RecordTarget.from_alias(
-                route53_targets.ApiGateway(self.rest_api)
-            )
-        )
-
-        # This resource is a minimum for this construct to work on its own
-        # this ping resource can also be used for a minimalistic test of the api endpoint
-        # jsut to make sure the endpoint is there
-        self.rest_api.root.add_resource("ping").add_method(
-            "GET",
-        )
-
+        ])
