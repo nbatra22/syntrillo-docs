@@ -4,6 +4,11 @@
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
+    "iframe_generator_api": {
+      "allowed_api_adresses": [
+        {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
+      ]
+    },
     "database": {
       "removal-policy": "DESTROY"
     },
@@ -16,6 +21,11 @@
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
+    "iframe_generator_api": {
+      "allowed_api_adresses": [
+        {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+      ]
+    },
     "database": {
       "removal-policy": "DESTROY"
     },
@@ -27,6 +37,11 @@
     "environment_name": "prod",
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 6
+    },
+    "iframe_generator_api": {
+      "allowed_api_adresses": [
+        {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+      ]
     },
     "database": {
       "removal-policy": "RETAIN"

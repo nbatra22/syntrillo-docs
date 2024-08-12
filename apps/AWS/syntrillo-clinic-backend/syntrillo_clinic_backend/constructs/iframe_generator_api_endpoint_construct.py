@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_iam as iam,
 )
 from constructs import Construct
 
@@ -50,6 +51,33 @@ class IFrameGeneratorApiEndpoint(Construct):
             ]
         )
 
+        # Add IP restrictions to the API endpoint
+        allowed_ip_addresses = []
+        for ip_info in self.environment_context["iframe_generator_api"]["allowed_api_adresses"]:
+            allowed_ip_addresses.append(ip_info["ip"])
+
+        # Create the IAM policy statement
+        allow_all_invokes_policy_statement = iam.PolicyStatement(
+            effect=iam.Effect.DENY,
+            principals=[iam.AnyPrincipal()],
+            actions=["execute-api:Invoke"],
+            resources=[f"execute-api:/*/*/*"],
+            conditions={
+                "NotIpAddress": {
+                    "aws:SourceIp": allowed_ip_addresses,
+                }
+            },
+        )
+
+        allowed_ips_policy_statement = iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            principals=[iam.AnyPrincipal()],
+            actions=["execute-api:Invoke"],
+            resources=[f"execute-api:/*/*/*"]
+        )
+
+        # self.rest_api.policy = iam.PolicyDocument(statements=[policy_statement])
+
         self.rest_api = apigw.RestApi(
             self, "IFramGeneratorAPI",
             rest_api_name="IFramGeneratorAPI",
@@ -60,7 +88,11 @@ class IFrameGeneratorApiEndpoint(Construct):
             deploy_options=apigw.StageOptions(
                 tracing_enabled=True,
                 stage_name=self.environment_name
-            )
+            ),
+            policy=iam.PolicyDocument(statements=[
+                allow_all_invokes_policy_statement, 
+                allowed_ips_policy_statement
+            ])
         )
 
         route53.ARecord(self, "SyntrilloCustomDomainARecord", 
@@ -77,3 +109,4 @@ class IFrameGeneratorApiEndpoint(Construct):
         self.rest_api.root.add_resource("ping").add_method(
             "GET",
         )
+
