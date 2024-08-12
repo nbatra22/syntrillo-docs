@@ -76,8 +76,7 @@ class IFrameGeneratorApiEndpoint(Construct):
             resources=[f"execute-api:/*/*/*"]
         )
 
-        # self.rest_api.policy = iam.PolicyDocument(statements=[policy_statement])
-
+        # Create rest api
         self.rest_api = apigw.RestApi(
             self, "IFramGeneratorAPI",
             rest_api_name="IFramGeneratorAPI",
@@ -87,7 +86,9 @@ class IFrameGeneratorApiEndpoint(Construct):
             ),
             deploy_options=apigw.StageOptions(
                 tracing_enabled=True,
-                stage_name=self.environment_name
+                stage_name=self.environment_name,
+                throttling_rate_limit=1000,
+                throttling_burst_limit=500
             ),
             policy=iam.PolicyDocument(statements=[
                 allow_all_invokes_policy_statement, 
