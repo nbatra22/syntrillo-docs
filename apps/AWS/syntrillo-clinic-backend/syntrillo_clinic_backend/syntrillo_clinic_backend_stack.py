@@ -33,7 +33,7 @@ from syntrillo_clinic_backend.substacks.secrets_stack import SecretsStack
 from syntrillo_clinic_backend.substacks.servers_stack import ServersStack
 
 from syntrillo_clinic_backend.substacks.task_scheduling_stack import SyntrilloClinicTaskSchedulingStack
-from syntrillo_clinic_backend.substacks.fitness_functions_stack import SyntrilloClinicBackendFitnessFunctionsStack
+from syntrillo_clinic_backend.substacks.check_functions_stack import SyntrilloClinicBackendCheckFunctionsStack
 from syntrillo_clinic_backend.substacks.backup_stack import SyntrilloClinicBackupStack
 
 from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
@@ -112,10 +112,11 @@ class SyntrilloClinicBackendStack(Stack):
         #     storage.efs_file_system
         # )
 
-        # fitness_functions=SyntrilloClinicBackendFitnessFunctionsStack(
-        #     self, "FitnessFunctionsStack",
-        #     vpc=network.vpc,
-        #     database=database,
-        #     efs_access_point=storage.efs_access_point,
-        #     secrets=secrets
-        # )
+        if self.aws_environment == "sandbox":
+            check_functions=SyntrilloClinicBackendCheckFunctionsStack(
+                self, "CheckFunctionsStack",
+                network=self.network,
+                database=self.database,
+                storage=self.storage,
+                secrets=self.secrets
+            )

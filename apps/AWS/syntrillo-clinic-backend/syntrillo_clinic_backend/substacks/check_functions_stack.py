@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_iam as iam
 )
 from constructs import Construct
 
@@ -166,30 +167,93 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
+class CheckSecurityConstruct(Construct):
+
+    def __init__(self, scope: Construct, id: str, vpc, efs_access_point, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+
+        self.vpc = vpc
+        self.efs_access_point = efs_access_point
+
+        check_security_function = _lambda.Function(
+            self, "CheckSecurityFunction",
+            function_name="CheckSecurityFunction",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            handler="check_security_function.handler",
+            code=_lambda.Code.from_asset("lambda-functions/check-functions/check-security-function"),
+            vpc = self.vpc,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.efs_access_point,
+                "/mnt/python_modules"
+            ),
+            environment={
+                "PYTHONPATH": "/mnt/python_modules"
+            },          
+            timeout=Duration.seconds(10),
+        )
+
+        fitness_function_layer = _lambda.LayerVersion.from_layer_version_arn(
+             self, 'PowertoolsLayer',
+            "arn:aws:lambda:us-east-1:017000801446:layer:AWSLambdaPowertoolsPythonV2:77"
+        )
+
+        check_security_function.add_layers(fitness_function_layer)
+
+        read_only_access_policy = iam.ManagedPolicy.from_aws_managed_policy_name("ReadOnlyAccess")
+        check_security_function.role.add_managed_policy(read_only_access_policy)
+
+        check_security_api = apigw.RestApi(
+            self, "CheckSecurityAPI", 
+            rest_api_name="CheckSecurityAPI",
+            deploy_options= apigw.StageOptions(
+                stage_name="sandbox"
+            )
+        )
+
+        root_resource = check_security_api.root
+        root_get_method = root_resource.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_security_function),
+        )
+
+        check_security_resources = root_resource.add_resource("check-security").add_resource("{proxy+}")
+        check_security_resources.add_method(
+            "GET",
+            apigw.LambdaIntegration(check_security_function),
+        )
+
+
+
 # -----------------------------------------------------------------------------
 # STACK
 # -----------------------------------------------------------------------------
 
-class SyntrilloClinicBackendFitnessFunctionsStack(Stack):
+class SyntrilloClinicBackendCheckFunctionsStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, vpc, database, efs_access_point, secrets, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, network, database, storage, secrets, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.vpc = vpc
-        self.database = database
-        self.efs_access_point = efs_access_point
-        self.secrets=secrets
+        self.network = network
+        self.efs_access_point = storage.efs_access_point
+        # self.database = database
+        # self.secrets=secrets
 
-        check_connectivity_function=CheckConnectivityConstruct(
-            self, "CheckConnectivityConstruct", 
-            self.vpc,
-            self.database,
-            self.efs_access_point,
-            self.secrets
-        )
-
-        check_behaviour_function=CheckBehaviourConstruct(
-            self, "CheckLambdaBehaviourConstruct", 
-            self.vpc,
+        check_security_function=CheckSecurityConstruct(
+            self, "CheckSecurityConstruct",
+            self.network.vpc,
             self.efs_access_point,
         )
+
+        # check_connectivity_function=CheckConnectivityConstruct(
+        #     self, "CheckConnectivityConstruct", 
+        #     self.network.vpc,
+        #     self.database,
+        #     self.efs_access_point,
+        #     self.secrets
+        # )
+
+        # check_behaviour_function=CheckBehaviourConstruct(
+        #     self, "CheckLambdaBehaviourConstruct", 
+        #     self.network.vpc,
+        #     self.efs_access_point,
+        # )
