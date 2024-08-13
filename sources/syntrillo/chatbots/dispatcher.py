@@ -50,7 +50,7 @@ class ChatBotsDispatcher:
         patients = self.convo_wrapper.get_patients()
         is_org_staging = self.healthie_utils.is_org_staging()
 
-        # Remove HTML tags from note content
+        # Remove HTML tags from note content, so that we can check for keywords at the start of the note
         note_content_clean = remove_html_tags(note_content)
 
         # chatbot to start or not
@@ -76,17 +76,29 @@ class ChatBotsDispatcher:
                 elif note_content_clean.startswith('@vcn'):
                     start_virtual_care_navigator_chatbot = True
             else:
-                # if the note creator is a provider only start if content starts with a keyword
+                # if the note creator is a patient start if content starts with a keyword
                 if note_content_clean.startswith(AfterHoursSupportChatBot.MANUAL_KICK_START_TAG_KEYWORD):
                     start_after_hours_support_chatbot = True
-                elif not is_within_working_hours:
-                    # TODO : implement after hours support for patients
-                    start_after_hours_support_chatbot = False
+
+                # if the note creator is a patient start if after working hours
+                if not is_within_working_hours:
+                    # Not implemented yet
+                    pass
+                    # start_after_hours_support_chatbot = True
+
+        else:
+            # We are in production
+            # Do nothing yet in production
+            pass
 
         # start the chatbot with the conversationWrapper
         if start_after_hours_support_chatbot:
             ahs_chatbot = AfterHoursSupportChatBot(convo_wrapper=self.convo_wrapper)
-            ahs_chatbot.answer()
+            ahs_chatbot.generate_responses()
+
+        elif start_virtual_care_navigator_chatbot:
+            # TODO : implement virtual care navigator chatbot
+            pass
 
 
 if __name__ == "__main__":
@@ -94,7 +106,7 @@ if __name__ == "__main__":
     # dummy run, to test the dispatcher
     # using a real note, which is already in the conversation.
     # Get conversation_id from browser and use conversation wrapper to get the note_id
-    note_id = '270897'
+    note_id = '270959'
 
     data = {"resource_id": note_id, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     dispatcher = ChatBotsDispatcher()

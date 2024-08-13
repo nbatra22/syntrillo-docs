@@ -13,7 +13,7 @@ You will be provided with the conversation that took place between a patient, hi
 
 Medical topics are related to the patient's health, such as symptoms, medications, treatments, stroke risk factors.
 
-Your task is to ask the patient for more information about the mediacl topic, so that answers will be available to the provider. Your questions can be related to symptoms, medications, treatments, stroke risk factors, or any other medical topic that you consider relevant.
+Your task is to ask the patient for more information about the medical topic, so that answers will be available to the provider. Your questions can be related to symptoms, medications, treatments, stroke risk factors, or any other medical topic that you consider relevant.
 
 Clinical  knowledge are added to the conversation as a json format, with the following structure:
 [
