@@ -18,14 +18,15 @@ class HealthInformationTablesManager:
 
     # TODO : new tables to implement
     HEALTHIE_QUESTIONNAIRES_TABLE = "healthie_questionnaires"
-    GUI_PREFERENCES_TABLE = "gui_preferences"
+    PREFERENCES_PATIENT_TABLE = "preferences_patient"
+    PREFERENCES_STAFF_TABLE = "preferences_staff"
     AI_CHATBOT_SESSIONS_TABLE = "ai_chatbot_sessions"
     AI_KNOWLEDGE_BASE_TABLE = "ai_knowledge_base"
 
     # Dictionary mapping table names to their SQL creation queries
     TABLE_CREATION_QUERIES = {
-        MISC_HEALTH_DATA_TABLE: """
-        CREATE TABLE IF NOT EXISTS misc_health_data (
+        MISC_HEALTH_DATA_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {MISC_HEALTH_DATA_TABLE} (
             id                          INT AUTO_INCREMENT PRIMARY KEY,
             syntrillo_internal_key      BINARY(16) NOT NULL,
             data_type                   VARCHAR(255) NOT NULL,
@@ -35,8 +36,8 @@ class HealthInformationTablesManager:
             INDEX (data_type)
         );
         """,
-        TENOVI_RAW_MEASUREMENTS_TABLE: """
-        CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
+        TENOVI_RAW_MEASUREMENTS_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {TENOVI_RAW_MEASUREMENTS_TABLE} (
             id                          INT AUTO_INCREMENT PRIMARY KEY,
             syntrillo_internal_key      BINARY(16) NOT NULL,
             device_name                 VARCHAR(255) NOT NULL,
@@ -51,7 +52,55 @@ class HealthInformationTablesManager:
             INDEX (syntrillo_internal_key),
             INDEX (device_name)
         );
-        """
+        """,
+        HEALTHIE_QUESTIONNAIRES_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {HEALTHIE_QUESTIONNAIRES_TABLE} (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            platform                    VARCHAR(255) DEFAULT NULL,
+            name                        VARCHAR(255) NOT NULL,
+            version                     VARCHAR(255) NOT NULL,
+            variables_json              JSON NOT NULL,
+            -- mediumblob : up to 16MB
+            excel_file                  MEDIUMBLOB DEFAULT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (name)
+        );
+        """,
+        PREFERENCES_PATIENT_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {PREFERENCES_PATIENT_TABLE} (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            syntrillo_internal_key      BINARY(16) NOT NULL,
+            platform                    VARCHAR(255) DEFAULT NULL,
+            item                        VARCHAR(255) DEFAULT NULL,
+            settings                    VARCHAR(255) DEFAULT NULL,
+            items_json                  JSON DEFAULT NULL,
+            settings_json               JSON DEFAULT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (syntrillo_internal_key)
+        );
+        """,
+        PREFERENCES_STAFF_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {PREFERENCES_STAFF_TABLE} (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            staff_id_json               JSON NOT NULL,
+            platform                    VARCHAR(255) DEFAULT NULL,
+            item                        VARCHAR(255) DEFAULT NULL,
+            settings                    VARCHAR(255) DEFAULT NULL,
+            items_json                  JSON DEFAULT NULL,
+            settings_json               JSON DEFAULT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        """,
+        AI_CHATBOT_SESSIONS_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {AI_CHATBOT_SESSIONS_TABLE} (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+        );
+        """,
+        AI_KNOWLEDGE_BASE_TABLE: f"""
+        CREATE TABLE IF NOT EXISTS {AI_KNOWLEDGE_BASE_TABLE} (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+        );
+        """,
     }
 
     def __init__(self):
