@@ -5,10 +5,54 @@ from syntrillo.databases_management.connection import DatabaseConnection
 class HealthInformationTablesManager:
     """
     A class to manage the creation and deletion of health information tables in a MySQL database.
+
+    It can only be instantiated interactively.
+
+    Warning : This class can drop tables. Use with caution.
+
     """
 
-    # TODO : list of tables to be managed, as class variables
+    # Health Information Tables as class variables
+    MISC_HEALTH_DATA_TABLE = "misc_health_data"
+    TENOVI_RAW_MEASUREMENTS_TABLE = "tenovi_raw_measurements"
 
+    # TODO : new tables to implement
+    HEALTHIE_QUESTIONNAIRES_TABLE = "healthie_questionnaires"
+    GUI_PREFERENCES_TABLE = "gui_preferences"
+    AI_CHATBOT_SESSIONS_TABLE = "ai_chatbot_sessions"
+    AI_KNOWLEDGE_BASE_TABLE = "ai_knowledge_base"
+
+    # Dictionary mapping table names to their SQL creation queries
+    TABLE_CREATION_QUERIES = {
+        MISC_HEALTH_DATA_TABLE: """
+        CREATE TABLE IF NOT EXISTS misc_health_data (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            syntrillo_internal_key      BINARY(16) NOT NULL,
+            data_type                   VARCHAR(255) NOT NULL,
+            data_json                   JSON NOT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (syntrillo_internal_key),
+            INDEX (data_type)
+        );
+        """,
+        TENOVI_RAW_MEASUREMENTS_TABLE: """
+        CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
+            id                          INT AUTO_INCREMENT PRIMARY KEY,
+            syntrillo_internal_key      BINARY(16) NOT NULL,
+            device_name                 VARCHAR(255) NOT NULL,
+            -- metric_name : json data copied here to speed-up access
+            metric_name                 VARCHAR(255) NOT NULL,
+            value_1                     VARCHAR(255) DEFAULT NULL,
+            value_2                     VARCHAR(255) DEFAULT NULL,
+            -- timestamp with isoformat: patient local time + timezone_offset from the device
+            timestamp_local             VARCHAR(255) NOT NULL,
+            data_json                   JSON NOT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX (syntrillo_internal_key),
+            INDEX (device_name)
+        );
+        """
+    }
 
     def __init__(self):
         """
@@ -27,57 +71,36 @@ class HealthInformationTablesManager:
 
     def create_health_data_tables(self):
         """
-        Create the PHI tables
+        Create the PHI tables.
+        Checks if each table exists before attempting to create it.
+        Commits after each successful table creation.
         """
-
-        create_misc_phi_table = """
-        CREATE TABLE IF NOT EXISTS misc_health_data (
-            id                          INT AUTO_INCREMENT PRIMARY KEY,
-            syntrillo_internal_key      BINARY(16) NOT NULL,
-            data_type VARCHAR(255)      NOT NULL,
-            data_json                   JSON NOT NULL,
-            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
-            INDEX (syntrillo_internal_key),
-            INDEX (data_type)
-        );
-        """
-
-        create_tenovi_raw_measurements_table = """
-        CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
-            id                          INT AUTO_INCREMENT PRIMARY KEY,
-            syntrillo_internal_key      BINARY(16) NOT NULL,
-            device_name                 VARCHAR(255) NOT NULL,
-            metric_name                 VARCHAR(255) NOT NULL,      -- json data copied here to speed-up access
-            value_1                     VARCHAR(255) DEFAULT NULL,
-            value_2                     VARCHAR(255) DEFAULT NULL,
-            timestamp_local             VARCHAR(255) NOT NULL,  -- this is timestamp isoformat: patient local time + timezone_offset from the device
-            data_json                   JSON NOT NULL,
-            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
-            INDEX (syntrillo_internal_key),
-            INDEX (device_name)
-        );
-        """
-
         try:
-            self.cursor.execute(create_misc_phi_table)
-            self.cursor.execute(create_tenovi_raw_measurements_table)
-            self.conn.commit()
-            print("PHI tables created successfully.")
+            for table_name, create_sql in self.TABLE_CREATION_QUERIES.items():
+                try:
+                    # Check if the table already exists
+                    self.cursor.execute(f"SHOW TABLES LIKE '{table_name}';")
+                    result = self.cursor.fetchone()
+
+                    if result:
+                        print(f"Table '{table_name}' already exists.")
+                    else:
+                        # Table doesn't exist, so create it
+                        self.cursor.execute(create_sql)
+                        self.conn.commit()  # Commit after table creation
+                        print(f"Table '{table_name}' created successfully.")
+                except pymysql.MySQLError as e:
+                    self.conn.rollback()  # Rollback only for the current table
+                    print(f"Error creating table '{table_name}': {e}")
         except pymysql.MySQLError as e:
-            self.conn.rollback()
-            print(f"Error creating tables: {e}")
+            print(f"General error during table creation: {e}")
+
 
     def drop_user_lookup_tables(self):
         """
         Drop the user PHI tables interactively with a warning.
-
-        Tables:
-        - misc_health_data
-        - tenovi_raw_measurements
-
         """
-        tables = ["misc_health_data", "tenovi_raw_measurements"]
-        for table in tables:
+        for table in self.TABLE_CREATION_QUERIES.keys():
             confirm = input(f"Are you sure you want to drop the table '{table}'? This action cannot be undone (yes/no): ")
             if confirm.lower() == "yes":
                 try:
@@ -94,14 +117,14 @@ class HealthInformationTablesManager:
         """
         Report if the tables exist and their number of records.
         """
-        tables = ["misc_health_data", "tenovi_raw_measurements"]
-        for table in tables:
+        for table in self.TABLE_CREATION_QUERIES.keys():
             try:
                 self.cursor.execute(f"SELECT COUNT(*) FROM {table};")
                 count = self.cursor.fetchone()[0]
                 print(f"Table '{table}' exists with {count} records.")
             except pymysql.MySQLError as e:
                 print(f"Table '{table}' does not exist or cannot be accessed: {e}")
+
 
     def close_connection(self):
         """
@@ -112,6 +135,7 @@ class HealthInformationTablesManager:
             self.conn.close()
             self.tunnel.stop() if self.tunnel else None
             print("Database connection closed.")
+
 
 if __name__ == '__main__':
     manager = HealthInformationTablesManager()
