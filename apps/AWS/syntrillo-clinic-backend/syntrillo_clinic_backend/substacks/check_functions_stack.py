@@ -167,59 +167,74 @@ class CheckConnectivityConstruct(Construct):
             apigw.LambdaIntegration(check_connectivity_function),
         )
 
-class CheckSecurityConstruct(Construct):
+class CheckConstruct(Construct):
 
-    def __init__(self, scope: Construct, id: str, vpc, efs_access_point, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, network: Construct, storage: Construct, database: Construct, secrets: Construct, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        self.vpc = vpc
-        self.efs_access_point = efs_access_point
+        self.network = network
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
 
-        check_security_function = _lambda.Function(
-            self, "CheckSecurityFunction",
-            function_name="CheckSecurityFunction",
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
+
+        check_function = _lambda.Function(
+            self, "CheckFunction",
+            function_name="CheckFunction",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            handler="check_security_function.handler",
-            code=_lambda.Code.from_asset("lambda-functions/check-functions/check-security-function"),
-            vpc = self.vpc,
+            params_and_secrets=params_and_secrets,
+            handler="check_function.handler",
+            code=_lambda.Code.from_asset("lambda-functions/check-functions/check-function"),
+            vpc = self.network.vpc,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.efs_access_point,
+                self.storage.efs_access_point,
                 "/mnt/python_modules"
             ),
             environment={
-                "PYTHONPATH": "/mnt/python_modules"
+                "PYTHONPATH": "/mnt/python_modules",
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn
             },          
             timeout=Duration.seconds(10),
         )
+
+        self.database.secret.grant_read(check_function)
+        self.secrets.tenovi_hwi_secrets.grant_read(check_function)
 
         fitness_function_layer = _lambda.LayerVersion.from_layer_version_arn(
              self, 'PowertoolsLayer',
             "arn:aws:lambda:us-east-1:017000801446:layer:AWSLambdaPowertoolsPythonV2:77"
         )
 
-        check_security_function.add_layers(fitness_function_layer)
+        check_function.add_layers(fitness_function_layer)
 
         read_only_access_policy = iam.ManagedPolicy.from_aws_managed_policy_name("ReadOnlyAccess")
-        check_security_function.role.add_managed_policy(read_only_access_policy)
+        check_function.role.add_managed_policy(read_only_access_policy)
 
-        check_security_api = apigw.RestApi(
-            self, "CheckSecurityAPI", 
-            rest_api_name="CheckSecurityAPI",
+
+        check_api = apigw.RestApi(
+            self, "CheckAPI", 
+            rest_api_name="CheckAPI",
             deploy_options= apigw.StageOptions(
                 stage_name="sandbox"
             )
         )
 
-        root_resource = check_security_api.root
+        root_resource = check_api.root
         root_get_method = root_resource.add_method(
             "GET",
-            apigw.LambdaIntegration(check_security_function),
+            apigw.LambdaIntegration(check_function),
         )
 
-        check_security_resources = root_resource.add_resource("check-security").add_resource("{proxy+}")
-        check_security_resources.add_method(
+        check_resources = root_resource.add_resource("check").add_resource("{proxy+}")
+        check_resources.add_method(
             "GET",
-            apigw.LambdaIntegration(check_security_function),
+            apigw.LambdaIntegration(check_function),
         )
 
 
@@ -234,14 +249,16 @@ class SyntrilloClinicBackendCheckFunctionsStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         self.network = network
-        self.efs_access_point = storage.efs_access_point
-        # self.database = database
-        # self.secrets=secrets
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
 
-        check_security_function=CheckSecurityConstruct(
-            self, "CheckSecurityConstruct",
-            self.network.vpc,
-            self.efs_access_point,
+        check_security_function=CheckConstruct(
+            self, "CheckConstruct",
+            self.network,
+            self.storage,
+            self.database,
+            self.secrets
         )
 
         # check_connectivity_function=CheckConnectivityConstruct(
