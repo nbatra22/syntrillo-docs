@@ -10,6 +10,7 @@ from typing import Tuple
 from openai import OpenAI
 
 from syntrillo.system.dot_env_loader import DotEnvFileLoader
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class ChartingNotePrefillJackson:
 
@@ -42,8 +43,10 @@ class ChartingNotePrefillJackson:
         except ImportError:
             # Not running in Google Colab
 
-            # Load the .env file based on the environment to retrieve the client domain and API key
-            _ = DotEnvFileLoader()
+            # ------------------------------
+            # load openai secrets and environment variables
+            # TODO : implement load_openai_secrets=True
+            secrets = LocalEnvironmentAndSecrets()
 
             self.openai_api_key = os.getenv('OPENAI_API_KEY')
 
@@ -296,6 +299,7 @@ if __name__ == "__main__":
     prefill = ChartingNotePrefillJackson()
 
     print(json.dumps(prefill.log, indent=2, default=str))
+
 
 
 

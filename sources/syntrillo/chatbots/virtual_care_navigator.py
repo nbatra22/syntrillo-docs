@@ -1,11 +1,12 @@
 # Path: ./sources/syntrillo/virtual_care_navigator/virtual_care_navigator.py
 
 import os
-from dotenv import load_dotenv
 
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.api_healthie.misc import log_this, transform_to_safe_html
+
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 # open AI
 #  - python anywhere US : pip3.8 install openai
@@ -26,21 +27,14 @@ class VirtualCareNavigator():
 
     def __init__(
         self,
-        api_key: str = None,
-        organization: str = 'staging',
-        dotenv_path: str = '.env'
     ):
-        # TODO ; fix call to HealthieAuth and HealthieUtils
-        self.auth = HealthieAuth(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
-        self.utils = HealthieUtils(api_key=api_key, organization=organization, dotenv_path=dotenv_path)
+        self.auth = HealthieAuth()
+        self.utils = HealthieUtils()
 
-        # TODO : use system > dotenvloader instead of this
-        # paths have to be hard-coded at PythonAnywhere
-        if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') and dotenv_path == ".env":
-            dotenv_path = '/home/syntrillo/Syntrillo_Clinic/.env'
-
-        # Load the environment variables from the specified file
-        load_dotenv(dotenv_path=dotenv_path)
+        # ------------------------------
+        # load secrets and dotenv
+        # TODO : implement load_openai_secrets=True
+        secrets = LocalEnvironmentAndSecrets()
 
         # Retrieve the API key from environment variables
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -199,7 +193,7 @@ class VirtualCareNavigator():
         """
 
         # get conversation id from note id
-        note = self.auth.send_query(
+        note, _ = self.auth.send_query(
             query="""
                 query note($id: ID) {
                     note(id: $id) {
@@ -212,7 +206,7 @@ class VirtualCareNavigator():
         conversation_id = note['note']['conversation_id']
 
         # get conversation from its id
-        conversation = self.auth.send_query(
+        conversation, _ = self.auth.send_query(
             query="""
                 query getConversation($id: ID) {
                     conversation(id: $id) {
@@ -276,7 +270,7 @@ class VirtualCareNavigator():
         """
 
         # get conversation id from note id
-        response = self.auth.send_query(
+        response, _ = self.auth.send_query(
             query="""
                     mutation createNote(
                     $user_id: String
@@ -323,7 +317,7 @@ class VirtualCareNavigator():
 
 if __name__ == "__main__":
     # Example usage of the list_forms function
-    vcn = HealthieVirtualCareNavigator()
+    vcn = VirtualCareNavigator()
 
     if True:
         # test endpoint

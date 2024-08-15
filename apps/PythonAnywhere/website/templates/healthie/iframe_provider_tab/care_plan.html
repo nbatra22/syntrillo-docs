@@ -337,6 +337,43 @@
 
 <div class="collapsible-content">
 
+    <p class="mt-4" style="text-decoration: underline;">Medication history</p>
+
+    <div class="table-container-data">
+        <table id="data-medication-history-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Active</th>
+                    <th>Start date</th>
+                    <th>End date</th>
+                    <th>Dosage</th>
+                    <th>Directions</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if medication_history == [] %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No data available</td>
+                    </tr>
+                {% else %}
+                    {% for datapoint in medication_history %}
+                        <tr>
+                            <td>{{ datapoint.name  }}</td>
+                            <td>{{ datapoint.active }}</td>
+                            <td>{{ datapoint.start_date }}</td>
+                            <td>{{ datapoint.end_date  }}</td>
+                            <td>{{ datapoint.dosage  }}</td>
+                            <td>{{ datapoint.directions }}</td>
+                            <td>{{ datapoint.comment  }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
     <p class="mt-4" style="text-decoration: underline;">Tenovi Pillbox Expectations Charting Notes data</p>
 
     <div class="table-container-data">
@@ -602,6 +639,24 @@
 
 
         // -----------------------------------------
+        // --- MEDICATIONS HISTORY LOGIC ---
+
+        var medicationHistoryDatasetJson = '{{ medication_history }}';
+
+        // Check if data is not null and not an empty array
+        if (!(medicationHistoryDatasetJson === null || (Array.isArray(medicationHistoryDatasetJson) && medicationHistoryDatasetJson.length === 0))) {
+            $('#data-medication-history-table').DataTable({
+                "paging": false,
+                "searching": false,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "order": [[2, 'asc']]  // Order by the 3rd column (start-date)
+            });
+        }
+
+
+        // -----------------------------------------
         // --- PILLBOX LOGIC ---
 
         // Initialize DataTable if not empty
@@ -621,6 +676,8 @@
                 "order": [[1, 'asc']]  // Order by the second column (created_at)
             });
         }
+
+
 
         // -----------------------------------------
         // -- JSON PLOTS --

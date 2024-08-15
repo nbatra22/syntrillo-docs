@@ -81,6 +81,15 @@ class PostManager:
             self.syntrillo_internal_key = None
             self.pseudonyms = None
 
+    def get_healthie_user_id(self):
+        """
+        Get the healthie_user_id
+        """
+        if self.pseudonyms is not None:
+            return self.pseudonyms['healthie_user_id']
+        else:
+            return None
+
 
 
 
