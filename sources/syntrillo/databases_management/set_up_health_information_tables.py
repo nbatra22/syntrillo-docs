@@ -94,6 +94,12 @@ class HealthInformationTablesManager:
         AI_CHATBOT_SESSIONS_TABLE: f"""
         CREATE TABLE IF NOT EXISTS {AI_CHATBOT_SESSIONS_TABLE} (
             id                          INT AUTO_INCREMENT PRIMARY KEY,
+            chatbot_name                VARCHAR(255) DEFAULT NULL,
+            healthie_conversation_id    VARCHAR(255) DEFAULT NULL,
+            data_json                   JSON DEFAULT NULL,
+            messages_json               JSON DEFAULT NULL,
+            paths_json                  JSON DEFAULT NULL,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
         );
         """,
         AI_KNOWLEDGE_BASE_TABLE: f"""
