@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_kms as kms,
 )
 from constructs import Construct
 
@@ -35,35 +36,76 @@ class DatabaseStack(Stack):
         removal_policy_value = self.environment_context["database"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
 
-        self.db = rds.DatabaseInstance(self, "MySQLDatabase",
+        self.snapshot_identifier = self.environment_context["database"]["snapshot-identifier"]
+
+        rds_encryption_key = kms.Key(self, "SyntrilloClinicMySQLDatabaseEncryptionKey",
+            description="Syntrillo Clinic MySQL Database Encyption Key",
+            enabled=True,
+            enable_key_rotation=True
+        )
+
+        # self.db = rds.DatabaseInstance(self, "MySQLDatabase",
+        #     vpc=self.network.vpc,
+        #     engine=rds.DatabaseInstanceEngine.MYSQL,
+        #     instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
+        #     vpc_subnets=ec2.SubnetSelection(subnets=self.network.vpc.private_subnets),
+        #     multi_az=False,
+        #     allocated_storage=20,
+        #     storage_type=rds.StorageType.GP2,
+        #     credentials=rds.Credentials.from_generated_secret("admin"),
+        #     database_name="syntrillo_clinic_db",
+        #     removal_policy=self.removal_policy
+        # )
+
+        # self.db_security_group = self.db.connections.security_groups[0]
+
+        self.db_from_snapshot = rds.DatabaseInstanceFromSnapshot(self, "MySQLDatabaseFromSnapshot",
             vpc=self.network.vpc,
             engine=rds.DatabaseInstanceEngine.MYSQL,
             instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
             vpc_subnets=ec2.SubnetSelection(subnets=self.network.vpc.private_subnets),
             multi_az=False,
             allocated_storage=20,
-            storage_type=rds.StorageType.GP2,
-            credentials=rds.Credentials.from_generated_secret("admin"),
-            database_name="syntrillo_clinic_db",
-            removal_policy=self.removal_policy
+            storage_type=rds.StorageType.GP3,
+            removal_policy=self.removal_policy,
+            snapshot_identifier=self.snapshot_identifier,
+            credentials=rds.SnapshotCredentials.from_generated_secret("admin"),
         )
 
-        self.db_security_group = self.db.connections.security_groups[0]
+        self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]
+
+        # private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.network.vpc.private_subnets]
+
+        # for cidr_block in private_subnet_cidr_blocks:
+        #     self.db_security_group.add_ingress_rule(
+        #         ec2.Peer.ipv4(cidr_block),
+        #         ec2.Port.tcp(3306),
+        #         description=f"Allow inbound traffic from {cidr_block} on port 3306"
+        #     )
 
         private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.network.vpc.private_subnets]
 
         for cidr_block in private_subnet_cidr_blocks:
-            self.db_security_group.add_ingress_rule(
+            self.db_from_snapshot_security_group.add_ingress_rule(
                 ec2.Peer.ipv4(cidr_block),
                 ec2.Port.tcp(3306),
                 description=f"Allow inbound traffic from {cidr_block} on port 3306"
             )
 
-        self.secret=self.db.secret
+        # self.secret=self.db.secret
+
+        self.admin_secret = self.db_from_snapshot.secret
+
+        # # AllOW BASTION HOST TO ACCESS MYSQL DB
+        # self.db_security_group.add_ingress_rule(
+        #     self.network.bastion_host_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        # )  
 
         # AllOW BASTION HOST TO ACCESS MYSQL DB
-        self.db_security_group.add_ingress_rule(
+        self.db_from_snapshot_security_group.add_ingress_rule(
             self.network.bastion_host_security_group,
             ec2.Port.tcp(3306),
             description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
-        )  
+        )

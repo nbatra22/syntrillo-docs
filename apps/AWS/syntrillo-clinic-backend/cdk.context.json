@@ -10,6 +10,7 @@
       ]
     },
     "database": {
+      "snapshot-identifier": "encrypted-snapshot-2",
       "removal-policy": "DESTROY"
     },
     "storage": {
@@ -27,6 +28,7 @@
       ]
     },
     "database": {
+      "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-15-encrypted",
       "removal-policy": "DESTROY"
     },
     "storage": {
@@ -44,6 +46,7 @@
       ]
     },
     "database": {
+      "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-16-encrypted",
       "removal-policy": "RETAIN"
     },
     "storage": {

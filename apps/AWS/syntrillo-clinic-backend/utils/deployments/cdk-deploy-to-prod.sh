@@ -2,7 +2,7 @@
 
 if [ "$1" == "" ]; then
  cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend
- cdk ls
+ cdk ls --profile syntrillo-clinic-prod-deployment --context environment='prod'
  exit
 fi
 

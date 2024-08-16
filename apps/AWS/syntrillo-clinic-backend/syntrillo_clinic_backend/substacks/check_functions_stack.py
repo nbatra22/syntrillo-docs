@@ -111,13 +111,13 @@ class CheckConnectivityConstruct(Construct):
             ),
             environment={
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.admin_secret.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn
             },
             timeout=Duration.seconds(10),
         )
 
-        self.database.secret.grant_read(check_connectivity_function)
+        self.database.admin_secret.grant_read(check_connectivity_function)
         self.secrets.tenovi_hwi_secrets.grant_read(check_connectivity_function)
 
         latest_layer_version_arn = self.get_latest_layer_version_arn("fitness-function-layer")
@@ -197,13 +197,13 @@ class CheckConstruct(Construct):
             ),
             environment={
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.secret.secret_arn,
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.admin_secret.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn
             },          
             timeout=Duration.seconds(10),
         )
 
-        self.database.secret.grant_read(check_function)
+        self.database.admin_secret.grant_read(check_function)
         self.secrets.tenovi_hwi_secrets.grant_read(check_function)
 
         fitness_function_layer = _lambda.LayerVersion.from_layer_version_arn(
