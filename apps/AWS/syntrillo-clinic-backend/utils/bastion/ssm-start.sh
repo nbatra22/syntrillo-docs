@@ -51,7 +51,7 @@ if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
         hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-5kt0pwavmcmm.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
     fi
     if [ $ENVIRONMENT == 'staging' ]; then
-        hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-k1mp4rbufthl.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
+        hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-saiukm5mugdm.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
     fi
    
     local_port=3307
