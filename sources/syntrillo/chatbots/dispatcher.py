@@ -98,19 +98,18 @@ class ChatBotsDispatcher:
                     # start_after_hours_support_chatbot = True
 
         else:
-            # We are in production
+            # !!! We are in production !!!
             if note_creator.is_provider():
                 # place holder for direct provider interaction with chatbot
                 pass
             else:
                 # if the note creator is a patient start if content starts with a keyword
                 if note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
-                    v02_start_after_hours_virtual_assistant = True
+                    v02_start_after_hours_virtual_assistant = False  # Not implemented yet since PHI may be sent
 
                 # if the note creator is a patient start if after working hours
                 if not is_within_working_hours:
-                    # Not implemented yet
-                    v02_start_after_hours_virtual_assistant = True
+                    v02_start_after_hours_virtual_assistant = False  # Not implemented yet since PHI may be sent
 
         # start the chatbot with the conversationWrapper object
         if v01_start_after_hours_support_chatbot:
