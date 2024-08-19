@@ -64,7 +64,10 @@ def iframe_healthie_provider_tab_devices():
     user_pii = healthie_utils.get_user_from_id(post_manager.pseudonyms['healthie_user_id'])
 
     # Check if user_pii has locations and get the number of locations
-    n_user_locations = len(user_pii['locations']) if 'locations' in user_pii and user_pii['locations'] else 0
+    try:
+        n_user_locations = len(user_pii['locations']) if 'locations' in user_pii and user_pii['locations'] else 0
+    except:
+        n_user_locations = 0
 
 
     return render_template('healthie/iframe_provider_tab/devices.html',
