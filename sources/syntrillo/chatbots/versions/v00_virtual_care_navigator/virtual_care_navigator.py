@@ -25,6 +25,9 @@ class VirtualCareNavigator():
     A class handling virtual care navigator operations.
     """
 
+
+    MANUAL_KICK_START_TAG_KEYWORD = "@vcn00"
+
     def __init__(
         self,
     ):

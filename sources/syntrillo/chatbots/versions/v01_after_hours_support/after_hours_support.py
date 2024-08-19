@@ -67,9 +67,9 @@ class AfterHoursSupportChatBot:
             self.is_chatbot_already_in_convo = None
 
 
-    def read_llm_file(self, file_name):
+    def read_data_file(self, file_name):
         """
-        Read content from a file in the 'llm' directory.
+        Read content from a file in the 'data' directory.
 
         Parameters:
         - file_name (str): The name of the file to read.
@@ -77,8 +77,8 @@ class AfterHoursSupportChatBot:
         Returns:
         - str: The content of the specified file.
         """
-        # Get the absolute path to the 'llm' directory
-        config_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), './llm/ahs/'))
+        # Get the absolute path to the 'data' directory
+        config_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), './data/'))
         file_path = os.path.join(config_dir, file_name)
 
         # Read and return the content of the file
@@ -108,12 +108,12 @@ class AfterHoursSupportChatBot:
         # step 1 : determine if tech or medical
         step1_messages = messages_raw.copy()
 
-        # place the system content to the begining of the messages
-        step1_setup_instructions = self.read_llm_file('step1a_setup_instructions.txt')
+        # place the system content at the begining of the messages
+        step1_setup_instructions = self.read_data_file('step1a_setup_instructions.txt')
         step1_messages.insert(0, {'role': 'system', 'content': step1_setup_instructions})
 
         # append the question to the end of the messages
-        step1_classification_query = self.read_llm_file('step1b_classification_query.txt')
+        step1_classification_query = self.read_data_file('step1b_classification_query.txt')
         step1_messages.append({'role': 'user', 'content': step1_classification_query})
 
         # call LLM
@@ -173,11 +173,11 @@ class AfterHoursSupportChatBot:
         step2_messages = []
         if is_technical:
             # add system content
-            step2_setup_instructions = self.read_llm_file('step2_path1a_setup_instructions_technical_support.txt')
+            step2_setup_instructions = self.read_data_file('step2_path1a_setup_instructions_technical_support.txt')
             step2_messages.append({'role': 'system', 'content': step2_setup_instructions})
 
             # add the technical context
-            step2_context_technical_healthie = self.read_llm_file('step2_path1b_context_technical_healthie.txt')
+            step2_context_technical_healthie = self.read_data_file('step2_path1b_context_technical_healthie.txt')
             step2_messages.append({
                 'role': 'user',
                 'content': json.dumps({
@@ -186,7 +186,7 @@ class AfterHoursSupportChatBot:
                     })
                 })
 
-            step2_context_technical_tenovi = self.read_llm_file('step2_path1b_context_technical_tenovi.txt')
+            step2_context_technical_tenovi = self.read_data_file('step2_path1b_context_technical_tenovi.txt')
             step2_messages.append({
                 'role': 'user',
                 'content': json.dumps({
@@ -197,11 +197,11 @@ class AfterHoursSupportChatBot:
 
         elif is_medical:
             # add system content
-            step2_setup_instructions = self.read_llm_file('step2_path2a_setup_instructions_medical_support.txt')
+            step2_setup_instructions = self.read_data_file('step2_path2a_setup_instructions_medical_support.txt')
             step2_messages.append({'role': 'system', 'content': step2_setup_instructions})
 
             # add the medical context
-            step2_context_medical = self.read_llm_file('step2_path2b_context_medical.txt')
+            step2_context_medical = self.read_data_file('step2_path2b_context_medical.txt')
             step2_messages.append({
                 'role': 'user',
                 'content': json.dumps({

@@ -56,7 +56,7 @@ class HealthInformationTablesManager:
         HEALTHIE_QUESTIONNAIRES_TABLE: f"""
         CREATE TABLE IF NOT EXISTS {HEALTHIE_QUESTIONNAIRES_TABLE} (
             id                          INT AUTO_INCREMENT PRIMARY KEY,
-            platform                    VARCHAR(255) DEFAULT NULL,
+            platform                    VARCHAR(255) DEFAULT NULL, -- prod or staging
             name                        VARCHAR(255) NOT NULL,
             version                     VARCHAR(255) NOT NULL,
             variables_json              JSON NOT NULL,
@@ -66,6 +66,9 @@ class HealthInformationTablesManager:
             INDEX (name)
         );
         """,
+    }
+
+    TODO_TABLE_CREATION_QUERIES = {
         PREFERENCES_PATIENT_TABLE: f"""
         CREATE TABLE IF NOT EXISTS {PREFERENCES_PATIENT_TABLE} (
             id                          INT AUTO_INCREMENT PRIMARY KEY,
