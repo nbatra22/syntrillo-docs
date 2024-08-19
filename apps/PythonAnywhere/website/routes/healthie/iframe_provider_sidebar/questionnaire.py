@@ -1,6 +1,6 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/questionnaire.py
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file, abort
 
 import json
 import os
@@ -28,6 +28,8 @@ def iframe_healthie_provider_sidebar_questionnaire():
 
     # --------------------------------------------------------------------
 
+    logs = []
+
     # Initialize StorageManager to access available data structures
     manager = DataStructureStorageManager()
     all_structures = manager.list_all_structures_with_metadata()
@@ -35,20 +37,30 @@ def iframe_healthie_provider_sidebar_questionnaire():
     # ---
     # create a storage_symlink in the static/healthie/documents/storage folder to the storage path and use it in the template
     source_path = manager.get_storage_path()
+    logs.append(f"source_path: {source_path}")
 
     # static_path is the path to the documents folder in the static folder from this python script
     static_path = os.path.join(os.path.dirname(__file__), '../../../static/healthie/documents/')
+    logs.append(f"static_path: {static_path}")
 
     # if this path exists creates a symlink to the storage path
+    symlink_available = False
     if os.path.exists(static_path):
-        symlink_destination_path = os.path.join(static_path, 'storage_symlink')
-        # test if the symlink exists
-        if not os.path.exists(symlink_destination_path):
-            # src: This is the source file path for which the symbolic link will be created.
-            # dst: This is the target file path where symbolic link will be created.
-            os.symlink(dst=symlink_destination_path, src=source_path, target_is_directory=True)
-        symlink_available = True
+        logs.append(f"static_path exists")
+        try:
+            symlink_destination_path = os.path.join(static_path, 'storage_symlink')
+            # test if the symlink exists
+            if not os.path.exists(symlink_destination_path):
+                # src: This is the source file path for which the symbolic link will be created.
+                # dst: This is the target file path where symbolic link will be created.
+                os.symlink(dst=symlink_destination_path, src=source_path, target_is_directory=True)
+                logs.append(f"symlink created")
+            symlink_available = True
+        except Exception as e:
+            logs.append(f"Error creating symlink: {e}")
+            symlink_available = False
     else:
+        logs.append(f"Error: static_path does not exist")
         symlink_available = False
 
     # ---
@@ -57,7 +69,25 @@ def iframe_healthie_provider_sidebar_questionnaire():
         healthie_provider_id=healthie_provider_id,
         all_structures=all_structures,
         symlink_available=symlink_available,
+        logs=json.dumps(logs, indent=4, default=str),
         )
+
+# ========================= DOWNLOAD ENDPOINT ==========================
+
+@iframe_healthie_provider_sidebar_questionnaire_bp.route('/download/questionnaire_from_storage/<filename>')
+def download_questionnaire_from_storage(filename):
+
+    # get the full file path
+    manager = DataStructureStorageManager()
+    file_directory = manager.get_storage_path()
+    file_path = os.path.join(file_directory, filename)
+
+    # Ensure that the file exists in the directory
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    else:
+        abort(404)  # File not found
+
 
 # ========================= ENDPOINTS ==========================
 

@@ -18,7 +18,8 @@
                 <tr>
                     <th>Name</th>
                     <th>Version</th>
-                    <th>File</th>
+                    <th>File Symlink</th>
+                    <th>File from Storage</th>
                     <th>Created at (EST)</th>
                     <th>Number of variables</th>
                     <th>Type</th>
@@ -35,6 +36,9 @@
                             {% else %}
                                 N/A
                             {% endif %}
+                        </td>
+                        <td>
+                            <a target="_blank" href="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_bp.download_questionnaire_from_storage', filename=structure.filename_xlsx) }}">xlsx</a>
                         </td>
                         <td>{{ structure.created_at_est }}</td>
                         <td>{{ structure.number_of_variables }}</td>
@@ -201,6 +205,21 @@
         </table>
     </div>
 </div> <!-- collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    System logs
+</h2>
+<div class="collapsible-content">
+
+    <div>
+        <textarea class="monospace-small" rows="5" cols="100" readonly wrap="off" style="resize: both;">{{ logs }}</textarea>
+    </div>
+
+</div> <!-- collapsible-content -->
+
 
 <!-- ========================= SCRIPTS ============================ -->
 
