@@ -1,6 +1,7 @@
 import json
 
 from typing import Tuple
+from datetime import datetime
 
 from syntrillo.api_healthie.conversations import HealthieConversations
 from syntrillo.api_healthie.user import HealthieUser
@@ -371,12 +372,29 @@ class ChatBotConversationWrapper:
 
         return messages
 
+    def get_last_note_datetime(self) -> datetime:
+        """
+        Get the datetime of the last note.
+
+        Returns:
+            datetime: The datetime of the last note (created_at).
+        """
+
+        # with this format : "2024-07-11 17:51:16 +0200"
+        created_at = self._conversation['notes'][-1]['created_at']
+
+        # convert created_at to datetime
+        dt = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z')
+
+        return dt
+
+
 
 
 if __name__ == '__main__':
 
     # test ChatBotConversationWrapper from a conversation_id
-    conversation_id = '1532286'
+    conversation_id = '1562883'
     wrapper = ChatBotConversationWrapper()
     log = wrapper.load_conversation_from_conversation_id(conversation_id)
 
