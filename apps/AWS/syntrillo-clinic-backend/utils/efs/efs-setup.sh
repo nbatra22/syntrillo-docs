@@ -17,7 +17,7 @@ pip install -r requirements.txt --target .
 
 # ON Amazon Linux Bastion
 sudo yum install docker
+sudo systemctl start docker
 sudo chmod 666 /var/run/docker.sock
 sudo usermod -a -G docker ec2-user
-sudo systemctl start docker
 docker run --rm -v "$PWD":/app -w /app python:3.10 pip install --no-cache-dir -r requirements.txt --target=/app/shared-python-modules

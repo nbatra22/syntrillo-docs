@@ -107,10 +107,11 @@ class SyntrilloClinicBackendStack(Stack):
                 storage=self.storage,
             )
 
-        backupStack = SyntrilloClinicBackupStack(
-            self, "BackupStack",
-            database=self.database,
-        )
+        if self.aws_environment == "sandbox":
+            backupStack = SyntrilloClinicBackupStack(
+                self, "BackupStack",
+                database=self.database,
+            )
 
         if self.aws_environment == "sandbox":
             check_functions=SyntrilloClinicBackendCheckFunctionsStack(
