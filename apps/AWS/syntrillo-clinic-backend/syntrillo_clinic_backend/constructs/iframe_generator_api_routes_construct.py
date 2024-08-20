@@ -49,8 +49,9 @@ class IFrameGeneratorAPIRoutes(Construct):
         )
 
         # /download
-        download_resource = self.rest_api.root.add_resource("download")
-        download_resource.add_method(
+        download = self.rest_api.root.add_resource("download")
+        download_proxy_resource = download.add_resource("{proxy+}")
+        download_proxy_resource.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )

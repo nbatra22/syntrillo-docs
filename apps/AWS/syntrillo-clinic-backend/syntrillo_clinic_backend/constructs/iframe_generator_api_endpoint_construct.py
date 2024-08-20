@@ -18,6 +18,7 @@ from aws_cdk import (
     aws_events as events,
     aws_secretsmanager as secretsmanager,
     aws_iam as iam,
+    aws_logs as logs,
 )
 from constructs import Construct
 
@@ -37,6 +38,7 @@ class IFrameGeneratorApiEndpoint(Construct):
 
         self.hosted_zone = self._setup_hosted_zone()
         self.certificate = self._setup_ssl_certificate()
+        self.log_destination = self._setup_log_destination()
         self.rest_api = self._setup_api_gateway()
         
     def _setup_hosted_zone(self):
@@ -62,6 +64,24 @@ class IFrameGeneratorApiEndpoint(Construct):
             subject_alternative_names=[api_domain_name]
         )
 
+    def _setup_log_destination(self):
+        cloudwatch_logs_role = iam.Role(
+            self, "APIGatewayCloudWatchLogsRole",
+            assumed_by=iam.ServicePrincipal("apigateway.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonAPIGatewayPushToCloudWatchLogs")
+            ]
+        )
+
+        apigateway.CfnAccount(self, "APIGatewayAccountResource",
+            cloud_watch_role_arn=cloudwatch_logs_role.role_arn
+        )
+
+        return logs.LogGroup(
+            self, "IFrameGeneratorAPIAccessLogLogGroup",
+            log_group_name="/aws/apigateway/IFrameGeneratorApiAccessLog"
+        )
+    
     def _setup_api_gateway(self):
         api_domain_name = f"api.{self.environment_name}.syntrillo-clinic-backend.com"
 
@@ -76,7 +96,9 @@ class IFrameGeneratorApiEndpoint(Construct):
                 tracing_enabled=True,
                 stage_name=self.environment_name,
                 throttling_rate_limit=1000,
-                throttling_burst_limit=500
+                throttling_burst_limit=500,
+                access_log_destination=apigateway.LogGroupLogDestination(self.log_destination),
+                logging_level=apigateway.MethodLoggingLevel.INFO
             ),
             policy=self._resource_policy()
         )
