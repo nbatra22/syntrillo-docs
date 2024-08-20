@@ -197,6 +197,8 @@ class DataStructureQuestionnaireHealthieManager:
 
         Returns a log dictionary with the result of the operation
 
+        TODO : option to disallow same form name and version at Healthie (in production)
+
         Args:
             structure_name (str): name of the structure (name_version) to load and transform
 
