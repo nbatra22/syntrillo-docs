@@ -6,7 +6,7 @@ import json
 
 from syntrillo.api_healthie.forms import HealthieAPIForms
 from syntrillo.data_structures.data_structure import DataStructure
-from syntrillo.data_structures.storage_manager import StorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import StorageManager
 
 # --------------------------------------------------------
 # initialize Healthie API

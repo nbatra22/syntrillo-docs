@@ -7,7 +7,7 @@ import json
 
 from typing import Tuple
 
-from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
 from syntrillo.api_healthie.forms import HealthieForms
 
 class DataStructureQuestionnaireHealthieManager:
@@ -23,7 +23,7 @@ class DataStructureQuestionnaireHealthieManager:
     healthie_custom_modules = None
 
     def __init__(self):
-        self.storage_manager = DataStructureStorageManager()
+        self.storage_manager = DataStructureStorageManagerLocalFileSystem()
         self.forms_api = HealthieForms()
 
 

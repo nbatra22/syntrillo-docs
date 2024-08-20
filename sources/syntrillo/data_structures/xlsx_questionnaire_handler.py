@@ -9,7 +9,7 @@ from typing import Tuple
 from glob import glob
 from datetime import datetime, timezone
 
-from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
 
 
 class DataStructureXlsxQuestionnaireHandler:
@@ -57,7 +57,7 @@ class DataStructureXlsxQuestionnaireHandler:
 
     def __init__(self):
         # instantiate the storage manager
-        self.storage_manager = DataStructureStorageManager()
+        self.storage_manager = DataStructureStorageManagerLocalFileSystem()
 
     @staticmethod
     def parse_comma_separated_string(s: str) -> list:

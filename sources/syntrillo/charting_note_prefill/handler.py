@@ -11,7 +11,7 @@ from typing import Tuple
 
 from syntrillo.api_healthie.documents import HealthieDocuments
 from syntrillo.api_healthie.forms import HealthieForms
-from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
 from syntrillo.charting_note_prefill.jackson import ChartingNotePrefillJackson
 
 class ChartingNotePrefillHandler:
@@ -27,7 +27,7 @@ class ChartingNotePrefillHandler:
     healthie_user_id: str = None
     healthie_documents: HealthieDocuments = None
     healthie_forms: HealthieForms = None
-    storage_manager: DataStructureStorageManager = None
+    storage_manager: DataStructureStorageManagerLocalFileSystem = None
 
     def __init__(
         self,
@@ -40,7 +40,7 @@ class ChartingNotePrefillHandler:
 
         self.healthie_forms = HealthieForms()
 
-        self.storage_manager = DataStructureStorageManager()
+        self.storage_manager = DataStructureStorageManagerLocalFileSystem()
 
 
 

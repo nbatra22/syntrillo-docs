@@ -10,7 +10,7 @@ from syntrillo.databases_management.set_up_health_information_tables import Heal
 from syntrillo.helper_functions.time import convert_to_est
 
 
-class DatabaseStorageManager:
+class DatabaseStorageManagerDatabase:
     """
     Manages storage of data structures in a MySQL database.
 

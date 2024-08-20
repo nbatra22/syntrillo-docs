@@ -8,7 +8,7 @@ import os
 from werkzeug.utils import secure_filename
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
 from syntrillo.data_structures.questionnaire_healthie_manager import DataStructureQuestionnaireHealthieManager
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.data_structures.xlsx_questionnaire_handler import DataStructureXlsxQuestionnaireHandler
@@ -31,7 +31,7 @@ def iframe_healthie_provider_sidebar_questionnaire():
     logs = []
 
     # Initialize StorageManager to access available data structures
-    manager = DataStructureStorageManager()
+    manager = DataStructureStorageManagerLocalFileSystem()
     all_structures = manager.list_all_structures_with_metadata()
 
     # ---
@@ -55,7 +55,10 @@ def iframe_healthie_provider_sidebar_questionnaire():
                 # dst: This is the target file path where symbolic link will be created.
                 os.symlink(dst=symlink_destination_path, src=source_path, target_is_directory=True)
                 logs.append(f"symlink created")
+            else:
+                logs.append(f"symlink already exists")
             symlink_available = True
+            logs.append(f"symlink_available: {symlink_available}")
         except Exception as e:
             logs.append(f"Error creating symlink: {e}")
             symlink_available = False
@@ -76,9 +79,16 @@ def iframe_healthie_provider_sidebar_questionnaire():
 
 @iframe_healthie_provider_sidebar_questionnaire_bp.route('/download/questionnaire_from_storage/<filename>')
 def download_questionnaire_from_storage(filename):
+    """
+    This endpoint is used to download a questionnaire file from the storage folder.
+
+    Args:
+        filename (str): The name of the file to download.
+
+    """
 
     # get the full file path
-    manager = DataStructureStorageManager()
+    manager = DataStructureStorageManagerLocalFileSystem()
     file_directory = manager.get_storage_path()
     file_path = os.path.join(file_directory, filename)
 
@@ -173,7 +183,7 @@ def healthie_upload_and_validate_form():
 
     # ---
     # get the storage path
-    storage_manager = DataStructureStorageManager()
+    storage_manager = DataStructureStorageManagerLocalFileSystem()
     storage_file_path = storage_manager.get_storage_path()
 
     # ---

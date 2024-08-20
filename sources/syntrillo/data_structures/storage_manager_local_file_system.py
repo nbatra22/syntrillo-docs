@@ -6,7 +6,7 @@ from typing import Tuple
 
 from syntrillo.helper_functions.time import convert_to_est
 
-class DataStructureStorageManager:
+class DataStructureStorageManagerLocalFileSystem:
     """
     Defines where the data structures are stored.
 
@@ -193,7 +193,7 @@ class DataStructureStorageManager:
 
 
 if __name__ == '__main__':
-    storage_manager = DataStructureStorageManager()
+    storage_manager = DataStructureStorageManagerLocalFileSystem()
 
     # print storage path
     print(storage_manager.storage_path)
