@@ -70,24 +70,24 @@
         <table class="compact-table">
             <tr>
                 <td>
-                    <form id="uploadAndValidateStructure" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_upload_and_validate_form') }}" method="POST" enctype="multipart/form-data">
+                    <form id="uploadAndValidateStructureDB" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_upload_and_validate_form') }}" method="POST" enctype="multipart/form-data">
                         <table>
                             <tr>
                                 <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
-                                    <button type="button" id="uploadAndValidateStructureButton" class="styled-button">Upload and validate</button>
+                                    <button type="button" id="uploadAndValidateStructureDBButton" class="styled-button">Upload and validate</button>
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
-                                    <span id="uploadAndValidateStructureLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                                    <span id="uploadAndValidateStructureSuccess" class="response-message"></span>
+                                    <span id="uploadAndValidateStructureDBLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="uploadAndValidateStructureDBSuccess" class="response-message"></span>
                                 </td>
                             </tr>
                             <tr>
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <label for="uploadAndValidateStructureFile" class="styled-label">Select File:</label>
+                                    <label for="uploadAndValidateStructureDBFile" class="styled-label">Select File:</label>
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
-                                    <input class="styled-file" type="file" name="file" id="uploadAndValidateStructureFile">
+                                    <input class="styled-file" type="file" name="file" id="uploadAndValidateStructureDBFile">
                                 </td>
                             </tr>
                             <tr>
@@ -118,7 +118,7 @@
                                 <p class="logs">Logs</p>
                             </td>
                             <td align="left">
-                                <textarea id="uploadAndValidateStructureTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                                <textarea id="uploadAndValidateStructureDBTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
                             </td>
                         </tr>
                     </table>

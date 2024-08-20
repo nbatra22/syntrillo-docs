@@ -158,79 +158,39 @@ def healthie_upload_and_validate_form():
     # -------------------------------------------------
     # ------- process the file ------------------------
 
-    # ---
-    #
-    storage_manager = DatabaseStorageManagerDatabase()
-
-    # get internal_name and version
-
-    # ---
-    # save the file
     filename = secure_filename(file.filename)
-    file_path = os.path.join(storage_file_path, filename)
 
-    # Check if file already exists and handle overwrite logic
-    if os.path.exists(file_path) and not allow_overwrite:
-        overall_log['success'] = False
-        overall_log['message'] = 'File already exists and overwriting is not allowed'
-        return jsonify(overall_log), 200
-
-    # Save the file to the storage path. Can overwrite existing file.
-    file.save(file_path)
+    # Read the file contents as bytes
+    file_bytes = file.read()
 
     # ---
     # initialize the structure handler
     xlxs_structure_handler = DataStructureXlsxQuestionnaireHandler()
 
     # ---
-    # Parse the xlsx file to JSON
-    # TODO: use file io instead of file path
-    json_data, log1 = xlxs_structure_handler.parse_xlsx_to_json(file_path)
+    # parse the xlsx file to JSON
+    json_data, log1 = xlxs_structure_handler.parse_xlsx_to_json(xlsx_file=file_bytes, xlsx_filename=filename)
+
     overall_log['log1'] = log1
 
     if not log1['success']:
         overall_log['success'] = False
-        # Delete the uploaded file
-        os.remove(file_path)
-        overall_log['message'] = "Failed to parse to JSON data. File deleted"
-        return jsonify( overall_log ), 200
+        overall_log['message'] = 'Error parsing the xlsx file'
+        return jsonify(overall_log), 200
+
+    overall_log['json_data'] = json_data
 
     # ---
-    # Remove .xlsx extension from filename
-    filename_without_ext = os.path.splitext(file_path)[0]
+    # Store the structure into the database
+    log2 = xlxs_structure_handler.store_json_structure_in_database(delete_existing=allow_overwrite)
 
-    # ---
-    # Store JSON data
-    log2 = xlxs_structure_handler.store_json_structure(json_data, structure_name=filename_without_ext)
     overall_log['log2'] = log2
 
     if not log2['success']:
         overall_log['success'] = False
-        # Delete the uploaded file
-        os.remove(file_path)
-        overall_log['message'] = "Failed to store JSON data. File deleted"
-        return jsonify( overall_log ), 200
+        overall_log['message'] = 'Error storing the structure in the database'
+        return jsonify(overall_log), 200
 
-    # ---
-    # build the form if requested
-    if build_charting_note:
-        healthie_manager = DataStructureQuestionnaireHealthieManager()
-        log3 = healthie_manager.create_healthie_form_from_structure(filename_without_ext)
-        overall_log['log3'] = log3
-
-        if not log3['success']:
-            overall_log['success'] = False
-            overall_log['message'] = "Failed to build the form"
-            return jsonify( overall_log ), 200
-        else:
-            overall_log['message'] = "File uploaded, stored and form built successfully"
-            # must reload the page
-            overall_log['must_reload'] = True
-
-    else:
-        overall_log['message'] = "File uploaded and stored successfully"
-        # must reload the page
-        overall_log['must_reload'] = True
 
     return jsonify( overall_log ), 200
 

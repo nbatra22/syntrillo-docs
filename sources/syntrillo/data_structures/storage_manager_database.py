@@ -201,7 +201,7 @@ class DatabaseStorageManagerDatabase:
             log['error'] = f"Data structure with ID '{id}' not found."
             return None, None, log
         else:
-            full_name = f"{result[1]}_{result[2]}.xlsx"
+            full_name = f"{result[1]}_v{result[2]}.xlsx"
             return result[0], full_name, log
 
 
@@ -248,6 +248,10 @@ class DatabaseStorageManagerDatabase:
         """
         Stores a data structure in the database.
 
+        Returns a log dictionary with the following keys:
+        - 'success': True if the data structure was successfully stored, False otherwise.
+        - 'messages': A list of messages detailing the operation.
+
         Args:
             - platform (str): The platform where the structure is used.
             - structure_name (str): The name of the structure to be stored.
@@ -255,6 +259,10 @@ class DatabaseStorageManagerDatabase:
             - data_structure (dict): The data structure to be stored into structure_json.
             - excel_file (bytes): The Excel file to be stored into the database.
             - delete_existing (bool): Whether to delete an existing structure with the same name and version.
+
+        Returns:
+            log (dict): A log dictionary
+
         """
         log = {
             'success': True,
@@ -293,10 +301,10 @@ class DatabaseStorageManagerDatabase:
             # store the structure and excel file
             query = f"""
             INSERT INTO {self.HEALTHIE_QUESTIONNAIRES_TABLE} (platform, name, version, structure_json, excel_file)
-            VALUES ('{platform}', '{structure_name}', '{structure_version}', '{structure_json}', %s)
+            VALUES (%s, %s, %s, %s, %s)
             """
             cursor = self.conn.cursor()
-            cursor.execute(query, (excel_file,))
+            cursor.execute(query, (platform, structure_name, structure_version, structure_json, excel_file))
             self.conn.commit()
             cursor.close()
         except pymysql.err.IntegrityError as e:
