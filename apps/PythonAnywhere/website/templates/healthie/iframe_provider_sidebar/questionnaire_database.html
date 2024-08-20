@@ -1,0 +1,351 @@
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/questionnaire_database.html -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Template and list of data structures
+</h2>
+<div class="collapsible-content">
+
+    <p>Blank template: <a target='_blank' href="{{ url_for('static', filename='healthie/documents/questionnaire_template_latest.xlsx') }}">Download latest Excel xlsx structure file template</a></p>
+
+    <p>Data structures available localy in the repository:</p>
+
+    <div class="table-container-data">
+        <table id="data-structure-db-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Version</th>
+                    <th>File from DB</th>
+                    <th>Created at (EST)</th>
+                    <th>Number of variables</th>
+                    <th>Type</th>
+                    <!-- <th>Description</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for structure in all_structures %}
+                    <tr>
+                        <td>{{ structure.metadata.name }}</td>
+                        <td>{{ structure.metadata.version }}</td>
+                        <td>
+                            <a target="_blank" href="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.download_questionnaire_from_database', id=structure.id) }}">xlsx</a>
+                        </td>
+                        <td>{{ structure.created_at_est }}</td>
+                        <td>{{ structure.number_of_variables }}</td>
+                        <td>{{ structure.metadata.type }}</td>
+                        <!-- <td>{{ structure.metadata.description }}</td> -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div> <!-- collapsible-content -->
+
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Upload and validate a data structure
+</h2>
+<div class="collapsible-content">
+
+    <p>Upload an Excel xlsx questionnaire file and validate its structure. When the file has been validated and uploaded to the database, its corresponding Form or Charting Note can be built automatically, or manually in the next section.</p>
+
+    <style>
+        /* Initially loading indicator and logs */
+        #uploadAndValidateStructureLoading {
+            display: none;
+        }
+        #uploadAndValidateStructureSuccess {
+            display: none;
+        }
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <form id="uploadAndValidateStructure" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_upload_and_validate_form') }}" method="POST" enctype="multipart/form-data">
+                        <table>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
+                                    <button type="button" id="uploadAndValidateStructureButton" class="styled-button">Upload and validate</button>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <span id="uploadAndValidateStructureLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="uploadAndValidateStructureSuccess" class="response-message"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <label for="uploadAndValidateStructureFile" class="styled-label">Select File:</label>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <input class="styled-file" type="file" name="file" id="uploadAndValidateStructureFile">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="build_charting_note" name="build_charting_note" value="yes" checked>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="build_charting_note" class="styled-label">Also Build the Questionnaire ( Charting Note or Form )</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="allow_overwrite" name="allow_overwrite" value="yes" checked>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="allow_overwrite" class="styled-label">Allow overwriting if database entry already exists</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="uploadAndValidateStructureTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div> <!-- collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Build questionnaire from a data structure
+</h2>
+<div class="collapsible-content">
+
+    <p>A new Healthie form (intake flow of charting note) is built from the selected structure.</p>
+
+    <p>Structures are JSON files located in the repository, derived from XLSX source files.</p>
+
+    <style>
+        /* Initially loading indicator and logs */
+        #questionnaireBuildFromDataStructureLoading {
+            display: none;
+        }
+        #questionnaireBuildFromDataStructureSuccess {
+            display: none;
+        }
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <form id="questionnaireBuildFromDataStructure" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_build_form_from_data_structure') }}" method="POST">
+                        <table>
+                            <tr>
+                                <td colspan="2">
+                                    <label for="questionnaireBuildFromDataStructureName" class="styled-label">Select Structure:</label>
+                                        <select name="structure_name" id="questionnaireBuildFromDataStructureName">
+                                            <!-- LIST ALL AVAILABLE STRUCTURES HERE -->
+                                            {% for structure in all_structures %}
+                                                <option value="{{ structure['structure_name'] }}">{{ structure['structure_name'] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
+                                    <button type="button" id="questionnaireBuildFromDataStructureButton" class="styled-button">Build questionnaire</button>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <span id="questionnaireBuildFromDataStructureLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="questionnaireBuildFromDataStructureSuccess" class="response-message"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="questionnaireBuildFromDataStructureTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div> <!-- collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    System logs
+</h2>
+<div class="collapsible-content">
+
+    <div>
+        <textarea class="monospace-small" rows="5" cols="100" readonly wrap="off" style="resize: both;">{{ logs }}</textarea>
+    </div>
+
+</div> <!-- collapsible-content -->
+
+
+<!-- ========================= SCRIPTS ============================ -->
+
+<script>
+    $(document).ready(function() {
+
+        // Initialize DataTable
+        $('#data-structure-db-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+
+        // allows to prevent multiple requests from being sent at the same time
+        let isQuestionnaireBuildFromDataStructureRunning = false;
+        let isUploadAndValidateStructureRunning = false;
+
+        // ========================= Upload and Validate a Data Structure ============================
+        $('#uploadAndValidateStructureButton').click(function() {
+
+            // Check if file is selected
+            if (!$('#uploadAndValidateStructureFile').val()) {
+                $('#uploadAndValidateStructureTextarea').val('Error: No file selected.');
+                $('#uploadAndValidateStructureSuccess').html('Error: No file selected.' );
+                $('#uploadAndValidateStructureSuccess').show();
+                return;
+            }
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isUploadAndValidateStructureRunning) return;
+            isUploadAndValidateStructureRunning = true;
+
+            // Hide or erase previous log and show loading indicator
+            $('#uploadAndValidateStructureTextarea').val('');
+            $('#uploadAndValidateStructureSuccess').hide();
+            $('#uploadAndValidateStructureLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#uploadAndValidateStructure').attr('action'),
+                type: 'POST',
+                data: new FormData($('#uploadAndValidateStructure')[0]),
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function(response) {
+                    // Update textarea with log message
+                    $('#uploadAndValidateStructureTextarea').val(JSON.stringify(response, null, 4));
+
+                    if (response.success) {
+                        if (response.must_reload) {
+
+                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your new addition (this page will reload).</b>');
+                            $('#uploadAndValidateStructureSuccess').show();
+
+                            setTimeout(function() {
+                                isUploadAndValidateStructureRunning = false;
+                                // reload this tab content
+                                loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+                            }, 8000);
+
+                        } else {
+                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your new addition.<b>');
+                            $('#uploadAndValidateStructureSuccess').show();
+                        }
+
+                    } else {
+                        $('#uploadAndValidateStructureSuccess').html('Error. See logs below.' );
+                        $('#uploadAndValidateStructureSuccess').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#uploadAndValidateStructureTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#uploadAndValidateStructureLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isUploadAndValidateStructureRunning = false;
+
+                }
+            });
+        });
+
+
+        // ========================= Build Questionnaire from Data Structure ============================
+        $('#questionnaireBuildFromDataStructureButton').click(function() {
+
+            // allows to prevent multiple requests from being sent at the same time
+            if (isQuestionnaireBuildFromDataStructureRunning) return;
+            isQuestionnaireBuildFromDataStructureRunning = true;
+
+            // Hide or erase previous log and show loading indicator
+            $('#questionnaireBuildFromDataStructureTextarea').val('');
+            $('#questionnaireBuildFromDataStructureSuccess').hide();
+            $('#questionnaireBuildFromDataStructureLoading').show();
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#questionnaireBuildFromDataStructure').attr('action'),
+                type: 'POST',
+                data: $('#questionnaireBuildFromDataStructure').serialize(),
+                success: function(response) {
+                    // Update textarea with log message
+                    $('#questionnaireBuildFromDataStructureTextarea').val(JSON.stringify(response, null, 4));
+
+                    if (response.success) {
+                        $('#questionnaireBuildFromDataStructureSuccess').html('Success');
+                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                    } else {
+                        $('#questionnaireBuildFromDataStructureSuccess').html('Error. See logs below.' );
+                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Log AJAX error to console
+                    $('#questionnaireBuildFromDataStructureTextarea').val('Error: ' + error); // Display error message in textarea
+                },
+                complete: function() {
+                    // Hide loading indicator after AJAX completes (whether success or error)
+                    $('#questionnaireBuildFromDataStructureLoading').hide();
+                    $('body').removeClass('loading'); // Remove loading cursor
+
+                    // allows to prevent multiple requests from being sent at the same time
+                    isQuestionnaireBuildFromDataStructureRunning = false;
+
+                }
+            });
+        });
+    });
+</script>

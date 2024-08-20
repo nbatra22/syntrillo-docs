@@ -40,6 +40,9 @@
         <li class="nav-item">
             <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaires</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-questionnaire-database-tab" data-toggle="tab" href="#tab-questionnaire-database" role="tab" aria-controls="tab-questionnaire-database" aria-selected="false">Questionnaires DB</a>
+        </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
@@ -48,6 +51,7 @@
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
         <div class="tab-pane fade" id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-questionnaire-tab"></div>
+        <div class="tab-pane fade" id="tab-questionnaire-database" role="tabpanel" aria-labelledby="tab-questionnaire-database-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
     </div>
 </div>
@@ -122,6 +126,7 @@
 
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_database_bp.iframe_healthie_provider_sidebar_questionnaire_database") }}', '#tab-questionnaire-database');
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_system_bp.iframe_healthie_provider_sidebar_system") }}', '#tab-system');
     });
 </script>
