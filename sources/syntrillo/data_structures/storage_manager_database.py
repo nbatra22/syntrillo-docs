@@ -251,6 +251,7 @@ class DatabaseStorageManagerDatabase:
         Returns a log dictionary with the following keys:
         - 'success': True if the data structure was successfully stored, False otherwise.
         - 'messages': A list of messages detailing the operation.
+        - 'structure_id': The ID of the stored structure.
 
         Args:
             - platform (str): The platform where the structure is used.
@@ -306,6 +307,8 @@ class DatabaseStorageManagerDatabase:
             cursor = self.conn.cursor()
             cursor.execute(query, (platform, structure_name, structure_version, structure_json, excel_file))
             self.conn.commit()
+            # Retrieve the id of the newly inserted row
+            log['structure_id'] = int(cursor.lastrowid)
             cursor.close()
         except pymysql.err.IntegrityError as e:
             log['success'] = False

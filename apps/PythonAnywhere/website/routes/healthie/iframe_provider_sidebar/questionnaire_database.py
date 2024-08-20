@@ -178,8 +178,6 @@ def healthie_upload_and_validate_form():
         overall_log['message'] = 'Error parsing the xlsx file'
         return jsonify(overall_log), 200
 
-    overall_log['json_data'] = json_data
-
     # ---
     # Store the structure into the database
     log2 = xlxs_structure_handler.store_json_structure_in_database(delete_existing=allow_overwrite)
@@ -191,6 +189,26 @@ def healthie_upload_and_validate_form():
         overall_log['message'] = 'Error storing the structure in the database'
         return jsonify(overall_log), 200
 
+    # ---
+    # build the form if requested
+    if build_charting_note:
+        healthie_manager = DataStructureQuestionnaireHealthieManager()
+        log3 = healthie_manager.create_healthie_form_from_structure_id(log2['structure_id'])
+        overall_log['log3'] = log3
+
+        if not log3['success']:
+            overall_log['success'] = False
+            overall_log['message'] = "Failed to build the form"
+            return jsonify( overall_log ), 200
+        else:
+            overall_log['message'] = "File uploaded, stored and form built successfully"
+            # must reload the page
+            overall_log['must_reload'] = True
+
+    else:
+        overall_log['message'] = "File uploaded and stored successfully"
+        # must reload the page
+        overall_log['must_reload'] = True
 
     return jsonify( overall_log ), 200
 

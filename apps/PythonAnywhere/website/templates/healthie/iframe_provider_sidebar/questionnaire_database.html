@@ -154,12 +154,12 @@
         <table class="compact-table">
             <tr>
                 <td>
-                    <form id="questionnaireBuildFromDataStructure" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_build_form_from_data_structure') }}" method="POST">
+                    <form id="questionnaireBuildFromDataStructureDB" action="{{ url_for('iframe_healthie_provider_sidebar_questionnaire_database_bp.healthie_build_form_from_data_structure') }}" method="POST">
                         <table>
                             <tr>
                                 <td colspan="2">
-                                    <label for="questionnaireBuildFromDataStructureID" class="styled-label">Select Structure:</label>
-                                        <select name="structure_id" id="questionnaireBuildFromDataStructureID">
+                                    <label for="questionnaireBuildFromDataStructureDBID" class="styled-label">Select Structure:</label>
+                                        <select name="structure_id" id="questionnaireBuildFromDataStructureDBID">
                                             {% for structure in all_structures %}
                                                 <option value="{{ structure['id'] }}">
                                                     {{ structure['structure_name'] }}
@@ -173,11 +173,11 @@
                             <tr>
                                 <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
-                                    <button type="button" id="questionnaireBuildFromDataStructureButton" class="styled-button">Build questionnaire</button>
+                                    <button type="button" id="questionnaireBuildFromDataStructureDBButton" class="styled-button">Build questionnaire</button>
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
-                                    <span id="questionnaireBuildFromDataStructureLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                                    <span id="questionnaireBuildFromDataStructureSuccess" class="response-message"></span>
+                                    <span id="questionnaireBuildFromDataStructureDBLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="questionnaireBuildFromDataStructureDBSuccess" class="response-message"></span>
                                 </td>
                             </tr>
                         </table>
@@ -192,7 +192,7 @@
                                 <p class="logs">Logs:</p>
                             </td>
                             <td align="left">
-                                <textarea id="questionnaireBuildFromDataStructureTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                                <textarea id="questionnaireBuildFromDataStructureDBTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
                             </td>
                         </tr>
                     </table>
