@@ -5,7 +5,8 @@ import json
 import html
 import os
 import ast
-from typing import Tuple
+import io
+from typing import Union, Tuple
 from glob import glob
 from datetime import datetime, timezone
 
@@ -96,7 +97,7 @@ class DataStructureXlsxQuestionnaireHandler:
             return value  # Return the original value if it's not NaN
 
 
-    def parse_xlsx_to_json(self, xlsx_file_name: str) -> Tuple[dict, dict]:
+    def parse_xlsx_to_json(self, xlsx_file: Union[str, bytes]) -> Tuple[dict, dict]:
         """
         Excel to JSON parser.
 
@@ -110,14 +111,17 @@ class DataStructureXlsxQuestionnaireHandler:
 
         It works with xls and xlsx files, but xlsx files prefered because of compatibility with Google ecosystem
 
-        Args:
-            xlsx_file_name (str): the Excel filename to be found in ./storage
-
-        Returns:
+        It returns a tuple with two elements:
         - dict: JSON data structure with metadata and variables
         - log: Log dictionary with the following keys
             - 'success': True if the Excel file was successfully parsed, False otherwise.
             - 'error': An error message if an error occurred, None otherwise.
+
+        Args:
+            xlsx_file (str|bytes): the Excel filename to be found in ./storage or the content of the file as bytes if coming from the database.
+
+        Returns:
+            data_structure,log (dict, dict): The data structure as a dictionary and a log dictionary.
 
         """
 
@@ -125,8 +129,18 @@ class DataStructureXlsxQuestionnaireHandler:
             'success': True,
         }
 
-        # Construct full path to the Excel file
-        xlsx_file_path = os.path.join(self.storage_manager_local_file_system.storage_path, xlsx_file_name)
+        # --------------------------------
+        # manage the input xlsx_file
+        if isinstance(xlsx_file, str):
+            # if xlsx_file is string, it is a filename
+            xlsx_file_io = os.path.join(self.storage_manager_local_file_system.storage_path, xlsx_file)
+        elif isinstance(xlsx_file, bytes):
+            # if xlsx_file is bytes, it is the content of the file
+            xlsx_file_io = io.BytesIO(xlsx_file)
+        else:
+            log['success'] = False
+            log['error'] = f"Excel file is not a string or bytes"
+            return None, log
 
         # --------------------------------
         # Load Excel file -- metadata tab
@@ -135,10 +149,10 @@ class DataStructureXlsxQuestionnaireHandler:
         # ---
         # Check if the Excel file exists and load the metadata tab
         try:
-            xls_metadata = pd.read_excel(xlsx_file_path, sheet_name='metadata', na_values=['', 'NaN'], header=None)
+            xls_metadata = pd.read_excel(io = xlsx_file_io, sheet_name='metadata', na_values=['', 'NaN'], header=None)
         except FileNotFoundError:
             log['success'] = False
-            log['error'] = f"Excel file '{xlsx_file_path}' not found."
+            log['error'] = f"Excel file not found."
             return None, log
         except Exception as e:
             log['success'] = False
@@ -164,7 +178,7 @@ class DataStructureXlsxQuestionnaireHandler:
         for key in expected_keys:
             if key not in metadata_dict:
                 log['success'] = False
-                log['error'] = f"Key '{key}' not found in metadata tab of Excel file '{xlsx_file_name}'"
+                log['error'] = f"Key '{key}' not found in metadata tab of Excel file '{xlsx_file}'"
                 return None, log
 
         # ---
@@ -172,7 +186,7 @@ class DataStructureXlsxQuestionnaireHandler:
         #  : version is for example '0.1' , and file name is 'onboarding_v0.1.xlsx'
         version = metadata_dict['version']
         # get the version from the filename : string betwen '_v' and '.xlsx'
-        version_from_filename = xlsx_file_name.split('_v')[1].split('.xlsx')[0]
+        version_from_filename = xlsx_file.split('_v')[1].split('.xlsx')[0]
         if version != version_from_filename:
             log['success'] = False
             log['error'] = f"Version '{version}' in metadata tab does not match the version in the filename '{version_from_filename}'"
@@ -192,7 +206,7 @@ class DataStructureXlsxQuestionnaireHandler:
             use_for_program = True
         else:
             log['success'] = False
-            log['error'] = f"Type '{metadata_dict.get('type')}' not recognized for Excel file '{xlsx_file_name}'"
+            log['error'] = f"Type '{metadata_dict.get('type')}' not recognized for Excel file '{xlsx_file}'"
 
         # store the use_for_charting and use_for_program in the metadata
         metadata_dict['use_for_charting'] = use_for_charting
@@ -220,10 +234,10 @@ class DataStructureXlsxQuestionnaireHandler:
         # --------------------------------
         # Load Excel file -- variables tab
         try:
-            xls_variables = pd.read_excel(xlsx_file_path, sheet_name='variables', na_values=['', 'NaN'])
+            xls_variables = pd.read_excel(xlsx_file_io, sheet_name='variables', na_values=['', 'NaN'])
         except FileNotFoundError:
             log['success'] = False
-            log['error'] = f"Excel file '{xlsx_file_path}' not found."
+            log['error'] = f"Excel file not found."
             return None, log
         except Exception as e:
             log['success'] = False
@@ -248,7 +262,7 @@ class DataStructureXlsxQuestionnaireHandler:
         for column in expected_columns:
             if column not in xls_variables.columns:
                 log['success'] = False
-                log['error'] = f"Column '{column}' not found in variables tab of Excel file '{xlsx_file_name}'"
+                log['error'] = f"Column '{column}' not found in variables tab of Excel file "
 
         # ---
         # Replace NaN values with None in the DataFrame

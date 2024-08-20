@@ -58,10 +58,10 @@
 
     <style>
         /* Initially loading indicator and logs */
-        #uploadAndValidateStructureLoading {
+        #uploadAndValidateStructureDBLoading {
             display: none;
         }
-        #uploadAndValidateStructureSuccess {
+        #uploadAndValidateStructureDBSuccess {
             display: none;
         }
     </style>
@@ -142,10 +142,10 @@
 
     <style>
         /* Initially loading indicator and logs */
-        #questionnaireBuildFromDataStructureLoading {
+        #questionnaireBuildFromDataStructureDBLoading {
             display: none;
         }
-        #questionnaireBuildFromDataStructureSuccess {
+        #questionnaireBuildFromDataStructureDBSuccess {
             display: none;
         }
     </style>
@@ -158,11 +158,14 @@
                         <table>
                             <tr>
                                 <td colspan="2">
-                                    <label for="questionnaireBuildFromDataStructureName" class="styled-label">Select Structure:</label>
-                                        <select name="structure_name" id="questionnaireBuildFromDataStructureName">
-                                            <!-- LIST ALL AVAILABLE STRUCTURES HERE -->
+                                    <label for="questionnaireBuildFromDataStructureID" class="styled-label">Select Structure:</label>
+                                        <select name="structure_id" id="questionnaireBuildFromDataStructureID">
                                             {% for structure in all_structures %}
-                                                <option value="{{ structure['structure_name'] }}">{{ structure['structure_name'] }}</option>
+                                                <option value="{{ structure['id'] }}">
+                                                    {{ structure['structure_name'] }}
+                                                    - Version {{ structure['structure_version'] }}
+                                                    ( {{ structure['platform'] }} )
+                                                </option>
                                             {% endfor %}
                                         </select>
                                 </td>
@@ -229,74 +232,74 @@
         });
 
         // allows to prevent multiple requests from being sent at the same time
-        let isQuestionnaireBuildFromDataStructureRunning = false;
-        let isUploadAndValidateStructureRunning = false;
+        let isQuestionnaireBuildFromDataStructureDBRunning = false;
+        let isUploadAndValidateStructureDBRunning = false;
 
         // ========================= Upload and Validate a Data Structure ============================
-        $('#uploadAndValidateStructureButton').click(function() {
+        $('#uploadAndValidateStructureDBButton').click(function() {
 
             // Check if file is selected
-            if (!$('#uploadAndValidateStructureFile').val()) {
-                $('#uploadAndValidateStructureTextarea').val('Error: No file selected.');
-                $('#uploadAndValidateStructureSuccess').html('Error: No file selected.' );
-                $('#uploadAndValidateStructureSuccess').show();
+            if (!$('#uploadAndValidateStructureDBFile').val()) {
+                $('#uploadAndValidateStructureDBTextarea').val('Error: No file selected.');
+                $('#uploadAndValidateStructureDBSuccess').html('Error: No file selected.' );
+                $('#uploadAndValidateStructureDBSuccess').show();
                 return;
             }
 
             // allows to prevent multiple requests from being sent at the same time
-            if (isUploadAndValidateStructureRunning) return;
-            isUploadAndValidateStructureRunning = true;
+            if (isUploadAndValidateStructureDBRunning) return;
+            isUploadAndValidateStructureDBRunning = true;
 
             // Hide or erase previous log and show loading indicator
-            $('#uploadAndValidateStructureTextarea').val('');
-            $('#uploadAndValidateStructureSuccess').hide();
-            $('#uploadAndValidateStructureLoading').show();
+            $('#uploadAndValidateStructureDBTextarea').val('');
+            $('#uploadAndValidateStructureDBSuccess').hide();
+            $('#uploadAndValidateStructureDBLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
 
             $.ajax({
-                url: $('#uploadAndValidateStructure').attr('action'),
+                url: $('#uploadAndValidateStructureDB').attr('action'),
                 type: 'POST',
-                data: new FormData($('#uploadAndValidateStructure')[0]),
+                data: new FormData($('#uploadAndValidateStructureDB')[0]),
                 contentType: false,
                 cache: false,
                 processData: false,
                 success: function(response) {
                     // Update textarea with log message
-                    $('#uploadAndValidateStructureTextarea').val(JSON.stringify(response, null, 4));
+                    $('#uploadAndValidateStructureDBTextarea').val(JSON.stringify(response, null, 4));
 
                     if (response.success) {
                         if (response.must_reload) {
 
-                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your new addition (this page will reload).</b>');
-                            $('#uploadAndValidateStructureSuccess').show();
+                            $('#uploadAndValidateStructureDBSuccess').html('<b>Success! - Go to Forms to see your new addition (this page will reload).</b>');
+                            $('#uploadAndValidateStructureDBSuccess').show();
 
                             setTimeout(function() {
-                                isUploadAndValidateStructureRunning = false;
+                                isUploadAndValidateStructureDBRunning = false;
                                 // reload this tab content
-                                loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+                                loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_database_bp.iframe_healthie_provider_sidebar_questionnaire_database") }}', '#tab-questionnaire-database');
                             }, 8000);
 
                         } else {
-                            $('#uploadAndValidateStructureSuccess').html('<b>Success! - Go to Forms to see your new addition.<b>');
-                            $('#uploadAndValidateStructureSuccess').show();
+                            $('#uploadAndValidateStructureDBSuccess').html('<b>Success! - Go to Forms to see your new addition.<b>');
+                            $('#uploadAndValidateStructureDBSuccess').show();
                         }
 
                     } else {
-                        $('#uploadAndValidateStructureSuccess').html('Error. See logs below.' );
-                        $('#uploadAndValidateStructureSuccess').show();
+                        $('#uploadAndValidateStructureDBSuccess').html('Error. See logs below.' );
+                        $('#uploadAndValidateStructureDBSuccess').show();
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error); // Log AJAX error to console
-                    $('#uploadAndValidateStructureTextarea').val('Error: ' + error); // Display error message in textarea
+                    $('#uploadAndValidateStructureDBTextarea').val('Error: ' + error); // Display error message in textarea
                 },
                 complete: function() {
                     // Hide loading indicator after AJAX completes (whether success or error)
-                    $('#uploadAndValidateStructureLoading').hide();
+                    $('#uploadAndValidateStructureDBLoading').hide();
                     $('body').removeClass('loading'); // Remove loading cursor
 
                     // allows to prevent multiple requests from being sent at the same time
-                    isUploadAndValidateStructureRunning = false;
+                    isUploadAndValidateStructureDBRunning = false;
 
                 }
             });
@@ -304,45 +307,45 @@
 
 
         // ========================= Build Questionnaire from Data Structure ============================
-        $('#questionnaireBuildFromDataStructureButton').click(function() {
+        $('#questionnaireBuildFromDataStructureDBButton').click(function() {
 
             // allows to prevent multiple requests from being sent at the same time
-            if (isQuestionnaireBuildFromDataStructureRunning) return;
-            isQuestionnaireBuildFromDataStructureRunning = true;
+            if (isQuestionnaireBuildFromDataStructureDBRunning) return;
+            isQuestionnaireBuildFromDataStructureDBRunning = true;
 
             // Hide or erase previous log and show loading indicator
-            $('#questionnaireBuildFromDataStructureTextarea').val('');
-            $('#questionnaireBuildFromDataStructureSuccess').hide();
-            $('#questionnaireBuildFromDataStructureLoading').show();
+            $('#questionnaireBuildFromDataStructureDBTextarea').val('');
+            $('#questionnaireBuildFromDataStructureDBSuccess').hide();
+            $('#questionnaireBuildFromDataStructureDBLoading').show();
             $('body').addClass('loading'); // Apply loading cursor
 
             $.ajax({
-                url: $('#questionnaireBuildFromDataStructure').attr('action'),
+                url: $('#questionnaireBuildFromDataStructureDB').attr('action'),
                 type: 'POST',
-                data: $('#questionnaireBuildFromDataStructure').serialize(),
+                data: $('#questionnaireBuildFromDataStructureDB').serialize(),
                 success: function(response) {
                     // Update textarea with log message
-                    $('#questionnaireBuildFromDataStructureTextarea').val(JSON.stringify(response, null, 4));
+                    $('#questionnaireBuildFromDataStructureDBTextarea').val(JSON.stringify(response, null, 4));
 
                     if (response.success) {
-                        $('#questionnaireBuildFromDataStructureSuccess').html('Success');
-                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                        $('#questionnaireBuildFromDataStructureDBSuccess').html('Success');
+                        $('#questionnaireBuildFromDataStructureDBSuccess').show();
                     } else {
-                        $('#questionnaireBuildFromDataStructureSuccess').html('Error. See logs below.' );
-                        $('#questionnaireBuildFromDataStructureSuccess').show();
+                        $('#questionnaireBuildFromDataStructureDBSuccess').html('Error. See logs below.' );
+                        $('#questionnaireBuildFromDataStructureDBSuccess').show();
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error); // Log AJAX error to console
-                    $('#questionnaireBuildFromDataStructureTextarea').val('Error: ' + error); // Display error message in textarea
+                    $('#questionnaireBuildFromDataStructureDBTextarea').val('Error: ' + error); // Display error message in textarea
                 },
                 complete: function() {
                     // Hide loading indicator after AJAX completes (whether success or error)
-                    $('#questionnaireBuildFromDataStructureLoading').hide();
+                    $('#questionnaireBuildFromDataStructureDBLoading').hide();
                     $('body').removeClass('loading'); // Remove loading cursor
 
                     // allows to prevent multiple requests from being sent at the same time
-                    isQuestionnaireBuildFromDataStructureRunning = false;
+                    isQuestionnaireBuildFromDataStructureDBRunning = false;
 
                 }
             });

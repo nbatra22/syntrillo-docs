@@ -89,8 +89,6 @@ def healthie_build_form_from_data_structure():
 
     It is called by a button on the Provider extra sidebar pane
 
-    TODO : use structure id instead of structure name
-
     """
 
     # Retrieve the JSON data from the POST request
@@ -98,13 +96,15 @@ def healthie_build_form_from_data_structure():
 
     # --------------------------------------------------------
 
-    structure_name = data_post_request.get('structure_name')
+    # this id is the id of the structure in the database
+    # which has unique(platform, name, version)
+    structure_id = data_post_request.get('structure_id')
 
     # Initialize the Healthie manager
     healthie_manager = DataStructureQuestionnaireHealthieManager()
 
     # create_healthie_form_from_structure
-    log = healthie_manager.create_healthie_form_from_structure(structure_name)
+    log = healthie_manager.create_healthie_form_from_structure_id(structure_id)
 
     return jsonify( log ), 200
 
@@ -159,9 +159,10 @@ def healthie_upload_and_validate_form():
     # ------- process the file ------------------------
 
     # ---
-    # get the storage path
-    storage_manager = DataStructureStorageManagerLocalFileSystem()
-    storage_file_path = storage_manager.get_storage_path()
+    #
+    storage_manager = DatabaseStorageManagerDatabase()
+
+    # get internal_name and version
 
     # ---
     # save the file
@@ -183,6 +184,7 @@ def healthie_upload_and_validate_form():
 
     # ---
     # Parse the xlsx file to JSON
+    # TODO: use file io instead of file path
     json_data, log1 = xlxs_structure_handler.parse_xlsx_to_json(file_path)
     overall_log['log1'] = log1
 

@@ -99,7 +99,7 @@ class DatabaseStorageManagerDatabase:
             'success': True,
         }
         query = f"""
-        SELECT variables_json
+        SELECT structure_json
         FROM {self.HEALTHIE_QUESTIONNAIRES_TABLE}
         WHERE platform = '{platform}' AND name = '{structure_name}' AND version = '{structure_version}'
         """
@@ -114,8 +114,8 @@ class DatabaseStorageManagerDatabase:
             return None, log
         else:
             try:
-                variables_json = json.loads(result[0])
-                return variables_json, log
+                structure_json = json.loads(result[0])
+                return structure_json, log
             except json.JSONDecodeError as e:
                 log['success'] = False
                 log['error'] = f"Error decoding JSON data: {str(e)}"
@@ -143,7 +143,7 @@ class DatabaseStorageManagerDatabase:
             'error': None
         }
         query = f"""
-        SELECT variables_json FROM {self.HEALTHIE_QUESTIONNAIRES_TABLE}
+        SELECT structure_json FROM {self.HEALTHIE_QUESTIONNAIRES_TABLE}
         WHERE id = %s
         """
         cursor = self.conn.cursor()
@@ -157,8 +157,8 @@ class DatabaseStorageManagerDatabase:
             return None, log
         else:
             try:
-                variables_json = json.loads(result[0])
-                return variables_json, log
+                structure_json = json.loads(result[0])
+                return structure_json, log
             except json.JSONDecodeError as e:
                 log['success'] = False
                 log['error'] = f"Error decoding JSON data: {str(e)}"
@@ -213,15 +213,15 @@ class DatabaseStorageManagerDatabase:
         Returns:
         - List[dict]: List of dictionaries with metadata information.
         """
-        query = f"SELECT id, platform, name, version, variables_json FROM {self.HEALTHIE_QUESTIONNAIRES_TABLE}"
+        query = f"SELECT id, platform, name, version, structure_json FROM {self.HEALTHIE_QUESTIONNAIRES_TABLE}"
         cursor = self.conn.cursor()
         cursor.execute(query)
         results = cursor.fetchall()
         cursor.close()
 
         structure_list = []
-        for id, platform, name, version, variables_json in results:
-            json_data = json.loads(variables_json)
+        for id, platform, name, version, structure_json in results:
+            json_data = json.loads(structure_json)
             metadata = json_data.get('metadata', {})
             structure_list.append({
                 'id': id,
@@ -252,7 +252,7 @@ class DatabaseStorageManagerDatabase:
             - platform (str): The platform where the structure is used.
             - structure_name (str): The name of the structure to be stored.
             - structure_version (str): The version of the structure to be stored.
-            - data_structure (dict): The data structure to be stored into variables_json.
+            - data_structure (dict): The data structure to be stored into structure_json.
             - excel_file (bytes): The Excel file to be stored into the database.
             - delete_existing (bool): Whether to delete an existing structure with the same name and version.
         """
@@ -287,13 +287,13 @@ class DatabaseStorageManagerDatabase:
             log['error'] = "Data structure must include items."
             return log
 
-        variables_json = json.dumps(data_structure)
+        structure_json = json.dumps(data_structure)
 
         try:
             # store the structure and excel file
             query = f"""
-            INSERT INTO {self.HEALTHIE_QUESTIONNAIRES_TABLE} (platform, name, version, variables_json, excel_file)
-            VALUES ('{platform}', '{structure_name}', '{structure_version}', '{variables_json}', %s)
+            INSERT INTO {self.HEALTHIE_QUESTIONNAIRES_TABLE} (platform, name, version, structure_json, excel_file)
+            VALUES ('{platform}', '{structure_name}', '{structure_version}', '{structure_json}', %s)
             """
             cursor = self.conn.cursor()
             cursor.execute(query, (excel_file,))
