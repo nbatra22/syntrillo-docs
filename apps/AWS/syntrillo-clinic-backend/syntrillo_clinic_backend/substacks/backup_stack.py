@@ -25,10 +25,10 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class SyntrilloClinicBackupStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, efs_file_system, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, database: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.efs_file_system = efs_file_system
+        self.database = database
 
         backup_vault = backup.BackupVault(
             self, "BackupVault",
@@ -38,7 +38,7 @@ class SyntrilloClinicBackupStack(Stack):
 
         backup_plan = backup.BackupPlan(
             self, "BackupPlan",
-            backup_plan_name="syntrillo-clinic-backup-plan",
+            backup_plan_name="syntrillo-clinic-rds-backup-plan",
             backup_vault=backup_vault
         )
 
@@ -55,9 +55,21 @@ class SyntrilloClinicBackupStack(Stack):
                 )
         )
 
+        # backup_rule = backup_plan.add_rule(
+        #     backup.BackupPlanRule(
+        #         rule_name="CopyToAnotherAccount",
+        #         copy_actions=[
+        #             backup.BackupPlanCopyActionProps(
+        #                 destination_backup_vault_arn='arn:aws:backup:us-east-1:058264215756:backup-vault:syntrillo-clinic-prod-copy-vault',
+        #                 copy_action_name="CopyToAnotherAccount"
+        #             )
+        #         ]
+        #     )
+        # )
+
         backup_plan.add_selection(
-            "EfsBackup",
+            "MySQLDatabaseFromSnaphotBackup",
             resources=[
-                backup.BackupResource.from_efs_file_system(self.efs_file_system)
+                backup.BackupResource.from_rds_database_instance(self.database.db_from_snapshot)
             ]
         )
