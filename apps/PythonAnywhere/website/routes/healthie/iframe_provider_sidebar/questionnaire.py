@@ -94,7 +94,7 @@ def download_questionnaire_from_storage(filename):
 
     # Ensure that the file exists in the directory
     if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
+        return send_file(file_path, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     else:
         abort(404)  # File not found
 
