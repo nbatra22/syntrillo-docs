@@ -63,7 +63,7 @@ class HealthInformationTablesManager:
             -- mediumblob : up to 16MB
             excel_file                  MEDIUMBLOB DEFAULT NULL,
             date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
-            INDEX (name)
+            UNIQUE (platform, name, version)
         );
         """,
     }

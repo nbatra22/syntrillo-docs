@@ -9,7 +9,7 @@ from typing import Tuple
 from glob import glob
 from datetime import datetime, timezone
 
-from syntrillo.data_structures.storage_manager import DataStructureStorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
 
 
 class DataStructureXlsxQuestionnaireHandler:
@@ -56,8 +56,9 @@ class DataStructureXlsxQuestionnaireHandler:
 
 
     def __init__(self):
+        # TODO : parameter to decide on which storage manager to use ?
         # instantiate the storage manager
-        self.storage_manager = DataStructureStorageManager()
+        self.storage_manager_local_file_system = DataStructureStorageManagerLocalFileSystem()
 
     @staticmethod
     def parse_comma_separated_string(s: str) -> list:
@@ -125,7 +126,7 @@ class DataStructureXlsxQuestionnaireHandler:
         }
 
         # Construct full path to the Excel file
-        xlsx_file_path = os.path.join(self.storage_manager.storage_path, xlsx_file_name)
+        xlsx_file_path = os.path.join(self.storage_manager_local_file_system.storage_path, xlsx_file_name)
 
         # --------------------------------
         # Load Excel file -- metadata tab
@@ -459,7 +460,7 @@ class DataStructureXlsxQuestionnaireHandler:
 
         """
 
-        log = self.storage_manager.store_structure(structure_name, json_data)
+        log = self.storage_manager_local_file_system.store_structure(structure_name, json_data)
 
         return log
 
@@ -475,7 +476,7 @@ class DataStructureXlsxQuestionnaireHandler:
             - 'error': An error message if an error occurred, None otherwise.
         """
 
-        structure, log = self.storage_manager.retrieve_structure(structure_name)
+        structure, log = self.storage_manager_local_file_system.retrieve_structure(structure_name)
 
         return structure, log
 
@@ -495,7 +496,7 @@ class DataStructureXlsxQuestionnaireHandler:
         }
 
         # Loop through all .xlsx files in storage_path
-        for filename in glob(os.path.join(self.storage_manager.storage_path, '*.xlsx')):
+        for filename in glob(os.path.join(self.storage_manager_local_file_system.storage_path, '*.xlsx')):
             # Parse XLSX file to JSON
             json_data, parse_log = self.parse_xlsx_to_json(filename)
 

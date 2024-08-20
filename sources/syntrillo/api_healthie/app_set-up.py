@@ -4,7 +4,7 @@
 from syntrillo.api_healthie.auth import HealthieAuth
 
 from syntrillo.data_structures.data_structure import DataStructure
-from syntrillo.data_structures.storage_manager import StorageManager
+from syntrillo.data_structures.storage_manager_local_file_system import StorageManager
 
 class HealthieAppSetup():
     """

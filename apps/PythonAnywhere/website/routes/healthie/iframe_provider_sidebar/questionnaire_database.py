@@ -1,24 +1,24 @@
-# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/questionnaire.py
+# Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/questionnaire_database.py
 
 from flask import Blueprint, render_template, request, jsonify, send_file, abort
 
 import json
 import os
+import io
 
 from werkzeug.utils import secure_filename
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
+from syntrillo.data_structures.storage_manager_database import DatabaseStorageManagerDatabase
 from syntrillo.data_structures.questionnaire_healthie_manager import DataStructureQuestionnaireHealthieManager
-from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.data_structures.xlsx_questionnaire_handler import DataStructureXlsxQuestionnaireHandler
 
-iframe_healthie_provider_sidebar_questionnaire_bp = Blueprint('iframe_healthie_provider_sidebar_questionnaire_bp', __name__)
+iframe_healthie_provider_sidebar_questionnaire_database_bp = Blueprint('iframe_healthie_provider_sidebar_questionnaire_database_bp', __name__)
 
 # ========================= HTML PAGE ==========================
 
-@iframe_healthie_provider_sidebar_questionnaire_bp.route('/healthie/iframe_provider_sidebar/questionnaire', methods=['POST'])
-def iframe_healthie_provider_sidebar_questionnaire():
+@iframe_healthie_provider_sidebar_questionnaire_database_bp.route('/healthie/iframe_provider_sidebar/questionnaire_database', methods=['POST'])
+def iframe_healthie_provider_sidebar_questionnaire_database():
     """
     This endpoint is used to display the questionnaire page in the provider sidebar iframe.
     It is called by the healthie_iframe_provider_sidebar index.html
@@ -31,72 +31,47 @@ def iframe_healthie_provider_sidebar_questionnaire():
     logs = []
 
     # Initialize StorageManager to access available data structures
-    manager = DataStructureStorageManagerLocalFileSystem()
+    manager = DatabaseStorageManagerDatabase()
     all_structures = manager.list_all_structures_with_metadata()
 
     # ---
-    # create a storage_symlink in the static/healthie/documents/storage folder to the storage path and use it in the template
-    source_path = manager.get_storage_path()
-    logs.append(f"source_path: {source_path}")
-
-    # static_path is the path to the documents folder in the static folder from this python script
-    static_path = os.path.join(os.path.dirname(__file__), '../../../static/healthie/documents/')
-    logs.append(f"static_path: {static_path}")
-
-    # if this path exists creates a symlink to the storage path
-    symlink_available = False
-    if os.path.exists(static_path):
-        logs.append(f"static_path exists")
-        try:
-            symlink_destination_path = os.path.join(static_path, 'storage_symlink')
-            # test if the symlink exists
-            if not os.path.exists(symlink_destination_path):
-                # src: This is the source file path for which the symbolic link will be created.
-                # dst: This is the target file path where symbolic link will be created.
-                os.symlink(dst=symlink_destination_path, src=source_path, target_is_directory=True)
-                logs.append(f"symlink created")
-            else:
-                logs.append(f"symlink already exists")
-            symlink_available = True
-            logs.append(f"symlink_available: {symlink_available}")
-        except Exception as e:
-            logs.append(f"Error creating symlink: {e}")
-            symlink_available = False
-    else:
-        logs.append(f"Error: static_path does not exist")
-        symlink_available = False
-
-    # ---
     return render_template(
-        'healthie/iframe_provider_sidebar/questionnaire.html',
+        'healthie/iframe_provider_sidebar/questionnaire_database.html',
         healthie_provider_id=healthie_provider_id,
         all_structures=all_structures,
-        symlink_available=symlink_available,
         logs=json.dumps(logs, indent=4, default=str),
         )
 
 # ========================= DOWNLOAD ENDPOINT ==========================
 
-@iframe_healthie_provider_sidebar_questionnaire_bp.route('/download/questionnaire_from_storage/<filename>')
-def download_questionnaire_from_storage(filename):
+@iframe_healthie_provider_sidebar_questionnaire_database_bp.route('/download/questionnaire_from_database/<id>')
+def download_questionnaire_from_database(id):
     """
-    This endpoint is used to download a questionnaire file from the storage folder.
+    This endpoint is used to download a questionnaire file from the database.
 
     Args:
-        filename (str): The name of the file to download.
+        id (int): The id of the questionnaire to download.
 
     """
 
-    # get the full file path
-    manager = DataStructureStorageManagerLocalFileSystem()
-    file_directory = manager.get_storage_path()
-    file_path = os.path.join(file_directory, filename)
+    # get the file from the database
+    manager = DatabaseStorageManagerDatabase()
 
-    # Ensure that the file exists in the directory
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    excel_bytes, full_name, log = manager.retrieve_excel_file_by_id(id)
+
+    if excel_bytes is None or log['success'] is False:
+        abort(404)
+
     else:
-        abort(404)  # File not found
+        # Wrap the bytes data in an io.BytesIO object
+        excel_file = io.BytesIO(excel_bytes)
+
+        return send_file(
+            excel_file,
+            as_attachment=True,
+            download_name=full_name,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
 
 
 # ========================= ENDPOINTS ==========================
@@ -107,12 +82,14 @@ def _checkbox_to_bool(checkbox):
     else:
         return True
 
-@iframe_healthie_provider_sidebar_questionnaire_bp.route('/healthie/iframe_provider_sidebar/questionnaire/healthie_build_form_from_data_structure', methods=['POST'])
+@iframe_healthie_provider_sidebar_questionnaire_database_bp.route('/healthie/iframe_provider_sidebar/questionnaire_database/healthie_build_form_from_data_structure', methods=['POST'])
 def healthie_build_form_from_data_structure():
     """
     This endpoint builds a form from the selected data structure
 
     It is called by a button on the Provider extra sidebar pane
+
+    TODO : use structure id instead of structure name
 
     """
 
@@ -131,7 +108,7 @@ def healthie_build_form_from_data_structure():
 
     return jsonify( log ), 200
 
-@iframe_healthie_provider_sidebar_questionnaire_bp.route('/healthie/iframe_provider_sidebar/questionnaire/healthie_upload_and_validate_form', methods=['POST'])
+@iframe_healthie_provider_sidebar_questionnaire_database_bp.route('/healthie/iframe_provider_sidebar/questionnaire_database/healthie_upload_and_validate_form', methods=['POST'])
 def healthie_upload_and_validate_form():
 
     # Retrieve the JSON data from the POST request

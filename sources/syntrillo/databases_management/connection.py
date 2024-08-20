@@ -108,7 +108,7 @@ class DatabaseConnection:
             delay (int): Delay in seconds between retry attempts.
 
         Returns:
-            pymysql.connections.Connection: A connection object to the MySQL database if successful, otherwise None.
+            tuple (pymysql.connections.Connection, sshtunnel.SSHTunnelForwarder): A tuple containing two objects: i) A connection object to the MySQL database if successful, otherwise None. ii) An SSH tunnel object to ssh.pythonanywhere.com if required and successful, otherwise None.
         """
 
         self.select_database_and_load_credentials()
