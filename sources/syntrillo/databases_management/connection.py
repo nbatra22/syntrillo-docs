@@ -82,6 +82,7 @@ class DatabaseConnection:
                     'user': env_secrets.get_aws_database_user(),
                     'password': env_secrets.get_aws_database_password(),
                     'port': int(env_secrets.get_aws_database_local_port()),
+                    'ssl': {'ssl': True}  # Enforce SSL
                 }
 
             elif self.database_server == 'PythonAnywhere':
