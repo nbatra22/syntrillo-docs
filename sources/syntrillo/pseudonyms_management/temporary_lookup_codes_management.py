@@ -36,6 +36,9 @@ class TemporaryLookUpCodesManagement:
         self.cursor = self.conn.cursor()
         self.verbose = verbose
 
+        # delete old entries every time the class is initialized
+        self.delete_old_entries()
+
     def __del__(self):
         """
         Destructor for the TemporaryLookUpCodesManagement class, closing the database connection and cursor.
@@ -246,9 +249,10 @@ class TemporaryLookUpCodesManagement:
             WHERE temporary_pseudo_code = %s AND purpose = %s
         """
         self.cursor.execute(query, (temp_code, purpose))
+        deleted_rows = self.cursor.rowcount
         self.conn.commit()
 
-        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Deleted entry for temporary code: {temp_code} with purpose: {purpose}")
+        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Deleted {deleted_rows} entry for temporary code: {temp_code} with purpose: {purpose}")
 
     def delete_old_entries(self):
         """
@@ -259,9 +263,12 @@ class TemporaryLookUpCodesManagement:
             WHERE date < NOW() - INTERVAL 24 HOUR
         """
         self.cursor.execute(query)
+        deleted_rows = self.cursor.rowcount
         self.conn.commit()
 
-        add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", "Deleted entries older than 24 hours")
+        if deleted_rows > 0:
+            add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Deleted {deleted_rows} old entries")
+
 
 # Example usage:
 if __name__ == "__main__":

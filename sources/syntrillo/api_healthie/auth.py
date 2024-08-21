@@ -1,14 +1,10 @@
 # Path: ./sources/syntrillo/api_healthie/auth.py
 
 import requests
-import os
 import json
 import inspect
 from typing import Tuple
-from dotenv import load_dotenv
-from datetime import datetime
 
-from syntrillo.system.dot_env_loader import DotEnvFileLoader
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class HealthieAuth:

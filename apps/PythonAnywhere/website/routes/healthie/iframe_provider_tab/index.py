@@ -1,6 +1,6 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/index.py
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, abort
 import json
 import random
 import os
@@ -10,9 +10,9 @@ from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 from syntrillo.system.dot_env_loader import DotEnvFileLoader
+from syntrillo.system.iframe_validator import IframeValidator
 
 # -------------------------------------------------
-
 iframe_healthie_provider_tab_index_bp = Blueprint('iframe_healthie_provider_tab_index', __name__)
 
 @iframe_healthie_provider_tab_index_bp.route('/iframe_healthie_provider_tab', methods=['GET'])
@@ -27,7 +27,16 @@ def iframe_healthie_provider_tab_index():
     """
 
     # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        pass
+        # abort(403, description="Access Denied: Unauthorized Embedding\n" + json.dumps(iframe_log))
+
+    # --------------------------------------------------------------------
     # Load the .env file based on the environment to retrieve local environment specific tweaks used mainly for debugging
+    # TODO : use LocalEnvironmentAndSecrets instead of DotEnvFileLoader
     _ = DotEnvFileLoader()
 
     # --------------------------------------------------------------------
@@ -101,6 +110,7 @@ def iframe_healthie_provider_tab_index():
         patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
         healthie_user_id=healthie_user_id,
         temporary_lookup_code=temporary_lookup_code,
-        milliseconds_delay=milliseconds_delay
+        milliseconds_delay=milliseconds_delay,
+        iframe_log=iframe_log
         )
 

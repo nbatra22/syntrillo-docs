@@ -3,7 +3,9 @@
 import os
 from math import isnan
 
-from flask import Flask, render_template
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+
+from flask import Flask, render_template, abort
 
 app = Flask(__name__)
 
@@ -114,7 +116,7 @@ def index():
     if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':
         return render_template("main_page.html")
     else:
-        return render_template("blank.html")
+        return abort(403, description="Access Denied")
 
 
 

@@ -59,7 +59,7 @@ class HealthInformationTablesManager:
             platform                    VARCHAR(255) DEFAULT NULL, -- prod or staging
             name                        VARCHAR(255) NOT NULL,
             version                     VARCHAR(255) NOT NULL,
-            variables_json              JSON NOT NULL,
+            structure_json              JSON NOT NULL,
             -- mediumblob : up to 16MB
             excel_file                  MEDIUMBLOB DEFAULT NULL,
             date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
