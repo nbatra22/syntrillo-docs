@@ -46,11 +46,11 @@ class IframeValidator:
 
             if referer:
                 referer += '/'
-                referer_is_valid = any(referer.startswith(domain) for domain in self.ALLOWED_DOMAINS), log
+                referer_is_valid = any(referer.startswith(domain) for domain in self.ALLOWED_DOMAINS_PRODUCTION), log
 
             if origin:
                 origin += '/'
-                origin_is_valid = any(origin.startswith(domain) for domain in self.ALLOWED_DOMAINS), log
+                origin_is_valid = any(origin.startswith(domain) for domain in self.ALLOWED_DOMAINS_PRODUCTION), log
 
             return referer_is_valid or origin_is_valid, log
 
