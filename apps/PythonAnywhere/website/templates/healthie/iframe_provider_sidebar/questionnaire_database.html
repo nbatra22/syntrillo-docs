@@ -1,5 +1,7 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/questionnaire_database.html -->
 
+<p class="mt-2">This tab interacts with our 'healthie_questionnaires' database, and should be used in production.</p>
+
 <h2 class="collapsible">
     <span class="icon-container">
         <i class="fas fa-chevron-right"></i>
@@ -10,7 +12,7 @@
 
     <p>Blank template: <a target='_blank' href="{{ url_for('static', filename='healthie/documents/questionnaire_template_latest.xlsx') }}">Download latest Excel xlsx structure file template</a></p>
 
-    <p>Data structures available localy in the repository:</p>
+    <p>Data structures available in the 'healthie_questionnaires' database:</p>
 
     <div class="table-container-data">
         <table id="data-structure-db-table" class="table table-striped table-bordered">
@@ -136,9 +138,9 @@
 </h2>
 <div class="collapsible-content">
 
-    <p>A new Healthie form (intake flow of charting note) is built from the selected structure.</p>
+    <p>Build a new Healthie form (intake flow of charting note) from the structure selected below.</p>
 
-    <p>Structures are JSON files located in the repository, derived from XLSX source files.</p>
+    <p>Structures objects located in the 'healthie_questionnaires' database, derived from XLSX files uploaded in the above section.</p>
 
     <style>
         /* Initially loading indicator and logs */
