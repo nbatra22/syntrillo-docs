@@ -35,15 +35,14 @@ class IframeValidator:
         secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
         org = secrets.get_healthie_organization()
 
-        log = { 'referer': referer, 'origin': origin, 'organization': org }
+        referer_is_valid = None
+        origin_is_valid = None
+        request_is_valid = False
 
         if org == 'staging':
-            return True, log
+            request_is_valid = True
 
         else:
-
-            referer_is_valid = False
-            origin_is_valid = False
 
             if referer:
                 referer += '/'
@@ -53,6 +52,19 @@ class IframeValidator:
                 origin += '/'
                 origin_is_valid = any(origin.startswith(domain) for domain in self.ALLOWED_DOMAINS_PRODUCTION), log
 
-            return referer_is_valid or origin_is_valid, log
+            request_is_valid = referer_is_valid or origin_is_valid, log
 
 
+        log = {
+            'referer': referer,
+            'origin': origin,
+            'organization': org,
+            'referer_is_valid': referer_is_valid,
+            'origin_is_valid': origin_is_valid,
+            'request_is_valid': request_is_valid,
+        }
+
+        self.request_is_valid = request_is_valid
+        self.log = log
+
+        return request_is_valid, log
