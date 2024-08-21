@@ -3,7 +3,9 @@
 import os
 from math import isnan
 
-from flask import Flask, render_template
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+
+from flask import Flask, render_template, abort
 
 app = Flask(__name__)
 
@@ -114,7 +116,14 @@ def index():
     if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':
         return render_template("main_page.html")
     else:
-        return render_template("blank.html")
+        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+        org = secrets.get_healthie_organization()
+        if org == 'production':
+            return abort(403, description="Access Denied: Unauthorized Access")
+        elif org == 'staging':
+            return abort(403, description="Staging - Access Denied: Unauthorized Access")
+        else:
+            return render_template("blank.html")
 
 
 
