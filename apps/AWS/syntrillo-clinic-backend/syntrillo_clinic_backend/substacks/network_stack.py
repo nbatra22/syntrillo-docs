@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_logs as logs, 
 )
 from constructs import Construct
 
@@ -26,8 +27,11 @@ from constructs import Construct
     
 class NetworkStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, aws_environment, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)   
+
+        self.environment_context = environment_context
+        self.aws_environment = environment_context["environment_name"]
 
         # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
         # Nat gateway is necessary for lambda functions to communicates outside the vpc
@@ -38,6 +42,20 @@ class NetworkStack(Stack):
             nat_gateways=1
         )
 
+        # VPC Flow Logs
+        if self.aws_environment == "prod":
+            self.vpc_flow_logs_log_group = logs.LogGroup(
+                self, "VPCFlowLogsLogGroup",
+                log_group_name="/aws/vpc/flowlogs",
+                removal_policy=RemovalPolicy.DESTROY
+            )
+
+            self.vpc.add_flow_log("SyntrilloClinicBackendVPCFlowLogCloudWatch",
+                destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
+                traffic_type=ec2.FlowLogTrafficType.ALL,
+            )
+
+        # Security groups
         self.bastion_host_security_group = ec2.SecurityGroup(
             self,
             "BastionHostSecurityGroup",
