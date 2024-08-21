@@ -1,6 +1,6 @@
 USE syntrillo$PseudonymManagement;
 
-DROP TABLE IF EXISTS logs;
+-- DROP TABLE IF EXISTS logs;
 CREATE TABLE IF NOT EXISTS logs (
     id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
     date DATETIME DEFAULT CURRENT_TIMESTAMP,                # Date and time of the log entry
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS logs (
     comment TEXT                                            # Additional comments about the log entry
 );
 
-DROP TABLE IF EXISTS user_look_up_codes;
+-- DROP TABLE IF EXISTS user_look_up_codes;
 CREATE TABLE IF NOT EXISTS user_look_up_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,                      # Auto-increment ID for unique identification
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS user_look_up_codes (
     UNIQUE(syntrillo_internal_key, pseudo_code_for_tenovi_phi_access)
 );
 
-DROP TABLE IF EXISTS user_look_up_temporary_codes;
+-- DROP TABLE IF EXISTS user_look_up_temporary_codes;
 CREATE TABLE IF NOT EXISTS user_look_up_temporary_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,                  # Auto-increment ID for unique identification
 
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS user_look_up_temporary_codes (
 
 USE syntrillo$HealthInformation;
 
-DROP TABLE IF EXISTS tenovi_raw_measurements;
+-- DROP TABLE IF EXISTS tenovi_raw_measurements;
 CREATE TABLE IF NOT EXISTS tenovi_raw_measurements (
     id                          INT AUTO_INCREMENT PRIMARY KEY,
     syntrillo_internal_key      BINARY(16) NOT NULL,
