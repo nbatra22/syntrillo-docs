@@ -2,6 +2,8 @@
 import os
 from dotenv import load_dotenv
 
+# TODO : DotEnvFileLoader should not be used anymore, it should be replaced by LocalEnvironmentAndSecrets
+
 class DotEnvFileLoader:
 
     # default path to the .env file, at the root of the repository

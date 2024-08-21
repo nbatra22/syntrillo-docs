@@ -1,6 +1,6 @@
 import os
 
-from syntrillo.system.dot_env_loader import DotEnvFileLoader
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class IframeValidator:
     """
@@ -31,8 +31,8 @@ class IframeValidator:
         referer = request.headers.get('Referer')
         origin = request.headers.get('Origin')
 
-        _ = DotEnvFileLoader()
-        org = os.getenv('HEALTHIE_ORGANIZATION')
+        secrets = LocalEnvironmentAndSecrets()
+        org = secrets.get_healthie_organization()
 
         log = { 'referer': referer, 'origin': origin, 'organization': org }
 
