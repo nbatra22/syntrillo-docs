@@ -66,6 +66,7 @@ class DatabaseConnection:
                 'host': env_secrets.get_aws_database_host(),
                 'user': env_secrets.get_aws_database_user(),
                 'password': env_secrets.get_aws_database_password(),
+                'ssl_ca': 'syntrillo/system/rds-certificate-bundle/us-east-1-bundle.pem',
             }
 
         else:
