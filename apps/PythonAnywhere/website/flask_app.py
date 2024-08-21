@@ -116,14 +116,7 @@ def index():
     if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':
         return render_template("main_page.html")
     else:
-        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
-        org = secrets.get_healthie_organization()
-        if org == 'production':
-            return abort(403, description="Access Denied")
-        elif org == 'staging':
-            return abort(403, description="Staging - Access Denied")
-        else:
-            return render_template("blank.html")
+        return abort(403, description="Access Denied")
 
 
 
