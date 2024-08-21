@@ -12,6 +12,7 @@ class IframeValidator:
     ALLOWED_DOMAINS_PRODUCTION = [
     "https://secure.gethealthie.com/",
     "https://patients.syntrillo.com/",
+    "https://api.prod.syntrillo-clinic-backend.com/",
     ]
 
     def __init__(self):
