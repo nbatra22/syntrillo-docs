@@ -61,7 +61,7 @@ class SyntrilloClinicBackendStack(Stack):
 
         self.network = NetworkStack(
             self, "NetworkStack",
-            self.aws_environment
+            environment_context=self.environment_context
         )
 
         self.database = DatabaseStack(

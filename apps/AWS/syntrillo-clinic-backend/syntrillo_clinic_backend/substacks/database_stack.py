@@ -52,7 +52,8 @@ class DatabaseStack(Stack):
             ),
             parameters={
                 "general_log": "1",
-                "log_output": "FILE"
+                "log_output": "FILE",
+                "require_secure_transport": "ON"  # Enforce SSL/TLS
             }
         )
 
