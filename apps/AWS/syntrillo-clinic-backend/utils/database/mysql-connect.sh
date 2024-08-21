@@ -8,7 +8,7 @@ fi
 
 ENVIRONMENT=$1
 if [ "$ENVIRONMENT" == 'sandbox' ]; then
-  SECRET_NAME='SyntrilloClinicBackendStack-oSWB6kcdQXhb'
+  SECRET_NAME='SyntrilloClinicBackendStack-6FMAgqFhBzsf'
 fi
 
 if [ "$ENVIRONMENT" == 'staging' ]; then

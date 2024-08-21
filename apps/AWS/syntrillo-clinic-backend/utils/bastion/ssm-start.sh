@@ -48,7 +48,7 @@ fi
 
 if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
     if [ $ENVIRONMENT == 'sandbox' ]; then
-        hostname="syntrilloclinicbackendstackd-mysqldatabase22bdac80-5kt0pwavmcmm.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
+        hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-pgfocymgbys3.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
     fi
     if [ $ENVIRONMENT == 'staging' ]; then
         hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-saiukm5mugdm.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
