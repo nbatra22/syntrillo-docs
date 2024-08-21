@@ -31,7 +31,7 @@ class IframeValidator:
         referer = request.headers.get('Referer')
         origin = request.headers.get('Origin')
 
-        secrets = LocalEnvironmentAndSecrets()
+        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
         org = secrets.get_healthie_organization()
 
         log = { 'referer': referer, 'origin': origin, 'organization': org }
