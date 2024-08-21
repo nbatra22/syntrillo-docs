@@ -1,8 +1,10 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/index.py
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, abort
 import json
 import random
+
+from syntrillo.system.iframe_validator import IframeValidator
 
 # python.analysis.extraPaths added into .vscode/settings.json
 
@@ -23,6 +25,14 @@ def iframe_healthie_provider_sidebar_index():
     """
 
     # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        pass
+        # abort(403, description="Access Denied: Unauthorized Embedding\n" + json.dumps(iframe_log))
+
+    # --------------------------------------------------------------------
     # Retrieve the JSON data from the GET request
     data_get_request = request.args.to_dict()
 
@@ -36,4 +46,5 @@ def iframe_healthie_provider_sidebar_index():
 
     return render_template('healthie/iframe_provider_sidebar/index.html',
                            healthie_provider_id=healthie_provider_id,
+                           iframe_log=iframe_log
                            )
