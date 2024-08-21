@@ -1,13 +1,10 @@
 # Path: ./sources/syntrillo/api_tenovi/auth.py
 
-import os
-import re
 import requests
 import inspect
 import json
 from typing import Tuple
 
-from syntrillo.system.dot_env_loader import DotEnvFileLoader
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 

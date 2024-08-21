@@ -36,6 +36,7 @@ def iframe_healthie_provider_tab_index():
 
     # --------------------------------------------------------------------
     # Load the .env file based on the environment to retrieve local environment specific tweaks used mainly for debugging
+    # TODO : use LocalEnvironmentAndSecrets instead of DotEnvFileLoader
     _ = DotEnvFileLoader()
 
     # --------------------------------------------------------------------

@@ -9,7 +9,6 @@ from typing import Tuple
 # Import OpenAI package
 from openai import OpenAI
 
-from syntrillo.system.dot_env_loader import DotEnvFileLoader
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class ChartingNotePrefillJackson:
