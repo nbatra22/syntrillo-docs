@@ -119,9 +119,9 @@ def index():
         secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
         org = secrets.get_healthie_organization()
         if org == 'production':
-            return abort(403, description="Access Denied: Unauthorized Access")
+            return abort(403, description="Access Denied")
         elif org == 'staging':
-            return abort(403, description="Staging - Access Denied: Unauthorized Access")
+            return abort(403, description="Staging - Access Denied")
         else:
             return render_template("blank.html")
 
