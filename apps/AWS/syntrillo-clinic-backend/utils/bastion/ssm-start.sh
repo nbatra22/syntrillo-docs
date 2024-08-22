@@ -3,7 +3,7 @@
 if [ "$1" == "" -o "$2" == "" ]; then
   echo "usage: $0 <environment> <session-type>"
   echo "environments: sandbox, staging"
-  echo "session-types: session, ssh-tunnel, mysql-tunnel" 
+  echo "session-types: session, ssh-tunnel, mysql-tunnel"
   exit
 fi
 
@@ -48,16 +48,16 @@ fi
 
 if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
     if [ $ENVIRONMENT == 'sandbox' ]; then
-        hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-pgfocymgbys3.cf60aoaem0ky.us-east-1.rds.amazonaws.com"        
+        hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-pgfocymgbys3.cf60aoaem0ky.us-east-1.rds.amazonaws.com"
     fi
     if [ $ENVIRONMENT == 'staging' ]; then
         hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-saiukm5mugdm.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
     fi
-   
+
     local_port=3307
 
     echo "-----"
-    echo "$> mysql -h 127.0.0.1 -P $local_port -u admin -p # => To excute in another terminal"
+    echo "$> mysql -h 127.0.0.1 -P $local_port -u admin -p --ssl # => To excute in another terminal"
     echo "OR"
     echo "$> mysql-connect $ENVIRONMENT # => To excute in another terminal, in the utils/database folder"
     echo "-----"

@@ -46,7 +46,7 @@ echo "If the connection 'hangs', make sure that you have started the ssm session
 echo "For example if you use did an ssm-start 'sanbox', and a mysql-connect 'staging' it will not work, and hang"
 
 echo "---"
-mysql -h 127.0.0.1 -P $local_port -u $username -p$password
+mysql -h 127.0.0.1 -P $local_port -u $username -p$password --ssl
 if [ $? != 0 ]; then
   echo "!!!"
   echo "Make sure you have opened the sql-tunnel"

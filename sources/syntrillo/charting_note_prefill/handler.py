@@ -18,12 +18,14 @@ class ChartingNotePrefillHandler:
     """
     The ChartingNotePrefillHandler class is used to handle the prefilling of charting notes with the  AI agent.
 
+    TODO : make use of DataStructureDatabaseStorageManager instead of DataStructureStorageManagerLocalFileSystem
+
     Args:
         healthie_user_id (str): The Healthie user ID.
 
     """
 
-    # class variables
+    # class variables : TODO : to init
     healthie_user_id: str = None
     healthie_documents: HealthieDocuments = None
     healthie_forms: HealthieForms = None
