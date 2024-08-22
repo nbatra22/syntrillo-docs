@@ -32,6 +32,8 @@ class SyntrilloClinicBackupStack(Stack):
         self.environment_name = environment_context["environment_name"]
         self.database = database
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
         # Create Backup Vault
         removal_policy_value = self.environment_context["backup"]["backup-vault-removal-policy"]
         backup_vault = backup.BackupVault(

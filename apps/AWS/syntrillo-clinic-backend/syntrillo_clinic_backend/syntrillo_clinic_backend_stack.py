@@ -51,6 +51,8 @@ class SyntrilloClinicBackendStack(Stack):
         
         self.environment_context = self.node.try_get_context(self.aws_environment)
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
         print("--------------------------------------")
         print(f"SyntrilloBackendStack AWS Environement : <{self.aws_environment}>")
         print(f"")
@@ -77,7 +79,8 @@ class SyntrilloClinicBackendStack(Stack):
         )
 
         self.secrets = SecretsStack(
-            self, "SecretsStack"
+            self, "SecretsStack",
+            environment_context=self.environment_context,
         )
         
         self.servers = ServersStack(
@@ -91,7 +94,7 @@ class SyntrilloClinicBackendStack(Stack):
 
         self.scheduled_tasks = SyntrilloClinicTaskSchedulingStack(
             self, "TaskSchedulingStack",
-            aws_environment=self.aws_environment,
+            environment_context=self.environment_context,
             network=self.network,
             database=self.database,
             storage=self.storage,

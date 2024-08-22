@@ -34,6 +34,8 @@ class DatabaseStack(Stack):
         self.environment_context = environment_context
         self.network = network
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
         removal_policy_value = self.environment_context["database"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
 

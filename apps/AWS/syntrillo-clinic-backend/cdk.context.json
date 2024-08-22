@@ -1,6 +1,7 @@
 {
   "sandbox": {
     "environment_name": "sandbox",
+    "stacks-termination-protection": false,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
@@ -27,6 +28,7 @@
   
   "staging": {
     "environment_name": "staging",
+    "stacks-termination-protection": true,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
@@ -53,6 +55,7 @@
 
   "prod": {
     "environment_name": "prod",
+    "stacks-termination-protection": true,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 6
     },

@@ -102,7 +102,7 @@ class RemoteMonitoringDataSync(Construct):
 
 class SyntrilloClinicTaskSchedulingStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, 
-                 aws_environment: str,
+                 environment_context: dict,
                  network: Construct, 
                  database: Construct,
                  storage: Construct,
@@ -111,11 +111,14 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.aws_environment = aws_environment
+        self.environment_context = environment_context
+        self.aws_environment = environment_context["environment_name"]
         self.network = network
         self.database = database
         self.storage = storage
         self.secrets = secrets
+
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
 
         remote_monitoring_data_sync = RemoteMonitoringDataSync(
             self, "RemoteMonitoringDataSyncFunction",
