@@ -19,6 +19,7 @@ from aws_cdk import (
     aws_secretsmanager as secretsmanager,
     aws_iam as iam,
     aws_logs as logs,
+    aws_wafv2 as wafv2,
 )
 from constructs import Construct
 
@@ -40,6 +41,69 @@ class IFrameGeneratorApiEndpoint(Construct):
         self.certificate = self._setup_ssl_certificate()
         self.log_destination = self._setup_log_destination()
         self.rest_api = self._setup_api_gateway()
+
+        if self.environment_context["iframe_generator_api"]["use_waf"]:
+            self.waf_webacl = self._setup_waf_webacl()
+
+    def _setup_waf_webacl(self):
+        web_acl = wafv2.CfnWebACL(
+            self, "IFramGeneratorAPIWebAcl",
+            name="IFramGeneratorAPIWebAcl",
+            scope="REGIONAL",
+            default_action=wafv2.CfnWebACL.DefaultActionProperty(
+                allow={}
+            ),
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                sampled_requests_enabled=True,
+                metric_name="IFramGeneratorAPIWebAclMetrics"
+            ),
+        )
+
+        web_acl_association = wafv2.CfnWebACLAssociation(
+            self, "IFramGeneratorAPIWebAclAssociation",
+            resource_arn=self.rest_api.deployment_stage.stage_arn,
+            web_acl_arn=web_acl.attr_arn
+        )
+
+        allowed_referer = self.environment_context["iframe_generator_api"]["allowed_referer"]
+        sepcific_referer_rule = wafv2.CfnWebACL.RuleProperty(
+            name="IFramGeneratorAPIWebAclAllowSpecificRefererRule",
+            priority=1,
+            action=wafv2.CfnWebACL.RuleActionProperty(
+                block={}
+            ),
+            statement=wafv2.CfnWebACL.StatementProperty(
+                not_statement=wafv2.CfnWebACL.NotStatementProperty(
+                    statement=wafv2.CfnWebACL.StatementProperty(
+                        byte_match_statement=wafv2.CfnWebACL.ByteMatchStatementProperty(
+                            field_to_match=wafv2.CfnWebACL.FieldToMatchProperty(
+                                single_header=wafv2.CfnWebACL.SingleHeaderProperty(
+                                    name="referer"
+                                )
+                            ),
+                            positional_constraint="CONTAINS",
+                            search_string=allowed_referer,
+                            text_transformations=[
+                                wafv2.CfnWebACL.TextTransformationProperty(
+                                    priority=0,
+                                    type="LOWERCASE"
+                                )
+                            ]
+                        )
+                    )
+                )
+            ),
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name="AllowedRefererRule",
+                sampled_requests_enabled=True
+            )
+        )
+
+        web_acl.rules = [sepcific_referer_rule]
+
+        return web_acl
         
     def _setup_hosted_zone(self):
         hosted_zone_id = ssm.StringParameter.from_string_parameter_attributes(
@@ -98,7 +162,7 @@ class IFrameGeneratorApiEndpoint(Construct):
                 throttling_rate_limit=1000,
                 throttling_burst_limit=500,
                 access_log_destination=apigateway.LogGroupLogDestination(self.log_destination),
-                logging_level=apigateway.MethodLoggingLevel.INFO
+                logging_level=apigateway.MethodLoggingLevel.INFO,
             ),
             policy=self._resource_policy()
         )

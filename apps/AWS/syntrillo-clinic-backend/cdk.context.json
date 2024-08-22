@@ -5,6 +5,8 @@
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
+      "use_waf": false,
+      "allowed_referer": "all",
       "allowed_api_adresses": [
         {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
       ]
@@ -23,8 +25,10 @@
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
+      "use_waf": false,
+      "allowed_referer": "all",
       "allowed_api_adresses": [
-        {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+        {"ip": "109.9.46.184/32", "ip_owner": "olemaitre"}
       ]
     },
     "database": {
@@ -41,6 +45,8 @@
       "provisioned_concurrency_executions": 6
     },
     "iframe_generator_api": {
+      "use_waf": true,
+      "allowed_referer": "https://patients.syntrillo.com",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
       ]
