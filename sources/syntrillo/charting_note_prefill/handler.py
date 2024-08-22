@@ -12,6 +12,7 @@ from typing import Tuple
 from syntrillo.api_healthie.documents import HealthieDocuments
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
+from syntrillo.data_structures.storage_manager_database import DataStructureStorageManagerDatabase
 from syntrillo.charting_note_prefill.jackson import ChartingNotePrefillJackson
 
 class ChartingNotePrefillHandler:
@@ -24,12 +25,6 @@ class ChartingNotePrefillHandler:
         healthie_user_id (str): The Healthie user ID.
 
     """
-
-    # class variables : TODO : to init
-    healthie_user_id: str = None
-    healthie_documents: HealthieDocuments = None
-    healthie_forms: HealthieForms = None
-    storage_manager: DataStructureStorageManagerLocalFileSystem = None
 
     def __init__(
         self,
@@ -44,6 +39,8 @@ class ChartingNotePrefillHandler:
 
         self.storage_manager = DataStructureStorageManagerLocalFileSystem()
 
+        self.storage_manager_database = DataStructureStorageManagerDatabase()
+
 
 
     def list_private_folders(
@@ -53,7 +50,7 @@ class ChartingNotePrefillHandler:
         List the private folders for the user using the Healthie API.
 
         Returns:
-            Tuple[dict, str]: The response and log.
+            Tuple ([dict, str]): The response and log.
 
         """
 
@@ -303,10 +300,16 @@ class ChartingNotePrefillHandler:
         custom_module_form = temp['customModuleForm']
 
         # our name, used in the data_structures module
-        syntrillo_structure_name = custom_module_form['external_id']
+        # format : '<structure_name>_v<version>'
+        healthie_external_id = custom_module_form['external_id']
 
         # get the data structure to obtain LLM information
-        data_structure, log3 = self.storage_manager.retrieve_structure(structure_name=syntrillo_structure_name)
+        #  : start from the database
+        #  : if not found, try the local file system
+        data_structure, log3 = self.storage_manager_database.retrieve_structure_by_healthie_external_id(healthie_external_id=healthie_external_id)
+        if log3.get('success') is False:
+            data_structure, log3 = self.storage_manager.retrieve_structure(structure_name=healthie_external_id)
+
         overall_log['retrieve_structure'] = log3
         if log3.get('success') is False:
             overall_log['success'] = False

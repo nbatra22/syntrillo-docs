@@ -11,7 +11,7 @@ from glob import glob
 from datetime import datetime, timezone
 
 from syntrillo.data_structures.storage_manager_local_file_system import DataStructureStorageManagerLocalFileSystem
-from syntrillo.data_structures.storage_manager_database import DatabaseStorageManagerDatabase
+from syntrillo.data_structures.storage_manager_database import DataStructureStorageManagerDatabase
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 
@@ -61,7 +61,7 @@ class DataStructureXlsxQuestionnaireHandler:
     def __init__(self):
         # instantiate the storage managers
         self.storage_manager_local_file_system = DataStructureStorageManagerLocalFileSystem()
-        self.storage_manager_database = DatabaseStorageManagerDatabase()
+        self.storage_manager_database = DataStructureStorageManagerDatabase()
 
     @staticmethod
     def parse_comma_separated_string(s: str) -> list:
@@ -524,7 +524,9 @@ class DataStructureXlsxQuestionnaireHandler:
 
         """
 
-        platform = LocalEnvironmentAndSecrets().get_healthie_organization()
+        # get the platform from the LocalEnvironmentAndSecrets
+        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+        platform = secrets.get_healthie_organization()
 
         log = self.storage_manager_database.store_structure(
             platform=platform,
