@@ -9,6 +9,7 @@ class IframeValidator:
 
     """
 
+    # must include trailing slash to avoid subdomains
     ALLOWED_DOMAINS_PRODUCTION = [
     "https://secure.gethealthie.com/",
     "https://patients.syntrillo.com/",
@@ -35,8 +36,8 @@ class IframeValidator:
         secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
         org = secrets.get_healthie_organization()
 
-        referer_is_valid = None
-        origin_is_valid = None
+        referer_is_valid = False
+        origin_is_valid = False
         request_is_valid = False
 
         if org == 'staging':
@@ -45,11 +46,11 @@ class IframeValidator:
         else:
 
             if referer:
-                referer += '/'
+                referer += '/' if not referer.endswith('/') else ''
                 referer_is_valid = any(referer.startswith(domain) for domain in self.ALLOWED_DOMAINS_PRODUCTION)
 
             if origin:
-                origin += '/'
+                origin += '/' if not origin.endswith('/') else ''
                 origin_is_valid = any(origin.startswith(domain) for domain in self.ALLOWED_DOMAINS_PRODUCTION)
 
             request_is_valid = referer_is_valid or origin_is_valid
