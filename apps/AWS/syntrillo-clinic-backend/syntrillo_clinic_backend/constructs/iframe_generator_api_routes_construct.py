@@ -56,6 +56,12 @@ class IFrameGeneratorAPIRoutes(Construct):
             apigw.LambdaIntegration(iframe_generator_function),
         )
 
+        iframe_healthie_client_sidebar = self.rest_api.root.add_resource("iframe_healthie_client_sidebar")
+        iframe_healthie_client_sidebar.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
+
     def create_static_resources(self, iframe_generator_function: _lambda.Function):
         static = self.rest_api.root.add_resource("static")
 
