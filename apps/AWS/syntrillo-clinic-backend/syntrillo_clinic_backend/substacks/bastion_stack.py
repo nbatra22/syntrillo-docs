@@ -55,5 +55,11 @@ class SyntrilloClinicBastionStack(Stack):
             "cd /home/ec2-user", 
             "mkdir -p efs",
             f"sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport {efs_file_system_id}.efs.us-east-1.amazonaws.com:/ efs",
+            "chown ec2-user:ec2-user efs",
+            "yum install -y -q mariadb105",
+            "yum install -y -q docker",
+            "systemctl start docker",
+            "chmod 666 /var/run/docker.sock",
+            "usermod -a -G docker ec2-user",
         )
         bastion_host.instance.add_user_data(user_data.render())
