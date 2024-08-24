@@ -8,6 +8,7 @@
     "iframe_generator_api": {
       "use_waf": false,
       "allowed_referer": "all",
+      "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
       ]
@@ -33,8 +34,9 @@
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
-      "use_waf": false,
-      "allowed_referer": "all",
+      "use_waf": true,
+      "allowed_referer": "https://securestaging.gethealthie.com/",
+      "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
       ]
@@ -62,6 +64,7 @@
     "iframe_generator_api": {
       "use_waf": true,
       "allowed_referer": "https://patients.syntrillo.com",
+      "webacl-log-group-removal-policy": "RETAIN",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
       ]

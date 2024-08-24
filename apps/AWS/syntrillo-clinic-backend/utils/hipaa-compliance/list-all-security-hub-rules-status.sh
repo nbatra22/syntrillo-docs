@@ -1,0 +1,1 @@
+aws securityhub get-findings     --filters '{"ComplianceStatus":[{"Value":"FAILED","Comparison":"EQUALS"}]}'     --query 'Findings[*].[Id, Title, Compliance.Status]'  --profile syntrillo-clinic-prod-deployment

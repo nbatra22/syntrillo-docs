@@ -2,6 +2,8 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    ArnFormat,
+    aws_lambda_event_sources as event_sources,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -46,6 +48,15 @@ class IFrameGeneratorApiEndpoint(Construct):
             self.waf_webacl = self._setup_waf_webacl()
 
     def _setup_waf_webacl(self):
+        webacl_log_group_removal_policy_value = self.environment_context["iframe_generator_api"]["webacl-log-group-removal-policy"]
+        webacl_log_group = logs.LogGroup(
+            self, "IFramGeneratorAPIWebAclLogGroup",
+            log_group_name="aws-waf-logs-IFramGeneratorAPIWebAclLogging",
+            # Loggroup name must folow a specific format and can not finish with '*' 
+            # (https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-naming)
+            removal_policy=RemovalPolicy[webacl_log_group_removal_policy_value]
+        )
+
         web_acl = wafv2.CfnWebACL(
             self, "IFramGeneratorAPIWebAcl",
             name="IFramGeneratorAPIWebAcl",
@@ -58,6 +69,22 @@ class IFrameGeneratorApiEndpoint(Construct):
                 sampled_requests_enabled=True,
                 metric_name="IFramGeneratorAPIWebAclMetrics"
             ),
+        )
+
+        # Enable logging for the Web ACL using CfnLoggingConfiguration
+        logging_configuration = wafv2.CfnLoggingConfiguration(
+            self, "IFramGeneratorAPIWebAclLoggingConfiguration",
+            resource_arn=web_acl.attr_arn,
+            log_destination_configs=[     
+                # Loggroup name must folow a specific format and can not finish with '*' 
+                # (https://docs.aws.amazon.com/waf/latest/developerguide/logging-cw-logs.html#logging-cw-logs-naming)
+                # therfore we cannot use webacl_log_group.log_group_arn directly in this destination config list        
+                Stack.of(self).format_arn(
+                arn_format=ArnFormat.COLON_RESOURCE_NAME,
+                service="logs",
+                resource="log-group",
+                resource_name=webacl_log_group.log_group_name,
+            )]
         )
 
         web_acl_association = wafv2.CfnWebACLAssociation(
