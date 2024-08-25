@@ -102,9 +102,10 @@ class SyntrilloClinicBackendStack(Stack):
             lambda_function=self.servers.iframe_generator_function.function
         )
 
-        if self.aws_environment != "prod":
+        if self.environment_context["bastion"]["bastion-enabled"]:
             self.bastion=SyntrilloClinicBastionStack(
                 self, "BastionStack",
+                environment_context=self.environment_context,
                 network=self.network,
                 database=self.database,
                 storage=self.storage,

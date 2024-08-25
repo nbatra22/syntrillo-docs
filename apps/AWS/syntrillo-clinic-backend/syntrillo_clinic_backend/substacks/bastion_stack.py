@@ -27,18 +27,21 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class SyntrilloClinicBastionStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, network: Construct, database: Construct, storage: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network: Construct, database: Construct, storage: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.environment_context = environment_context
         self.network = network
         self.database = database
         self.storage = storage
+
+        bation_host_instance_size = self.environment_context["bastion"]["bastion-instance-size"]
 
         # Create the bastion host
         bastion_host = ec2.BastionHostLinux(
             self, "BastionHost",
             vpc=self.network.vpc,
-            instance_type=ec2.InstanceType("t3.micro"),
+            instance_type=ec2.InstanceType(bation_host_instance_size),
             subnet_selection=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PUBLIC,
             ),
