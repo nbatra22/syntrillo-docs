@@ -25,8 +25,8 @@
       "create-rds-backup-plan": false
     },
     "bastion": {
-      "bastion-instance-size": "t3.micro",
-      "bastion-enabled": true
+      "bastion-enabled": true,
+      "bastion-instance-size": "t3.micro"
     }
 
   },
@@ -58,8 +58,8 @@
       "create-rds-backup-plan": false
     },
     "bastion": {
-      "bastion-instance-size": "t3.micro",
-      "bastion-enabled": true
+      "bastion-enabled": true,
+      "bastion-instance-size": "t3.micro"
     }
   },
 
@@ -90,8 +90,8 @@
       "create-rds-backup-plan": true
     },
     "bastion": {
-      "bastion-instance-size": "t3.medium",
-      "bastion-enabled": true
+      "bastion-enabled": false,
+      "bastion-instance-size": "t3.medium"
     }
   }
 }
