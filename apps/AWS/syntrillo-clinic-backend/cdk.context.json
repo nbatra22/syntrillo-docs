@@ -11,7 +11,8 @@
       "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
-      ]
+      ],
+      "disable_execute_api_endpoint": false
     },
     "database": {
       "snapshot-identifier": "encrypted-snapshot-2",
@@ -39,12 +40,13 @@
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
-      "use_waf": true,
+      "use_waf": false,
       "allowed_referer": "https://securestaging.gethealthie.com/",
       "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
-      ]
+      ],
+      "disable_execute_api_endpoint": false
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-15-encrypted",
@@ -76,7 +78,8 @@
       "webacl-log-group-removal-policy": "RETAIN",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
-      ]
+      ],
+      "disable_execute_api_endpoint": true
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-16-encrypted",
