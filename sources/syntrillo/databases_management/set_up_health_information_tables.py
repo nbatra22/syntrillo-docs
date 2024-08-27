@@ -68,6 +68,8 @@ class HealthInformationTablesManager:
         """,
     }
 
+    # TODO : use INDEX (platform, name, version) instead of UNIQUE (platform, name, version) ?
+
     TODO_TABLE_CREATION_QUERIES = {
         PREFERENCES_PATIENT_TABLE: f"""
         CREATE TABLE IF NOT EXISTS {PREFERENCES_PATIENT_TABLE} (

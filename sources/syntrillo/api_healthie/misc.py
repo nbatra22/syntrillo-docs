@@ -38,6 +38,9 @@ def log_this(
     """
     Stores some logs locally. Default is verbose file.
     """
+
+    # TODO : write only if local
+
     if filepath is None:
         filepath = 'ignore_healthie_log_verbose.txt'
 
@@ -95,4 +98,5 @@ def transform_to_safe_html(response : str):
 
     html_output = bleach.clean(markdown.markdown(response), tags=my_allowed_tags, attributes=my_allowed_attributes)
 
+    # TODO : Markup.escape(html_output)
     return Markup(html_output)

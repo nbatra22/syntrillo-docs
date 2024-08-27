@@ -16,6 +16,7 @@ import json
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
+# TODO : log_this is needed ?
 from syntrillo.api_healthie.misc import log_this
 from syntrillo.chatbots.dispatcher import ChatBotsDispatcher
 from syntrillo.patient_initialization.new_patient_created import NewPatientCreated
@@ -31,11 +32,12 @@ ALLOWED_IPS = ['192.168.0.1', '10.0.0.1', '127.0.0.1',  # local IPs
                '52.4.158.130', '3.216.152.234',         # production
                ]
 
-
 @healthie_endpoint_bp.route('/healthie_endpoint_post', methods=['POST'])
 def healthie_endpoint_post():
     """
     This is the single endpoint of healthie webhooks.
+
+    https://api.staging.syntrillo-clinic-backend.com/healthie_endpoint_post
 
     See https://docs.gethealthie.com/docs/#webhooks
 
