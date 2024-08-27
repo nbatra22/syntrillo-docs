@@ -254,7 +254,12 @@ class LocalEnvironmentAndSecrets:
 
 if __name__ == '__main__':
     # test the class
-    secrets = LocalEnvironmentAndSecrets(load_aws_database_secrets=True, load_healthie_secrets=True, load_tenovi_hwi_secrets=True)
+    secrets = LocalEnvironmentAndSecrets(
+        load_aws_database_secrets=True,
+        load_healthie_secrets=True,
+        load_tenovi_hwi_secrets=True,
+        load_openai_secrets=True,
+        )
 
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
@@ -268,6 +273,8 @@ if __name__ == '__main__':
     aws_database_password = secrets.get_secret_value('aws_database', 'password')
     aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
+    openai_api_key = secrets.get_secret_value('openai', 'api_key')
+
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
     print(f"healthie_organization : {healthie_organization}")
@@ -279,6 +286,8 @@ if __name__ == '__main__':
     print(f"aws_database_user : {aws_database_user}")
     print(f"aws_database_password : {aws_database_password}")
     print(f"aws_database_port : {aws_database_port}")
+
+    print(f"openai_api_key : {openai_api_key}")
 
     print("done")
 
