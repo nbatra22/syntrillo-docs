@@ -57,10 +57,7 @@ def healthie_endpoint_post():
     # Retrieve the JSON data from the POST request
     data = request.json
 
-    # Log the data to a local file
-    with open('ignore_healthie_endpoint_post_logs.txt', 'a') as f:
-        f.write(json.dumps(data) + '\n\n')
-
+    # TODO : Log the data json.dumps(data)
 
     # --------------------------------------------
     # Dispatch
