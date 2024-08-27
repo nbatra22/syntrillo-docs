@@ -4,7 +4,6 @@ import os
 
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.api_healthie.misc import log_this
 from syntrillo.helper_functions.html import transform_to_safe_html
 
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
@@ -87,7 +86,7 @@ class VirtualCareNavigator():
             )
 
         else:
-            log_this(message=f"VCN: conversation owner not VCN: {owner_id}")
+            # TODO : log
             response = None
 
 
@@ -176,9 +175,6 @@ class VirtualCareNavigator():
             max_tokens=max_tokens,
             seed=seed,
         )
-
-        # debug
-        log_this(messages)
 
         # Extract the assistant's reply from the new structure
         assistant_reply = transform_to_safe_html(response.choices[0].message.content.strip())
