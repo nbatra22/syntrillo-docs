@@ -39,3 +39,7 @@ class SecretsStack(Stack):
         self.healthie_secrets = secretsmanager.Secret(
             self, "HealthieSecrets"
         )
+
+        self.openai_secrets = secretsmanager.Secret(
+            self, "OpenAiSecrets"
+        )

@@ -117,11 +117,11 @@ class SyntrilloClinicBackendStack(Stack):
             database=self.database,
         )
 
-        if self.aws_environment == "sandbox":
-            check_functions=SyntrilloClinicBackendCheckFunctionsStack(
-                self, "CheckFunctionsStack",
-                network=self.network,
-                database=self.database,
-                storage=self.storage,
-                secrets=self.secrets
-            )
+        # if self.aws_environment == "sandbox":
+        #     check_functions=SyntrilloClinicBackendCheckFunctionsStack(
+        #         self, "CheckFunctionsStack",
+        #         network=self.network,
+        #         database=self.database,
+        #         storage=self.storage,
+        #         secrets=self.secrets
+        #     )
