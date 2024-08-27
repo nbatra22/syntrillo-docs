@@ -54,6 +54,8 @@ class DatabaseStack(Stack):
             ),
             parameters={
                 "general_log": "1",
+                "slow_query_log": "1",
+                "long_query_time": "2",  # Logs queries longer than 2 seconds
                 "log_output": "FILE",
                 "require_secure_transport": "ON"  # Enforce SSL/TLS
             }
