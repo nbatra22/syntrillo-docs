@@ -40,7 +40,7 @@ def check_database_encryption():
     rds_client = boto3.client('rds')
 
     # Specify the DB instance identifier
-    db_instance_identifier = 'syntrilloclinicbackendstackd-mysqldatabase22bdac80-5kt0pwavmcmm'
+    db_instance_identifier = 'syntrilloclinicbackendsta-mysqldatabasefromsnapsho-pgfocymgbys3'
 
     # Describe the DB instance
     response = rds_client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)

@@ -1,5 +1,5 @@
 {
-    "resource": "/healthie/iframe_provider_tab/devices",
+    "resource": "/healthie/iframe_provider_tab/{proxy+}",
     "path": "/healthie/iframe_provider_tab/devices",
     "httpMethod": "POST",
     "headers": {
@@ -18,7 +18,7 @@
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
-        "X-Amzn-Trace-Id": "Root=1-66ae1120-7d0825281a9d92f96879cce2",
+        "X-Amzn-Trace-Id": "Root=1-66cca625-386c0ccc634b834c562c0bef",
         "X-Forwarded-For": "109.9.46.184",
         "X-Forwarded-Port": "443",
         "X-Forwarded-Proto": "https",
@@ -71,7 +71,7 @@
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
         ],
         "X-Amzn-Trace-Id": [
-            "Root=1-66ae1120-7d0825281a9d92f96879cce2"
+            "Root=1-66cca625-386c0ccc634b834c562c0bef"
         ],
         "X-Forwarded-For": [
             "109.9.46.184"
@@ -88,21 +88,23 @@
     },
     "queryStringParameters": null,
     "multiValueQueryStringParameters": null,
-    "pathParameters": null,
+    "pathParameters": {
+        "proxy": "devices"
+    },
     "stageVariables": null,
     "requestContext": {
-        "resourceId": "911gmm",
-        "resourcePath": "/healthie/iframe_provider_tab/devices",
+        "resourceId": "7317yx",
+        "resourcePath": "/healthie/iframe_provider_tab/{proxy+}",
         "httpMethod": "POST",
-        "extendedRequestId": "b7edLG25IAMEMNA=",
-        "requestTime": "03/Aug/2024:11:14:40 +0000",
+        "extendedRequestId": "dH7l8GIeoAMEZaQ=",
+        "requestTime": "26/Aug/2024:15:58:29 +0000",
         "path": "/healthie/iframe_provider_tab/devices",
         "accountId": "730335351683",
         "protocol": "HTTP/1.1",
         "stage": "sandbox",
         "domainPrefix": "api",
-        "requestTimeEpoch": 1722683680875,
-        "requestId": "5cda1762-dbf6-4aa7-8155-03cd772347a8",
+        "requestTimeEpoch": 1724687909771,
+        "requestId": "d7bb9f1b-7771-45cd-a031-0b922802e821",
         "identity": {
             "cognitoIdentityPoolId": null,
             "accountId": null,
@@ -118,9 +120,9 @@
             "user": null
         },
         "domainName": "api.sandbox.syntrillo-clinic-backend.com",
-        "deploymentId": "yi4mss",
+        "deploymentId": "6h4cxu",
         "apiId": "athdqpk08c"
     },
-    "body": "healthie_provider_id=1033222&healthie_user_id=Not+transmitted&temporary_lookup_code=a5ad50c9-25a3-485b-b91a-32dca68cda62&patient_not_registered_at_syntrillo=False",
+    "body": "healthie_provider_id=1033222&healthie_user_id=Not+transmitted&temporary_lookup_code=5669ea25-ee36-4a76-960f-69b42989d6d9&patient_not_registered_at_syntrillo=False",
     "isBase64Encoded": false
 }

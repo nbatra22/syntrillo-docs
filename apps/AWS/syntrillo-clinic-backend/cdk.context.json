@@ -1,13 +1,18 @@
 {
   "sandbox": {
     "environment_name": "sandbox",
+    "stacks-termination-protection": false,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
+      "use_waf": false,
+      "allowed_referer": "all",
+      "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
-      ]
+      ],
+      "disable_execute_api_endpoint": false
     },
     "database": {
       "snapshot-identifier": "encrypted-snapshot-2",
@@ -15,17 +20,33 @@
     },
     "storage": {
       "removal-policy": "DESTROY"
+    },
+    "backup": {
+      "backup-vault-removal-policy": "DESTROY",
+      "create-rds-backup-plan": false
+    },
+    "bastion": {
+      "bastion-enabled": true,
+      "bastion-instance-size": "t3.micro"
     }
+
   },
+
+  
   "staging": {
     "environment_name": "staging",
+    "stacks-termination-protection": true,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 0
     },
     "iframe_generator_api": {
+      "use_waf": false,
+      "allowed_referer": "https://securestaging.gethealthie.com/",
+      "webacl-log-group-removal-policy": "DESTROY",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
-      ]
+      ],
+      "disable_execute_api_endpoint": false
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-15-encrypted",
@@ -33,17 +54,32 @@
     },
     "storage": {
       "removal-policy": "DESTROY"
+    },
+    "backup": {
+      "backup-vault-removal-policy": "DESTROY",
+      "create-rds-backup-plan": false
+    },
+    "bastion": {
+      "bastion-enabled": true,
+      "bastion-instance-size": "t3.micro"
     }
   },
+
+
   "prod": {
     "environment_name": "prod",
+    "stacks-termination-protection": true,
     "iframe_generator_function": {
       "provisioned_concurrency_executions": 6
     },
     "iframe_generator_api": {
+      "use_waf": true,
+      "allowed_referer": "https://patients.syntrillo.com/",
+      "webacl-log-group-removal-policy": "RETAIN",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
-      ]
+      ],
+      "disable_execute_api_endpoint": true
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-16-encrypted",
@@ -51,6 +87,14 @@
     },
     "storage": {
       "removal-policy": "RETAIN"
+    },
+    "backup": {
+      "backup-vault-removal-policy": "RETAIN",
+      "create-rds-backup-plan": true
+    },
+    "bastion": {
+      "bastion-enabled": false,
+      "bastion-instance-size": "t3.medium"
     }
   }
 }

@@ -34,6 +34,8 @@ class DatabaseStack(Stack):
         self.environment_context = environment_context
         self.network = network
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
         removal_policy_value = self.environment_context["database"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
 
@@ -52,6 +54,8 @@ class DatabaseStack(Stack):
             ),
             parameters={
                 "general_log": "1",
+                "slow_query_log": "1",
+                "long_query_time": "2",  # Logs queries longer than 2 seconds
                 "log_output": "FILE",
                 "require_secure_transport": "ON"  # Enforce SSL/TLS
             }

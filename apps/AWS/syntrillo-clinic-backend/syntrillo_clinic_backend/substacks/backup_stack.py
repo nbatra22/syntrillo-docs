@@ -25,51 +25,60 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class SyntrilloClinicBackupStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, database: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, database: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.environment_context = environment_context
+        self.environment_name = environment_context["environment_name"]
         self.database = database
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
+        # Create Backup Vault
+        removal_policy_value = self.environment_context["backup"]["backup-vault-removal-policy"]
         backup_vault = backup.BackupVault(
             self, "BackupVault",
-            backup_vault_name="syntrillo-clinic-backup-vault",
-            removal_policy=RemovalPolicy.DESTROY
+            backup_vault_name=f"syntrillo-clinic-{self.environment_name}-backup-vault",
+            removal_policy=RemovalPolicy[removal_policy_value]
         )
 
-        backup_plan = backup.BackupPlan(
-            self, "BackupPlan",
-            backup_plan_name="syntrillo-clinic-rds-backup-plan",
-            backup_vault=backup_vault
-        )
+        # Create Backup Plans
+        if self.environment_context["backup"]["create-rds-backup-plan"]:
+            backup_plan = backup.BackupPlan(
+                self, "BackupPlan",
+                backup_plan_name=f"syntrillo-clinic-{self.environment_name}-rds-backup-plan",
+                backup_vault=backup_vault
+            )
 
-        backup_rule = backup_plan.add_rule(
-            backup.BackupPlanRule(
-                rule_name="DailyBackupRule",
-                schedule_expression=events.Schedule.cron(
-                    minute="0",
-                    hour="5",
-                    month="*",
-                    week_day="*",
-                    year="*"
-                ),  # Run daily at 5:00 AM UTC
-                )
-        )
+            backup_rule = backup_plan.add_rule(
+                backup.BackupPlanRule(
+                    rule_name="DailyBackupRule",
+                    schedule_expression=events.Schedule.cron(
+                        minute="0",
+                        hour="5",
+                        month="*",
+                        week_day="*",
+                        year="*"
+                    ),  # Run daily at 5:00 AM UTC
+                    delete_after=Duration.days(30)
+                    )
+            )
 
-        # backup_rule = backup_plan.add_rule(
-        #     backup.BackupPlanRule(
-        #         rule_name="CopyToAnotherAccount",
-        #         copy_actions=[
-        #             backup.BackupPlanCopyActionProps(
-        #                 destination_backup_vault_arn='arn:aws:backup:us-east-1:058264215756:backup-vault:syntrillo-clinic-prod-copy-vault',
-        #                 copy_action_name="CopyToAnotherAccount"
-        #             )
-        #         ]
-        #     )
-        # )
+            # backup_rule = backup_plan.add_rule(
+            #     backup.BackupPlanRule(
+            #         rule_name="CopyToAnotherAccount",
+            #         copy_actions=[
+            #             backup.BackupPlanCopyActionProps(
+            #                 destination_backup_vault_arn='arn:aws:backup:us-east-1:058264215756:backup-vault:syntrillo-clinic-prod-copy-vault',
+            #                 copy_action_name="CopyToAnotherAccount"
+            #             )
+            #         ]
+            #     )
+            # )
 
-        backup_plan.add_selection(
-            "MySQLDatabaseFromSnaphotBackup",
-            resources=[
-                backup.BackupResource.from_rds_database_instance(self.database.db_from_snapshot)
-            ]
-        )
+            backup_plan.add_selection(
+                "MySQLDatabaseFromSnaphotBackup",
+                resources=[
+                    backup.BackupResource.from_rds_database_instance(self.database.db_from_snapshot)
+                ]
+            )

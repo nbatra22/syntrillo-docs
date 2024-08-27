@@ -25,8 +25,12 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class SecretsStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        self.environment_context = environment_context
+
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
 
         self.tenovi_hwi_secrets = secretsmanager.Secret(
             self, "TenoviHWISecrets"
@@ -34,4 +38,8 @@ class SecretsStack(Stack):
 
         self.healthie_secrets = secretsmanager.Secret(
             self, "HealthieSecrets"
+        )
+
+        self.openai_secrets = secretsmanager.Secret(
+            self, "OpenAiSecrets"
         )

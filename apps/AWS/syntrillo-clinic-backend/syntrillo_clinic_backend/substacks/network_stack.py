@@ -33,6 +33,8 @@ class NetworkStack(Stack):
         self.environment_context = environment_context
         self.aws_environment = environment_context["environment_name"]
 
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
+
         # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
         # Nat gateway is necessary for lambda functions to communicates outside the vpc
         # In our case lambdas need to call tenovi and healthie for example

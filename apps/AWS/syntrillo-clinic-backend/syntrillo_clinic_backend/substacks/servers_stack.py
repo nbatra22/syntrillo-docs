@@ -45,12 +45,15 @@ class ServersStack(Stack):
             secrets,
             **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-    
+
+
         self.environment_context = environment_context
         self.network = network
         self.database = database
         self.storage = storage
         self.secrets = secrets
+        
+        self.termination_protection = self.environment_context["stacks-termination-protection"]
 
         self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
