@@ -74,7 +74,7 @@
     },
     "iframe_generator_api": {
       "use_waf": true,
-      "allowed_referer": "https://patients.syntrillo.com",
+      "allowed_referer": "https://patients.syntrillo.com/",
       "webacl-log-group-removal-policy": "RETAIN",
       "allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
