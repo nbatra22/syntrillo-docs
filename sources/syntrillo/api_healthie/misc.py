@@ -9,6 +9,8 @@ import bleach
 import markdown
 from markupsafe import Markup
 
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+
 def extract_healthie_user_id_from_url(url):
     """
     Extracts user ID from the referrer URL.
@@ -39,7 +41,9 @@ def log_this(
     Stores some logs locally. Default is verbose file.
     """
 
-    # TODO : write only if local
+    # Do not log in AWS Lambda as it is not possible to access the file system
+    if LocalEnvironmentAndSecrets().is_lambda() :
+        return
 
     if filepath is None:
         filepath = 'ignore_healthie_log_verbose.txt'
