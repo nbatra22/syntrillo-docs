@@ -30,15 +30,15 @@ class LocalEnvironmentAndSecrets:
     # first is local in .env, second is in aws secrets managers
     SECRET_CODES = {
         'healthie' : {
-            'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization' ),
-            'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey' ),
+            'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization'  ),
+            'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
-            'api_key'       : ( 'TENOVI_API_KEY',        'tenoviHwiApiKey' ),
+            'api_key'       : ( 'TENOVI_API_KEY',        'tenoviHwiApiKey'       ),
         },
         'openai' : {
-            'api_key'       : ( 'OPENAI_API_KEY',        'openAiApiKey' ),
+            'api_key'       : ( 'OPENAI_API_KEY',        'openAiApiKey'          ),
         },
         'aws_database' : {
             'host'          : ( 'AWS_DATABASE_CONFIG_HOST',        'host' ),
