@@ -38,7 +38,7 @@ class LocalEnvironmentAndSecrets:
             'api_key'       : ( 'TENOVI_API_KEY',        'tenoviHwiApiKey' ),
         },
         'openai' : {
-            'api_key'       : ( 'OPENAI_API_KEY',        'openAIAPIKey' ),
+            'api_key'       : ( 'OPENAI_API_KEY',        'openAiApiKey' ),
         },
         'aws_database' : {
             'host'          : ( 'AWS_DATABASE_CONFIG_HOST',        'host' ),
@@ -294,5 +294,4 @@ if __name__ == '__main__':
     # should be available in the environment
     overide_uid = os.getenv('OVERDIDE_HEALTHIE_USER_ID')
     print(f"overide_uid : {overide_uid}")
-
 
