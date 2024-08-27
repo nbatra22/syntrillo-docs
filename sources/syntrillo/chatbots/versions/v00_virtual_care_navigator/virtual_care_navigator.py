@@ -4,7 +4,8 @@ import os
 
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.api_healthie.misc import log_this, transform_to_safe_html
+from syntrillo.api_healthie.misc import log_this
+from syntrillo.helper_functions.html import transform_to_safe_html
 
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
