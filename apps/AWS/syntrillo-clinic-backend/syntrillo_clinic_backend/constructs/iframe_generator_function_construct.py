@@ -75,3 +75,4 @@ class IFrameGeneratorFunction(Construct):
         self.database.admin_secret.grant_read(self.function)
         self.secrets.tenovi_hwi_secrets.grant_read(self.function)
         self.secrets.healthie_secrets.grant_read(self.function)
+        self.secrets.openai_secrets.grant_read(self.function)
