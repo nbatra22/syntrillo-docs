@@ -34,8 +34,11 @@ class LocalEnvironmentAndSecrets:
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey' ),
         },
         'tenovi_hwi' : {
-            'client_domain' : ( 'TENOVI_CLIENT_DOMAIN', 'tenoviHwiClientDomain' ),
-            'api_key'       : ( 'TENOVI_API_KEY',       'tenoviHwiApiKey' ),
+            'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
+            'api_key'       : ( 'TENOVI_API_KEY',        'tenoviHwiApiKey' ),
+        },
+        'openai' : {
+            'api_key'       : ( 'OPENAI_API_KEY',        'openAIAPIKey' ),
         },
         'aws_database' : {
             'host'          : ( 'AWS_DATABASE_CONFIG_HOST',        'host' ),
@@ -43,9 +46,6 @@ class LocalEnvironmentAndSecrets:
             'password'      : ( 'AWS_DATABASE_CONFIG_PASSWORD',    'password' ),
             'local_port'    : ( 'AWS_DATABASE_CONFIG_LOCAL_PORT',  None ),
         },
-        'openai' : {
-            'api_key'  : ( 'OPENAI_API_KEY', 'openAIAPIKey' ),
-        }
     }
 
     # ------------------------------
