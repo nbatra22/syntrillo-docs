@@ -70,7 +70,7 @@ class DataStructureStorageManagerLocalFileSystem:
         TODO : consider moving JSON and XLSX to a database
 
         Args
-        - structure_name: The name of the data structure to retrieve.
+        - structure_name: The name of the data structure to retrieve, including its version.
 
         Returns a tuple:
         - The data structure as a dictionary.

@@ -64,7 +64,18 @@ if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
 
     aws ssm --profile $PROFILE \
         start-session \
-    --target $INSTANCE_ID \
+        --target $INSTANCE_ID \
         --document-name AWS-StartPortForwardingSessionToRemoteHost \
-        --parameters '{"host":["'$hostname'"],"portNumber":["3306"], "localPortNumber":["'$local_port'"]}'
+        --parameters '{"host":["'$hostname'"],"portNumber":["3306"], "localPortNumber":["'$local_port'"]}' &
+
+    # Allow the session to establish
+    sleep 10
+
+    # Keep-alive loop: Ping the local port periodically to keep the session active
+    while true; do
+        echo -ne "\nPinging localhost:$local_port to keep tunnel alive..."
+        (echo > /dev/tcp/localhost/$local_port) >/dev/null 2>&1 || echo -e "\nPing failed"
+        sleep 300  # Ping every 5 minutes
+    done
+
 fi

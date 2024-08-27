@@ -227,6 +227,15 @@ class LocalEnvironmentAndSecrets:
     def is_pythonanywhere(self):
         return self._is_pythonanywhere
 
+    # ------------------------------
+    # some other methods
+    def get_healthie_full_platform_name(self):
+        """
+        Returns the full platform name for Healthie. Either:
+            - 'healthie_production'
+            - 'healthie_staging'
+        """
+        return 'healthie_' + self.get_healthie_organization()
 
 
 if __name__ == '__main__':

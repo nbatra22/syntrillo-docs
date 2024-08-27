@@ -9,7 +9,7 @@ import io
 from werkzeug.utils import secure_filename
 
 # python.analysis.extraPaths added into .vscode/settings.json
-from syntrillo.data_structures.storage_manager_database import DatabaseStorageManagerDatabase
+from syntrillo.data_structures.storage_manager_database import DataStructureStorageManagerDatabase
 from syntrillo.data_structures.questionnaire_healthie_manager import DataStructureQuestionnaireHealthieManager
 from syntrillo.data_structures.xlsx_questionnaire_handler import DataStructureXlsxQuestionnaireHandler
 
@@ -31,7 +31,7 @@ def iframe_healthie_provider_sidebar_questionnaire_database():
     logs = []
 
     # Initialize StorageManager to access available data structures
-    manager = DatabaseStorageManagerDatabase()
+    manager = DataStructureStorageManagerDatabase()
     all_structures = manager.list_all_structures_with_metadata()
 
     # ---
@@ -55,7 +55,7 @@ def download_questionnaire_from_database(id):
     """
 
     # get the file from the database
-    manager = DatabaseStorageManagerDatabase()
+    manager = DataStructureStorageManagerDatabase()
 
     excel_bytes, full_name, log = manager.retrieve_excel_file_by_id(id)
 

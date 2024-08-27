@@ -8,9 +8,10 @@ from typing import Tuple
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.set_up_health_information_tables import HealthInformationTablesManager
 from syntrillo.helper_functions.time import convert_to_est
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 
-class DatabaseStorageManagerDatabase:
+class DataStructureStorageManagerDatabase:
     """
     Manages storage of data structures in a MySQL database.
 
@@ -75,6 +76,61 @@ class DatabaseStorageManagerDatabase:
 
         return data_structures
 
+    def retrieve_structure_by_healthie_external_id(
+        self,
+        healthie_external_id: str
+    ) -> Tuple[dict, dict]:
+        """
+        This function retrieves a structure by its healthie_external_id
+
+        Expected format of healthie_external_id : '<structure_name>_v<version>'
+
+        The platform is retrievd from LocalEnvironamentAndSecrets
+
+        Returns a tuple with the following elements:
+        - The data structure as a dictionary.
+        - A log dictionary with the following keys:
+            - 'success': True if the data structure was successfully retrieved, False otherwise.
+            - 'error': An error message if an error occurred, None otherwise
+
+        Args:
+            healthie_external_id (str): The healthie_external_id of the structure to be retrieved.
+
+        Returns:
+            tuple ([dict, dict]): The data structure and a log dictionary.
+
+        """
+
+        # get the platform from the LocalEnvironmentAndSecrets
+        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+        platform = secrets.get_healthie_organization()
+
+        # parse the healthie_external_id into structure_name and version
+        # expected format : '<structure_name>_v<version>'
+        # log success or failure
+        log = {
+            'success': True,
+            'error': None
+        }
+
+        try:
+            # Split the healthie_external_id backwards to handle underscores in structure_name
+            # Expected format: '<structure_name>_v<version>'
+            if "_v" not in healthie_external_id:
+                raise ValueError("Invalid format: '_v' not found in healthie_external_id")
+
+            # Split from the right side to get the version and structure_name
+            structure_name, structure_version = healthie_external_id.rsplit('_v', 1)
+
+        except Exception as e:
+            log['success'] = False
+            log['error'] = f"Error parsing healthie_external_id: {str(e)}"
+            return None, log
+
+        # retrieve the structure
+        return self.retrieve_structure_by_platform_name_and_version(platform, structure_name, structure_version)
+
+
     def retrieve_structure_by_platform_name_and_version(
         self,
         platform: str,
@@ -94,6 +150,10 @@ class DatabaseStorageManagerDatabase:
             platform (str): The platform where the structure is used.
             structure_name (str): The name of the structure to be retrieved.
             structure_version (str): The version of the structure to be retrieved.
+
+        Returns:
+            tuple ([dict, dict]): The data structure and a log dictionary.
+
         """
         log = {
             'success': True,
@@ -327,7 +387,7 @@ class DatabaseStorageManagerDatabase:
 
 # Example usage
 if __name__ == '__main__':
-    storage_manager = DatabaseStorageManagerDatabase()
+    storage_manager = DataStructureStorageManagerDatabase()
 
     # Example data structure to store
     data_structure = {
