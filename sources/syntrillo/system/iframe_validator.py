@@ -23,6 +23,10 @@ class IframeValidator:
         """
         Checks if the request comes from an allowed domain.
 
+        Returns a tupple:
+        - True if the request is allowed, False otherwise.
+        - A dictionary containing logs of the referer and origin headers.
+
         Args:
             request (Flask request object): The Flask request object.
 
