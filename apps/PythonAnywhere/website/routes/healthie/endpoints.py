@@ -16,7 +16,6 @@ import json
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.api_healthie.misc import log_this
 from syntrillo.chatbots.dispatcher import ChatBotsDispatcher
 from syntrillo.patient_initialization.new_patient_created import NewPatientCreated
 
@@ -31,11 +30,12 @@ ALLOWED_IPS = ['192.168.0.1', '10.0.0.1', '127.0.0.1',  # local IPs
                '52.4.158.130', '3.216.152.234',         # production
                ]
 
-
 @healthie_endpoint_bp.route('/healthie_endpoint_post', methods=['POST'])
 def healthie_endpoint_post():
     """
     This is the single endpoint of healthie webhooks.
+
+    https://api.staging.syntrillo-clinic-backend.com/healthie_endpoint_post
 
     See https://docs.gethealthie.com/docs/#webhooks
 
@@ -47,23 +47,17 @@ def healthie_endpoint_post():
 
     # Get the IP address of the incoming request
     # remote_ip = request.remote_addr # returns a private address on PA : '10.0.0.20'
-    # log_this(remote_ip)
     remote_ip = request.headers.get('X-Real-IP', request.remote_addr)
-    log_this(remote_ip)
 
     # Check if the remote IP is in the whitelist
     if remote_ip not in ALLOWED_IPS:
         message = {'error': f'Unauthorized access. Your IP is not whitelisted. {remote_ip}'}
-        log_this(message=message)
         return jsonify(message), 401
 
     # Retrieve the JSON data from the POST request
     data = request.json
 
-    # Log the data to a local file
-    with open('ignore_healthie_endpoint_post_logs.txt', 'a') as f:
-        f.write(json.dumps(data) + '\n\n')
-
+    # TODO : Log the data json.dumps(data)
 
     # --------------------------------------------
     # Dispatch
@@ -71,14 +65,14 @@ def healthie_endpoint_post():
     # Message created in the chat. The webhook fires when a message is sent in the chat.
     #   {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note" and data['event_type'] == "message.created":
-        log_this(message="Endpoint : Note : message.created")
+        # TODO log (message="Endpoint : Note : message.created")
         chatbot = ChatBotsDispatcher()
         chatbot.endpoint(data=data)
 
     # Patient created on the provider 'Add Client' page. The webhook fires before the patient logs in for the first time.
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}
     elif data['resource_id_type'] == "User" and data['event_type'] == "patient.created":
-        log_this(message="Endpoint : User : patient.created")
+        # TODO : log (message="Endpoint : User : patient.created")
         npc = NewPatientCreated()
         npc.endpoint(data=data)
 

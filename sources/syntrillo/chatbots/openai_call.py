@@ -16,11 +16,10 @@ class OpenAICall:
     def __init__(self):
         # ------------------------------
         # load secrets and dotenv
-        # TODO : implement load_openai_secrets=True
-        secrets = LocalEnvironmentAndSecrets()
+        secrets = LocalEnvironmentAndSecrets(load_openai_secrets=True)
 
         # Retrieve the API key from environment variables
-        self.openai_api_key = os.getenv('OPENAI_API_KEY')
+        self.openai_api_key = secrets.get_openai_api_key()
 
 
     def send_messages(

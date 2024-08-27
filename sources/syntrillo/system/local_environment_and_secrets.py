@@ -23,7 +23,7 @@ class LocalEnvironmentAndSecrets:
     AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN = 'AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN'
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
-
+    AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
 
     # ------------------------------
     # array of available secret codes
@@ -34,8 +34,11 @@ class LocalEnvironmentAndSecrets:
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey' ),
         },
         'tenovi_hwi' : {
-            'client_domain' : ( 'TENOVI_CLIENT_DOMAIN', 'tenoviHwiClientDomain' ),
-            'api_key'       : ( 'TENOVI_API_KEY',       'tenoviHwiApiKey' ),
+            'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
+            'api_key'       : ( 'TENOVI_API_KEY',        'tenoviHwiApiKey' ),
+        },
+        'openai' : {
+            'api_key'       : ( 'OPENAI_API_KEY',        'openAIAPIKey' ),
         },
         'aws_database' : {
             'host'          : ( 'AWS_DATABASE_CONFIG_HOST',        'host' ),
@@ -58,32 +61,37 @@ class LocalEnvironmentAndSecrets:
     _PYTHON_ANYWHERE_DOTENV_PATH = '/home/syntrillo/Syntrillo_Clinic/.env'
 
     # ------------------------------
-    # hiden class attributes
-    _is_lambda = False
-    _is_pythonanywhere = False
-    _is_local = False
-    _dotenv_path = None
-    # names below have to match the ones in the SECRET_CODES
-    _aws_database_secrets = None
-    _healthie_secrets = None
-    _tenovi_hwi_secrets = None
-
     def __init__(
         self,
         load_aws_database_secrets: bool = False,
         load_healthie_secrets: bool = False,
         load_tenovi_hwi_secrets: bool = False,
+        load_openai_secrets: bool = False,
         ) -> None:
         """
         Initializes the GetLocalSecrets class.
         """
+
+        # ------------------------------
+        # init class attributes
+        self._is_lambda = False
+        self._is_pythonanywhere = False
+        self._is_local = False
+        self._dotenv_path = None
+
+        # names below have to match the ones in the SECRET_CODES
+        self._aws_database_secrets = None
+        self._healthie_secrets = None
+        self._tenovi_hwi_secrets = None
+        self._openai_secrets = None
 
         try:
             # ------------------------------
             # determine the environment where the code is running
             if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None:
+            or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
+            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None:
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -109,6 +117,9 @@ class LocalEnvironmentAndSecrets:
 
                 if load_tenovi_hwi_secrets:
                     self._tenovi_hwi_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN))
+
+                if load_openai_secrets:
+                    self._openai_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN))
 
         except Exception as e:
             # Handle exceptions related to the initialization of the class
@@ -206,6 +217,9 @@ class LocalEnvironmentAndSecrets:
     def get_aws_database_local_port(self):
         return self.get_secret_value('aws_database', 'local_port')
 
+    def get_openai_api_key(self):
+        return self.get_secret_value('openai', 'api_key')
+
     # ------------------------------
     # Are we in a production environment
     def is_production(self):
@@ -240,7 +254,12 @@ class LocalEnvironmentAndSecrets:
 
 if __name__ == '__main__':
     # test the class
-    secrets = LocalEnvironmentAndSecrets(load_aws_database_secrets=True, load_healthie_secrets=True, load_tenovi_hwi_secrets=True)
+    secrets = LocalEnvironmentAndSecrets(
+        load_aws_database_secrets=True,
+        load_healthie_secrets=True,
+        load_tenovi_hwi_secrets=True,
+        load_openai_secrets=True,
+        )
 
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
@@ -254,6 +273,8 @@ if __name__ == '__main__':
     aws_database_password = secrets.get_secret_value('aws_database', 'password')
     aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
+    openai_api_key = secrets.get_secret_value('openai', 'api_key')
+
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
     print(f"healthie_organization : {healthie_organization}")
@@ -265,6 +286,8 @@ if __name__ == '__main__':
     print(f"aws_database_user : {aws_database_user}")
     print(f"aws_database_password : {aws_database_password}")
     print(f"aws_database_port : {aws_database_port}")
+
+    print(f"openai_api_key : {openai_api_key}")
 
     print("done")
 
