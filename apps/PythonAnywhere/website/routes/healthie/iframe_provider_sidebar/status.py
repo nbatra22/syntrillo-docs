@@ -1,8 +1,9 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_sidebar/status.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, abort
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_sidebar_status_bp = Blueprint('iframe_healthie_provider_sidebar_status_bp', __name__)
 
@@ -15,6 +16,14 @@ def iframe_healthie_provider_sidebar_status():
     It is called by the healthie_iframe_provider_sidebar index.html
     """
 
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    # --------------------------------------------------------------------
     healthie_provider_id = request.form.get('healthie_provider_id')
 
     # --------------------------------------------------------------------

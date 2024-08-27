@@ -12,6 +12,7 @@ from syntrillo.data_structures.storage_manager_local_file_system import DataStru
 from syntrillo.data_structures.questionnaire_healthie_manager import DataStructureQuestionnaireHealthieManager
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.data_structures.xlsx_questionnaire_handler import DataStructureXlsxQuestionnaireHandler
+from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_sidebar_questionnaire_bp = Blueprint('iframe_healthie_provider_sidebar_questionnaire_bp', __name__)
 
@@ -24,6 +25,14 @@ def iframe_healthie_provider_sidebar_questionnaire():
     It is called by the healthie_iframe_provider_sidebar index.html
     """
 
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    # --------------------------------------------------------------------
     healthie_provider_id = request.form.get('healthie_provider_id')
 
     # --------------------------------------------------------------------

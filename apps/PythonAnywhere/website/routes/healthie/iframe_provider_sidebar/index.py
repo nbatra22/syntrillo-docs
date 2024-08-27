@@ -29,8 +29,7 @@ def iframe_healthie_provider_sidebar_index():
     iframe_validator = IframeValidator()
     iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
     if not iframe_valid:
-        pass
-        # abort(403, description="Access Denied: Unauthorized Embedding\n" + json.dumps(iframe_log))
+        abort(403, description="Access Denied")
 
     # --------------------------------------------------------------------
     # Retrieve the JSON data from the GET request
