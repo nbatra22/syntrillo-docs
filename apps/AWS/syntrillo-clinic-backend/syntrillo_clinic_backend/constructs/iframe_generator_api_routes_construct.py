@@ -66,6 +66,14 @@ class IFrameGeneratorAPIRoutes(Construct):
                 apigw.LambdaIntegration(iframe_generator_function),
             )
 
+        # /healthie_endpoint_post
+        if self.environment_context["environment_name"] != 'prod':
+            iframe_healthie_client_sidebar = self.rest_api.root.add_resource("healthie_endpoint_post")
+            iframe_healthie_client_sidebar.add_method(
+                "POST",
+                apigw.LambdaIntegration(iframe_generator_function),
+            )
+
     def create_static_resources(self, iframe_generator_function: _lambda.Function):
         static = self.rest_api.root.add_resource("static")
 
