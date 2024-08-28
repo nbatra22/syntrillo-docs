@@ -1,5 +1,5 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/care_plan.py
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, abort
 
 import json
 
@@ -13,6 +13,8 @@ from syntrillo.data_structures.healthie_dataset_handler import DataStructureHeal
 
 from syntrillo.api_healthie.medications import HealthieMedications
 
+from syntrillo.system.iframe_validator import IframeValidator
+
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
 @iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan', methods=['POST'])
@@ -22,6 +24,14 @@ def iframe_healthie_provider_tab_care_plan():
     It is called by the healthie_iframe_provider_tab index.html
     """
 
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    # --------------------------------------------------------------------
     # get all pseudonyms from post temporary identifier
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_index_post(request)

@@ -1,7 +1,8 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/system.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, abort
 
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_system_bp = Blueprint('iframe_healthie_provider_tab_system_bp', __name__)
 
@@ -9,6 +10,15 @@ iframe_healthie_provider_tab_system_bp = Blueprint('iframe_healthie_provider_tab
 
 @iframe_healthie_provider_tab_system_bp.route('/healthie/iframe_provider_tab/system', methods=['POST'])
 def iframe_healthie_provider_tab_system():
+
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    # --------------------------------------------------------------------
     # Retrieve the form data from the POST request
     #   : these are passed from the healthie_iframe_provider_tab index.html
     #   : healthie_user_id, is None, unless in panic mode

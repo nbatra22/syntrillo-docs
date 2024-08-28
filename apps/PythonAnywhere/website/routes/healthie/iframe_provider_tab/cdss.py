@@ -1,7 +1,9 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/cdss.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, abort
 
 from .post_management import PostManager
+
+from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_cdss_bp = Blueprint('iframe_healthie_provider_tab_cdss_bp', __name__)
 
@@ -12,6 +14,14 @@ def iframe_healthie_provider_tab_cdss():
     It is called by the healthie_iframe_provider_tab index.html
     """
 
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    # --------------------------------------------------------------------
     # get all pseudonyms from post temporary identifier
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_index_post(request)

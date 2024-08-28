@@ -1,11 +1,11 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_patient_sidebar/index.py
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, abort
 import json
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
-
+from syntrillo.system.iframe_validator import IframeValidator
 
 # -------------------------------------------------
 
@@ -21,6 +21,12 @@ def iframe_healthie_patient_sidebar():
         referrer_url: https://securestaging.gethealthie.com/
 
     """
+    # --------------------------------------------------------------------
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
 
     # --------------------------------------------------------------------
     # Retrieve the JSON data from the GET request
