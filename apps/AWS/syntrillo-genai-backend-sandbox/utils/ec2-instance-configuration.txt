@@ -1,0 +1,3 @@
+# Install pip3
+sudo apt update # <= important otherwise package retrieval error
+sudo apt install python3-pip
