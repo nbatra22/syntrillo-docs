@@ -9,7 +9,10 @@
       "use_waf": false,
       "allowed_referer": "all",
       "webacl-log-group-removal-policy": "DESTROY",
-      "allowed_api_adresses": [
+      "iframes_allowed_api_adresses": [
+        {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
+      ],
+      "webhooks_allowed_api_adresses": [
         {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
       ],
       "disable_execute_api_endpoint": false
@@ -43,8 +46,12 @@
       "use_waf": false,
       "allowed_referer": "https://securestaging.gethealthie.com/",
       "webacl-log-group-removal-policy": "DESTROY",
-      "allowed_api_adresses": [
+      "iframes_allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+      ],
+      "webhooks_allowed_api_adresses": [
+        {"ip": "18.206.70.225/32", "ip_owner": "healthie-staging"},
+        {"ip": "44.195.8.253/32", "ip_owner": "healthie-staging"}
       ],
       "disable_execute_api_endpoint": false
     },
@@ -76,8 +83,12 @@
       "use_waf": true,
       "allowed_referer": "https://patients.syntrillo.com/",
       "webacl-log-group-removal-policy": "RETAIN",
-      "allowed_api_adresses": [
+      "iframes_allowed_api_adresses": [
         {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+      ],
+      "webhooks_allowed_api_adresses": [
+        {"ip": "52.4.158.130/32", "ip_owner": "healthie-prod"},
+        {"ip": "3.216.152.234/32", "ip_owner": "healthie-prod"}
       ],
       "disable_execute_api_endpoint": true
     },

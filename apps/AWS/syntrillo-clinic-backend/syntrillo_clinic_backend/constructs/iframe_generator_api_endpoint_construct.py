@@ -209,9 +209,14 @@ class IFrameGeneratorApiEndpoint(Construct):
         return api
 
     def _resource_policy(self):
-        allowed_ip_addresses = set(
+        iframe_allowed_ip_addresses = set(
             ip_info["ip"]
-            for ip_info in self.environment_context["iframe_generator_api"]["allowed_api_adresses"]
+            for ip_info in self.environment_context["iframe_generator_api"]["iframes_allowed_api_adresses"]
+        )
+
+        webhook_allowed_ip_addresses = set(
+            ip_info["ip"]
+            for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
         )
 
         allow_all_invokes_policy_statement = iam.PolicyStatement(
@@ -221,7 +226,19 @@ class IFrameGeneratorApiEndpoint(Construct):
             resources=["execute-api:/*/*/*"],
             conditions={
                 "NotIpAddress": {
-                    "aws:SourceIp": list(allowed_ip_addresses),
+                    "aws:SourceIp": list(iframe_allowed_ip_addresses),
+                }
+            },
+        )
+
+        deny_all_webhook_invokes_policy_statement = iam.PolicyStatement(
+            effect=iam.Effect.DENY,
+            principals=[iam.AnyPrincipal()],
+            actions=["execute-api:Invoke"],
+            resources=["execute-api:/*/*/healthie_endpoint_post"],
+            conditions={
+                "NotIpAddress": {
+                    "aws:SourceIp": list(webhook_allowed_ip_addresses),
                 }
             },
         )
@@ -230,10 +247,11 @@ class IFrameGeneratorApiEndpoint(Construct):
             effect=iam.Effect.ALLOW,
             principals=[iam.AnyPrincipal()],
             actions=["execute-api:Invoke"],
-            resources=["execute-api:/*/*/*"]
+            resources=["execute-api:/*/*/*"],
         )
 
         return iam.PolicyDocument(statements=[
                 allow_all_invokes_policy_statement, 
-                allowed_ips_policy_statement
+                allowed_ips_policy_statement,
+                deny_all_webhook_invokes_policy_statement
         ])
