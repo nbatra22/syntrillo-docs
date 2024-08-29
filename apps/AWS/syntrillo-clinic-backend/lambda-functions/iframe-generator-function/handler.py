@@ -1,5 +1,4 @@
-from aws_lambda_powertools import Logger
-logger = Logger(service="IFRAME_GENERATOR")
+from syntrillo.system.logger import logger
 
 import flask_app
 
