@@ -5,6 +5,7 @@
 routes to healthie webhooks endpoints
 
 """
+from syntrillo.system.logger import logger
 
 from flask import Blueprint, request, jsonify, render_template
 import json
@@ -66,6 +67,7 @@ def healthie_endpoint_post():
     #   {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
     if data['resource_id_type'] == "Note" and data['event_type'] == "message.created":
         # TODO log (message="Endpoint : Note : message.created")
+        logger.info("Endpoint : Note : message.created")
         chatbot = ChatBotsDispatcher()
         chatbot.endpoint(data=data)
 
@@ -73,9 +75,9 @@ def healthie_endpoint_post():
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}
     elif data['resource_id_type'] == "User" and data['event_type'] == "patient.created":
         # TODO : log (message="Endpoint : User : patient.created")
+        logger.info("Endpoint : User : patient.created")
         npc = NewPatientCreated()
         npc.endpoint(data=data)
-
 
     return jsonify({'message': 'Webhook received'}), 200
 

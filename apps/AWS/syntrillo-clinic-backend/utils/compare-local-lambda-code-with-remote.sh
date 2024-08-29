@@ -1,10 +1,18 @@
 #!/bin/bash
 
+if [ "$1" == "" ]; then
+  echo "Usage: $0 <environment>"
+  echo "Environments: sandbox, staging, prod-deployment"
+  exit
+fi
+
+ENVIRONMENT=$1
+
 # Set the Lambda function name
 FUNCTION_NAME="IFrameGeneratorFunction"
 
 # Download the remote function code
-REMOTE_CODE_URL=$(aws lambda --profile syntrillo-clinic-staging get-function --function-name "$FUNCTION_NAME" --query 'Code.Location' --output text)
+REMOTE_CODE_URL=$(aws lambda --profile syntrillo-clinic-$ENVIRONMENT get-function --function-name "$FUNCTION_NAME" --query 'Code.Location' --output text)
 curl -L -o remote_code.zip "$REMOTE_CODE_URL"
 
 # Extract the remote function code
