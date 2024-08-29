@@ -12,3 +12,8 @@ def favicon():
 @app.route('/')
 def hello():
     return 'Hello, World!'
+
+from flask import send_file
+@app.route('/download')
+def download():
+    return send_file('file-to-download.txt', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
