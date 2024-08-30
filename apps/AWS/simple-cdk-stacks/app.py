@@ -7,6 +7,7 @@ from simple_cdk_stacks.simple_api_lambda_stack import SimpleApiLambdaStack
 from simple_cdk_stacks.simple_rds_s3_export_stack import SimpleRDSS3ExportStack
 from simple_cdk_stacks.simple_http_resolver_stack import SimpleHttpResolverStack
 from simple_cdk_stacks.simple_flask_wsgi_stack import SimpleFlaskWsgiStack
+from simple_cdk_stacks.simple_download_stack import SimpleDownloadStack
 
 app = cdk.App()
 SimpleApiLambdaStack(app, "SimpleApiLambdaStack",
@@ -30,5 +31,6 @@ SimpleApiLambdaStack(app, "SimpleApiLambdaStack",
 SimpleRDSS3ExportStack(app, "SimpleRDSS3ExportStack")
 SimpleHttpResolverStack(app, "SimpleHttpResolverStack")
 SimpleFlaskWsgiStack(app, "SimpleFlaskWsgiStack")
+SimpleDownloadStack(app, "SimpleDownloadStack")
 
 app.synth()
