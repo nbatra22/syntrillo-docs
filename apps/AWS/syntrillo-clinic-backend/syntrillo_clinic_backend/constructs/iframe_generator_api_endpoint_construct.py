@@ -192,7 +192,8 @@ class IFrameGeneratorApiEndpoint(Construct):
                 logging_level=apigateway.MethodLoggingLevel.INFO,
             ),
             policy=self._resource_policy(),
-            disable_execute_api_endpoint=self.environment_context["iframe_generator_api"]["disable_execute_api_endpoint"]
+            disable_execute_api_endpoint=self.environment_context["iframe_generator_api"]["disable_execute_api_endpoint"],
+            binary_media_types=["*/*"],
         )
 
         route53.ARecord(
