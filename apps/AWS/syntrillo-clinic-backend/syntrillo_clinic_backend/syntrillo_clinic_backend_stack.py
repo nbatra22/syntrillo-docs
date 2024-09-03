@@ -36,6 +36,8 @@ from syntrillo_clinic_backend.substacks.task_scheduling_stack import SyntrilloCl
 from syntrillo_clinic_backend.substacks.check_functions_stack import SyntrilloClinicBackendCheckFunctionsStack
 from syntrillo_clinic_backend.substacks.backup_stack import SyntrilloClinicBackupStack
 
+from syntrillo_clinic_backend.substacks.fix_output_dependency_stack import FixOutputDependencyStack
+
 from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
 
 import json
@@ -115,6 +117,11 @@ class SyntrilloClinicBackendStack(Stack):
             self, "BackupStack",
             environment_context=self.environment_context,
             database=self.database,
+        )
+
+        fix_output_dependency_stack = FixOutputDependencyStack(
+            self, "FixOutputDependencyStack",
+            secrets=self.secrets,
         )
 
         # if self.aws_environment == "sandbox":
