@@ -31,8 +31,6 @@ from syntrillo_clinic_backend.constructs.iframe_generator_api_routes_construct i
 
 from syntrillo_clinic_backend.constructs.iframe_generator_function_construct import IFrameGeneratorFunction
 
-from syntrillo_clinic_backend.constructs.iframe_generator_secrets_construct import IFrameGeneratorSecrets
-
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -56,12 +54,6 @@ class ServersStack(Stack):
         self.secrets = secrets
         
         self.termination_protection = self.environment_context["stacks-termination-protection"]
-
-        self.iframe_generator_secrets = IFrameGeneratorSecrets(
-            self, "IFrameGeneratorSecrets",
-            environment_context=self.environment_context,
-            database=self.database,
-        )
 
         self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
