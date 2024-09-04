@@ -4,6 +4,8 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
+from syntrillo.system.logger import logger
+
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.devices import Devices
@@ -25,6 +27,8 @@ class RemoteMonitoringDataSync:
             syntrillo_internal_key (uuid.UUID): The syntrillo internal key (UUID).
 
         """
+
+        logger.info("[RemoteMonitoringDataSync] : __init__")
 
         # ---------------
         # get user lookup codes
@@ -114,7 +118,6 @@ class RemoteMonitoringDataSync:
         }
 
         # Loop over devices
-        # TODO : log with timestamp
         for device in self.user_devices:
             # Get latest timestamp for this device
             latest_record, log = self.syntrillo_database_manager.get_latest_record_for_tenovi_device(device['device']['name'])
@@ -122,6 +125,9 @@ class RemoteMonitoringDataSync:
                 overall_log["logs"].append(log)
                 overall_log["success"] = False
                 continue
+
+            # log device name and latest timestamp
+            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device['device']['name']} : latest_record : {latest_record}")
 
             # adding a tiny amount of time to the latest created server time to avoid duplicates (since it is greater than or equal to)
             latest_server_created_zulutime_updated_str = None
@@ -139,7 +145,11 @@ class RemoteMonitoringDataSync:
             if not log["success"]:
                 overall_log["logs"].append(log)
                 overall_log["success"] = False
+                logger.error(f"[sync_tenovi_to_syntrillo] : device_name : {device['device']['name']} : get_device_measurements : {log}")
                 continue
+
+            # log number of measurements
+            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device['device']['name']} : number_of_measurements : {len(measurements)}")
 
             # Loop over measurements
             for measurement in measurements:
@@ -157,8 +167,11 @@ class RemoteMonitoringDataSync:
                     if not log["success"]:
                         overall_log["logs"].append(log)
                         overall_log["success"] = False
+                        logger.error(f"[sync_tenovi_to_syntrillo] : device_name : {device['device']['name']} : insert_tenovi_raw_measurement : {log}")
                     else:
                         overall_log["number_of_records_inserted"] += 1
+
+            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device['device']['name']} : number_of_records_inserted : {overall_log['number_of_records_inserted']}")
 
         return overall_log
 
@@ -451,6 +464,8 @@ class RemoteMonitoringDataSync:
 
         """
 
+        logger.info("[sync_syntrillo_to_healthie]")
+
         overall_log1 = self.sync_syntrillo_to_healthie__bmp_blood_pressure()
         overall_log2 = self.sync_syntrillo_to_healthie__bmp_pulse()
         overall_log3 = self.sync_syntrillo_to_healthie__watch_daily_sum_steps()
@@ -463,6 +478,11 @@ class RemoteMonitoringDataSync:
             "number_of_records_inserted": overall_log1["number_of_records_inserted"] + overall_log2["number_of_records_inserted"] + overall_log3["number_of_records_inserted"] + overall_log4["number_of_records_inserted"] + overall_log5["number_of_records_inserted"] + overall_log6["number_of_records_inserted"],
             "logs": overall_log1["logs"] + overall_log2["logs"] + overall_log3["logs"] + overall_log4["logs"] + overall_log5["logs"] + overall_log6["logs"]
         }
+
+        if overall_log["success"]:
+            logger.info(f"[sync_syntrillo_to_healthie] : overall_log : success")
+        else:
+            logger.error(f"[sync_syntrillo_to_healthie] : overall_log : {overall_log}")
 
         return overall_log
 
