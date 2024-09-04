@@ -85,6 +85,7 @@ class DatabaseStack(Stack):
             parameter_group=parameter_group,
             monitoring_interval=Duration.seconds(60),
             monitoring_role=enhanced_monitoring_role,
+            iam_authentication=True,
         )
 
         # Allow Database Access

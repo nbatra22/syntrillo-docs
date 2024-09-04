@@ -192,7 +192,8 @@ class IFrameGeneratorApiEndpoint(Construct):
                 logging_level=apigateway.MethodLoggingLevel.INFO,
             ),
             policy=self._resource_policy(),
-            disable_execute_api_endpoint=self.environment_context["iframe_generator_api"]["disable_execute_api_endpoint"]
+            disable_execute_api_endpoint=self.environment_context["iframe_generator_api"]["disable_execute_api_endpoint"],
+            binary_media_types=["*/*"],
         )
 
         route53.ARecord(
@@ -209,15 +210,15 @@ class IFrameGeneratorApiEndpoint(Construct):
         return api
 
     def _resource_policy(self):
-        iframe_allowed_ip_addresses = set(
+        iframe_allowed_ip_addresses = sorted(set(
             ip_info["ip"]
             for ip_info in self.environment_context["iframe_generator_api"]["iframes_allowed_api_adresses"]
-        )
+        ))
 
-        webhook_allowed_ip_addresses = set(
+        webhook_allowed_ip_addresses = sorted(set(
             ip_info["ip"]
             for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
-        )
+        ))
 
         allow_all_invokes_policy_statement = iam.PolicyStatement(
             effect=iam.Effect.DENY,
