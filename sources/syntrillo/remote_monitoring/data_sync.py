@@ -114,6 +114,7 @@ class RemoteMonitoringDataSync:
         }
 
         # Loop over devices
+        # TODO : log with timestamp
         for device in self.user_devices:
             # Get latest timestamp for this device
             latest_record, log = self.syntrillo_database_manager.get_latest_record_for_tenovi_device(device['device']['name'])
