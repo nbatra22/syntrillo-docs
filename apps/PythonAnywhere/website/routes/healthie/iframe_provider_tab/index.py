@@ -104,6 +104,7 @@ def iframe_healthie_provider_tab_index():
         milliseconds_delay_default = 1000
 
     # if os env variable MILLISECONDS_DELAY exists use it else use default
+    #   : useful locally since some delay needed to prevent a server error on VSCode Live Server
     milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', milliseconds_delay_default) )
 
     # --------------------------------------------------------------------
