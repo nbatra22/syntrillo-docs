@@ -94,13 +94,14 @@
 
     // Function to load content via POST
     //   : POST prefered over GET to avoid caching sensitive data in the URL
-    function loadTabContent(url, target, milliseconds_delay=2000) {
+    function loadTabContent(url, target, milliseconds_delay = {{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
 
         $(target).html("<h3>Loading content. Please wait...</h3>");
 
         // Variables passed from Flask
         var healthieProviderId = "{{ healthie_provider_id }}";
 
+        // The global setTimeout() method sets a timer which executes a function or specified piece of code once the timer expires.
         setTimeout(function() {
             $.ajax({
                 type: 'POST',
@@ -112,7 +113,19 @@
                     $(target).html(data);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    if (jqXHR.status === 504) {
+                        if (retryCount < maxRetries) {
+                            // Retry after 5 seconds if a 504 error occurs
+                            $(target).html('<p>&nbsp;</p><p>Received 504 Timeout Error. Retrying...</p>');
+                            setTimeout(function () {
+                                loadTabContent(url, target, milliseconds_delay, retryCount + 1, maxRetries);
+                            }, 5000); // 5 seconds delay before retry
+                        } else {
+                            $(target).html('<p>&nbsp;</p><p>Error: 504 Gateway Timeout. Please try again later.</p>');
+                        }
+                    } else {
+                        $(target).html('<p>&nbsp;</p><p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    }
                 }
             });
         }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server

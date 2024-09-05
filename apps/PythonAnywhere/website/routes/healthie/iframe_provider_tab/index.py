@@ -9,8 +9,8 @@ import os
 from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
-from syntrillo.system.dot_env_loader import DotEnvFileLoader
 from syntrillo.system.iframe_validator import IframeValidator
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 # -------------------------------------------------
 iframe_healthie_provider_tab_index_bp = Blueprint('iframe_healthie_provider_tab_index', __name__)
@@ -34,9 +34,8 @@ def iframe_healthie_provider_tab_index():
         abort(403, description="Access Denied")
 
     # --------------------------------------------------------------------
-    # Load the .env file based on the environment to retrieve local environment specific tweaks used mainly for debugging
-    # TODO : use LocalEnvironmentAndSecrets instead of DotEnvFileLoader
-    _ = DotEnvFileLoader()
+    # load secrets and environment variables to retrieve local environment specific tweaks used mainly for debugging
+    secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
 
     # --------------------------------------------------------------------
     # get healthie_provider_id and healthie_user_id from URL parameters
@@ -98,8 +97,14 @@ def iframe_healthie_provider_tab_index():
     # --------------------------------------------------------------------
     # milliseconds_delay
 
-    # if os env variable MILLISECONDS_DELAY exists use it else use 1000
-    milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', 1000) )
+    if secrets.is_lambda and secrets.is_staging:
+        # if running on AWS Lambda and in staging environment use a longer delay to allow lambdas to initialize
+        milliseconds_delay_default = 5000
+    else:
+        milliseconds_delay_default = 1000
+
+    # if os env variable MILLISECONDS_DELAY exists use it else use default
+    milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', milliseconds_delay_default) )
 
     # --------------------------------------------------------------------
     # render the template

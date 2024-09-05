@@ -106,7 +106,7 @@
     //   : POST prefered over GET to avoid caching sensitive data in the URL
     //   : information will be retrived from the first part of the route scripts, with the get_pseudonyms_from_index_post function
     //     that's why it requires several ids to be passed
-    function loadTabContent(url, target, milliseconds_delay={{ milliseconds_delay }}) {
+    function loadTabContent(url, target, milliseconds_delay = {{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
 
         $(target).html("<h3>Loading content. Please wait...</h3>");
 
@@ -116,6 +116,7 @@
         var temporaryLookupCode = "{{ temporary_lookup_code }}";
         var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
+        // The global setTimeout() method sets a timer which executes a function or specified piece of code once the timer expires.
         setTimeout(function() {
             $.ajax({
                 type: 'POST',
@@ -130,7 +131,19 @@
                     $(target).html(data);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
-                    $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    if (jqXHR.status === 504) {
+                        if (retryCount < maxRetries) {
+                            // Retry after 5 seconds if a 504 error occurs
+                            $(target).html('<p>&nbsp;</p><p>Received 504 Timeout Error. Retrying...</p>');
+                            setTimeout(function () {
+                                loadTabContent(url, target, milliseconds_delay, retryCount + 1, maxRetries);
+                            }, 5000); // 5 seconds delay before retry
+                        } else {
+                            $(target).html('<p>&nbsp;</p><p>Error: 504 Gateway Timeout. Please try again later.</p>');
+                        }
+                    } else {
+                        $(target).html('<p>&nbsp;</p><p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    }
                 }
             });
         }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server
