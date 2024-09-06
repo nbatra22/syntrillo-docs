@@ -116,15 +116,15 @@
                     if (jqXHR.status === 504) {
                         if (retryCount < maxRetries) {
                             // Retry after 5 seconds if a 504 error occurs
-                            $(target).html('<p>&nbsp;</p><p>Received 504 Timeout Error. Retrying...</p>');
+                            $(target).html('<h3>Received 504 Timeout Error. Retrying...</h3>');
                             setTimeout(function () {
                                 loadTabContent(url, target, milliseconds_delay, retryCount + 1, maxRetries);
                             }, 5000); // 5 seconds delay before retry
                         } else {
-                            $(target).html('<p>&nbsp;</p><p>Error: 504 Gateway Timeout. Please try again later.</p>');
+                            $(target).html('<h3>Error: 504 Gateway Timeout. Please try again later.</h3>');
                         }
                     } else {
-                        $(target).html('<p>&nbsp;</p><p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                        $(target).html('<h3>Error: ' + jqXHR.status + ' ' + errorThrown + '</h3>');
                     }
                 }
             });
