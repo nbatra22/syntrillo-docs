@@ -62,7 +62,7 @@ class IFrameGeneratorFunction(Construct):
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
-            timeout=Duration.seconds(60),
+            timeout=Duration.seconds(self.environment_context['iframe_generator_function']['lambda_time_out_seconds']),
         )
 
         self.function_alias = _lambda.Alias(
