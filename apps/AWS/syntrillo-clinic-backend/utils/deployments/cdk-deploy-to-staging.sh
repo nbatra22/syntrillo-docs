@@ -7,4 +7,13 @@ cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")";
 #  : ./apps/AWS/syntrillo-clinic-backend
 cd ../../
 
-cdk deploy --profile syntrillo-clinic-staging --context 'environment=staging' $@
+if [ "$1" == "admin" ]; then
+  echo "deploy with ADMIN permissions"
+  role_arn=""
+  shift
+else
+  echo "deploy with prod like permissions"
+  role_arn="--role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role"	
+fi
+
+cdk deploy --profile syntrillo-clinic-staging $role_arn --context 'environment=staging' $@
