@@ -4,6 +4,10 @@ import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
+
+from syntrillo.system.matplotlib_setup import setup_matplotlib
+setup_matplotlib()
+
 import matplotlib
 import matplotlib.cm as cm # color map
 

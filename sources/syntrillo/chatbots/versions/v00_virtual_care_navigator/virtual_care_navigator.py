@@ -1,4 +1,4 @@
-# Path: ./sources/syntrillo/virtual_care_navigator/virtual_care_navigator.py
+# Path: ./sources/syntrillo/chatbots/versions/v00_virtual_care_navigator/virtual_care_navigator.py
 
 import os
 

@@ -9,6 +9,9 @@ import plotly.io as pio
 import plotly.utils as pu
 from typing import Tuple
 
+from syntrillo.system.matplotlib_setup import setup_matplotlib
+setup_matplotlib()
+
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from matplotlib import colormaps

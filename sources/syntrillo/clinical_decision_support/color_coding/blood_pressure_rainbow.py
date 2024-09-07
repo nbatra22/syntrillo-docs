@@ -1,6 +1,9 @@
 # Path: ./sources/syntrillo/clinical_decision_support/color_coding/blood_pressure_rainbow.py
 # get rainbow color for blood pressure
 
+from syntrillo.system.matplotlib_setup import setup_matplotlib
+setup_matplotlib()
+
 from matplotlib import colors as mcolors
 
 class ColorCodingBloodPressureRainbows:

@@ -160,6 +160,7 @@ def sync_measurements_form():
     # sync
     sync = RemoteMonitoringDataSync(post_manager.syntrillo_internal_key)
 
+    # TODO : move this section to the sync method
     overall_log = {
         "success": True,
         "number_of_records_inserted__tenovi_to_syntrillo": 0,

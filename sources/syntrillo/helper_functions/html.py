@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/helper_functions/html.py
 import re
 import markdown
 from bleach.css_sanitizer import CSSSanitizer
