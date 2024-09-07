@@ -1,3 +1,4 @@
+# Path: ./sources/syntrillo/chatbots/openai_call.py
 import os
 import json
 

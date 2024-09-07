@@ -224,20 +224,32 @@
         <table class="compact-table">
             <tr>
                 <td>
-                    <table>
-                        <tr>
-                            <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                <form id="syncMeasurementsForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.sync_measurements_form') }}" method="POST">
+                    <form id="syncMeasurementsForm" action="{{ url_for('iframe_healthie_provider_tab_system_devices_bp.sync_measurements_form') }}" method="POST">
+                        <table>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
                                     <button type="button" id="syncMeasurementsFormButton" class="styled-button">Sync measurements</button>
-                                </form>
-                            </td>
-                            <td align="left" style="vertical-align: middle;">
-                                <span id="syncMeasurementsLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                                <span id="syncMeasurementsSuccess" class="response-message"></span>
-                            </td>
-                        </tr>
-                    </table>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <span id="syncMeasurementsLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="syncMeasurementsSuccess" class="response-message"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <label for="syncMeasurementsFormWhatToSync" class="styled-label">What to synch:</label>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <select name="sync_measurements_form_what_to_sync" id="syncMeasurementsFormWhatToSync" class="styled-select">
+                                        <option value="sync_both" selected>Both</option>
+                                        <option value="sync_tenovi_to_syntrillo">Tenovi to Syntrillo</option>
+                                        <option value="sync_syntrillo_to_healthie">Syntrillo to Healthie</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
                 </td>
             </tr>
             <tr>
