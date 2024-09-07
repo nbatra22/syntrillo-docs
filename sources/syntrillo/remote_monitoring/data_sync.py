@@ -2,7 +2,7 @@
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from syntrillo.system.logger import logger
 
@@ -139,7 +139,7 @@ class RemoteMonitoringDataSync:
                 "logs": []
             }
 
-            # Get latest timestamp for this device
+            # Get latest timestamp from the syntrillo database for this device
             latest_record, log = self.syntrillo_database_manager.get_latest_record_for_tenovi_device(device_name)
             if not log["success"]:
                 device_log["logs"].append(log)
@@ -147,31 +147,46 @@ class RemoteMonitoringDataSync:
                 overall_log["device_logs"][device_name] = device_log
                 continue
 
-            # log device name and latest timestamp
-            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device_name} : latest_record : {latest_record}")
+            # log device name
+            logger.info(f"synch device_name : {device_name}")
 
             # adding a tiny amount of time to the latest created server time to avoid duplicates (since it is greater than or equal to)
             latest_server_created_zulutime_updated_str = None
-            if latest_record:
+            created__gte = None,
+            if latest_record is not None:
                 data_json_dict = json.loads(latest_record['data_json'])
                 latest_server_created_zulutime_updated = datetime.strptime(data_json_dict['created'], "%Y-%m-%dT%H:%M:%S.%fZ")
                 latest_server_created_zulutime_updated += timedelta(microseconds=1)
                 latest_server_created_zulutime_updated_str = latest_server_created_zulutime_updated.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                created__gte = latest_server_created_zulutime_updated_str
+            else:
+                # if no records, then start from when the device was created
+                created__gte = device['device']['created']
+
+            # created__lte is the current time with zulu timezone
+            created__lte = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
             # Get data from Tenovi device measurements class
-            measurements, log = self.device_measurements.get_device_measurements(
+            # use a trick to get what is possible to obtain if a 504 error is returned
+            # (used for Pillbox with a large number of battery measurements because of an old firmware)
+            measurements, log = self.device_measurements.get_device_measurements_created_window_504_adaptive(
                 hwi_device_id=device['id'],
-                created__gte=latest_server_created_zulutime_updated_str,
+                created__gte=created__gte,
+                created__lte=created__lte,
             )
-            if not log["success"]:
-                device_log["logs"].append(log)
-                device_log["success"] = False
-                logger.error(f"[sync_tenovi_to_syntrillo] : device_name : {device_name} : get_device_measurements : {log}")
-                overall_log["device_logs"][device_name] = device_log
+
+            # log this device's measurements
+            device_log["logs"].append(log)
+            device_log["success"] = log["success"]
+            overall_log["device_logs"][device_name] = device_log
+
+            # stop and continue to next device if no success and no partial success
+            if log["success"] is False and ( log['partial_success'] is not None and log['partial_success'] is False ):
+                logger.error(f"device_name : {device_name} : get_device_measurements : {log}")
                 continue
 
             # log number of measurements
-            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device_name} : number_of_measurements : {len(measurements)}")
+            logger.info(f"device_name : {device_name} : number_of_measurements : {len(measurements)}")
 
             # Loop over measurements
             for measurement in measurements:
@@ -189,13 +204,13 @@ class RemoteMonitoringDataSync:
                     if not log["success"]:
                         device_log["logs"].append(log)
                         device_log["success"] = False
-                        logger.error(f"[sync_tenovi_to_syntrillo] : device_name : {device_name} : insert_tenovi_raw_measurement : {log}")
+                        logger.error(f"device_name : {device_name} : insert_tenovi_raw_measurement : {log}")
                     else:
                         device_log["number_of_records_inserted"] += 1
                         overall_log["number_of_records_inserted"] += 1
 
             overall_log["device_logs"][device_name] = device_log
-            logger.info(f"[sync_tenovi_to_syntrillo] : device_name : {device_name} : number_of_records_inserted : {overall_log['number_of_records_inserted']}")
+            logger.info(f"device_name : {device_name} : number_of_records_inserted : {overall_log['number_of_records_inserted']}")
 
         # Set overall success to False only if all devices have failed
         if all(not log["success"] for log in overall_log["device_logs"].values()):
@@ -518,6 +533,48 @@ class RemoteMonitoringDataSync:
             logger.info(f"[sync_syntrillo_to_healthie] : overall_log : success")
         else:
             logger.error(f"[sync_syntrillo_to_healthie] : overall_log : {overall_log}")
+
+        return overall_log
+
+    def sync_tenovi_to_syntrillo_to_healthie(
+        self,
+        sync_tenovi_to_syntrillo=True,
+        sync_syntrillo_to_healthie=True,
+    ) -> dict:
+        """
+        Sync data from Tenovi to Syntrillo PHI database and then to Healthie.
+
+        Args:
+            sync_tenovi_to_syntrillo (bool, optional): Sync data from Tenovi to Syntrillo PHI database. Defaults to True.
+            sync_syntrillo_to_healthie (bool, optional): Sync data from Syntrillo PHI database to Healthie. Defaults to True.
+
+        Returns:
+            dict: Overall log.
+
+        """
+        overall_log = {
+            "success": True,
+            "number_of_records_inserted__tenovi_to_syntrillo": 0,
+            "number_of_records_inserted__syntrillo_to_healthie": 0,
+        }
+
+        # sync tenovi to syntrillo
+        if sync_tenovi_to_syntrillo:
+            log1 = self.sync_tenovi_to_syntrillo()
+            overall_log['tenovi_to_syntrillo'] = log1
+            overall_log['success'] = overall_log['success'] and log1['full_success']
+
+            if log1['number_of_records_inserted'] is not None:
+                overall_log['number_of_records_inserted__tenovi_to_syntrillo'] = log1['number_of_records_inserted']
+
+        # sync syntrillo to healthie
+        if sync_syntrillo_to_healthie:
+            log2 = self.sync_syntrillo_to_healthie()
+            overall_log['syntrillo_to_healthie'] = log2
+            overall_log['success'] = overall_log['success'] and log2['success']
+
+            if log2['number_of_records_inserted'] is not None:
+                overall_log['number_of_records_inserted__syntrillo_to_healthie'] = log2['number_of_records_inserted']
 
         return overall_log
 

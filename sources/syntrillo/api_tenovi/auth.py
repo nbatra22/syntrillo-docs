@@ -138,10 +138,21 @@ class TenoviAuth:
                 log = {
                     "success": False,
                     "message": f"Failed to get data in {caller}: {response.status_code}",
-                    "code": response.status_code,
+                    "status_code": response.status_code,
                     "response": response.json() if response.text else None,
                 }
                 return None, log
+
+        # Handle timeout errors
+        except requests.exceptions.Timeout as e:
+            if verbose:
+                print(f"Timeout error in {caller}: {e}")
+            log = {
+                "success": False,
+                "message": f"Timeout error in {caller}: {e}",
+                "status_code": 504,
+            }
+            return None, log
 
         # Handle any exceptions that occur during the GET request
         except requests.exceptions.RequestException as e:
@@ -152,6 +163,7 @@ class TenoviAuth:
                 "message": f"An error occurred in {caller}: {e}"
             }
             return None, log
+
 
 
     def make_post_request(

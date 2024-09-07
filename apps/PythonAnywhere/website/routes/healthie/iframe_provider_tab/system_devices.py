@@ -160,33 +160,12 @@ def sync_measurements_form():
     # sync
     sync = RemoteMonitoringDataSync(post_manager.syntrillo_internal_key)
 
-    # TODO : move this section to the sync method
-    overall_log = {
-        "success": True,
-        "number_of_records_inserted__tenovi_to_syntrillo": 0,
-        "number_of_records_inserted__syntrillo_to_healthie": 0,
-    }
+    log = sync.sync_tenovi_to_syntrillo_to_healthie(
+        sync_tenovi_to_syntrillo=sync_tenovi_to_syntrillo,
+        sync_syntrillo_to_healthie=sync_syntrillo_to_healthie,
+    )
 
-    # sync tenovi to syntrillo
-    if sync_tenovi_to_syntrillo:
-        log1 = sync.sync_tenovi_to_syntrillo()
-        overall_log['tenovi_to_syntrillo'] = log1
-        overall_log['success'] = overall_log['success'] and log1['full_success']
-
-        if log1['number_of_records_inserted'] is not None:
-            overall_log['number_of_records_inserted__tenovi_to_syntrillo'] = log1['number_of_records_inserted']
-
-    # sync syntrillo to healthie
-    if sync_syntrillo_to_healthie:
-        log2 = sync.sync_syntrillo_to_healthie()
-        overall_log['syntrillo_to_healthie'] = log2
-        overall_log['success'] = overall_log['success'] and log2['success']
-
-        if log2['number_of_records_inserted'] is not None:
-            overall_log['number_of_records_inserted__syntrillo_to_healthie'] = log2['number_of_records_inserted']
-
-
-    return jsonify( overall_log ), 200
+    return jsonify( log ), 200
 
 
 @iframe_healthie_provider_tab_system_devices_bp.route('/healthie/iframe_provider_tab/system_devices/delete_syntrillo_measurements_records_form', methods=['POST'])
