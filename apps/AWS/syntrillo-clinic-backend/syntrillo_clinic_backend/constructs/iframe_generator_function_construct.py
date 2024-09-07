@@ -56,7 +56,7 @@ class IFrameGeneratorFunction(Construct):
             environment={
                 "POWERTOOLS_LOG_LEVEL": self.environment_context['iframe_generator_function']['log_level'],
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.admin_secret.secret_arn,
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets.openai_secrets.secret_arn
@@ -74,17 +74,29 @@ class IFrameGeneratorFunction(Construct):
         )
 
         # self.database.admin_secret.grant_read(self.function)
-        self.grant_read_secrets(self.database.admin_secret)
+        self.grant_read_secrets(self.secrets.database_lambda_user_secrets)
         # self.secrets.tenovi_hwi_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
         # self.secrets.healthie_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.healthie_secrets)
         # self.secrets.openai_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.openai_secrets)
+
+        # function_security_group = self.function.connections.security_groups[0]
+
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
+        # )
     
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         self.function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
             resources=[secrets.secret_arn],
+        ))
+        self.function.add_to_role_policy(iam.PolicyStatement(
+            actions=["kms:Decrypt"],
+            resources=[secrets.encryption_key.key_arn],
         ))

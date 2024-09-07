@@ -28,10 +28,10 @@ class FixOutputDependencyStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, stack: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.secrets = stack
+        self.database = stack
 
         ssm.StringParameter(
             self, "TemporaryFixOutputDependencyParameter",
             parameter_name="/tmp/fix_output_dependency",
-            string_value=self.secrets.database_lambda_user_secrets.secret_arn,
+            string_value=self.database.admin_secret.secret_arn,
         )

@@ -59,7 +59,7 @@ class RemoteMonitoringDataSync(Construct):
             environment={
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.database.admin_secret.secret_arn,
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
             },
@@ -69,7 +69,7 @@ class RemoteMonitoringDataSync(Construct):
         )
 
         # self.database.admin_secret.grant_read(self.function)
-        self.grant_read_secrets(self.database.admin_secret)
+        self.grant_read_secrets(self.secrets.database_lambda_user_secrets)
         # self.secrets.tenovi_hwi_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
         # self.secrets.healthie_secrets.grant_read(self.function)
