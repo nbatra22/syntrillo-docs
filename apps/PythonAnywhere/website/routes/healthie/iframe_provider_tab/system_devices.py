@@ -137,10 +137,26 @@ def sync_measurements_form():
 
     """
 
+    # --------------------------------------------------------------------
     # get all pseudonyms from post temporary identifier
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
+    # --------------------------------------------------------------------
+    # get data from the form
+    sync_measurements_form_what_to_sync = request.form.to_dict().get('sync_measurements_form_what_to_sync')
+
+    sync_tenovi_to_syntrillo = False
+    sync_syntrillo_to_healthie = False
+    if sync_measurements_form_what_to_sync == "sync_tenovi_to_syntrillo":
+        sync_tenovi_to_syntrillo = True
+    elif sync_measurements_form_what_to_sync == "sync_syntrillo_to_healthie":
+        sync_syntrillo_to_healthie = True
+    elif sync_measurements_form_what_to_sync == "sync_both":
+        sync_tenovi_to_syntrillo = True
+        sync_syntrillo_to_healthie = True
+
+    # --------------------------------------------------------------------
     # sync
     sync = RemoteMonitoringDataSync(post_manager.syntrillo_internal_key)
 
@@ -150,24 +166,24 @@ def sync_measurements_form():
         "number_of_records_inserted__syntrillo_to_healthie": 0,
     }
 
-    # sync data between Tenovi and Syntrillo
+    # sync tenovi to syntrillo
+    if sync_tenovi_to_syntrillo:
+        log1 = sync.sync_tenovi_to_syntrillo()
+        overall_log['tenovi_to_syntrillo'] = log1
+        overall_log['success'] = overall_log['success'] and log1['full_success']
 
-    log1 = sync.sync_tenovi_to_syntrillo()
-    overall_log['tenovi_to_syntrillo'] = log1
+        if log1['number_of_records_inserted'] is not None:
+            overall_log['number_of_records_inserted__tenovi_to_syntrillo'] = log1['number_of_records_inserted']
 
-    if not log1['success']:
-        overall_log['success'] = False
-
-    else:
-        overall_log['number_of_records_inserted__tenovi_to_syntrillo'] = log1['number_of_records_inserted']
-
+    # sync syntrillo to healthie
+    if sync_syntrillo_to_healthie:
         log2 = sync.sync_syntrillo_to_healthie()
         overall_log['syntrillo_to_healthie'] = log2
+        overall_log['success'] = overall_log['success'] and log2['success']
 
-        if not log2['success']:
-            overall_log['success'] = False
-        else:
+        if log2['number_of_records_inserted'] is not None:
             overall_log['number_of_records_inserted__syntrillo_to_healthie'] = log2['number_of_records_inserted']
+
 
     return jsonify( overall_log ), 200
 

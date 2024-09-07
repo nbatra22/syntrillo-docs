@@ -87,6 +87,7 @@ class TenoviAuth:
         self,
         url: str,
         params: dict = None,
+        timeout: int = 10,
         verbose: bool = False
         ) -> Tuple[dict, dict]:
         """
@@ -95,6 +96,7 @@ class TenoviAuth:
         Args:
             url (str): The URL to make the GET request to.
             params (dict, optional): Query parameters to include in the request.
+            timeout (int, optional): The number of seconds to wait for the server to send data before giving up.
 
         Returns a tupple:
         - dict or None: The JSON response if the request was successful, None otherwise.
@@ -121,22 +123,23 @@ class TenoviAuth:
 
         # Make the GET request
         try:
-            response = requests.get(full_url, headers=self.get_headers(), params=params)
+            response = requests.get(full_url, headers=self.get_headers(), params=params, timeout=timeout)
             if response.status_code == 200:
                 json_output = response.json()
                 log = {
                     "success": True,
-                    "message": f"Successfully posted data in {caller}"
+                    "message": f"Successfully got data in {caller}"
                 }
                 return json_output, log
             else:
                 if verbose:
-                    print(f"Failed to post data in {caller}: {response.status_code}")
+                    print(f"Failed to get data in {caller}: {response.status_code}")
                     print(response.text)
                 log = {
                     "success": False,
                     "message": f"Failed to get data in {caller}: {response.status_code}",
-                    "error": response.json() if response.text else None,
+                    "code": response.status_code,
+                    "response": response.json() if response.text else None,
                 }
                 return None, log
 
