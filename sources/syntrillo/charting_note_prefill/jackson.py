@@ -44,7 +44,7 @@ class ChartingNotePrefillJackson:
 
             # ------------------------------
             # load openai secrets and environment variables
-            secrets = LocalEnvironmentAndSecrets()
+            secrets = LocalEnvironmentAndSecrets(load_openai_secrets=True)
 
             self.openai_api_key = secrets.get_openai_api_key()
 
