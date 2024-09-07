@@ -813,12 +813,18 @@ class DataReportingHeartRate:
                     end_date=pd.to_datetime(previous_consecutive_range['to_date'])
                     )
 
-                if hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd is not None and previous_hr_hourly_stats_rmssd != 0:
+                if hr_hourly_stats_rmssd is not None \
+                    and previous_hr_hourly_stats_rmssd is not None \
+                    and previous_hr_hourly_stats_rmssd != 0 \
+                    and not np.isnan(hr_hourly_stats_rmssd) \
+                    and not np.isnan(previous_hr_hourly_stats_rmssd):
+
                     hr_hourly_stats_rmssd_trend = (hr_hourly_stats_rmssd - previous_hr_hourly_stats_rmssd) / previous_hr_hourly_stats_rmssd
-                    hr_hourly_stats_rmssd_trend_pct = str(int(100*hr_hourly_stats_rmssd_trend)) + '%'
+                    hr_hourly_stats_rmssd_trend_pct = str(int(100 * hr_hourly_stats_rmssd_trend)) + '%'
                 else:
                     hr_hourly_stats_rmssd_trend = None
                     hr_hourly_stats_rmssd_trend_pct = '-'
+
 
         return {
             'from_date': from_date,
