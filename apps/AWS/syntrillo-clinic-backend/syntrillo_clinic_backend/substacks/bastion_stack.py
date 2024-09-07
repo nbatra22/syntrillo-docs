@@ -66,3 +66,9 @@ class SyntrilloClinicBastionStack(Stack):
             "usermod -a -G docker ec2-user",
         )
         bastion_host.instance.add_user_data(user_data.render())
+    
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            self.network.bastion_host_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        )

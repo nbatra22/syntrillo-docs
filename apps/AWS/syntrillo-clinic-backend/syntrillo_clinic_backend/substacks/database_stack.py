@@ -102,8 +102,16 @@ class DatabaseStack(Stack):
 
         self.admin_secret = self.db_from_snapshot.secret
 
-        self.db_from_snapshot_security_group.add_ingress_rule(
-            self.network.bastion_host_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
-        )
+        # self.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.network.bastion_host_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        # )
+
+        # db_host_param = ssm.StringParameter(
+        #     self,
+        #     "DatabaseHostParameter",
+        #     parameter_name="/syntrillo-clinic/aws/db/host",
+        #     string_value=self.db_from_snapshot.instance_endpoint.hostname,
+        #     description="Database host",
+        # )
