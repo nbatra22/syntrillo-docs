@@ -12,7 +12,6 @@ if [ "$1" == "admin" ]; then
   role_arn=""
   shift
 else
-  echo "deploy with prod like permissions"
   role_arn="--role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role"	
 fi
 

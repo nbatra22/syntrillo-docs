@@ -108,10 +108,10 @@ class DatabaseStack(Stack):
         #     description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
         # )
 
-        # db_host_param = ssm.StringParameter(
-        #     self,
-        #     "DatabaseHostParameter",
-        #     parameter_name="/syntrillo-clinic/aws/db/host",
-        #     string_value=self.db_from_snapshot.instance_endpoint.hostname,
-        #     description="Database host",
-        # )
+        db_host_param = ssm.StringParameter(
+            self,
+            "DatabaseHostParameter",
+            parameter_name="/syntrillo-clinic/aws/db/host",
+            string_value=self.db_from_snapshot.instance_endpoint.hostname,
+            description="Database host",
+        )

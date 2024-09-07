@@ -121,7 +121,7 @@ class SyntrilloClinicBackendStack(Stack):
 
         # fix_output_dependency_stack = FixOutputDependencyStack(
         #     self, "FixOutputDependencyStack",
-        #     secrets=self.secrets,
+        #     stack=self.secrets,
         # )
 
         # if self.aws_environment == "sandbox":
