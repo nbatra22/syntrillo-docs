@@ -1,7 +1,6 @@
 # Path: ./sources/syntrillo/api_tenovi/device_measurements.py
 
 from syntrillo.api_tenovi.auth import TenoviAuth
-from syntrillo.api_tenovi.devices import Devices
 
 class DeviceMeasurements:
 
@@ -9,6 +8,7 @@ class DeviceMeasurements:
     TENOVI_METRICS_BPM_BLOOD_PRESSURE = "blood_pressure"
     TENOVI_METRICS_BPM_PULSE = "pulse"
     TENOVI_METRICS_BPM_IRREGULAR_HEARTBEAT = "irregular_heartbeat"
+
     TENOVI_METRICS_WATCH_STEPS = "steps"
     TENOVI_METRICS_WATCH_SLEEP = "sleep"
     TENOVI_METRICS_WATCH_HEART_RATE_STATISTICS = "heart_rate_statistics"
@@ -61,10 +61,12 @@ class DeviceMeasurements:
             "metric__name": metric__name
         }.items() if v is not None}
 
-        return self.auth.make_get_request(
+        response, log = self.auth.make_get_request(
             url,
             params=params
         )
+
+        return response, log
 
 
 
@@ -85,6 +87,11 @@ if __name__ == "__main__":
         # Get and print all devices or a specific device
         for hwi_device_id in device_ids:
             measurements, log = device_measurements.get_device_measurements(hwi_device_id)
-            print(f"\n-----------\nMeasurements for device {hwi_device_id}:")
-            TenoviAuth.print_pretty_json(measurements)
+            print(f"\n-----------\nDevice {hwi_device_id}:")
+            TenoviAuth.print_pretty_json(log)
+            # TenoviAuth.print_pretty_json(measurements)
+            # print number of measurements
+            if log['success']:
+                print(f"Number of measurements: {len(measurements)}")
+
 

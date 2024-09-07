@@ -1,4 +1,4 @@
-# Path: ./sources/syntrillo/data_structures/storage_manager.py
+# Path: ./sources/syntrillo/data_structures/storage_manager_local_file_system.py
 
 import os
 import json

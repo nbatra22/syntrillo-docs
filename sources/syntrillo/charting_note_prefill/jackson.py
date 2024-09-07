@@ -44,12 +44,10 @@ class ChartingNotePrefillJackson:
 
             # ------------------------------
             # load openai secrets and environment variables
-            # TODO : implement load_openai_secrets=True
-            secrets = LocalEnvironmentAndSecrets()
+            secrets = LocalEnvironmentAndSecrets(load_openai_secrets=True)
 
-            self.openai_api_key = os.getenv('OPENAI_API_KEY')
+            self.openai_api_key = secrets.get_openai_api_key()
 
-            self.log.append("Loaded API key from .env file.")
 
     def load_documents(self, documents_with_binary_content : list) -> None:
         """
@@ -238,9 +236,14 @@ class ChartingNotePrefillJackson:
         for form_answer in form_answers_blank:
             #defines the prompt for the AI from the form.
             prompt = form_answer.get('LLM_data').get("structure_item").get('llm_prompt')
+
             #prompt is the same as the qustion provided to the doctor if left as auto
             if prompt == "auto":
                 prompt = form_answer.get('LLM_data').get("structure_item").get('question')
+
+            #if no prompt is provided, skip the question.
+            if prompt == None or prompt == "":
+                continue
 
             #for "yes or no" special values adds insturctions to the end of the llm prompt.
             #In the future could create a helper function that works with any list of values provided.
