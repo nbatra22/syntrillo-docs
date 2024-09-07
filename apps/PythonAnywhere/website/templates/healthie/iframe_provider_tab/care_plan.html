@@ -641,10 +641,11 @@
         // -----------------------------------------
         // --- MEDICATIONS HISTORY LOGIC ---
 
-        var medicationHistoryDatasetJson = '{{ medication_history }}';
+        // Parse the JSON string into an actual JavaScript array or object
+        var medicationHistoryDatasetJson = JSON.parse('{{ medication_history | tojson }}');
 
         // Check if data is not null and not an empty array
-        if (!(medicationHistoryDatasetJson === null || (Array.isArray(medicationHistoryDatasetJson) && medicationHistoryDatasetJson.length === 0))) {
+        if (medicationHistoryDatasetJson && Array.isArray(medicationHistoryDatasetJson) && medicationHistoryDatasetJson.length > 0) {
             $('#data-medication-history-table').DataTable({
                 "paging": false,
                 "searching": false,
@@ -653,20 +654,19 @@
                 "responsive": true,
                 "order": [[2, 'asc']]  // Order by the 3rd column (start-date)
             });
+        } else {
+            console.log('Medication History Data is empty or not an array.');
         }
 
 
         // -----------------------------------------
         // --- PILLBOX LOGIC ---
 
-        // Initialize DataTable if not empty
-        var pillboxDataset = '{{ tenovi_pillbox_expectations_dataset | tojson }}';
-
         // Parse the JSON string into an actual JavaScript array or object
-        var pillboxDatasetJson = JSON.parse(pillboxDataset);
+        var pillboxDatasetJson = JSON.parse('{{ tenovi_pillbox_expectations_dataset | tojson }}');
 
         // Check if data is not null and not an empty array
-        if (!(pillboxDatasetJson === null || (Array.isArray(pillboxDatasetJson) && pillboxDatasetJson.length === 0))) {
+        if (pillboxDatasetJson && Array.isArray(pillboxDatasetJson) && pillboxDatasetJson.length > 0) {
             $('#data-pillbox-expectations-table').DataTable({
                 "paging": false,
                 "searching": false,
@@ -675,8 +675,9 @@
                 "responsive": true,
                 "order": [[1, 'asc']]  // Order by the second column (created_at)
             });
+        } else {
+            console.log('Pillbox Dataset Data is empty or not an array.');
         }
-
 
 
         // -----------------------------------------
@@ -688,6 +689,9 @@
         // Load blood pressure plot when the document is ready
         var target = '#blood-pressure-plot-container-json';
         var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
+        // log call to console: url, target
+        console.log('Loading blood pressure plot from url: ' + url, 'to target: ' + target);
+
         loadPlotContent(url, target, json_or_html='json');
 
         // Load pulse plot when the document is ready
