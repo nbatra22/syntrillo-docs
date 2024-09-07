@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_kms as kms,
 )
 from constructs import Construct
 
@@ -32,14 +33,25 @@ class SecretsStack(Stack):
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
+        custom_kms_key = kms.Key(
+            self, "SecretsKmsKey",
+            description="Custom KMS key for Secrets",
+            enabled=True,
+            enable_key_rotation=True,
+            pending_window=Duration.days(30)
+        )
+
         self.tenovi_hwi_secrets = secretsmanager.Secret(
-            self, "TenoviHWISecrets"
+            self, "TenoviHWISecrets",
+            encryption_key=custom_kms_key
         )
 
         self.healthie_secrets = secretsmanager.Secret(
-            self, "HealthieSecrets"
+            self, "HealthieSecrets",
+            encryption_key=custom_kms_key
         )
 
         self.openai_secrets = secretsmanager.Secret(
-            self, "OpenAiSecrets"
+            self, "OpenAiSecrets",
+            encryption_key=custom_kms_key
         )

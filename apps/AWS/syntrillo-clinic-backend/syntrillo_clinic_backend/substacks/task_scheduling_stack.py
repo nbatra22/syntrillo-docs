@@ -18,6 +18,7 @@ from aws_cdk import (
     aws_events as events,
     aws_events_targets as targets,
     aws_secretsmanager as secretsmanager,
+    aws_iam as iam,
 )
 from constructs import Construct
 
@@ -67,9 +68,12 @@ class RemoteMonitoringDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.database.admin_secret.grant_read(self.remote_monitoring_data_sync_function)
-        self.secrets.tenovi_hwi_secrets.grant_read(self.remote_monitoring_data_sync_function)
-        self.secrets.healthie_secrets.grant_read(self.remote_monitoring_data_sync_function)
+        # self.database.admin_secret.grant_read(self.function)
+        self.grant_read_secrets(self.database.admin_secret)
+        # self.secrets.tenovi_hwi_secrets.grant_read(self.function)
+        self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
+        # self.secrets.healthie_secrets.grant_read(self.function)
+        self.grant_read_secrets(self.secrets.healthie_secrets)
 
         # Create a scheduled event rule
         # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
@@ -95,6 +99,13 @@ class RemoteMonitoringDataSync(Construct):
                 self.remote_monitoring_data_sync_function,
             )
         )
+
+    def grant_read_secrets(self, secrets):
+        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
+        self.remote_monitoring_data_sync_function.add_to_role_policy(iam.PolicyStatement(
+            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
+            resources=[secrets.secret_arn],
+        ))
 
 # -----------------------------------------------------------------------------
 # STACKS

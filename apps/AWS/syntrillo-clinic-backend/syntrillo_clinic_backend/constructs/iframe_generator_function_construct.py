@@ -17,6 +17,7 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_iam as iam,
 )
 from constructs import Construct
 
@@ -72,7 +73,18 @@ class IFrameGeneratorFunction(Construct):
             provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
         )
 
-        self.database.admin_secret.grant_read(self.function)
-        self.secrets.tenovi_hwi_secrets.grant_read(self.function)
-        self.secrets.healthie_secrets.grant_read(self.function)
-        self.secrets.openai_secrets.grant_read(self.function)
+        # self.database.admin_secret.grant_read(self.function)
+        self.grant_read_secrets(self.database.admin_secret)
+        # self.secrets.tenovi_hwi_secrets.grant_read(self.function)
+        self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
+        # self.secrets.healthie_secrets.grant_read(self.function)
+        self.grant_read_secrets(self.secrets.healthie_secrets)
+        # self.secrets.openai_secrets.grant_read(self.function)
+        self.grant_read_secrets(self.secrets.openai_secrets)
+    
+    def grant_read_secrets(self, secrets):
+        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
+        self.function.add_to_role_policy(iam.PolicyStatement(
+            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
+            resources=[secrets.secret_arn],
+        ))
