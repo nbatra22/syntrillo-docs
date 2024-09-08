@@ -176,14 +176,17 @@ class RemoteMonitoringDataSync:
             )
 
             # log this device's measurements
-            device_log["logs"].append(log)
             device_log["success"] = log["success"]
-            overall_log["device_logs"][device_name] = device_log
 
-            # stop and continue to next device if no success and no partial success
-            if log["success"] is False and ( log['partial_success'] is not None and log['partial_success'] is False ):
-                logger.error(f"device_name : {device_name} : get_device_measurements : {log}")
-                continue
+            if log["success"] is False:
+                # log error
+                device_log["logs"].append(log)
+
+                # stop and continue to next device if no success and no partial success
+                if log['partial_success'] is not None and log['partial_success'] is False:
+                    overall_log["device_logs"][device_name] = device_log
+                    logger.error(f"device_name : {device_name} : get_device_measurements : {log}")
+                    continue
 
             # log number of measurements
             logger.info(f"device_name : {device_name} : number_of_measurements : {len(measurements)}")
