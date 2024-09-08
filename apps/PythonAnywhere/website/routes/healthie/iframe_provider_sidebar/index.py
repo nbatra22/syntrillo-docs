@@ -48,13 +48,14 @@ def iframe_healthie_provider_sidebar_index():
         healthie_provider_id = "1033222" # "-1"
 
     # --------------------------------------------------------------------
-    # milliseconds_delay
+    # milliseconds_delay used to delay the rendering of the iframe tabs
 
-    if secrets.is_lambda and secrets.is_staging:
-        # if running on AWS Lambda and in staging environment use a longer delay to allow lambdas to initialize
-        milliseconds_delay_default = 5000
-    else:
-        milliseconds_delay_default = 1000
+    # use a short delay by default
+    milliseconds_delay_default = 100
+
+    if secrets.is_lambda() and secrets.is_staging():
+        # may require a longer delay on AWS Lambda staging
+        milliseconds_delay_default = 500
 
     # if os env variable MILLISECONDS_DELAY exists use it else use default
     #   : useful locally since some delay needed to prevent a server error on VSCode Live Server

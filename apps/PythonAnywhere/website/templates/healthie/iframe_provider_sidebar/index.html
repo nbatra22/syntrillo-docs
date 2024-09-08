@@ -141,7 +141,7 @@
         });
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status', 500);
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status', 10);
 
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
