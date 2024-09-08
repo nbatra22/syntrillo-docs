@@ -106,6 +106,8 @@
     //   : POST prefered over GET to avoid caching sensitive data in the URL
     //   : information will be retrived from the first part of the route scripts, with the get_pseudonyms_from_index_post function
     //     that's why it requires several ids to be passed
+    //   : milliseconds_delay is used to prevent a server error on VSCode Live Server
+    //   : if a 504 error occurs, the function will retry after 5 seconds
     function loadTabContent(url, target, milliseconds_delay = {{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
 
         $(target).html("<h3>Loading content. Please wait...</h3>");
@@ -149,41 +151,55 @@
         }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server
     }
 
-    // Function to load html content, within tabs, via POST
+    // Function to load html or json content of a plot, within tabs, via POST
     //   : POST prefered over GET to avoid caching sensitive data in the URL
     //   : information will be retrived from the endpoint parts of the route scripts, with the get_pseudonyms_from_tab_post function
     //     that's why it requires only the temporary_lookup_code to be passed
-    // Function to load html content via POST
-    function loadPlotContent(url, target, json_or_html, milliseconds_delay={{ milliseconds_delay }}) {
-            $(target).html("<p>Loading content. Please wait...</p>");
-            var temporaryLookupCode = "{{ temporary_lookup_code }}";
+    //   : json_or_html is used to determine if the content is html or json
+    //   : milliseconds_delay is used to prevent a server error on VSCode Live Server
+    //   : if a 504 error occurs, the function will retry after 5 seconds
+    function loadPlotContent(url, target, json_or_html, milliseconds_delay={{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
+        $(target).html("<p>Loading content. Please wait...</p>");
+        var temporaryLookupCode = "{{ temporary_lookup_code }}";
 
-            setTimeout(function() {
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        temporary_lookup_code: temporaryLookupCode,
-                        json_or_html: json_or_html
-                    },
-                    success: function(data) {
-                        if ( json_or_html === 'html' ) {
-                            $(target).html(data.html);
-                        } else if ( json_or_html === 'json' ) {
-                            $(target).html(data.html);
-                            if (data.json !== null) {
-                                Plotly.newPlot(target.replace('#', ''), data.json.data, data.json.layout);
-                            } else {
-                                $(target).html('<p>No plot available</p>');
-                            }
+        setTimeout(function() {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    temporary_lookup_code: temporaryLookupCode,
+                    json_or_html: json_or_html
+                },
+                success: function(data) {
+                    if (json_or_html === 'html') {
+                        $(target).html(data.html);
+                    } else if (json_or_html === 'json') {
+                        $(target).html(data.html);
+                        if (data.json !== null) {
+                            Plotly.newPlot(target.replace('#', ''), data.json.data, data.json.layout);
+                        } else {
+                            $(target).html('<p>No plot available</p>');
                         }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status === 504) {
+                        if (retryCount < maxRetries) {
+                            // Retry after 5 seconds if a 504 error occurs
+                            $(target).html('<p>Received 504 Timeout Error. Retrying...</p>');
+                            setTimeout(function() {
+                                loadPlotContent(url, target, json_or_html, milliseconds_delay, retryCount + 1, maxRetries);
+                            }, 5000); // 5 seconds delay before retry
+                        } else {
+                            $(target).html('<p>Error: 504 Gateway Timeout. Please try again later.</p>');
+                        }
+                    } else {
                         $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
                     }
-                });
-            }, milliseconds_delay);
-        }
+                }
+            });
+        }, milliseconds_delay);
+    }
 
     // When the document is ready
     $(document).ready(function(){
@@ -197,7 +213,7 @@
 
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 500);
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 100);
 
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
