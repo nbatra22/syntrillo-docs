@@ -25,13 +25,13 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class FixOutputDependencyStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, secrets: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, stack: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.secrets = secrets
+        self.database = stack
 
-        # ssm.StringParameter(
-        #     self, "TemporaryFixOutputDependencyParameter",
-        #     parameter_name="/tmp/fix_output_dependency",
-        #     string_value=self.secrets.tenovi_hwi_secrets.secret_arn,
-        # )
+        ssm.StringParameter(
+            self, "TemporaryFixOutputDependencyParameter",
+            parameter_name="/tmp/fix_output_dependency",
+            string_value=self.database.admin_secret.secret_arn,
+        )

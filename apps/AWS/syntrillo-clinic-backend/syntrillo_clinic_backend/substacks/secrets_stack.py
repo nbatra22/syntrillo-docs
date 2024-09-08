@@ -17,8 +17,11 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_kms as kms,
 )
 from constructs import Construct
+
+import json
 
 # -----------------------------------------------------------------------------
 # STACKS
@@ -31,15 +34,43 @@ class SecretsStack(Stack):
         self.environment_context = environment_context
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
+ 
+        db_host_param = ssm.StringParameter.from_string_parameter_name(self, "ServersStackDatabaseHostParameter", "/syntrillo-clinic/aws/db/host").string_value
+        
+        custom_kms_key = kms.Key(
+            self, "SecretsKmsKey",
+            description="Custom KMS key for Secrets",
+            enabled=True,
+            enable_key_rotation=True,
+            pending_window=Duration.days(30)
+        )
+
+        self.database_lambda_user_secrets = secretsmanager.Secret(
+            self, "DatabaseLambdaUserSecrets",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template=json.dumps({
+                    "username": "syntrillo_clinic_lambda_user",
+                    "host": db_host_param
+                }),
+                generate_string_key="password",
+                exclude_characters='/@"\\',
+                include_space=False,
+                password_length=32
+            ),
+            encryption_key=custom_kms_key
+        )
 
         self.tenovi_hwi_secrets = secretsmanager.Secret(
-            self, "TenoviHWISecrets"
+            self, "TenoviHWISecrets",
+            encryption_key=custom_kms_key
         )
 
         self.healthie_secrets = secretsmanager.Secret(
-            self, "HealthieSecrets"
+            self, "HealthieSecrets",
+            encryption_key=custom_kms_key
         )
 
         self.openai_secrets = secretsmanager.Secret(
-            self, "OpenAiSecrets"
+            self, "OpenAiSecrets",
+            encryption_key=custom_kms_key
         )
