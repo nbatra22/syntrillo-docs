@@ -547,6 +547,8 @@ class RemoteMonitoringDataSync:
         """
         Sync data from Tenovi to Syntrillo PHI database and then to Healthie.
 
+        The two steps are independent (if the first fails, the second will still run) and can be disabled.
+
         Args:
             sync_tenovi_to_syntrillo (bool, optional): Sync data from Tenovi to Syntrillo PHI database. Defaults to True.
             sync_syntrillo_to_healthie (bool, optional): Sync data from Syntrillo PHI database to Healthie. Defaults to True.
