@@ -1,7 +1,4 @@
 # Path: ./apps/PythonAnywhere/scheduled_tasks/healthie/device_measurement_sync.py
-import json
-import sys
-import os
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -22,28 +19,21 @@ def handler(event, context):
 
     patients = healthie_utils.list_patients()
 
-    # print("Patients:", patients)
-
     for patient in patients['users']:
-        print("\n---------\n", patient['id'])
 
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient['id'])
 
-        if entry: # and patient['id'] == "1051529":
+        if entry:
             sync = RemoteMonitoringDataSync(entry['syntrillo_internal_key'])
 
-            overall_log1 = sync.sync_tenovi_to_syntrillo()
+            log = sync.sync_tenovi_to_syntrillo_to_healthie()
 
-            if not overall_log1['success']:
-                print(json.dumps(overall_log1, indent=4))
-
+            if log('success'):
+                logger.info(f"Successfully synced data for patient {patient['id']}")
             else:
-                print("tenovi to syntrillo : number_of_records_inserted : ", overall_log1['number_of_records_inserted'] )
-                overall_log2 = sync.sync_syntrillo_to_healthie()
-                if not overall_log2['success']:
-                    print(json.dumps(overall_log2, indent=4))
+                logger.error(f"Failed to sync data for patient {patient['id']}. Log: {log}")
 
-                else:
-                    print("syntrillo to healthie : number_of_records_inserted : ", overall_log2['number_of_records_inserted'] )
+        else:
+            logger.error(f"Failed to sync data for patient {patient['id']}. No entry found in lookup")
 
     lookup_codes.close_connection()
