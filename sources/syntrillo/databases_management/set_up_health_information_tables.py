@@ -62,7 +62,7 @@ class HealthInformationTablesManager:
             structure_json              JSON NOT NULL,
             -- mediumblob : up to 16MB
             excel_file                  MEDIUMBLOB DEFAULT NULL,
-            date                        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            date                        DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         """,
     }
