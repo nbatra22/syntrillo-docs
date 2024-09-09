@@ -132,7 +132,7 @@ class DeviceMeasurements:
 
             # AWS logger
             if recursive_level == 0:
-                logger.error(f"504 errors. Attempting to aggregate results with smaller time frames. Gaps may exist. Device ID: {hwi_device_id}")
+                logger.warning(f"504 errors. Attempting to aggregate results with smaller time frames. Gaps may exist. Device ID: {hwi_device_id}")
 
             # Convert datetime strings to datetime objects
             created__gte_dt = datetime.strptime(created__gte, "%Y-%m-%dT%H:%M:%S.%fZ")

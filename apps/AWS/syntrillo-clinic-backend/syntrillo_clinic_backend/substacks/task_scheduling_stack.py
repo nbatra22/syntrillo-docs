@@ -106,6 +106,10 @@ class RemoteMonitoringDataSync(Construct):
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
             resources=[secrets.secret_arn],
         ))
+        self.remote_monitoring_data_sync_function.add_to_role_policy(iam.PolicyStatement(
+            actions=["kms:Decrypt"],
+            resources=[secrets.encryption_key.key_arn],
+        ))
 
 # -----------------------------------------------------------------------------
 # STACKS
