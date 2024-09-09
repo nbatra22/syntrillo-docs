@@ -15,9 +15,9 @@ class HealthInformationTablesManager:
     # Health Information Tables as class variables
     MISC_HEALTH_DATA_TABLE = "misc_health_data"
     TENOVI_RAW_MEASUREMENTS_TABLE = "tenovi_raw_measurements"
+    HEALTHIE_QUESTIONNAIRES_TABLE = "healthie_questionnaires"
 
     # TODO : new tables to implement
-    HEALTHIE_QUESTIONNAIRES_TABLE = "healthie_questionnaires"
     PREFERENCES_PATIENT_TABLE = "preferences_patient"
     PREFERENCES_STAFF_TABLE = "preferences_staff"
     AI_CHATBOT_SESSIONS_TABLE = "ai_chatbot_sessions"
