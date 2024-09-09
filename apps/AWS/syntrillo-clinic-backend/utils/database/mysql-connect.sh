@@ -8,7 +8,7 @@ fi
 
 ENVIRONMENT=$1
 if [ "$ENVIRONMENT" == 'sandbox' ]; then
-  SECRET_NAME='SyntrilloClinicBackendStack-udoHIgLkzPoD'
+  SECRET_NAME='DatabaseAdminSecrets4B85717-Tqw6AojniUp9'
 fi
 
 if [ "$ENVIRONMENT" == 'staging' ]; then
@@ -45,8 +45,11 @@ echo '---'
 echo "If the connection 'hangs', make sure that you have started the ssm session in the right environment"
 echo "For example if you use did an ssm-start 'sanbox', and a mysql-connect 'staging' it will not work, and hang"
 
+SSL_OPTION_FOR_MARIA_DB="--ssl"
+mysql --version | grep -q 'Ver 8' && SSL_OPTION_FOR_MARIA_DB=""
+
 echo "---"
-mysql -h 127.0.0.1 -P $local_port -u $username -p$password --ssl
+mysql -h 127.0.0.1 -P $local_port -u $username -p$password $SSL_OPTION_FOR_MARIA_DB
 if [ $? != 0 ]; then
   echo "!!!"
   echo "Make sure you have opened the sql-tunnel"
