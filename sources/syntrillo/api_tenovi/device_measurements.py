@@ -230,10 +230,11 @@ if __name__ == "__main__":
     if True:
         device_measurements = DeviceMeasurements()
         device_ids = [
-                   "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
-                   "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
+                   # "e154d35e-4543-4c15-abdd-cbdc8f482654",  # Omar New - HWI - Watch
+                   # "55fc9fab-3a74-4d61-b949-c1f08ea76f2b",  # Omar New - HWI - Pillbox
                    "ff7ddf32-1472-450e-89ae-362416765d8b"  # Omar New - HWI - BPM
                    ]
+
 
         # Get and print all devices or a specific device
         for hwi_device_id in device_ids:
@@ -244,17 +245,43 @@ if __name__ == "__main__":
             created__gte = device[0]['device']['created']
             created__lte = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-            measurements, log = device_measurements.get_device_measurements_created_window_504_adaptive(
-                hwi_device_id=hwi_device_id,
-                created__gte=created__gte,
-                created__lte=created__lte,
-                timeout=10,
-                )
+            # set cretated_gte to 1 day before created__lte
+            # created__gte = (datetime.strptime(created__lte, "%Y-%m-%dT%H:%M:%S.%fZ")
+            #                - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+            if False:
+                measurements, log = device_measurements.get_device_measurements_created_window_504_adaptive(
+                    hwi_device_id=hwi_device_id,
+                    created__gte=created__gte,
+                    created__lte=created__lte,
+                    timeout=10,
+                    )
+
+            if True:
+                measurements, log = device_measurements.get_device_measurements(
+                    hwi_device_id=hwi_device_id,
+                    # created__gte=created__gte,
+                    # created__lte=created__lte,
+                    timeout=20,
+                    )
             print(f"\n-----------\nDevice {hwi_device_id}:")
             TenoviAuth.print_pretty_json(log)
             # TenoviAuth.print_pretty_json(measurements)
             # print number of measurements
             if measurements :
                 print(f"Number of measurements: {len(measurements)}")
+
+            # print all measurements
+            if measurements and len(measurements) > 0:
+                print("All measurements:")
+                TenoviAuth.print_pretty_json(measurements)
+
+                # print all the timestamps
+                print("All created and timestamps:")
+                for measurement in measurements:
+                    print(measurement['created'], measurement['timestamp'])
+
+
+
 
 
