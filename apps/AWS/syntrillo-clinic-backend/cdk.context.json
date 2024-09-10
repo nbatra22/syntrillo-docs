@@ -43,7 +43,7 @@
     "stacks-termination-protection": true,
     "iframe_generator_function": {
       "log_level": "DEBUG",
-      "provisioned_concurrency_executions": 0,
+      "provisioned_concurrency_executions": 8,
       "lambda_time_out_seconds": 300
     },
     "iframe_generator_api": {
