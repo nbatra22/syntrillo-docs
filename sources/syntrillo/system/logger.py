@@ -21,3 +21,9 @@ def get_logger():
 
 # create a logger instance
 logger = get_logger()
+
+# local testing
+if __name__ == "__main__":
+    logger.info( { 'info' : "Hello, world!", 'log' : "hello" } )
+
+
