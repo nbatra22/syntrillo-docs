@@ -1,4 +1,3 @@
-# Path: ./apps/PythonAnywhere/scheduled_tasks/healthie/device_measurement_sync.py
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -29,11 +28,11 @@ def handler(event, context):
             log = sync.sync_tenovi_to_syntrillo_to_healthie()
 
             if log('success'):
-                logger.info(f"Successfully synced data for patient {patient['id']}")
+                logger.info(f"Successfully synced data for patient {patient['syntrillo_internal_key']}")
             else:
-                logger.error(f"Failed to sync data for patient {patient['id']}. Log: {log}")
+                logger.error( { "error" : f"Failed to sync data for patient {patient['syntrillo_internal_key']}", "log": log } )
 
         else:
-            logger.error(f"Failed to sync data for patient {patient['id']}. No entry found in lookup")
+            logger.error(f"Failed to sync data for this patient. No entry found in lookup")
 
     lookup_codes.close_connection()
