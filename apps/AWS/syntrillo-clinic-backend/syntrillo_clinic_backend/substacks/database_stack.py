@@ -91,14 +91,14 @@ class DatabaseStack(Stack):
         # Allow Database Access
         self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]
 
-        private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.network.vpc.private_subnets]
+        # private_subnet_cidr_blocks = [subnet.ipv4_cidr_block for subnet in self.network.vpc.private_subnets]
 
-        for cidr_block in private_subnet_cidr_blocks:
-            self.db_from_snapshot_security_group.add_ingress_rule(
-                ec2.Peer.ipv4(cidr_block),
-                ec2.Port.tcp(3306),
-                description=f"Allow inbound traffic from {cidr_block} on port 3306"
-            )
+        # for cidr_block in private_subnet_cidr_blocks:
+        #     self.db_from_snapshot_security_group.add_ingress_rule(
+        #         ec2.Peer.ipv4(cidr_block),
+        #         ec2.Port.tcp(3306),
+        #         description=f"Allow inbound traffic from {cidr_block} on port 3306"
+        #     )
 
         self.admin_secret = self.db_from_snapshot.secret
 

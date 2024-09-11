@@ -100,6 +100,14 @@ class RemoteMonitoringDataSync(Construct):
             )
         )
 
+        function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        )
+
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         self.remote_monitoring_data_sync_function.add_to_role_policy(iam.PolicyStatement(

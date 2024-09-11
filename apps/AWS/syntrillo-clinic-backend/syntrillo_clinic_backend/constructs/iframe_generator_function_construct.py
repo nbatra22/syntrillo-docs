@@ -83,13 +83,13 @@ class IFrameGeneratorFunction(Construct):
         # self.secrets.openai_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.openai_secrets)
 
-        # function_security_group = self.function.connections.security_groups[0]
+        function_security_group = self.function.connections.security_groups[0]
 
-        # self.database.db_from_snapshot_security_group.add_ingress_rule(
-        #     function_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
-        # )
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
+        )
     
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
