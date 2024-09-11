@@ -64,6 +64,7 @@ class IFrameGeneratorFunction(Construct):
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
             timeout=Duration.seconds(self.environment_context['iframe_generator_function']['lambda_time_out_seconds']),
+            reserved_concurrent_executions=self.environment_context['iframe_generator_function']['reserved_concurrent_executions']
         )
 
         self.function_alias = _lambda.Alias(
@@ -82,13 +83,13 @@ class IFrameGeneratorFunction(Construct):
         # self.secrets.openai_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.openai_secrets)
 
-        # function_security_group = self.function.connections.security_groups[0]
+        function_security_group = self.function.connections.security_groups[0]
 
-        # self.database.db_from_snapshot_security_group.add_ingress_rule(
-        #     function_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
-        # )
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
+        )
     
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
