@@ -24,7 +24,7 @@ def handler(event, context):
 
             log = sync.sync_tenovi_to_syntrillo_to_healthie()
 
-            if log('success'):
+            if log.get('success', False):
                 logger.info(f"Successfully synced data for patient {entry['syntrillo_internal_key']}")
             else:
                 logger.error( { "error" : f"Failed to sync data for patient {entry['syntrillo_internal_key']}", "log": log } )
