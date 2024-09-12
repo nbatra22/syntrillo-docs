@@ -22,6 +22,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+import json
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -81,12 +82,29 @@ class DatabaseStack(Stack):
             storage_type=rds.StorageType.GP3,
             removal_policy=self.removal_policy,
             snapshot_identifier=self.snapshot_identifier,
-            credentials=rds.SnapshotCredentials.from_generated_secret("admin"),
+            # credentials=rds.SnapshotCredentials.from_generated_secret("admin"),
             parameter_group=parameter_group,
             monitoring_interval=Duration.seconds(60),
             monitoring_role=enhanced_monitoring_role,
             iam_authentication=True,
         )
+
+        self.database_admin_secrets = secretsmanager.Secret(
+            self, "DatabaseAdminSecrets",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template=json.dumps({
+                    "username": "admin",
+                    "host": self.db_from_snapshot.instance_endpoint.hostname
+                }),
+                generate_string_key="password",
+                exclude_characters='/@"\\',
+                include_space=False,
+                password_length=32
+            ),
+            encryption_key=rds_encryption_key
+        )
+
+        self.db_from_snapshot.credentials = rds.Credentials.from_secret(self.database_admin_secrets)
 
         # Allow Database Access
         self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]

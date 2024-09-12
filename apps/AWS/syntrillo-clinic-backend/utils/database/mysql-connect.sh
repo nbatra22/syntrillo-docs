@@ -12,7 +12,7 @@ if [ "$ENVIRONMENT" == 'sandbox' ]; then
 fi
 
 if [ "$ENVIRONMENT" == 'staging' ]; then
-  SECRET_NAME='SyntrilloClinicBackendStack-HAeIABnzUtyN'
+  SECRET_NAME='DatabaseAdminSecrets4B85717-uGKLcnzcSCua'
 fi
 
 if [ "$(which jq)" == "" ]; then
