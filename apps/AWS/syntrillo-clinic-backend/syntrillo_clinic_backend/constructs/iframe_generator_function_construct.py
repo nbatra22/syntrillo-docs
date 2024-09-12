@@ -62,7 +62,7 @@ class IFrameGeneratorFunction(Construct):
                 "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets.openai_secrets.secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
-            memory_size=512,
+            memory_size=self.environment_context['iframe_generator_function']['memory_size'], 
             timeout=Duration.seconds(self.environment_context['iframe_generator_function']['lambda_time_out_seconds']),
             reserved_concurrent_executions=self.environment_context['iframe_generator_function']['reserved_concurrent_executions']
         )

@@ -6,6 +6,7 @@
       "log_level": "INFO",
       "provisioned_concurrency_executions": 0,
       "lambda_time_out_seconds": 60,
+      "memory_size": 384,
       "reserved_concurrent_executions": 50
     },
     "iframe_generator_api": {
@@ -46,6 +47,7 @@
       "log_level": "DEBUG",
       "provisioned_concurrency_executions": 6,
       "lambda_time_out_seconds": 300,
+      "memory_size": 384,
       "reserved_concurrent_executions": 50
     },
     "iframe_generator_api": {
@@ -86,6 +88,7 @@
       "log_level": "INFO",
       "provisioned_concurrency_executions": 8,
       "lambda_time_out_seconds": 60,
+      "memory_size": 384,
       "reserved_concurrent_executions": 50
     },
     "iframe_generator_api": {
