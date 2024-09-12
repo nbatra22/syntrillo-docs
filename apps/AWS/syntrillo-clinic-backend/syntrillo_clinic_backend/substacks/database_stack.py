@@ -102,11 +102,12 @@ class DatabaseStack(Stack):
 
         self.admin_secret = self.db_from_snapshot.secret
 
-        # self.db_from_snapshot_security_group.add_ingress_rule(
-        #     self.network.bastion_host_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
-        # )
+        # Done in the database stack (not the bastion stack) because the bastion security group can be used by the ec2 bastion or cloud shell
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            self.network.bastion_host_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        )
 
         db_host_param = ssm.StringParameter(
             self,
