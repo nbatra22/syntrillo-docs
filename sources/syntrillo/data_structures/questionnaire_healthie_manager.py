@@ -123,17 +123,50 @@ class DataStructureQuestionnaireHealthieManager:
 
         # form name and (our) external id
         #  : form name have to be less than 50 characters
-        form_name = self.structure.get('metadata').get('name') + ' (v' + self.structure.get('metadata').get('version') + ')'
-        external_id_type = self.structure.get('metadata').get('internal_name')  # name without version
-        external_id = external_id_type + '_v' + self.structure.get('metadata').get('version') # versioned name
+        metadata : dict = self.structure.get('metadata', {})
+        form_name = metadata.get('name') + ' (v' + metadata.get('version') + ')'
+        external_id_type = metadata.get('internal_name')  # name without version
+        external_id = external_id_type + '_v' + metadata.get('version') # versioned name
 
         # form type
-        use_for_charting = self.structure.get('metadata').get('use_for_charting', False)
-        use_for_program = self.structure.get('metadata').get('use_for_program', False)
+        use_for_charting = metadata.get('use_for_charting', False)
+        use_for_program = metadata.get('use_for_program', False)
 
         # prefill flag
-        prefill = self.structure.get('metadata').get('prefill', False)
+        prefill = metadata.get('prefill', False)
 
+        # ----------- Error handling ---------------
+        # check form name length
+        if len(form_name) > 50:
+            log = {
+                "success": False,
+                "message": "Error: Form name is too long",
+                "structure_name" : self.structure_name,
+                "metadata": self.structure.get('metadata'),
+            }
+            return log
+
+        # error if version already in get('name')
+        if metadata.get('version') in metadata.get('name'):
+            log = {
+                "success": False,
+                "message": "Error: Version number should not be in the name",
+                "structure_name" : self.structure_name,
+                "metadata": self.structure.get('metadata'),
+            }
+            return log
+
+        # error if version already in get('internal_name')
+        if metadata.get('version') in metadata.get('internal_name'):
+            log = {
+                "success": False,
+                "message": "Error: Version number should not be in the internal_name",
+                "structure_name" : self.structure_name,
+                "metadata": self.structure.get('metadata'),
+            }
+            return log
+
+        # ----------- Create form ---------------
         # Call the create_form_wrapper function to create a new form with the specified modules
         response = self.forms_api.create_form_wrapper(
             form_name=form_name,
