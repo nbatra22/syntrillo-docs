@@ -51,6 +51,7 @@ class ChatBotsDispatcher:
 
         # ------------------------------
         # dispatch the message to the appropriate chatbot, based on time and several variables
+        # TODO : log error if note['user_id'] empty (when a provider sent the note ?)
         note_creator = self.convo_wrapper.get_note_creator()
         note_content = self.convo_wrapper.get_note_content()
         convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
