@@ -1,5 +1,233 @@
-<p>
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/index.html -->
 
-    Demo patient index.html file
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthie Extra Provider Tab - Syntrillo server</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-</p>
+    <!-- Link to Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Include jQuery UI for Tooltip -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+    <!-- Include font-awesome for collapsable icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Link to DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap4.min.css">
+
+    <!-- Link to local CSS - at last position -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider.css') }}">
+
+    <style>
+        /* space before system tab */
+        .nav-tabs .nav-item.ml-auto {
+            margin-left: auto;
+        }
+        /* Increase the max-width of the container */
+        .container {
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container"> <!-- TODO : increase media max-width -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-onboarding-tab" data-toggle="tab" href="#tab-onboarding" role="tab" aria-controls="tab-onboarding" aria-selected="false">Onboarding</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-care-plan-tab" data-toggle="tab" href="#tab-care-plan" role="tab" aria-controls="tab-care-plan" aria-selected="false">Care Plan - Hello</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
+        </li>
+        <!-- Large gap -->
+        <li class="nav-item ml-auto">
+            <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-system-devices-tab" data-toggle="tab" href="#tab-system-devices" role="tab" aria-controls="tab-system-devices" aria-selected="false">System Devices</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
+        <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
+        <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
+        <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
+        <div class="tab-pane fade" id="tab-cdss" role="tabpanel" aria-labelledby="tab-cdss-tab"></div>
+        <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
+        <div class="tab-pane fade" id="tab-system-devices" role="tabpanel" aria-labelledby="tab-system-devices-tab"></div>
+    </div>
+</div>
+
+<!-- a spacer at the bottom. Nicer when the user scrolls up -->
+<div class="bg-white mb-5">
+    <p>&nbsp;</p>
+</div>
+
+<!-- =================== SCRIPTS =================== -->
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Include jQuery UI for Tooltip -->
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<!-- Include DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+
+<!-- plotly -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+
+    // Global function to format ISO date to US date format (MMM DD, YYYY)
+    function formatDate(isoDate) {
+        var date = new Date(isoDate);
+        var options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
+
+    // Function to load tab content via POST
+    //   : POST prefered over GET to avoid caching sensitive data in the URL
+    //   : information will be retrived from the first part of the route scripts, with the get_pseudonyms_from_index_post function
+    //     that's why it requires several ids to be passed
+    //   : milliseconds_delay is used to prevent a server error on VSCode Live Server
+    //   : if a 504 error occurs, the function will retry after 5 seconds
+    function loadTabContent(url, target, milliseconds_delay = {{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
+
+        $(target).html("<h3>Loading content. Please wait...</h3>");
+
+        // Variables passed from Flask
+        var healthieProviderId = "{{ healthie_provider_id }}";
+        var healthieUserId = "{{ healthie_user_id }}";
+        var temporaryLookupCode = "{{ temporary_lookup_code }}";
+        var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+
+        // The global setTimeout() method sets a timer which executes a function or specified piece of code once the timer expires.
+        setTimeout(function() {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    healthie_provider_id: healthieProviderId,
+                    healthie_user_id: healthieUserId,
+                    temporary_lookup_code: temporaryLookupCode,
+                    patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
+                },
+                success: function(data) {
+                    $(target).html(data);
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status === 504) {
+                        if (retryCount < maxRetries) {
+                            // Retry after 5 seconds if a 504 error occurs
+                            $(target).html('<h3>Received 504 Timeout Error. Retrying...</h3>');
+                            setTimeout(function () {
+                                loadTabContent(url, target, milliseconds_delay, retryCount + 1, maxRetries);
+                            }, 5000); // 5 seconds delay before retry
+                        } else {
+                            $(target).html('<h3>Error: 504 Gateway Timeout. Please try again later.</h3>');
+                        }
+                    } else {
+                        $(target).html('<h3>Error: ' + jqXHR.status + ' ' + errorThrown + '</h3>');
+                    }
+                }
+            });
+        }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server
+    }
+
+    // Function to load html or json content of a plot, within tabs, via POST
+    //   : POST prefered over GET to avoid caching sensitive data in the URL
+    //   : information will be retrived from the endpoint parts of the route scripts, with the get_pseudonyms_from_tab_post function
+    //     that's why it requires only the temporary_lookup_code to be passed
+    //   : json_or_html is used to determine if the content is html or json
+    //   : milliseconds_delay is used to prevent a server error on VSCode Live Server
+    //   : if a 504 error occurs, the function will retry after 5 seconds
+    function loadPlotContent(url, target, json_or_html, milliseconds_delay={{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
+        $(target).html("<p>Loading content. Please wait...</p>");
+        var temporaryLookupCode = "{{ temporary_lookup_code }}";
+
+        setTimeout(function() {
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    temporary_lookup_code: temporaryLookupCode,
+                    json_or_html: json_or_html
+                },
+                success: function(data) {
+                    if (json_or_html === 'html') {
+                        $(target).html(data.html);
+                    } else if (json_or_html === 'json') {
+                        $(target).html(data.html);
+                        if (data.json !== null) {
+                            Plotly.newPlot(target.replace('#', ''), data.json.data, data.json.layout);
+                        } else {
+                            $(target).html('<p>No plot available</p>');
+                        }
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status === 504) {
+                        if (retryCount < maxRetries) {
+                            // Retry after 5 seconds if a 504 error occurs
+                            $(target).html('<p>Received 504 Timeout Error. Retrying...</p>');
+                            setTimeout(function() {
+                                loadPlotContent(url, target, json_or_html, milliseconds_delay, retryCount + 1, maxRetries);
+                            }, 5000); // 5 seconds delay before retry
+                        } else {
+                            $(target).html('<p>Error: 504 Gateway Timeout. Please try again later.</p>');
+                        }
+                    } else {
+                        $(target).html('<p>Error: ' + jqXHR.status + ' ' + errorThrown + '</p>');
+                    }
+                }
+            });
+        }, milliseconds_delay);
+    }
+
+    // When the document is ready
+    $(document).ready(function(){
+
+        // Delegate the click event to the parent container for collapsible sections
+        $(document).on('click', '.collapsible', function() {
+            var icon = $(this).find("i");
+            icon.toggleClass("fa-chevron-right fa-chevron-down");
+            $(this).next(".collapsible-content").toggleClass("show");
+        });
+
+
+        // Load the content of the status tab immediately
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 10);
+
+        // Load the content of the other tabs in the background
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+
+    });
+
+
+</script>
+
+</body>
+</html>
+
