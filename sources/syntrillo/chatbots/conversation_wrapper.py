@@ -19,29 +19,31 @@ class ChatBotConversationWrapper:
         'logs': []
     }
 
-    # class attributes
-    _note_id = None
-    _conversation_id = None
-
-    _note = None
-    _conversation = None
-
-    # HealthieUser class
-    _owner = None
-
-    # HealthieUser class array
-    _patients = None  # typically one patient
-    _members = None
-    _creators = None  # every note creator
-
-    # all creators ids
-    _creators_ids = None
-
     def __init__(self) -> None:
         """
         Initialize the VirtualCareNavigatorConversationWrapper class.
         """
         self.convo = HealthieConversations()
+
+        # ------------------------------------------------
+        # initialize variables
+        self.note_id = None
+        self.conversation_id = None
+
+        self.note = None
+        self.conversation = None
+
+        # HealthieUser class
+        self.owner = None
+
+        # HealthieUser class array
+        self.patients = None  # typically one patient
+        self.members = None
+        self.creators = None  # every note creator
+
+        # all creators ids
+        self.creators_ids = None
+
 
     def get_log(self) -> dict:
         """
@@ -65,9 +67,9 @@ class ChatBotConversationWrapper:
 
         # ---
         # load note from note id
-        self._note_id = note_id
-        self._note, log = self.convo.get_note_by_id(note_id)
-        if self._note is None or not log['success']:
+        self.note_id = note_id
+        self.note, log = self.convo.get_note_by_id(note_id)
+        if self.note is None or not log['success']:
             self.log['success'] = False
             self.log['logs'].append({
                 'message' : 'Failed to get note',
@@ -78,9 +80,9 @@ class ChatBotConversationWrapper:
 
         # ---
         # get conversation id from note id
-        self._conversation_id, log = self.convo.get_conversation_id_from_note_id(note_id)
+        self.conversation_id, log = self.convo.get_conversation_id_from_note_id(note_id)
 
-        if self._conversation_id is None or not log['success']:
+        if self.conversation_id is None or not log['success']:
             self.log['success'] = False
             self.log['logs'].append({
                 'message' : 'Failed to get conversation id from note id',
@@ -91,12 +93,12 @@ class ChatBotConversationWrapper:
 
         # ---
         # load whole conversation from conversation id
-        log = self.load_conversation_from_conversation_id(self._conversation_id)
+        log = self.load_conversation_from_conversation_id(self.conversation_id)
         if not log['success']:
             self.log['success'] = False
             self.log['logs'].append({
                 'message' : 'Failed to get conversation from conversation id',
-                'conversation_id' : self._conversation_id,
+                'conversation_id' : self.conversation_id,
                 'log' : log
             })
             return self.log
@@ -116,10 +118,10 @@ class ChatBotConversationWrapper:
             log (dict): The log of the request.
 
         """
-        self._conversation_id = conversation_id
-        self._conversation, log = self.convo.get_conversation_by_id(conversation_id)
+        self.conversation_id = conversation_id
+        self.conversation, log = self.convo.get_conversation_by_id(conversation_id)
 
-        if self._conversation is None or not log['success']:
+        if self.conversation is None or not log['success']:
             self.log['success'] = False
             self.log['logs'].append({
                 'message' : 'Failed to get conversation',
@@ -130,28 +132,28 @@ class ChatBotConversationWrapper:
 
         try:
             # get owner (always a provider)
-            self._owner = HealthieUser(healthie_user_id=self._conversation['owner']['id'])
+            self.owner = HealthieUser(healthie_user_id=self.conversation['owner']['id'])
 
             # get invitees
-            self._patients = []
-            for member in self._conversation['invitees']:
+            self.patients = []
+            for member in self.conversation['invitees']:
                 temp_user = HealthieUser(healthie_user_id=member['id'])
                 if temp_user.is_patient():
-                    self._patients.append(temp_user)
+                    self.patients.append(temp_user)
 
             # get conversation members
-            self._members = []
-            for member in self._conversation['conversation_memberships']:
-                self._members.append(HealthieUser(healthie_user_id=member['user_id']))
+            self.members = []
+            for member in self.conversation['conversation_memberships']:
+                self.members.append(HealthieUser(healthie_user_id=member['user_id']))
 
             # get all unique creators from all the notes in the conversation
-            self._creators = []
-            self._creators_ids = []
-            for note in self._conversation['notes']:
+            self.creators = []
+            self.creators_ids = []
+            for note in self.conversation['notes']:
                 creator = HealthieUser(healthie_user_id=note['creator']['id'])
-                if creator.healthie_user_id not in self._creators_ids:
-                    self._creators.append(creator)
-                    self._creators_ids.append(creator.healthie_user_id)
+                if creator.healthie_user_id not in self.creators_ids:
+                    self.creators.append(creator)
+                    self.creators_ids.append(creator.healthie_user_id)
 
 
         except Exception as e:
@@ -171,7 +173,7 @@ class ChatBotConversationWrapper:
         Returns:
             dict: The note details.
         """
-        return self._note
+        return self.note
 
     def get_note_content(self) -> str:
         """
@@ -180,7 +182,7 @@ class ChatBotConversationWrapper:
         Returns:
             str: The note content.
         """
-        return self._note['content']
+        return self.note['content']
 
     def get_note_creator(self) -> HealthieUser:
         """
@@ -189,7 +191,9 @@ class ChatBotConversationWrapper:
         Returns:
             HealthieUser: The creator of the note.
         """
-        return HealthieUser(healthie_user_id=self._note['user_id'])
+
+        # TODO : check if the creator is a provider or a patient
+        return HealthieUser(healthie_user_id=self.note['user_id'])
 
     def get_conversation(self) -> dict:
         """
@@ -198,7 +202,7 @@ class ChatBotConversationWrapper:
         Returns:
             dict: The conversation details.
         """
-        return self._conversation
+        return self.conversation
 
     def get_conversation_owner(self) -> HealthieUser:
         """
@@ -207,7 +211,7 @@ class ChatBotConversationWrapper:
         Returns:
             HealthieUser: The owner of the conversation.
         """
-        return self._owner
+        return self.owner
 
     def get_patients(self) -> HealthieUser:
         """
@@ -216,7 +220,7 @@ class ChatBotConversationWrapper:
         Returns:
             patients list(HealthieUser): The patients in the conversation.
         """
-        return self._patients
+        return self.patients
 
     def does_convo_includes_multiple_clients(self) -> bool:
         """
@@ -227,7 +231,7 @@ class ChatBotConversationWrapper:
         Returns:
             bool: True if the conversation includes multiple clients, False otherwise.
         """
-        return self._conversation['includes_multiple_clients']
+        return self.conversation['includes_multiple_clients']
 
     def list_convo_member_ids(self) -> list:
         """
@@ -236,7 +240,7 @@ class ChatBotConversationWrapper:
         Returns:
             list: The conversation members.
         """
-        members = self._conversation['conversation_memberships']
+        members = self.conversation['conversation_memberships']
         ids = []
         for member in members:
             ids.append(member['user_id'])
@@ -250,7 +254,7 @@ class ChatBotConversationWrapper:
         Returns:
             creators (list[HealthieUser]): The conversation creators.
         """
-        return self._creators
+        return self.creators
 
     def is_user_in_convo(self, healthie_user_id: str) -> bool:
         """
@@ -262,7 +266,7 @@ class ChatBotConversationWrapper:
         Returns:
             bool: True if the user is in the conversation, False otherwise.
         """
-        return healthie_user_id in self._creators_ids
+        return healthie_user_id in self.creators_ids
 
 
     def create_note(
@@ -281,7 +285,7 @@ class ChatBotConversationWrapper:
             Tuple[dict, dict]: The note details and the log of the request.
         """
         message, log = self.convo.create_note(
-            conversation_id=self._conversation_id,
+            conversation_id=self.conversation_id,
             content=content,
             user_id=healthie_user_id
             )
@@ -290,7 +294,7 @@ class ChatBotConversationWrapper:
             self.log['success'] = False
             self.log['logs'].append({
                 'message' : 'Failed to create note',
-                'conversation_id' : self._conversation_id,
+                'conversation_id' : self.conversation_id,
                 'log' : log
             })
 
@@ -317,7 +321,7 @@ class ChatBotConversationWrapper:
 
         """
         notes = []
-        for note in self._conversation['notes']:
+        for note in self.conversation['notes']:
             if note['creator']['is_patient']:
                 who = 'patient'
             else:
@@ -382,7 +386,7 @@ class ChatBotConversationWrapper:
         """
 
         # with this format : "2024-07-11 17:51:16 +0200"
-        created_at = self._conversation['notes'][-1]['created_at']
+        created_at = self.conversation['notes'][-1]['created_at']
 
         # convert created_at to datetime
         dt = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S %z')
