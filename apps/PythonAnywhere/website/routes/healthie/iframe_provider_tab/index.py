@@ -7,6 +7,7 @@ import os
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.api_healthie.misc import extract_healthie_user_id_from_url
+from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 from syntrillo.system.iframe_validator import IframeValidator
@@ -109,14 +110,29 @@ def iframe_healthie_provider_tab_index():
     milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', milliseconds_delay_default) )
 
     # --------------------------------------------------------------------
-    # render the template
-    return render_template(
-        'healthie/iframe_provider_tab/index.html',
-        healthie_provider_id=healthie_provider_id,
-        patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
-        healthie_user_id=healthie_user_id,
-        temporary_lookup_code=temporary_lookup_code,
-        milliseconds_delay=milliseconds_delay,
-        iframe_log=iframe_log
+    # is it a demo mode?
+
+    # get user tag
+    user = HealthieUser(entry['healthie_user_id'])
+    is_demo = user.if_user_has_tag('demo')
+
+    if is_demo:
+        # render the demo template
+        return render_template(
+            'healthie/iframe_provider_tab/demo/index.html',
         )
+
+    else:
+
+    # --------------------------------------------------------------------
+    # render the template
+        return render_template(
+            'healthie/iframe_provider_tab/index.html',
+            healthie_provider_id=healthie_provider_id,
+            patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
+            healthie_user_id=healthie_user_id,
+            temporary_lookup_code=temporary_lookup_code,
+            milliseconds_delay=milliseconds_delay,
+            iframe_log=iframe_log
+            )
 
