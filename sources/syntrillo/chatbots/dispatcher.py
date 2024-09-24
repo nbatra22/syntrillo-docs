@@ -33,6 +33,8 @@ class ChatBotsDispatcher:
         """
         The endpoint for the chatbot dispatcher.
 
+        TODO : comment
+
         Receives a data dict similar to:
             {"resource_id": 260040, "resource_id_type": "Note", "event_type": "message.created", "changed_fields": []}
         where
