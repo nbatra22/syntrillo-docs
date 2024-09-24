@@ -117,14 +117,15 @@ def iframe_healthie_provider_tab_index():
     is_demo = user.if_user_has_tag('demo')
 
     if is_demo:
+        # render the demo template
         return render_template(
             'healthie/iframe_provider_tab/demo/index.html',
         )
 
     else:
 
-        # --------------------------------------------------------------------
-        # render the template
+    # --------------------------------------------------------------------
+    # render the template
         return render_template(
             'healthie/iframe_provider_tab/index.html',
             healthie_provider_id=healthie_provider_id,
