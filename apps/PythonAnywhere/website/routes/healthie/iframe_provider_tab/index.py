@@ -110,16 +110,27 @@ def iframe_healthie_provider_tab_index():
     milliseconds_delay = int( os.getenv('MILLISECONDS_DELAY', milliseconds_delay_default) )
 
     # --------------------------------------------------------------------
-    # is it a demo mode?
+    # is it a demo or test mode?
 
     # get user tag
-    user = HealthieUser(entry['healthie_user_id'])
-    is_demo = user.if_user_has_tag('demo')
+    if entry is not None and entry['healthie_user_id'] is not None:
+        user = HealthieUser(entry['healthie_user_id'])
+        is_demo = user.if_user_has_tag('demo')
+        is_test = user.if_user_has_tag('test')
+    else:
+        is_demo = False
+        is_test = False
 
     if is_demo:
         # render the demo template
         return render_template(
             'healthie/iframe_provider_tab/demo/index.html',
+        )
+
+    elif is_test:
+        # render the test template
+        return render_template(
+            'healthie/iframe_provider_tab/test/index.html',
         )
 
     else:
