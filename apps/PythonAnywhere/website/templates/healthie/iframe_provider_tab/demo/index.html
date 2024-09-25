@@ -38,15 +38,7 @@
 
 <div class="container"> <!-- TODO : increase media max-width -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="tab-onboarding-tab" data-toggle="tab" href="#tab-onboarding" role="tab" aria-controls="tab-onboarding" aria-selected="false">Onboarding</a>
-        </li>
+        
         <li class="nav-item">
             <a class="nav-link" id="tab-care-plan-tab" data-toggle="tab" href="#tab-care-plan" role="tab" aria-controls="tab-care-plan" aria-selected="false">Care Plan - Hello</a>
         </li>
@@ -54,12 +46,13 @@
             <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
         </li>
         <!-- Large gap -->
+         <!-- Need to confirm with omar if he would like to keep the below
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" id="tab-system-devices-tab" data-toggle="tab" href="#tab-system-devices" role="tab" aria-controls="tab-system-devices" aria-selected="false">System Devices</a>
-        </li>
+        </li> -->
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
@@ -218,8 +211,13 @@
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
+
+        
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss'); 
+        
+    
+        
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
 
