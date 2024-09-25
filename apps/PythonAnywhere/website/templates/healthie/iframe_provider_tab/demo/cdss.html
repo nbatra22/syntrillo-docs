@@ -1,7 +1,10 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/cdss.html -->
 
 
- <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider_demo.css">
+  <!-- Link to local CSS -->
+  <!-- <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider_demo.css"> -->
+ <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider_demo.css') }}">
+
 
   <!-- Link to Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
