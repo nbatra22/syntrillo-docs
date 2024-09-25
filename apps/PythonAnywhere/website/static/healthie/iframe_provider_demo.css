@@ -338,3 +338,25 @@ body.loading {
     transform: translateX(-50%);
 }
 
+
+/* Demo code below */
+
+.card{
+    width: 15vw;
+    
+}
+
+.table-secondary td{
+    padding: 1.4rem;
+}
+
+.gradient-bar{
+    background-image: linear-gradient(to right, green, yellow, red);
+    width: 100%;
+    height: 2rem;
+}
+
+.bi-arrow-bar-down{
+    position: relative;
+    left: 80%;
+}
