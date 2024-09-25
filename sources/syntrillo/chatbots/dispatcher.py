@@ -53,12 +53,12 @@ class ChatBotsDispatcher:
 
         # ------------------------------
         # dispatch the message to the appropriate chatbot, based on time and several variables
-        # TODO : log error if note['user_id'] empty (when a provider sent the note ?)
         note_creator = self.convo_wrapper.get_note_creator()
         note_content = self.convo_wrapper.get_note_content()
         convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
         conversation_owner = self.convo_wrapper.get_conversation_owner()
         patients = self.convo_wrapper.get_patients()
+        # TODO : implement convo_wrapper.does_convo_includes_only_providers()
         is_org_staging = self.healthie_utils.is_org_staging()
 
         # Remove HTML tags from note content, so that we can check for keywords at the start of the note
@@ -68,10 +68,13 @@ class ChatBotsDispatcher:
         v00_start_virtual_care_navigator = False
         v01_start_after_hours_support_chatbot = False
         v02_start_after_hours_virtual_assistant = False
+        # TODO : implement v04_care_plan_personalization
 
         # Get the current time in the EST timezone
         est = pytz.timezone('US/Eastern')
         current_time_est = datetime.now(est)
+
+        # TODO: implement v03 and v04 if specific patient&providers (investors) are involved, using IDs and tags
 
         if is_org_staging:
             # We are in staging
