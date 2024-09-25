@@ -140,8 +140,10 @@ class ChatBotConversationWrapper:
                 temp_user = HealthieUser(healthie_user_id=member['id'])
                 if temp_user.is_patient():
                     self.patients.append(temp_user)
+                # TODO : add a check for the provider
 
             # get conversation members
+            # TODO : describe the difference between invitees and conversation_memberships
             self.members = []
             for member in self.conversation['conversation_memberships']:
                 self.members.append(HealthieUser(healthie_user_id=member['user_id']))
