@@ -550,7 +550,7 @@ if __name__ == '__main__':
     print(bpm_data.head())
 
     # ---
-    if False:
+    if True:
     # get the plot as html
         fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
             representation='html'
@@ -558,6 +558,10 @@ if __name__ == '__main__':
 
         # print the first chars of output
         print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/plot_bp.html', 'w') as f:
+            f.write(output)
 
     # ---
     if False:
@@ -573,7 +577,7 @@ if __name__ == '__main__':
         color = data_reporting_blood_pressure._get_color_for_percent_above_130_90(100)
         print(color)
 
-    if True:
+    if False:
 
         from_date, to_date = data_reporting_blood_pressure.get_date_range()
 
