@@ -404,6 +404,9 @@ font-size: 1rem;
  color: #34B0CB;
  font-weight: 550;
 }
+.last-measured{
+    display: none;
+}
 
 
  /*  mobile devices */
@@ -420,6 +423,9 @@ font-size: 1rem;
     .barriers-wrapper table{
         width: 98vw;
         font-size: .85rem;
+    }
+    .last-measured{
+        display: block;
     }
  }
 
