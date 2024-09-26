@@ -1,23 +1,24 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/cdss.html -->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 
   <!-- Link to local CSS -->
   <!-- <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider_demo.css"> -->
  <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider_demo.css') }}">
 
 
-  <!-- Link to Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+   <!-- Bootstrap JS and Popper.js -->
+   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 
-   
 
-
-<div class="container-fluid">
+<div>
 
 <h4>Elanor, 70 year old F</h4>
 
 
-<div class="d-md-flex justify-content-between overall-wrapper">
+<div class="d-lg-flex justify-content-between overall-wrapper">
 
   <!--Stroke Risk Score starts here-->
 <div>
@@ -63,8 +64,8 @@
   <h5>Biometric Data</h5>
 
     <!--Might change to d-sm-flex if we want to keep them side by side-->
-<div class="d-lg-flex">
-<div class="custom-card d-sm-flex align-content-center">
+<div class="d-lg-flex" style="margin-top: 2vh;">
+<div class="custom-card d-sm-flex align-content-center"  data-toggle="tooltip" title="Last Measured: 9/26/2024">
   <div class="align-content-center">
     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-check2-circle" viewBox="0 0 16 16">
       <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
@@ -72,40 +73,46 @@
     </svg>
   </div>
   <div class="align-content-center">
-    <h5>Systolic Blood Pressure</h5>
-  <p class="data-text">119 mmHg</p>
+    <!--When clicked should display blood pressure graph-->
+    <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Systolic Blood Pressure</a></h5>
+  <p class="data-text">119 mmHg</p> 
+  <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
 </div>
 </div>
 
-<div class="custom-card d-sm-flex">
+<div class="custom-card d-sm-flex" data-toggle="tooltip" title="Last Measured: 9/26/2024">
   <div class="align-content-center">
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="red" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-check2-circle" viewBox="0 0 16 16">
+      <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
+      <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
+    </svg>
 </div>
   <div class="align-content-center">   
-    <h5>Diastolic Blood Pressure</h5>
-    <p class="data-text">184 mmHg</p>
+    <!--When clicked should display blood pressure graph-->
+    <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Diastolic Blood Pressure</a></h5>
+    <p class="data-text">66 mmHg</p>
+    <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
   </div>
 </div>
 </div>
 
 <div class="d-lg-flex">
-  <div class="custom-card d-sm-flex align-content-center">
+  <div class="custom-card d-sm-flex align-content-center" data-toggle="tooltip" title="Last Measured: 9/26/2024">
     <div class="align-content-center">
-      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="red" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
       <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
       </svg>
     </div>
     <div class="align-content-center">
-      <h5>Heart Rate</h5>
+      <!--When clicked should display heart rate graph-->
+      <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Heart Rate</a></h5>
     <p class="data-text">56 bpm</p>
+    <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
   </div>
   </div>
   
-  <div class="custom-card d-sm-flex">
+  <div class="custom-card d-sm-flex" data-toggle="tooltip" title="Last Measured: 9/25/2024">
     <div class="align-content-center">
       <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -114,13 +121,14 @@
   </div>
     <div class="align-content-center">   
       <h5>Heart Rate Variability</h5>
-      <p class="data-text">11.5 ms</p>
+      <p class="data-text">36 ms</p>
+      <p class="last-measured"> Last Measured: <span class="data-text">9/25/2024</span></p>
     </div>
   </div>
   </div>
 
   <div class="d-lg-flex">
-    <div class="custom-card d-sm-flex align-content-center">
+    <div class="custom-card d-sm-flex align-content-center" data-toggle="tooltip" title="Last Measured: 9/20/2024">
       <div class="align-content-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="red" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -128,27 +136,31 @@
         </svg>
       </div>
       <div class="align-content-center">
-        <h5>Vigorous Physical Activity</h5>
+        <!--When clicked should display steps graph-->
+        <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Vigorous Physical Activity</a></h5>
         <p class="data-text">0 min/wk</p>
+        <p class="last-measured"> Last Measured: <span class="data-text">9/20/2024</span></p>
     </div>
     </div>
     
-    <div class="custom-card d-sm-flex">
+    <div class="custom-card d-sm-flex" data-toggle="tooltip" title="Last Measured: 9/24/2024">
       <div class="align-content-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-check2-circle" viewBox="0 0 16 16">
-          <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
-          <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+          <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+          </svg>
     </div>
       <div class="align-content-center">   
-        <h5>Moderate Physical Activity</h5>
+        <!--When clicked should display steps graph-->
+        <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Moderate Physical Activity</a></h5>
         <p class="data-text">60 min/wk</p>
+        <p class="last-measured"> Last Measured: <span class="data-text">9/24/2024</span></p>
       </div>
     </div>
     </div>
 
     <div class="d-lg-flex">
-      <div class="custom-card d-sm-flex align-content-center">
+      <div class="custom-card d-sm-flex align-content-center" data-toggle="tooltip" title="Last Measured: 8/15/2024">
         <div class="align-content-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-check2-circle" viewBox="0 0 16 16">
             <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/>
@@ -158,11 +170,12 @@
         <div class="align-content-center">
           <h5>Body Mass Index</h5>
         <p class="data-text">24.2 kg/m</p>
+        <p class="last-measured"> Last Measured: <span class="data-text">8/15/2024</span></p>
       </div>
       </div>
       
       <!--Div below intentionally left blank-->
-      <div class=" d-sm-flex">
+      <div class=" d-sm-flex custom-card-blank">
         <div class="align-content-center">
          
       </div>
@@ -177,7 +190,7 @@
 
 
 <!--Barriers Profile starts here-->
-<div>
+<div class="barriers-wrapper">
   <h5>Barriers Profile</h5>
     <br>
     <table class="table-secondary table-bordered">
@@ -209,4 +222,25 @@
 </div>
 
 </div>
+</div>
+
+
+   <!-- Blood Pressure Modal -->
+   <div class="modal fade" id="bpModal" tabindex="-1" aria-labelledby="bpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bpModalLabel">Blood Pressure Plot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Iframe to load the plot_bp.html -->
+                <!-- <iframe src="{{ url_for('static', filename='healthie/test/plot_bp.html') }}" width="100%" height="400px" style="border:none;"></iframe> -->
+                <iframe src="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\test\plot_bp.html" width="100%" height="400px" style="border:none;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>

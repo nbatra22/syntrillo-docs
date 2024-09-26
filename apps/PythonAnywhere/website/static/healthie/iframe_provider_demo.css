@@ -344,6 +344,7 @@ body.loading {
 
 .table-secondary td{
     padding: 1.4rem;
+    background-color: #F5F5F5;
 }
 
 .gradient-bar{
@@ -364,7 +365,16 @@ body.loading {
     margin: 1rem;
     width: 20vw;
     font-size: .8rem;
-    background-color: #D6D8DB;
+    background-color: #F5F5F5;
+}
+
+.custom-card-blank{
+    border: none;
+    padding: 1rem;
+    margin: 1rem;
+    width: 20vw;
+    font-size: .8rem;
+    
 }
 .custom-card svg{
     margin-right: .8rem;
@@ -383,12 +393,49 @@ font-size: 1rem;
 }
 
 .orange-text{
-    color: orange;
+    color: rgb(235, 143, 4);
+    font-weight: 600;
 }
 .green-text{
     color: green;
+    font-weight: 600;
 }
 .data-text{
  color: #34B0CB;
+ font-weight: 550;
 }
+.last-measured{
+    display: none;
+}
+
+.biometric-wrapper a:link{
+    color: inherit;
+    text-decoration: underline;
+}
+.biometric-wrapper a:visited{
+    color: inherit;
+    text-decoration: underline;
+}
+
+
+ /*  mobile devices */
+ @media (max-width: 800px) {
+    .biometric-wrapper{
+        width: 96vw;
+        margin-top: 4vh;
+    }
+    .custom-card{
+        width: 100%;
+        margin: 1vw;
+        
+    }
+    .barriers-wrapper table{
+        width: 98vw;
+        font-size: .85rem;
+    }
+    .last-measured{
+        display: block;
+    }
+ }
+
 
