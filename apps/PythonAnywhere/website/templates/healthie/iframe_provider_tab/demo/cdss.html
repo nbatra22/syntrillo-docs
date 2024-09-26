@@ -6,10 +6,11 @@
  <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider_demo.css') }}">
 
 
-  <!-- Link to Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-   
+   <!-- Bootstrap JS and Popper.js -->
+   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
+   <!-- Bootstrap CSS -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
 <div>
@@ -72,7 +73,8 @@
     </svg>
   </div>
   <div class="align-content-center">
-    <h5>Systolic Blood Pressure</h5>
+    <!--When clicked should display blood pressure graph-->
+    <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Systolic Blood Pressure</a></h5>
   <p class="data-text">119 mmHg</p> 
   <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
 </div>
@@ -86,7 +88,8 @@
     </svg>
 </div>
   <div class="align-content-center">   
-    <h5>Diastolic Blood Pressure</h5>
+    <!--When clicked should display blood pressure graph-->
+    <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Diastolic Blood Pressure</a></h5>
     <p class="data-text">66 mmHg</p>
     <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
   </div>
@@ -102,7 +105,8 @@
       </svg>
     </div>
     <div class="align-content-center">
-      <h5>Heart Rate</h5>
+      <!--When clicked should display heart rate graph-->
+      <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Heart Rate</a></h5>
     <p class="data-text">56 bpm</p>
     <p class="last-measured"> Last Measured: <span class="data-text">9/26/2024</span></p>
   </div>
@@ -132,7 +136,8 @@
         </svg>
       </div>
       <div class="align-content-center">
-        <h5>Vigorous Physical Activity</h5>
+        <!--When clicked should display steps graph-->
+        <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Vigorous Physical Activity</a></h5>
         <p class="data-text">0 min/wk</p>
         <p class="last-measured"> Last Measured: <span class="data-text">9/20/2024</span></p>
     </div>
@@ -146,7 +151,8 @@
           </svg>
     </div>
       <div class="align-content-center">   
-        <h5>Moderate Physical Activity</h5>
+        <!--When clicked should display steps graph-->
+        <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Moderate Physical Activity</a></h5>
         <p class="data-text">60 min/wk</p>
         <p class="last-measured"> Last Measured: <span class="data-text">9/24/2024</span></p>
       </div>
@@ -216,4 +222,25 @@
 </div>
 
 </div>
+</div>
+
+
+   <!-- Blood Pressure Modal -->
+   <div class="modal fade" id="bpModal" tabindex="-1" aria-labelledby="bpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bpModalLabel">Blood Pressure Plot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Iframe to load the plot_bp.html -->
+                <!-- <iframe src="{{ url_for('static', filename='healthie/test/plot_bp.html') }}" width="100%" height="400px" style="border:none;"></iframe> -->
+                <iframe src="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\test\plot_bp.html" width="100%" height="400px" style="border:none;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>

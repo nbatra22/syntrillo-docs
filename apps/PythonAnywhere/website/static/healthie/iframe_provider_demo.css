@@ -408,6 +408,15 @@ font-size: 1rem;
     display: none;
 }
 
+.biometric-wrapper a:link{
+    color: inherit;
+    text-decoration: underline;
+}
+.biometric-wrapper a:visited{
+    color: inherit;
+    text-decoration: underline;
+}
+
 
  /*  mobile devices */
  @media (max-width: 800px) {
