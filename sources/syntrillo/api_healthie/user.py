@@ -151,6 +151,7 @@ class HealthieUser:
                     first_name
                     last_name
                     name
+                    doc_share_id                # # An ID used for document, course, and conversation sharing
                     dob
                     gender
                     sex

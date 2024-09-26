@@ -1,11 +1,13 @@
 # Path: ./sources/syntrillo/chatbots/conversation_wrapper.py
 import json
 
-from typing import Tuple
+from typing import Tuple, List
 from datetime import datetime
 
 from syntrillo.api_healthie.conversations import HealthieConversations
 from syntrillo.api_healthie.user import HealthieUser
+
+from syntrillo.system.logger import logger
 
 class ChatBotConversationWrapper:
     """
@@ -37,9 +39,10 @@ class ChatBotConversationWrapper:
         self.owner = None
 
         # HealthieUser class array
-        self.patients = None  # typically one patient
-        self.members = None
-        self.creators = None  # every note creator
+        self.patients : List[HealthieUser] = None  # typically one patient
+        self.members : List[HealthieUser] = None
+        self.creators : List[HealthieUser] = None  # every note creator
+        self.providers : List[HealthieUser] = None  # provider(s) in the conversation
 
         # all creators ids
         self.creators_ids = None
@@ -136,11 +139,13 @@ class ChatBotConversationWrapper:
 
             # get invitees
             self.patients = []
+            self.providers = []
             for member in self.conversation['invitees']:
                 temp_user = HealthieUser(healthie_user_id=member['id'])
                 if temp_user.is_patient():
                     self.patients.append(temp_user)
-                # TODO : add a check for the provider
+                elif temp_user.is_provider():
+                    self.providers.append(temp_user)
 
             # get conversation members
             # TODO : describe the difference between invitees and conversation_memberships
@@ -149,6 +154,7 @@ class ChatBotConversationWrapper:
                 self.members.append(HealthieUser(healthie_user_id=member['user_id']))
 
             # get all unique creators from all the notes in the conversation
+            #  : useful to know who has already answered, if an AI has already answered, etc.
             self.creators = []
             self.creators_ids = []
             for note in self.conversation['notes']:
@@ -157,6 +163,17 @@ class ChatBotConversationWrapper:
                     self.creators.append(creator)
                     self.creators_ids.append(creator.healthie_user_id)
 
+            # log numbers
+            logger.info(
+                {   'message' : 'Conversation loaded in conversation_wrapper',
+                    'conversation_id': conversation_id,
+                    'number_of_notes': len(self.conversation['notes']),
+                    'number_of_members': len(self.members),
+                    'number_of_creators': len(self.creators),
+                    'number_of_providers': len(self.providers),
+                    'number_of_patients': len(self.patients)
+                }
+            )
 
         except Exception as e:
             self.log['success'] = False
@@ -165,6 +182,8 @@ class ChatBotConversationWrapper:
                 'conversation_id' : conversation_id,
                 'log' : str(e)
             })
+
+
 
         return self.log
 
@@ -258,6 +277,15 @@ class ChatBotConversationWrapper:
         """
         return self.creators
 
+    def get_all_convo_members(self) -> list:
+        """
+        Get all the conversation members.
+
+        Returns:
+            members (list[HealthieUser]): The conversation members.
+        """
+        return self.members
+
     def is_user_in_convo(self, healthie_user_id: str) -> bool:
         """
         Check if the user is in the conversation.
@@ -270,6 +298,36 @@ class ChatBotConversationWrapper:
         """
         return healthie_user_id in self.creators_ids
 
+    def does_convo_include_only_providers(self) -> bool:
+        """
+        Check if the conversation includes only providers.
+
+        Returns:
+            bool: True if the conversation includes only providers, False otherwise.
+        """
+
+        for member in self.members:
+            if not member.is_provider():
+                return False
+
+        return True
+
+
+    def does_convo_includes_provider_with_tag(self, tag: str) -> bool:
+        """
+        Check if the conversation includes a provider with a specific tag.
+
+        Args:
+            tag (str): The tag to check.
+
+        Returns:
+            bool: True if the conversation includes a provider with the tag, False otherwise.
+        """
+        for provider in self.providers:
+            if provider.if_user_has_tag(tag):
+                return True
+
+        return False
 
     def create_note(
         self,
@@ -306,7 +364,7 @@ class ChatBotConversationWrapper:
         self,
         chatbot_user_id: str = None,
         keyword_to_remove_from_content: str = None
-        ) -> Tuple[dict, dict]:
+        ) -> list:
         """
         Returns all notes from the conversation as a list of dictionaries having the following format:
             {
@@ -317,6 +375,7 @@ class ChatBotConversationWrapper:
 
         Args:
             chatbot_user_id (str): The chatbot user id.
+            keyword_to_remove_from_content (str): The keyword to remove from the content.
 
         Returns:
             notes (list[dict]): The notes from the conversation.
@@ -395,29 +454,56 @@ class ChatBotConversationWrapper:
 
         return dt
 
+    def get_last_note_id(self) -> str:
+        """
+        Get the id of the last note.
+
+        Returns:
+            str: The id of the last note.
+        """
+        return self.conversation['notes'][-1]['id']
+
+
 
 
 
 if __name__ == '__main__':
 
     # test ChatBotConversationWrapper from a conversation_id
-    conversation_id = '1562883'
-    wrapper = ChatBotConversationWrapper()
-    log = wrapper.load_conversation_from_conversation_id(conversation_id)
+    if False:
+        conversation_id = '1562883'
+        wrapper = ChatBotConversationWrapper()
+        log = wrapper.load_conversation_from_conversation_id(conversation_id)
 
-    print(json.dumps(wrapper.get_conversation(), indent=4, default=str))
+        print(json.dumps(wrapper.get_conversation(), indent=4, default=str))
 
-    print("owner is provider:" , wrapper.get_conversation_owner().is_provider())
+        print("owner is provider:" , wrapper.get_conversation_owner().is_provider())
 
-    print('---------------')
-    notes = wrapper.get_all_notes_for_llm(chatbot_user_id='1459460')
-    print(json.dumps(notes, indent=4, default=str))
+        print('---------------')
+        notes = wrapper.get_all_notes_for_llm(chatbot_user_id='1459460')
+        print(json.dumps(notes, indent=4, default=str))
 
-    print('---------------')
-    # show all note creators
-    creators = wrapper.get_all_convo_creators()
-    for member in creators:
-        print(member.healthie_user_id , member.get_patient_information()['name'])
+        print('---------------')
+        # show all note creators
+        creators = wrapper.get_all_convo_creators()
+        for member in creators:
+            print(member.healthie_user_id , member.get_patient_information()['name'])
+
+    if True:
+        conversation_id = '1740910'
+        wrapper = ChatBotConversationWrapper()
+        log = wrapper.load_conversation_from_conversation_id(conversation_id)
+
+        members = wrapper.get_all_convo_members()
+        print(json.dumps(members, indent=4, default=str))
+
+        print("convo_include_only_providers:", wrapper.does_convo_include_only_providers() )
+
+        tag = "CarePlanPersonalizationVirtualAssistant"
+        print("convo_includes_provider_with_tag:", wrapper.does_convo_includes_provider_with_tag(tag) )
+
+
+
 
 
 

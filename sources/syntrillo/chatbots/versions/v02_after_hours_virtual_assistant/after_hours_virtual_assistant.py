@@ -57,7 +57,7 @@ class AfterHoursVirtualAssistant:
         self.convo_wrapper = convo_wrapper
 
         # ------------------------------
-        # is there an user with my tag?
+        # is there an user in Healthie with my tag?
         #  : if yes, I'll use this user to answer
         #  : if no, I'll use the provider user
         tags = HealthieTags()
