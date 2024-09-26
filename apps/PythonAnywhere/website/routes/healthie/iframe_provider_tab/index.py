@@ -115,8 +115,8 @@ def iframe_healthie_provider_tab_index():
     # get user tag
     if entry is not None and entry['healthie_user_id'] is not None:
         user = HealthieUser(entry['healthie_user_id'])
-        is_demo = user.if_user_has_tag('demo')
-        is_test = user.if_user_has_tag('test')
+        is_demo = user.does_user_have_tag('demo')
+        is_test = user.does_user_have_tag('test')
     else:
         is_demo = False
         is_test = False

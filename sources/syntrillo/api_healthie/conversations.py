@@ -4,6 +4,7 @@ import json
 from typing import Tuple
 
 from syntrillo.api_healthie.auth import HealthieAuth
+from syntrillo.api_healthie.user import HealthieUser
 
 
 class HealthieConversations:
@@ -227,5 +228,116 @@ class HealthieConversations:
         )
 
         return response, log
+
+    def create_conversation(
+        self,
+        owner_id : str = None,
+        members_ids : list = None,
+        members_csv : str = None,
+        name : str = None,
+        ) -> Tuple[dict, dict]:
+        """
+        Create a new conversation.
+
+        https://docs.gethealthie.com/docs/#creating-a-conversation
+
+        Provide either members_ids or members_csv
+
+        Args:
+            owner_id (str): The owner id.
+            members_ids (list): The list of members ids.
+            members_csv (str): The list of members name as a csv string.
+            name (str): The name of the conversation.
+
+        Returns:
+            conversation_id,log (Tuple[dict, dict]): The conversation id and the log of the request
+
+        """
+
+        #
+
+        log = {
+            'success': True,
+            'message': 'create_conversation',
+            'errors': []
+        }
+
+        # get members as comma separated doc_share_id values
+        if members_ids is not None:
+            members_csv = ''
+            for member_id in members_ids:
+                # get user name
+                user = HealthieUser(healthie_user_id=member_id)
+                doc_share_id = user.get_patient_information().get('doc_share_id', None)
+                if doc_share_id is not None:
+                    members_csv += f'{doc_share_id},'
+                else:
+                    log['errors'].append(f'User {member_id} does not have a doc_share_id')
+                    log['success'] = False
+
+
+
+        if members_csv is None or members_csv == '':
+            log['errors'].append('No members in the conversation')
+            log['success'] = False
+
+        if log['success'] is False:
+            return None, log
+
+        # remove last comma
+        if members_csv[-1] == ',':
+            members_csv = members_csv[:-1]
+
+        # create conversation
+        response, log = self.auth.send_query(
+            query="""
+                mutation createConversation(
+                    $owner_id: ID
+                    $simple_added_users: String
+                    $name: String
+                ) {
+                    createConversation(
+                        input: {
+                            owner_id: $owner_id
+                            simple_added_users: $simple_added_users
+                            name: $name
+                        }
+                    ) {
+                        conversation {
+                            id
+                        }
+                        messages {
+                            field
+                            message
+                        }
+                    }
+                }
+                """,
+            variables={
+                'owner_id': owner_id,
+                'simple_added_users': members_csv,
+                'name': name,
+            }
+        )
+
+        return response, log
+
+
+
+if __name__ == '__main__':
+
+    # test create_conversation
+    hc = HealthieConversations()
+    owner_id = '1033222' # olivier+healthie_test2@15kay.fr
+    members_ids = [
+        '1664829', # Care Plan Personalization Virtual Assistant
+        # '5f7c5c9c5e9d3f001b3f3b5d'
+        ]
+    name = 'test conversation'
+    response, log = hc.create_conversation(owner_id=owner_id, members_ids=members_ids, name=name)
+    print(json.dumps(response, indent=2))
+    print(json.dumps(log, indent=2))
+
+
 
 
