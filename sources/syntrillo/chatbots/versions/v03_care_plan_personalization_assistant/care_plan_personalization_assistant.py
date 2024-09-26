@@ -82,6 +82,8 @@ class CarePlanPersonalizationVirtualAssistant:
         notes = self.convo_wrapper.get_all_notes_for_llm()
 
         # get last note
+        # expected format :
+        #   "last_note":{"who":"provider or chatbot","content":"<p>hello</p>","created_at":"2024-09-26 12:14:25 -0400"}}
         if notes is None:
             last_note = None
         else:
