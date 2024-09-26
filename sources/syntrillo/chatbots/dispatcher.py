@@ -106,8 +106,10 @@ class ChatBotsDispatcher:
                 # place holder for direct provider interaction with chatbot
 
                 if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) \
-                    and convo_include_only_providers:
+                    and convo_include_only_providers \
+                    and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
                         # we have a provider with the AI tag, and the conversation includes only providers
+                        # and the last note is not from the AI (to prevent loops, I've been there...)
                     v03_start_care_plan_personalization_assistant = True
 
             else:

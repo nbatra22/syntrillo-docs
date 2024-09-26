@@ -324,7 +324,7 @@ class ChatBotConversationWrapper:
             bool: True if the conversation includes a provider with the tag, False otherwise.
         """
         for provider in self.providers:
-            if provider.if_user_has_tag(tag):
+            if provider.does_user_have_tag(tag):
                 return True
 
         return False
