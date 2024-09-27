@@ -26,6 +26,7 @@ class LLMServer(Construct):
     def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        self.environment_context = environment_context
         self.network = network
 
         role = iam.Role(self, "EC2SSMRole",
@@ -163,7 +164,7 @@ class LLMServer(Construct):
                     actions=[
                         "s3:GetObject",
                     ],
-                    resources=["arn:aws:s3:::sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.zip"]
+                    resources=[f"arn:aws:s3:::{environment_context['environment_name']}.syntrillo-clinic-backend.llm-server-packages/llm-service.zip"]
                 ),
             ]
         )

@@ -8,7 +8,7 @@ aws s3 cp s3://sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.
 unzip llm-service.zip
 sudo pip install -r requirements.txt
 
-sudo vi /etc/systemd/system/flask_api.service
+sudo bash -c 'cat > /etc/systemd/system/flask_api.service << EOF
 [Unit]
 Description=Gunicorn instance to serve Flask API
 After=network.target
@@ -20,10 +20,11 @@ WorkingDirectory=/home/ubuntu
 # Environment="PATH=/home/ubuntu/testenv/bin"
 #ExecStart=/home/ubuntu/testenv/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 flask_api:app
 #ExecStart=/home/ubuntu/.local/bin/gunicorn --workers 2 --bind 0.0.0.0:5000 flask_api:app
-ExecStart=/home/ubuntu/.local/bin/gunicorn --workers 2 --bind 0.0.0.0:80 flask_api:app
+ExecStart=/usr/local/bin/gunicorn --workers 2 --bind 0.0.0.0:80 flask_api:app
 
 [Install]
 WantedBy=multi-user.target
+EOF'
 
 sudo systemctl daemon-reload
 sudo systemctl start flask_api.service
