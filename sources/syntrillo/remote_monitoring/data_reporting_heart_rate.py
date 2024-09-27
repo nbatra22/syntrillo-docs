@@ -930,8 +930,12 @@ if __name__ == '__main__':
     # get data
     data_reporting_heart_rate = DataReportingHeartRate(entry['syntrillo_internal_key'])
 
-    start_date = datetime.now() - timedelta(days=100)
-    end_date = datetime.now()
+    if False:
+        start_date = datetime.now() - timedelta(days=100)
+        end_date = datetime.now()
+    else:
+        start_date = None
+        end_date = None
 
     pulse_df, log = data_reporting_heart_rate.get_pulse_dataframe(start_date=start_date, end_date=end_date)
 

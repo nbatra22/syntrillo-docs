@@ -68,7 +68,7 @@ class DataReportingSteps:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-        ) -> Tuple[pd.DataFrame, dict]:
+        ) -> Tuple[pd.DataFrame, pd.DataFrame, dict]:
         """
         Get BPM report, only Steps data.
 
@@ -413,12 +413,10 @@ if __name__ == '__main__':
         start_date = None
         end_date = None
 
-    hourly_steps_data, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
+    hourly_steps_data, daily_steps_data, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
         start_date=start_date,
         end_date=end_date,
     )
-
-    daily_steps_data = data_reporting_steps.daily_steps_df
 
     print(log)
 
