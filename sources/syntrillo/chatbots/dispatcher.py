@@ -21,6 +21,7 @@ from syntrillo.chatbots.versions.v02_after_hours_virtual_assistant.after_hours_v
 
 from syntrillo.chatbots.versions.v03_care_plan_personalization_assistant.care_plan_personalization_assistant import CarePlanPersonalizationVirtualAssistant as v03_CarePlanPersonalizationVirtualAssistant
 
+from syntrillo.chatbots.versions.v04_after_hours_virtual_assistant_bedrock.after_hours_virtual_assistant_bedrock import AfterHoursVirtualAssistantBedrock as v04_AfterHoursVirtualAssistantBedrock
 
 class ChatBotsDispatcher:
     """
@@ -87,6 +88,7 @@ class ChatBotsDispatcher:
         v01_start_after_hours_support_chatbot = False
         v02_start_after_hours_virtual_assistant = False
         v03_start_care_plan_personalization_assistant = False
+        v04_after_hours_virtual_assistant_bedrock = False
 
         # Get the current time in the EST timezone
         est = pytz.timezone('US/Eastern')
@@ -123,6 +125,11 @@ class ChatBotsDispatcher:
                 elif note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
                     v02_start_after_hours_virtual_assistant = True
 
+                # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
+                #   staging : Patient 'Investor Demo': 1660020; tagged as 'demo'
+                elif note_creator.does_user_have_tag('demo') or note_creator.healthie_user_id == '1660020':
+                    v04_after_hours_virtual_assistant_bedrock = True
+
                 # if the note creator is a patient start if after working hours
                 if not is_within_working_hours:
                     # Not implemented yet
@@ -155,6 +162,10 @@ class ChatBotsDispatcher:
         elif v03_start_care_plan_personalization_assistant:
             cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
             cppa_chatbot.generate_responses()
+
+        elif v04_after_hours_virtual_assistant_bedrock:
+            ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)
+            ahvab_chatbot.generate_responses()
 
         elif v00_start_virtual_care_navigator:
             # TODO : implement legacy virtual care navigator chatbot
