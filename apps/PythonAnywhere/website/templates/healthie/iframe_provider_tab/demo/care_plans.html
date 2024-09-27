@@ -1,5 +1,714 @@
-<p>
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/care_plan.html -->
 
-    Demo patient care_plans.html file
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Summary status
+</h2>
 
-</p>
+<div class="collapsible-content">
+
+    <p class="mt-4"">Table format:&nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="summary-table-toggle-link" id="summary-table-weekly-link">Weekly</span>
+        &nbsp;|&nbsp;
+        <span class="summary-table-toggle-link" id="summary-table-monthly-link">Monthly</span>
+    </p>
+
+    <style>
+
+        /* Table styling : weekly/monthly links */
+        .summary-table-hidden {
+            display: none;
+        }
+        .summary-table-toggle-link {
+            cursor: pointer;
+            color: blue;
+            font-size: 0.8em;
+        }
+        .summary-table-toggle-link.active {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        /* Table styling : summary table */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary-table td, .summary-table th {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+        }
+        /*
+        .summary-table td:hover::after,
+        .summary-table th:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-100%);
+            white-space: nowrap;
+            z-index: 1;
+        }
+        */
+        .summary-table .specific-bottom-border td,
+        .summary-table .specific-bottom-border th {
+            border-bottom: 1px solid black !important;
+        }
+
+        .summary-table .tooltip-cell {
+            position: relative;
+            cursor: grab;
+        }
+
+        .summary-table .tooltip-content {
+            display: none;
+            position: absolute;
+            background-color: #f3eefff0;
+            color: #1c1c1e;
+            padding: 5px;
+            border-radius: 5px;
+            left: 50%;
+            bottom: 100%;  /* Position tooltip just above the cell */
+            transform: translateX(-50%) translateY(-5px);
+            white-space: nowrap;
+            z-index: 1;
+            font-size: 0.8em;
+            font-weight: bold;
+            border-color: rgb(155, 120, 252);
+            border-style: solid;
+            border-width: 2px;
+        }
+
+        .summary-table .tooltip-cell:hover .tooltip-content {
+            display: block;
+        }
+
+        .summary-table .tooltip-cell:hover {
+           border: 2px solid rgb(155, 120, 252) !important;  /* Change border color and thickness on hover */
+        }
+
+        .summary-table .tooltip-icon {
+            display: inline-block;
+                width: 10px;
+                height: 10px;
+                background-color: white;
+                color: blue;
+                text-align: center;
+                border-radius: 50%;
+                font-size: 0.6em;
+                line-height: 10px;
+                margin-left: 5px;
+                cursor: pointer;
+                top: -0.5em;
+                position: relative;
+        }
+    </style>
+
+    {# --- Loop through each period type (weekly and monthly) --- #}
+    {% for period_type in ['weekly', 'monthly'] %}
+
+        {# --- Get the summary information based on the period type --- #}
+        {% if period_type == 'weekly' %}
+            {% set summary_information = summary_information_weekly %}
+        {% elif period_type == 'monthly' %}
+            {% set summary_information = summary_information_monthly %}
+        {% endif %}
+
+        <!-- Container for each table, hidden by default -->
+         {% if summary_information %}
+            <div class="table-container-data-color summary-table-hidden" id="summary-{{ period_type }}">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align: left; padding-left: 10px;">Time Frames</th>
+                            <th colspan="4" class="tooltip-cell">
+                                BP <span class="tooltip-icon">i</span>
+                                <div class="tooltip-content">
+                                    {{ summary_information.blood_pressure_information.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="4" class="tooltip-cell">
+                                Pulse
+                                <div class="tooltip-content">
+                                    {{ summary_information.heart_rate_information.pulse.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="4"  class="tooltip-cell">
+                                Heart rate
+                                <div class="tooltip-content">
+                                    {{ summary_information.heart_rate_information.heart_rate.general|safe }}
+                                </div>
+                            </th>
+                            <th colspan="2">Activity</th>
+                            <th colspan="1">Medication<br>Adherence</th>
+                        </tr>
+                        <tr class="specific-bottom-border">
+
+                            <!-- Blood pressure -->
+                            <th class="tooltip-cell">
+                                % above<br>130/90
+                                <div class="tooltip-content">
+                                    Percentage SBP above 120 or DBP above 80.<br><br>
+                                    Green to red color scale.
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                min
+                                <div class="tooltip-content">
+                                    Minimal SBP / Minimal DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average SBP / Average DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximal SBP / Maximal DBP<br><br>
+                                    {{ summary_information.blood_pressure_information.internal1|safe }}
+                                </div>
+                            </th>
+
+                            <!-- Pulse -->
+                            <th class="tooltip-cell">
+                                min
+                                <div class="tooltip-content">
+                                    Minimal pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximal pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.pulse.internal1|safe }}
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                irregular
+                                <div class="tooltip-content">
+                                    Count of irregular pulse from BPM device<br><br>
+                                    {{ summary_information.heart_rate_information.irregular_pulse.internal1|safe }}
+                                </div>
+                            </th>
+
+                            <!-- Heart rate - using hourly averages -->
+                            <th class="tooltip-cell">
+                                avg
+                                <div class="tooltip-content">
+                                    Average of hourly averages
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                max
+                                <div class="tooltip-content">
+                                    Maximum of hourly maxima
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                rmssd
+                                <div class="tooltip-content">
+                                    Root mean square of successive differences (RMSSD).
+                                    <br><br>
+                                    Approximation using differences between successive hourly averages.
+                                </div>
+                            </th>
+                            <th class="tooltip-cell">
+                                rmssd<br>trend
+                                <div class="tooltip-content">
+                                    RMSSD trend from previous consecutive time frame.
+                                </div>
+                            </th>
+
+                            <!-- Activity -->
+                            <th class="tooltip-cell">
+                                steps<br>daily avg
+                                <div class="tooltip-content">
+                                    {{ summary_information.steps_information.general|safe }}
+                                </div>
+                            </th>
+                            <th>self<br>reported</th>
+
+                            <!-- Medication adherence -->
+                            <th>avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if summary_information.combined_summary_data %}
+                            {% for period in summary_information.combined_summary_data %}
+                                <tr class="{% if period.range_name == 'Whole Time' %}specific-bottom-border{% endif %}">
+                                    <td class="tooltip-cell" style="text-align: left; padding-left: 20px;">
+                                        {{ period.range_name }}
+                                        <div class="tooltip-content">
+                                            {{ period.range_name_info|safe }}
+                                        </div>
+                                    </td>
+
+                                    <!-- Blood pressure -->
+                                    <td style="background-color: {{ period.bp_summary_data.percent_above_130_90_color }};">
+                                        {{ period.bp_summary_data.percent_above_130_90|none_string_data_filter(0) }}%
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_min.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_min.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_mean.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_mean.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.bp_summary_data.internal1_color_bp_max.color }};">
+                                        {{ period.bp_summary_data.internal1_color_bp_max.html|safe }}
+                                    </td>
+
+                                    <!-- Pulse -->
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_min.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_min.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_mean.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_mean.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.pulse_max.color }};">
+                                        {{ period.heart_rate_summary_data.pulse_max.html|safe }}
+                                    </td>
+                                    <td style="background-color: {{ period.heart_rate_summary_data.irregular_pulse_count.color }};">
+                                        {{ period.heart_rate_summary_data.irregular_pulse_count.html|safe }}
+                                    </td>
+
+                                    <!-- Heart rate - using hourly averages -->
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_average_average|none_string_data_filter(0) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_max_max|none_string_data_filter(0) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd|none_string_data_filter(1) }}</td>
+                                    <td>{{ period.heart_rate_summary_data.hr_hourly_stats_rmssd_trend_pct }}</td>
+
+                                    <!-- Activity -->
+                                    <td>{{ period.steps_summary_data.daily_steps_average|none_string_data_filter(0) }}</td>
+                                    <td></td>
+
+                                    <!-- Medication adherence -->
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="15" style="text-align: center;">No data available</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div>
+                <p>No data available</p>
+            </div>
+        {% endif %}
+
+    {% endfor %}
+
+</div> <!-- end of collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Medication adherence
+</h2>
+
+<div class="collapsible-content">
+
+    <p class="mt-4" style="text-decoration: underline;">Medication history</p>
+
+    <div class="table-container-data">
+        <table id="data-medication-history-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Active</th>
+                    <th>Start date</th>
+                    <th>End date</th>
+                    <th>Dosage</th>
+                    <th>Directions</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if medication_history == [] %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No data available</td>
+                    </tr>
+                {% else %}
+                    {% for datapoint in medication_history %}
+                        <tr>
+                            <td>{{ datapoint.name  }}</td>
+                            <td>{{ datapoint.active }}</td>
+                            <td>{{ datapoint.start_date }}</td>
+                            <td>{{ datapoint.end_date  }}</td>
+                            <td>{{ datapoint.dosage  }}</td>
+                            <td>{{ datapoint.directions }}</td>
+                            <td>{{ datapoint.comment  }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="mt-4" style="text-decoration: underline;">Tenovi Pillbox Expectations Charting Notes data</p>
+
+    <div class="table-container-data">
+        <table id="data-pillbox-expectations-table" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Date</th>
+                    <th>Openings AM</th>
+                    <th>Openings PM</th>
+                    <th>Openings Daily</th>
+                    <th>Weekend Leniency</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if tenovi_pillbox_expectations_dataset == [] %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No data available</td>
+                    </tr>
+                {% else %}
+                    {% for datapoint in tenovi_pillbox_expectations_dataset %}
+                        <tr>
+                            <td>{{ datapoint.version | default('not-applicable') }}</td>
+                            <td>{{ datapoint.created_at | default('not-applicable') }}</td>
+                            <td>{{ datapoint.openings_am | default('not-applicable') }}</td>
+                            <td>{{ datapoint.openings_pm | default('not-applicable') }}</td>
+                            <td>{{ datapoint.openings_daily_total | default('not-applicable') }}</td>
+                            <td>{{ datapoint.weekend_leniency | default('not-applicable') }}</td>
+                            <td>{{ datapoint.comment | default('not-applicable') | safe }}</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="mt-4" style="text-decoration: underline;">Medication Adherence Data</p>
+    <style>
+        .medical-adherence-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .medical-adherence-table td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            border: 1px solid #ccc;
+            white-space: nowrap;
+        }
+        .medical-adherence-table td:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 1;
+        }
+    </style>
+
+    <div class="table-container-data">
+        <table class="medical-adherence-table">
+            <tr>
+                <td>Period</td>
+                <td>Day</td>
+                <td>Sun</td>
+                <td>Mon</td>
+                <td>Tue</td>
+                <td>Wed</td>
+                <td>Thu</td>
+                <td>Fri</td>
+                <td>Sat</td>
+                <td>Total</td>
+                <td>Comment</td>
+            </tr>
+            {% if medication_adherence_data %}
+                {% for week in medication_adherence_data %}
+                    <tr>
+                        <td rowspan="2">{{ week.name }}</td>
+                        <td>AM</td>
+                        {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                            <td style="background-color: {{ week.status_per_day[day]['AM_color'] }};"
+                                data-tooltip="{{ week.status_per_day[day]['AM_data'] }} - {{ week.status_per_day[day]['AM_comment'] }}">
+                            </td>
+                        {% endfor %}
+                        <td>{{ week.status_per_day['total']['AM_comment'] }}</td>
+                    </tr>
+                    <tr>
+                        <td>PM</td>
+                        {% for day in ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'total'] %}
+                            <td style="background-color: {{ week.status_per_day[day]['PM_color'] }};"
+                                data-tooltip="{{ week.status_per_day[day]['PM_data'] }} - {{ week.status_per_day[day]['PM_comment'] }}">
+                            </td>
+                        {% endfor %}
+                        <td>{{ week.status_per_day['total']['PM_comment'] }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="11" style="text-align: center;">No data available</td>
+                </tr>
+            {% endif %}
+        </table>
+    </div>
+
+</div> <!-- end of collapsible-content -->
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Blood pressure
+</h2>
+
+<div class="collapsible-content">
+
+    <!--
+    <div id="blood-pressure-plot-container-html">
+        <p>Loading blood pressure plot as html...</p>
+    </div>
+    -->
+
+    <div id="blood-pressure-plot-container-json">
+        <p>Loading blood pressure plot as json...</p>
+    </div>
+
+</div>
+
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Heart Rate
+</h2>
+
+<div class="collapsible-content">
+
+    {% if pulse_moments %}
+        <p>Pulse statistics (from BPM device, patient at rest):</p>
+        <table class="compact-table-two-columns">
+            <tr>
+                <td class="compact-table-two-columns-col1">Count</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.count | int }}</td>
+            </tr>
+            </tr>
+            <tr>
+                <td class="compact-table-two-columns-col1">Average</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.mean | int }} bpm</td>
+            </tr>
+            <tr>
+                <td class="compact-table-two-columns-col1">Std</td>
+                <td class="compact-table-two-columns-col2">{{ pulse_moments.std | round(1) }} bpm</td>
+            </tr>
+        </table>
+    {% else %}
+        <p>No pulse statistics available</p>
+    {% endif %}
+
+    <!--
+    <div id="pulse-plot-container-html">
+        <p>Loading pulse plot as html...</p>
+    </div>
+    -->
+
+    <div id="pulse-plot-container-json">
+        <p>Loading pulse plot as json...</p>
+    </div>
+
+    <br>
+    {% if rmssd %}
+        <p>HRV approximation from hourly averages:</p>
+        <table class="compact-table-two-columns">
+            <tr>
+                <td class="compact-table-two-columns-col1">Root Mean Square of Successive Differences (RMSSD)</td>
+                <td class="compact-table-two-columns-col2">{{ rmssd | round(1) }} bpm</td>
+            </tr>
+        </table>
+    {% else %}
+        <p>No HRV approximation available</p>
+    {% endif %}
+
+    <!--
+    <div id="heart-rate-statistics-plot-container-html">
+        <p>Loading heart rate statistics plot as html...</p>
+    </div>
+    -->
+
+    <div id="heart-rate-statistics-plot-container-json">
+        <p>Loading heart rate statistics plot as json...</p>
+    </div>
+
+</div>
+
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Activity
+</h2>
+
+<div class="collapsible-content">
+
+    <div id="daily-steps-plot-container-json">
+        <p>Loading daily steps plot as json...</p>
+    </div>
+
+
+</div>
+
+
+
+<!-- a spacer at the bottom. Nicer when the user scrolls up -->
+<div class="bg-white mb-5">
+    <p>&nbsp;</p>
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+
+        // -----------------------------------------
+        // -- SUMMARY TABLE LOGIC --
+
+        const summaryWeekly = document.getElementById('summary-weekly');
+        const summaryMonthly = document.getElementById('summary-monthly');
+        const weeklyLink = document.getElementById('summary-table-weekly-link');
+        const monthlyLink = document.getElementById('summary-table-monthly-link');
+
+        // initialize
+        var summaryPageToDisplay = "{{ summary_page_to_display }}";
+
+        if (summaryPageToDisplay === "weekly") {
+            summaryWeekly.classList.remove('summary-table-hidden');
+            weeklyLink.classList.add('active');
+        } else if (summaryPageToDisplay === "monthly") {
+            summaryMonthly.classList.remove('summary-table-hidden');
+            monthlyLink.classList.add('active');
+        }
+
+        // toggle
+        document.getElementById('summary-table-weekly-link').addEventListener('click', function() {
+            summaryWeekly.classList.remove('summary-table-hidden');
+            summaryMonthly.classList.add('summary-table-hidden');
+            weeklyLink.classList.add('active');
+            monthlyLink.classList.remove('active');
+        });
+
+        document.getElementById('summary-table-monthly-link').addEventListener('click', function() {
+            summaryMonthly.classList.remove('summary-table-hidden');
+            summaryWeekly.classList.add('summary-table-hidden');
+            monthlyLink.classList.add('active');
+            weeklyLink.classList.remove('active');
+        });
+
+
+        // -----------------------------------------
+        // --- MEDICATIONS HISTORY LOGIC ---
+
+        // Parse the JSON string into an actual JavaScript array or object
+        var medicationHistoryDatasetJson = JSON.parse('{{ medication_history | tojson }}');
+
+        // Check if data is not null and not an empty array
+        if (medicationHistoryDatasetJson && Array.isArray(medicationHistoryDatasetJson) && medicationHistoryDatasetJson.length > 0) {
+            $('#data-medication-history-table').DataTable({
+                "paging": false,
+                "searching": false,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "order": [[2, 'asc']]  // Order by the 3rd column (start-date)
+            });
+        } else {
+            console.log('Medication History Data is empty or not an array.');
+        }
+
+
+        // -----------------------------------------
+        // --- PILLBOX LOGIC ---
+
+        // Parse the JSON string into an actual JavaScript array or object
+        var pillboxDatasetJson = JSON.parse('{{ tenovi_pillbox_expectations_dataset | tojson }}');
+
+        // Check if data is not null and not an empty array
+        if (pillboxDatasetJson && Array.isArray(pillboxDatasetJson) && pillboxDatasetJson.length > 0) {
+            $('#data-pillbox-expectations-table').DataTable({
+                "paging": false,
+                "searching": false,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "order": [[1, 'asc']]  // Order by the second column (created_at)
+            });
+        } else {
+            console.log('Pillbox Dataset Data is empty or not an array.');
+        }
+
+
+        // -----------------------------------------
+        // -- JSON PLOTS --
+        // N.B. JSON PLOTS are prefered over HTML PLOTS
+        // because they take less time to execute in lambda functions
+        // (~ 150ms for json plots against ~ 500ms for html plots)
+
+        // Load blood pressure plot when the document is ready
+        var target = '#blood-pressure-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_blood_pressure_plot") }}';
+        // log call to console: url, target
+        console.log('Loading blood pressure plot from url: ' + url, 'to target: ' + target);
+
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load pulse plot when the document is ready
+        var target = '#pulse-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_pulse_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load heart rate statistics plot when the document is ready
+        var target = '#heart-rate-statistics-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_heart_rate_statistics_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+        // Load daily steps plot when the document is ready
+        var target = '#daily-steps-plot-container-json';
+        var url = '{{ url_for("iframe_healthie_provider_tab_care_plan_bp.get_daily_steps_plot") }}';
+        loadPlotContent(url, target, json_or_html='json');
+
+    });
+</script>
+

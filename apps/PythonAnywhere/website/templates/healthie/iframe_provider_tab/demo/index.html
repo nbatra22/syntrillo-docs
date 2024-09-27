@@ -1,5 +1,65 @@
-<p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Demo</title>
+    <!-- Link to local CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie/test/iframe_provider.css') }}"> 
+  <!--  <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider.css"> -->
 
-    Demo patient index.html file
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Nav Tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">Care Plan</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">CDSS</button>
+            </li>
+        </ul>
 
-</p>
+        <!-- Tab Content -->
+        <div class="tab-content mt-3" id="myTabContent">
+            <div class="tab-pane fade show active custom-style" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+                <iframe src="care_plans.html" width="100%" height="800vh" style="border:none;"></iframe>
+            </div>
+            <div class="tab-pane fade custom-style" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+                
+                <iframe src="cdss.html" width="100%" height="800vh" style="border:none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Pressure Modal -->
+    <div class="modal fade" id="bpModal" tabindex="-1" aria-labelledby="bpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bpModalLabel">Blood Pressure Plot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Iframe to load the plot_bp.html -->
+                   <iframe src="{{ url_for('static', filename='healthie/test/plot_bp.html') }}" width="100%" height="400px" style="border:none;"></iframe>
+                    <!-- <iframe src="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\test\plot_bp.html" width="100%" height="400px" style="border:none;"></iframe>
+                -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
