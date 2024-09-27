@@ -68,7 +68,7 @@ class DataReportingSteps:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-        ) -> Tuple[pd.DataFrame, dict]:
+        ) -> Tuple[pd.DataFrame, pd.DataFrame, dict]:
         """
         Get BPM report, only Steps data.
 
@@ -397,7 +397,9 @@ class DataReportingSteps:
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    # 1358984 : patient eight with demo data
+    # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1358984')
     lookup_codes.close_connection()
 
     # ---
@@ -411,12 +413,10 @@ if __name__ == '__main__':
         start_date = None
         end_date = None
 
-    hourly_steps_data, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
+    hourly_steps_data, daily_steps_data, log = data_reporting_steps.get_hourly_and_daily_steps_dataframes(
         start_date=start_date,
         end_date=end_date,
     )
-
-    daily_steps_data = data_reporting_steps.daily_steps_df
 
     print(log)
 
@@ -437,5 +437,19 @@ if __name__ == '__main__':
 
         df = data_reporting_steps.get_summary_for_date_ranges(date_ranges)
         print(df)
+
+
+    if True:
+        # get the plot as html
+        fig, output, _ = data_reporting_steps.get_daily_steps_plotly(
+            representation='html'
+        )
+
+        # print the first chars of output
+        print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/p8_plot_daily_steps.html', 'w') as f:
+            f.write(output)
 
     pass

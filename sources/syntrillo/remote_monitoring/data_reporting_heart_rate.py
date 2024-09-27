@@ -356,6 +356,8 @@ class DataReportingHeartRate:
         self,
         representation: str = 'html',
         html_no_data : str = 'No blood pressure data available',
+        full_html: bool = False, # required if embeded in a webpage
+        **plotly_args  # Allows passing additional arguments to pio.to_html
     ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the pulse and irregular_heartrate data.
@@ -427,11 +429,20 @@ class DataReportingHeartRate:
             legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
             )
 
+        # adjustments for the demo
+        if representation == 'html':
+            # Adjust the layout of the figure, including the legend to prevent overlap
+            fig.update_layout(
+                legend=dict(
+                    entrywidth=100,
+                ),
+                margin=dict(l=40, r=40, t=80, b=40)  # Adjust margins to fit the plot
+            )
 
         # ---
         # convert the figure to html or json
         if representation == 'html' or representation == 'both':
-            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_html = pio.to_html(fig, full_html=full_html, **plotly_args)
             representation_output_json = None
         elif representation == 'json' or representation == 'both':
             representation_output_json = plotly_fig_to_dict(fig)
@@ -449,6 +460,8 @@ class DataReportingHeartRate:
         self,
         representation: str = 'html',
         html_no_data : str = 'No blood pressure data available',
+        full_html: bool = False, # required if embeded in a webpage
+        **plotly_args  # Allows passing additional arguments to pio.to_html
     ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the watch hourly heart rate stats data.
@@ -519,14 +532,24 @@ class DataReportingHeartRate:
             legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
             )
 
+        # adjustments for the demo
+        if representation == 'html':
+            # Adjust the layout of the figure, including the legend to prevent overlap
+            fig.update_layout(
+                legend=dict(
+                    entrywidth=130,
+                    x=0.4
+                ),
+                margin=dict(l=40, r=40, t=80, b=40)  # Adjust margins to fit the plot
+            )
 
         # ---
         # convert the figure to html or json
         if representation == 'html' or representation == 'both':
-            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_html = pio.to_html(fig, full_html=full_html, **plotly_args)
             representation_output_json = None
         elif representation == 'json' or representation == 'both':
-            representation_output_json = plotly_fig_to_dict(fig)
+            representation_output_json = plotly_fig_to_dict(fig, **plotly_args)
             representation_output_html = None
         else:
             representation_output_html = None
@@ -921,15 +944,21 @@ class DataReportingHeartRate:
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    # 1358984 : patient eight with demo data
+    # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1358984')
     lookup_codes.close_connection()
 
     # ---
     # get data
     data_reporting_heart_rate = DataReportingHeartRate(entry['syntrillo_internal_key'])
 
-    start_date = datetime.now() - timedelta(days=100)
-    end_date = datetime.now()
+    if False:
+        start_date = datetime.now() - timedelta(days=100)
+        end_date = datetime.now()
+    else:
+        start_date = None
+        end_date = None
 
     pulse_df, log = data_reporting_heart_rate.get_pulse_dataframe(start_date=start_date, end_date=end_date)
 
@@ -956,3 +985,37 @@ if __name__ == '__main__':
 
     print('--------------------------------')
 
+    # ---
+    if True:
+        # get the plot as html
+        fig, output, _ = data_reporting_heart_rate.get_heart_rate_statistics_plotly(
+            representation='html',
+            full_html=True,
+            config={'responsive': True},
+            default_width = "100%",
+            default_height = "100%",
+        )
+
+        # print the first chars of output
+        print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/p8_plot_hr_watch.html', 'w') as f:
+            f.write(output)
+
+    if True:
+        # get the plot as html
+        fig, output, _ = data_reporting_heart_rate.get_pulse_plotly(
+            representation='html',
+            full_html=True,
+            config={'responsive': True},
+            default_width = "100%",
+            default_height = "100%",
+        )
+
+        # print the first chars of output
+        print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/p8_plot_pulse_bpm.html', 'w') as f:
+            f.write(output)
