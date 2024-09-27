@@ -169,6 +169,8 @@ class DataReportingBloodPressure:
         self,
         representation: str = 'html',
         html_no_data : str = 'No blood pressure data available',
+        full_html: bool = False, # required if embeded in a webpage
+        **plotly_args  # Allows passing additional arguments to pio.to_html
     ) -> Tuple[go.Figure, str, dict]:
         """
         Creates a figure from the blood pressure data.
@@ -237,17 +239,31 @@ class DataReportingBloodPressure:
             title='Blood Pressure',
             xaxis_title='Date',
             yaxis=dict(title='Blood Pressure (mmHg)', side='left'),
-            legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='center', x=0.5),
+            legend=dict(
+                orientation='h',
+                yanchor='bottom',
+                y=1.02,
+                xanchor='center',
+                x=0.5),
             )
 
+        # adjustments for the demo
+        if representation == 'html':
+            # Adjust the layout of the figure, including the legend to prevent overlap
+            fig.update_layout(
+                legend=dict(
+                    entrywidth=100,
+                ),
+                margin=dict(l=40, r=40, t=80, b=40)  # Adjust margins to fit the plot
+            )
 
         # ---
         # convert the figure to html or json
         if representation == 'html' or representation == 'both':
-            representation_output_html = pio.to_html(fig, full_html=False)
+            representation_output_html = pio.to_html(fig, full_html=full_html, **plotly_args)
             representation_output_json = None
         elif representation == 'json' or representation == 'both':
-            representation_output_json = plotly_fig_to_dict(fig)
+            representation_output_json = plotly_fig_to_dict(fig, **plotly_args)
             representation_output_html = None
         else:
             representation_output_html = None
@@ -555,7 +571,11 @@ if __name__ == '__main__':
     if True:
     # get the plot as html
         fig, output, _ = data_reporting_blood_pressure.get_blood_pressure_plotly(
-            representation='html'
+            representation='html',
+            full_html=True,
+            config={'responsive': True},
+            default_width = "100%",
+            default_height = "100%",
         )
 
         # print the first chars of output
