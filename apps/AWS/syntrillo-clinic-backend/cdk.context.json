@@ -14,10 +14,16 @@
       "allowed_referer": "all",
       "webacl-log-group-removal-policy": "DESTROY",
       "iframes_allowed_api_adresses": [
-        {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
+        {
+          "ip": "109.9.46.184/32",
+          "ip_owner": "olemaitre-home"
+        }
       ],
       "webhooks_allowed_api_adresses": [
-        {"ip": "109.9.46.184/32", "ip_owner": "olemaitre-home"}
+        {
+          "ip": "109.9.46.184/32",
+          "ip_owner": "olemaitre-home"
+        }
       ],
       "disable_execute_api_endpoint": false
     },
@@ -36,10 +42,7 @@
       "bastion-enabled": true,
       "bastion-instance-size": "t3.micro"
     }
-
   },
-
-  
   "staging": {
     "environment_name": "staging",
     "stacks-termination-protection": true,
@@ -55,11 +58,20 @@
       "allowed_referer": "https://securestaging.gethealthie.com/",
       "webacl-log-group-removal-policy": "DESTROY",
       "iframes_allowed_api_adresses": [
-        {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+        {
+          "ip": "0.0.0.0/0",
+          "ip_owner": "everybody"
+        }
       ],
       "webhooks_allowed_api_adresses": [
-        {"ip": "18.206.70.225/32", "ip_owner": "healthie-staging"},
-        {"ip": "44.195.8.253/32", "ip_owner": "healthie-staging"}
+        {
+          "ip": "18.206.70.225/32",
+          "ip_owner": "healthie-staging"
+        },
+        {
+          "ip": "44.195.8.253/32",
+          "ip_owner": "healthie-staging"
+        }
       ],
       "disable_execute_api_endpoint": false
     },
@@ -79,8 +91,6 @@
       "bastion-instance-size": "t3.micro"
     }
   },
-
-
   "prod": {
     "environment_name": "prod",
     "stacks-termination-protection": true,
@@ -96,11 +106,20 @@
       "allowed_referer": "https://patients.syntrillo.com/",
       "webacl-log-group-removal-policy": "RETAIN",
       "iframes_allowed_api_adresses": [
-        {"ip": "0.0.0.0/0", "ip_owner": "everybody"}
+        {
+          "ip": "0.0.0.0/0",
+          "ip_owner": "everybody"
+        }
       ],
       "webhooks_allowed_api_adresses": [
-        {"ip": "52.4.158.130/32", "ip_owner": "healthie-prod"},
-        {"ip": "3.216.152.234/32", "ip_owner": "healthie-prod"}
+        {
+          "ip": "52.4.158.130/32",
+          "ip_owner": "healthie-prod"
+        },
+        {
+          "ip": "3.216.152.234/32",
+          "ip_owner": "healthie-prod"
+        }
       ],
       "disable_execute_api_endpoint": true
     },
@@ -119,5 +138,8 @@
       "bastion-enabled": false,
       "bastion-instance-size": "t3.medium"
     }
-  }
+  },
+  "acknowledged-issue-numbers": [
+    30444
+  ]
 }

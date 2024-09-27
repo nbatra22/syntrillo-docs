@@ -3,6 +3,7 @@
 import os
 import json
 import pytz
+import requests
 
 from datetime import datetime
 
@@ -95,7 +96,12 @@ class CarePlanPersonalizationVirtualAssistant:
         })
 
         # create the response
-        response = "CarePlanPersonalizationVirtualAssistant.generate_responses says hello!"
+        # response = "CarePlanPersonalizationVirtualAssistant.generate_responses says hello!"
+
+        llm_response = requests.post('http://10.0.190.145/query', headers= {'Content-Type': 'application/json'} , data = json.dumps({
+            "query": last_note["content"],
+            "model": "claude-3-5-sonnet"}))
+        response = json.loads(llm_response.text)['answer']      
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
