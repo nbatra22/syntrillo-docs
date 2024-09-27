@@ -525,7 +525,9 @@ class DataReportingBloodPressure:
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1035117') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    # 1358984 : patient eight with demo data
+    # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1358984')
     lookup_codes.close_connection()
 
     # ---
@@ -560,7 +562,7 @@ if __name__ == '__main__':
         print(output[:100])
 
         # save output to a file
-        with open('/home/olivier/temp/plot_bp.html', 'w') as f:
+        with open('/home/olivier/temp/p8_plot_bp.html', 'w') as f:
             f.write(output)
 
     # ---

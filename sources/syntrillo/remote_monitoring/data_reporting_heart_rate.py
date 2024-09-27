@@ -921,7 +921,9 @@ class DataReportingHeartRate:
 if __name__ == '__main__':
 # Example usage
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    # 1358984 : patient eight with demo data
+    # 1051529 : Omar's "Patient One" / 1035117 : "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1358984')
     lookup_codes.close_connection()
 
     # ---
@@ -956,3 +958,29 @@ if __name__ == '__main__':
 
     print('--------------------------------')
 
+    # ---
+    if True:
+        # get the plot as html
+        fig, output, _ = data_reporting_heart_rate.get_heart_rate_statistics_plotly(
+            representation='html'
+        )
+
+        # print the first chars of output
+        print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/p8_plot_hr_watch.html', 'w') as f:
+            f.write(output)
+
+    if True:
+        # get the plot as html
+        fig, output, _ = data_reporting_heart_rate.get_pulse_plotly(
+            representation='html'
+        )
+
+        # print the first chars of output
+        print(output[:100])
+
+        # save output to a file
+        with open('/home/olivier/temp/p8_plot_pulse_bpm.html', 'w') as f:
+            f.write(output)
