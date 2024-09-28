@@ -98,7 +98,7 @@ class CarePlanPersonalizationVirtualAssistant:
         # create the response
         # response = "CarePlanPersonalizationVirtualAssistant.generate_responses says hello!"
 
-        llm_response = requests.post('https://10.0.190.145/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
+        llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
             "query": last_note["content"],
             "model": "claude-3-5-sonnet"}))
         response = json.loads(llm_response.text)['answer']      

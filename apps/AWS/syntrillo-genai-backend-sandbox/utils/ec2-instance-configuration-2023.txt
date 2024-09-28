@@ -1,0 +1,35 @@
+sudo yum update -y
+sudo yum install python3.11 -y
+sudo yum install python3.11-pip -y
+
+aws s3 cp s3://sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.zip .
+unzip llm-service.zip
+
+sudo pip3.11 install -r requirements.txt
+
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+
+sudo bash -c 'cat > /etc/systemd/system/flask_api.service << EOF
+[Unit]
+Description=Gunicorn instance to serve Flask API
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/home/ec2-user
+ExecStart=/usr/local/bin/gunicorn --certfile /home/ec2-user/cert.pem --keyfile /home/ec2-user/key.pem --workers 2 --bind 0.0.0.0:443 flask_api:app
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+sudo systemctl daemon-reload
+sudo systemctl stop flask_api.service
+sudo systemctl start flask_api.service
+sudo systemctl status flask_api.service
+
+curl --insecure --location 'https://127.0.0.1/query' --header 'Content-Type: application/json' --data '{
+    "query": "Robert Johnson is a 64 yo M w/ a history of diabetes, obesity, hypertension, and hyperlipidemia who presents following recent admission for ischemic stroke involving the left internal capsule. Stroke mechanism is small vessel disease. LDL is 86. Hemoglobin A1c is 6.3. Patient is on ASA 81 mg daily and Atorvastatin 20 mg daily. Patient does not smoke but drinks two alcoholic drinks per day. Patient has moderate depression and severe fatigue. What American Heart Association recommendations apply to this patient? Please only include recommendations associated with level A and level B evidence.",
+    "model": "claude-3-5-sonnet"
+}'

@@ -194,9 +194,30 @@ class LLMServer(Construct):
         #     "Allow LLM server access http"
         # ) 
 
+        # # create an ec2 instance
+        # self.instance = ec2.Instance(self, "LLMServerInstance",
+        #     instance_name="LLMServerInstance",
+        #     vpc = self.network.vpc,
+        #     instance_type=ec2.InstanceType("t3.micro"),
+        #     # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
+        #     # machine_image=ec2.MachineImage.from_ssm_parameter(
+        #     #     "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id",
+        #     #     os=ec2.OperatingSystemType.LINUX
+        #     # ),
+        #     machine_image = ec2.MachineImage.generic_linux({
+        #         "us-east-1": "ami-04a98573e58903ee0",
+        #     }),
+        #     vpc_subnets=ec2.SubnetSelection(
+        #         subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        #     ),
+        #     role=role,
+        #     security_group=self.security_group,
+        #     private_ip_address='10.0.190.145'
+        # )
+
         # create an ec2 instance
-        self.instance = ec2.Instance(self, "LLMServerInstance",
-            instance_name="LLMServerInstance",
+        self.instance_linux_2023 = ec2.Instance(self, "LLMServerInstance2023",
+            instance_name="LLMServerInstance2023",
             vpc = self.network.vpc,
             instance_type=ec2.InstanceType("t3.micro"),
             # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
@@ -205,14 +226,14 @@ class LLMServer(Construct):
             #     os=ec2.OperatingSystemType.LINUX
             # ),
             machine_image = ec2.MachineImage.generic_linux({
-                "us-east-1": "ami-04a98573e58903ee0",
+                "us-east-1": "ami-066784287e358dad1",
             }),
             vpc_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
             ),
             role=role,
             security_group=self.security_group,
-            private_ip_address='10.0.190.145'
+            private_ip_address='10.0.190.146'
         )
 
         # Create a security group for the VPC Endpoint
