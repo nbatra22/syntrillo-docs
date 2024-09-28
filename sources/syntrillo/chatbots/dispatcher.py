@@ -149,17 +149,11 @@ class ChatBotsDispatcher:
                     v03_start_care_plan_personalization_assistant = True
 
             else:
-                # if the note creator is a patient start if content starts with a keyword
-                if note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
-                    v02_start_after_hours_virtual_assistant = False  # Not implemented yet since PHI may be sent
-
-                # if the note creator is a patient start if after working hours
-                if not is_within_working_hours:
-                    v02_start_after_hours_virtual_assistant = False  # Not implemented yet since PHI may be sent
+                # place holder for patient interaction with chatbot
 
                 # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
                 #   production : Demo Patient 'Eleanor Demo': xxxxx ; tagged as 'demo'
-                elif note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == 'xxxxxxx':
+                if note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == 'xxxxxxx':
                     v04_after_hours_virtual_assistant_bedrock = True
 
 
