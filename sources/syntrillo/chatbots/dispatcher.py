@@ -88,7 +88,7 @@ class ChatBotsDispatcher:
         v01_start_after_hours_support_chatbot = False
         v02_start_after_hours_virtual_assistant = False
         v03_start_care_plan_personalization_assistant = False
-        v04_after_hours_virtual_assistant_bedrock = False
+        v04_start_after_hours_virtual_assistant_bedrock = False
 
         # Get the current time in the EST timezone
         est = pytz.timezone('US/Eastern')
@@ -128,7 +128,7 @@ class ChatBotsDispatcher:
                 # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
                 #   staging : Patient 'Investor Demo': 1660020; tagged as 'demo'
                 elif note_creator.does_user_have_tag('demo') or note_creator.healthie_user_id == '1660020':
-                    v04_after_hours_virtual_assistant_bedrock = True
+                    v04_start_after_hours_virtual_assistant_bedrock = True
 
                 # if the note creator is a patient start if after working hours
                 if not is_within_working_hours:
@@ -156,7 +156,7 @@ class ChatBotsDispatcher:
                 if note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == 'xxxxxxx':
                     v01_start_after_hours_support_chatbot = False
                     v02_start_after_hours_virtual_assistant = False
-                    v04_after_hours_virtual_assistant_bedrock = False
+                    v04_start_after_hours_virtual_assistant_bedrock = False
 
 
         # start the chatbot with the conversationWrapper object
@@ -172,7 +172,7 @@ class ChatBotsDispatcher:
             cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
             cppa_chatbot.generate_responses()
 
-        elif v04_after_hours_virtual_assistant_bedrock:
+        elif v04_start_after_hours_virtual_assistant_bedrock:
             ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)
             ahvab_chatbot.generate_responses()
 
