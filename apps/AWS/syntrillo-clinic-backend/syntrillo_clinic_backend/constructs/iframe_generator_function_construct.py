@@ -28,6 +28,7 @@ class IFrameGeneratorFunction(Construct):
                  database: Construct,
                  storage: Construct,
                  secrets: Construct,
+                 llm_server: Construct,
                  **kwargs):
         super().__init__(scope, id, **kwargs)
 
@@ -36,6 +37,7 @@ class IFrameGeneratorFunction(Construct):
         self.database = database
         self.storage = storage
         self.secrets = secrets
+        self.llm_server = llm_server
 
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
@@ -90,6 +92,24 @@ class IFrameGeneratorFunction(Construct):
             ec2.Port.tcp(3306),
             description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
         )
+
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
+        )
+
+        self.llm_server.security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(443),
+            "Allow LLM server access httpS"
+        )
+
+        self.llm_server.security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(80),
+            "Allow LLM server access http"
+        ) 
     
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)

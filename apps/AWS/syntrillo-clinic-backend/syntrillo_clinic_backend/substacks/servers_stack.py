@@ -56,19 +56,20 @@ class ServersStack(Stack):
         
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
+        self.llm_server = LLMServer(
+            self, "LLMServer",
+            environment_context=self.environment_context,
+            network=self.network,
+        )
+
         self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
             environment_context=self.environment_context,
             network=self.network,
             database=self.database,
             storage=self.storage, 
-            secrets=self.secrets
-        )
-
-        self.llm_server = LLMServer(
-            self, "LLMServer",
-            environment_context=self.environment_context,
-            network=self.network,
+            secrets=self.secrets,
+            llm_server=self.llm_server 
         )
 
         self.iframe_generator_api_endpoint = IFrameGeneratorApiEndpoint(

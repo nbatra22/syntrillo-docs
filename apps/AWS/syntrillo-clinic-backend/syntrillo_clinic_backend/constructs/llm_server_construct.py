@@ -176,23 +176,23 @@ class LLMServer(Construct):
         role.add_managed_policy(s3_access_policy)
 
         # Create a security group
-        security_group = ec2.SecurityGroup(self, "UbuntuInstanceSG",
+        self.security_group = ec2.SecurityGroup(self, "UbuntuInstanceSG",
             vpc=self.network.vpc,
             description="Security group for LLM Server",
             allow_all_outbound=True
         )
 
-        security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(5000),
-            "Allow LLM server access"
-        )
+        # security_group.add_ingress_rule(
+        #     ec2.Peer.any_ipv4(),
+        #     ec2.Port.tcp(443),
+        #     "Allow LLM server access httpS"
+        # )
 
-        security_group.add_ingress_rule(
-            ec2.Peer.any_ipv4(),
-            ec2.Port.tcp(80),
-            "Allow LLM server access http"
-        )
+        # security_group.add_ingress_rule(
+        #     ec2.Peer.any_ipv4(),
+        #     ec2.Port.tcp(80),
+        #     "Allow LLM server access http"
+        # ) 
 
         # create an ec2 instance
         self.instance = ec2.Instance(self, "LLMServerInstance",
@@ -211,7 +211,7 @@ class LLMServer(Construct):
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
             ),
             role=role,
-            security_group=security_group,
+            security_group=self.security_group,
             private_ip_address='10.0.190.145'
         )
 
