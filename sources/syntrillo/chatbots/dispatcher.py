@@ -140,7 +140,14 @@ class ChatBotsDispatcher:
             # !!! We are in production !!!
             if note_creator.is_provider():
                 # place holder for direct provider interaction with chatbot
-                pass
+
+                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) \
+                    and convo_include_only_providers \
+                    and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
+                        # we have a provider with the AI tag, and the conversation includes only providers
+                        # and the last note is not from the AI (to prevent loops, I've been there...)
+                    v03_start_care_plan_personalization_assistant = True
+
             else:
                 # if the note creator is a patient start if content starts with a keyword
                 if note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
@@ -149,6 +156,12 @@ class ChatBotsDispatcher:
                 # if the note creator is a patient start if after working hours
                 if not is_within_working_hours:
                     v02_start_after_hours_virtual_assistant = False  # Not implemented yet since PHI may be sent
+
+                # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
+                #   production : Demo Patient 'Eleanor Demo': xxxxx ; tagged as 'demo'
+                elif note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == 'xxxxxxx':
+                    v04_after_hours_virtual_assistant_bedrock = True
+
 
         # start the chatbot with the conversationWrapper object
         if v01_start_after_hours_support_chatbot:
