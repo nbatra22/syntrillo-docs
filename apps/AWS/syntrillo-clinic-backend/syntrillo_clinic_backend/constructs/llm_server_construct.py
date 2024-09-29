@@ -23,11 +23,12 @@ from constructs import Construct
 
 class LLMServer(Construct):
 
-    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, network: Construct, iframe_generator_function: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         self.environment_context = environment_context
         self.network = network
+        self.iframe_generator_function = iframe_generator_function
 
         role = iam.Role(self, "EC2SSMRole",
             assumed_by=iam.ServicePrincipal("ec2.amazonaws.com")
@@ -234,6 +235,18 @@ class LLMServer(Construct):
             role=role,
             security_group=self.security_group,
             private_ip_address='10.0.190.146'
+        )
+
+        self.security_group.add_ingress_rule(
+            self.iframe_generator_function.function_security_group,
+            ec2.Port.tcp(443),
+            "Allow LLM server access httpS"
+        )
+
+        self.security_group.add_ingress_rule(
+            self.iframe_generator_function.function_security_group,
+            ec2.Port.tcp(80),
+            "Allow LLM server access http"
         )
 
         # Create a security group for the VPC Endpoint
