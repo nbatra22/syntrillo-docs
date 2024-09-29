@@ -374,6 +374,11 @@ class ChatBotConversationWrapper:
                 'conversation_id' : self.conversation_id,
                 'log' : log
             })
+            logger.error({
+                'message' : 'Failed to create note',
+                'conversation_id' : self.conversation_id,
+                'log' : log
+            })
 
         return message, log
 
