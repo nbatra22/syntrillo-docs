@@ -54,7 +54,12 @@ class CarePlanPersonalizationVirtualAssistant:
                 self.chatbot_user_id = uids[0]
             else:
                 self.chatbot_user_id = None
-                raise ValueError(f"More than one user with tag {self.CHATBOT_TAG}")
+                logger.error({
+                    "message": "CarePlanPersonalizationVirtualAssistant.__init__",
+                    "error": "More than one user with tag",
+                    "tag": self.CHATBOT_TAG,
+                    "uids": uids
+                })
         else:
             self.chatbot_user_id = None
 
@@ -62,8 +67,14 @@ class CarePlanPersonalizationVirtualAssistant:
             self.responder_user_id = self.chatbot_user_id
             self.chatbot_user_available_to_answer = True
         else:
-            self.responder_user_id = self.convo_wrapper.get_conversation_owner().healthie_user_id
+            logger.error({
+                "message": "CarePlanPersonalizationVirtualAssistant.__init__",
+                "error": "Cannot find user with chatbot tag",
+                "tag": self.CHATBOT_TAG,
+                "uids": uids
+            })
             self.chatbot_user_available_to_answer = False
+            self.responder_user_id = None
 
         # ------------------------------
         # Detect if the chatbot has already answered
@@ -101,7 +112,7 @@ class CarePlanPersonalizationVirtualAssistant:
         llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
             "query": last_note["content"],
             "model": "claude-3-5-sonnet"}))
-        response = json.loads(llm_response.text)['answer']      
+        response = json.loads(llm_response.text)['answer']
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
