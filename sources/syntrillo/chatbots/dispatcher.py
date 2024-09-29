@@ -67,7 +67,7 @@ class ChatBotsDispatcher:
         is_org_staging = self.healthie_utils.is_org_staging()
 
         # ------------------------------
-        # test is note creator is a bot, if so exists
+        # test if note creator is a bot, if so exists
         if note_creator.does_user_have_tag(v02_AfterHoursVirtualAssistant.CHATBOT_TAG):
             return
 
