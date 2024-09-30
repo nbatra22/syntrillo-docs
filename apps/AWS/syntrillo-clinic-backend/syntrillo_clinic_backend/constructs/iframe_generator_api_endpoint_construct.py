@@ -93,10 +93,40 @@ class IFrameGeneratorApiEndpoint(Construct):
             web_acl_arn=web_acl.attr_arn
         )
 
+        # Create an IP set with the two allowed IP addresses
+        webhook_allowed_ip_addresses = sorted(set(
+            ip_info["ip"]
+            for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
+        ))
+
+        allowed_ips = wafv2.CfnIPSet(
+            self, "WebHookAllowedIPs",
+            addresses=webhook_allowed_ip_addresses,
+            ip_address_version="IPV4",
+            scope="REGIONAL", 
+            name="webhook-allowed-ips"
+        )
+
+        sepcific_ip_allowed_rule = wafv2.CfnWebACL.RuleProperty(
+            name="AllowSpecificIPs",
+            priority=10,
+            action=wafv2.CfnWebACL.RuleActionProperty(allow={}),
+            statement=wafv2.CfnWebACL.StatementProperty(
+                ip_set_reference_statement=wafv2.CfnWebACL.IPSetReferenceStatementProperty(
+                    arn=allowed_ips.attr_arn
+                )
+            ),
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name="AllowSpecificIPsRule",
+                sampled_requests_enabled=True
+            )
+        )
+
         allowed_referer = self.environment_context["iframe_generator_api"]["allowed_referer"]
         sepcific_referer_rule = wafv2.CfnWebACL.RuleProperty(
             name="IFramGeneratorAPIWebAclAllowSpecificRefererRule",
-            priority=1,
+            priority=20,
             action=wafv2.CfnWebACL.RuleActionProperty(
                 block={}
             ),
@@ -128,7 +158,7 @@ class IFrameGeneratorApiEndpoint(Construct):
             )
         )
 
-        web_acl.rules = [sepcific_referer_rule]
+        web_acl.rules = [sepcific_ip_allowed_rule, sepcific_referer_rule]
 
         return web_acl
         
