@@ -160,7 +160,7 @@ class ChatBotsDispatcher:
                 # if the note creator is an investor (demo tag or specific id), start the after hours bot
                 #   production : Demo Patient 'Eleanor Demo': xxxxx ; tagged as 'demo'
                 if note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == '6262139':
-                    v01_start_after_hours_support_chatbot = False
+                    v01_start_after_hours_support_chatbot = True
                     v02_start_after_hours_virtual_assistant = False
                     v04_start_after_hours_virtual_assistant_bedrock = False
 
