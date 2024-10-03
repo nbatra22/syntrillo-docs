@@ -15,6 +15,8 @@ def handler(event, context):
 
     patients = healthie_utils.list_patients()
 
+    logger.info(f"Found {len(patients['users'])} patients over {patients['usersCount']}")
+
     for patient in patients['users']:
 
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient['id'])

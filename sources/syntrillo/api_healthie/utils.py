@@ -163,6 +163,7 @@ class HealthieUtils():
         variables = {
             'offset': 0,  # Offset for pagination (if applicable)
             # Add other variables as needed
+            'should_paginate': False, # If set to True (default)  we only read the first 10 users
         }
 
         # Send the GraphQL query using the inherited send_query method
