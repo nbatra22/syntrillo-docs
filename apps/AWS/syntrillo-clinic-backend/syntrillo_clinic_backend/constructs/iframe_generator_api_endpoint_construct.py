@@ -168,11 +168,21 @@ class IFrameGeneratorApiEndpoint(Construct):
             parameter_name="/syntrillo-clinic/aws/route53/hosted_zone_id"
         ).string_value
 
-        return route53.HostedZone.from_hosted_zone_attributes(
+        hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
             self, "SyntrilloClinicBackendHostedZone",
             zone_name=f"{self.environment_name}.syntrillo-clinic-backend.com",
             hosted_zone_id=hosted_zone_id
         )
+
+        # Create a CloudWatch Logs group for the query logs
+        log_group = logs.LogGroup(
+            self, "Route53QueryLogGroup",
+            log_group_name="/aws/route53/query-logging"
+        )
+
+        # MANUALLY ENABLE QUERY LOGGING IN THE HOSTED ZONE : ENABLE PERMISSIONS AND SELECT THE LOGGROUP NAME :/aws/route53/query-logging 
+                
+        return hosted_zone
 
     def _setup_ssl_certificate(self):
         domain_name = f"{self.environment_name}.syntrillo-clinic-backend.com"
