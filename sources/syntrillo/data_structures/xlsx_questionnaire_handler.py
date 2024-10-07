@@ -53,8 +53,21 @@ class DataStructureXlsxQuestionnaireHandler:
         'number': 'Number',
         'label': 'used to display a title (no data retrieved)',
         'read_only': 'used to display a read-only *HTML* value (no data retrieved)',
+
         'html': 'not a mod_type. It is used to display a read-only mod_type *HTML* value (no data retrieved), but the html value is in the question item in Excel',
-        'medications': 'Medications questions from Charting bank',
+
+        # -- Charting bank questions, with specific mod_type, where values are displayed automatically across questionnaires
+        'medications': 'Medications question from Charting bank',
+        'name': 'Name question from Charting bank',
+        'legal_name': 'Legal First Name question from Charting bank',
+        'dob': 'Date of Birth question from Charting bank',
+        'blood_pressure': 'Blood Pressure question from Charting bank',
+        'Weight': 'Weight question from Charting bank',
+        'Height (in.)': 'Height question from Charting bank',
+        'synced_allergy': 'Allergy question from Charting bank',
+
+        # -- mod_type related on our own metrics
+        'StrokeRiskScore': 'Stroke Risk Score from our own metrics',
     }
 
 
@@ -291,6 +304,10 @@ class DataStructureXlsxQuestionnaireHandler:
         json_data_items = []
         number_of_variables = 0
         for _, row in xls_variables.iterrows():
+
+            # skip if 'display' is None
+            if row['display'] is None or row['display'] == "" or pd.isna(row['display']):
+                continue
 
             # Handle None value for 'values'
             if pd.isna(row['values']):  # Check for NaN (which is equivalent to None in pandas)

@@ -37,11 +37,13 @@
         <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
         </li>
+        {% if is_local %}
         <li class="nav-item">
-            <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaires</a>
+            <a class="nav-link" id="tab-questionnaire-tab" data-toggle="tab" href="#tab-questionnaire" role="tab" aria-controls="tab-questionnaire" aria-selected="false">Questionnaires (LOCAL)</a>
         </li>
+        {% endif %}
         <li class="nav-item">
-            <a class="nav-link" id="tab-questionnaire-database-tab" data-toggle="tab" href="#tab-questionnaire-database" role="tab" aria-controls="tab-questionnaire-database" aria-selected="false">Questionnaires DB</a>
+            <a class="nav-link" id="tab-questionnaire-database-tab" data-toggle="tab" href="#tab-questionnaire-database" role="tab" aria-controls="tab-questionnaire-database" aria-selected="false">Questionnaires (database)</a>
         </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
@@ -50,7 +52,9 @@
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
+        {% if is_local %}
         <div class="tab-pane fade" id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-questionnaire-tab"></div>
+        {% endif %}
         <div class="tab-pane fade" id="tab-questionnaire-database" role="tabpanel" aria-labelledby="tab-questionnaire-database-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
     </div>
@@ -144,8 +148,12 @@
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status', 10);
 
         // Load the content of the other tabs in the background
+        {% if is_local %}
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+        {% endif %}
+
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_database_bp.iframe_healthie_provider_sidebar_questionnaire_database") }}', '#tab-questionnaire-database');
+
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_system_bp.iframe_healthie_provider_sidebar_system") }}', '#tab-system');
     });
 </script>

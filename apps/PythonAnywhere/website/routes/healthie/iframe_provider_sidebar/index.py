@@ -64,5 +64,6 @@ def iframe_healthie_provider_sidebar_index():
     return render_template('healthie/iframe_provider_sidebar/index.html',
                            healthie_provider_id=healthie_provider_id,
                            iframe_log=iframe_log,
-                           milliseconds_delay=milliseconds_delay
+                           milliseconds_delay=milliseconds_delay,
+                           is_local=secrets.is_local(),
                            )
