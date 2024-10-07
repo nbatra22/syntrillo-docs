@@ -1279,6 +1279,12 @@ if __name__ == "__main__":
 
         print(json.dumps(form, indent=4, default=str))
 
+        # print summary: label, mod_type
+        print("label                          | mod_type (internal name)")
+        print("-------------------------------|-------------------------")
+        for module in form['customModuleForm']['custom_modules']:
+            print(f"{module['label']:30} : {module['mod_type']}")
+
         """
 
 
