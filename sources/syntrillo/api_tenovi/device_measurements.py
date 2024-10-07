@@ -125,6 +125,9 @@ class DeviceMeasurements:
             timeout=timeout
         )
 
+        # if log['success'] is True:
+        #     logger.info(f"Successfully got measurements for device {measurements}")
+
         log['partial_success'] = log['success']
 
         # If the request timed out, retry with a smaller window
