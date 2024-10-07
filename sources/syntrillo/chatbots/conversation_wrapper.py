@@ -344,6 +344,23 @@ class ChatBotConversationWrapper:
         Returns:
             Tuple[dict, dict]: The note details and the log of the request.
         """
+
+        if healthie_user_id is None:
+            self.log['success'] = False
+            self.log['logs'].append({
+                'message' : 'Failed to create note',
+                'conversation_id' : self.conversation_id,
+                'log' : 'healthie_user_id is None'
+            })
+
+            logger.error({
+                'message' : 'Failed to create note',
+                'conversation_id' : self.conversation_id,
+                'log' : 'healthie_user_id is None'
+            })
+
+            return None, self.log
+
         message, log = self.convo.create_note(
             conversation_id=self.conversation_id,
             content=content,
@@ -353,6 +370,11 @@ class ChatBotConversationWrapper:
         if message is None or not log['success']:
             self.log['success'] = False
             self.log['logs'].append({
+                'message' : 'Failed to create note',
+                'conversation_id' : self.conversation_id,
+                'log' : log
+            })
+            logger.error({
                 'message' : 'Failed to create note',
                 'conversation_id' : self.conversation_id,
                 'log' : log
