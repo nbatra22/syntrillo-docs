@@ -9,6 +9,8 @@ import plotly.io as pio
 import plotly.utils as pu
 from typing import Tuple
 
+from syntrillo.system.logger import logger
+
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
@@ -146,9 +148,13 @@ class DataReportingHeartRate:
         # make sure pulse is numeric
         pulse_df['pulse'] = pd.to_numeric(pulse_df['pulse'], errors='coerce')
 
+        logger.info(f"pulse_df['timestamp_local'] before datetime conversion:{pulse_df['timestamp_local']}") # debug: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True
+
         # ---
         # Convert 'timestamp_local' to datetime objects
-        pulse_df['timestamp_local'] = pd.to_datetime(pulse_df['timestamp_local'])
+        pulse_df['timestamp_local'] = pd.to_datetime(pulse_df['timestamp_local'], utc=True)
+
+        logger.info(f"pulse_df['timestamp_local'] after datetime conversion: {pulse_df['timestamp_local']}") # debug: Tz-aware datetime.datetime cannot be converted to datetime64 unless utc=True
 
         # ---
         # store the dataframe in the class
