@@ -45,7 +45,7 @@ class SyntrilloGenaiBackendSandboxStack(Stack):
         self.instance = ec2.Instance(self, "SyntrilloGenAiBackendSandboxInstance",
             instance_name="SyntrilloGenAiBackendSandboxInstance",
             vpc = self.vpc,
-            instance_type=ec2.InstanceType("t3.medium"),
+            instance_type=ec2.InstanceType("t3.micro"),
             # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
             # machine_image=ec2.MachineImage.from_ssm_parameter(
             #     "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id",

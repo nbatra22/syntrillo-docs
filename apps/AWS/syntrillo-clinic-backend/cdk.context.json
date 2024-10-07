@@ -27,6 +27,9 @@
       ],
       "disable_execute_api_endpoint": false
     },
+    "llm_server": {
+      "llm-server-instance-size": "t3.micro"
+    },
     "database": {
       "snapshot-identifier": "encrypted-snapshot-2",
       "removal-policy": "DESTROY"
@@ -75,6 +78,9 @@
       ],
       "disable_execute_api_endpoint": false
     },
+    "llm_server": {
+      "llm-server-instance-size": "t3.micro"
+    },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-15-encrypted",
       "removal-policy": "DESTROY"
@@ -122,6 +128,9 @@
         }
       ],
       "disable_execute_api_endpoint": true
+    },
+    "llm_server": {
+      "llm-server-instance-size": "t3.medium"
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-16-encrypted",
