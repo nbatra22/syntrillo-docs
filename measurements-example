@@ -1,0 +1,150 @@
+    {
+        "level": "INFO",
+        "location": "get_device_measurements_created_window_504_adaptive:129",
+        "message": "Successfully got measurements for device [{"metric": "blood_pressure", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "110.00", "value_2": "68.00", "created": "2024-10-06T01: 33: 08.738164Z", "timestamp": "2024-10-06T01: 32: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 328}}, {"metric": "pulse", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "96.00", "value_2": "0.00", "created": "2024-10-06T01: 33: 08.759208Z", "timestamp": "2024-10-06T01: 32: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 328}}, {"metric": "blood_pressure", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "114.00", "value_2": "75.00", "created": "2024-10-06T01: 33: 38.238672Z", "timestamp": "2024-10-06T01: 33: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 329}}, {"metric": "pulse", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "92.00", "value_2": "0.00", "created": "2024-10-06T01: 33: 38.256522Z", "timestamp": "2024-10-06T01: 33: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 329}}, {"metric": "blood_pressure", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "102.00", "value_2": "60.00", "created": "2024-10-06T04: 02: 32.590622Z", "timestamp": "2024-10-06T04: 02: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 331}}, {"metric": "pulse", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "86.00", "value_2": "0.00", "created": "2024-10-06T04: 02: 32.626193Z", "timestamp": "2024-10-06T04: 02: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 331}}, {"metric": "pulse", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "98.00", "value_2": "0.00", "created": "2024-10-06T04: 03: 49.869634Z", "timestamp": "2024-10-06T04: 03: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 332}}, {"metric": "blood_pressure", "device_name": "Tenovi BPM - L", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "patient_id": "5383853", "hardware_uuid": "297056120BD7", "sensor_code": "10", "value_1": "107.00", "value_2": "66.00", "created": "2024-10-06T04: 03: 49.850245Z", "timestamp": "2024-10-06T04: 03: 00.000000Z", "timezone_offset": -4, "estimated_timestamp": False, "filter_params": {"measurement_index": 332}}]",
+        "timestamp": "2024-10-06 05:28:18,675+0000",
+        "service": "default-service",
+        "cold_start": true,
+        "function_name": "RemoteMonitoringDataSyncFunction",
+        "function_memory_size": "512",
+        "function_arn": "arn:aws:lambda:us-east-1:381491864638:function:RemoteMonitoringDataSyncFunction",
+        "function_request_id": "6cc68bbe-abe6-477f-bcfb-676bfd5da64c",
+        "xray_trace_id": "1-67021ee5-2ebeb76e2c1a54054fa45cbd"
+    }
+
+{
+        "metric": "blood_pressure",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "110.00",
+        "value_2": "68.00",
+        "created": "2024-10-06T01:33:08.738164Z",
+        "timestamp": "2024-10-06T01:32:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 328
+        }
+    },
+    {
+        "metric": "pulse",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "96.00",
+        "value_2": "0.00",
+        "created": "2024-10-06T01:33:08.759208Z",
+        "timestamp": "2024-10-06T01:32:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 328
+        }
+    },
+    {
+        "metric": "blood_pressure",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "114.00",
+        "value_2": "75.00",
+        "created": "2024-10-06T01:33:38.238672Z",
+        "timestamp": "2024-10-06T01:33:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 329
+        }
+    },
+    {
+        "metric": "pulse",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "92.00",
+        "value_2": "0.00",
+        "created": "2024-10-06T01:33:38.256522Z",
+        "timestamp": "2024-10-06T01:33:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 329
+        }
+    },
+    {
+        "metric": "blood_pressure",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "102.00",
+        "value_2": "60.00",
+        "created": "2024-10-06T04:02:32.590622Z",
+        "timestamp": "2024-10-06T04:02:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 331
+        }
+    },
+    {
+        "metric": "pulse",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "86.00",
+        "value_2": "0.00",
+        "created": "2024-10-06T04:02:32.626193Z",
+        "timestamp": "2024-10-06T04:02:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 331
+        }
+    },
+    {
+        "metric": "pulse",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "98.00",
+        "value_2": "0.00",
+        "created": "2024-10-06T04:03:49.869634Z",
+        "timestamp": "2024-10-06T04:03:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 332
+        }
+    },
+    {
+        "metric": "blood_pressure",
+        "device_name": "Tenovi BPM - L",
+        "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa",
+        "patient_id": "5383853",
+        "hardware_uuid": "297056120BD7",
+        "sensor_code": "10",
+        "value_1": "107.00",
+        "value_2": "66.00",
+        "created": "2024-10-06T04:03:49.850245Z",
+        "timestamp": "2024-10-06T04:03:00.000000Z",
+        "timezone_offset": -4,
+        "estimated_timestamp": False,
+        "filter_params": {
+            "measurement_index": 332
+        }
+    }

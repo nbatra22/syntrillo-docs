@@ -93,10 +93,40 @@ class IFrameGeneratorApiEndpoint(Construct):
             web_acl_arn=web_acl.attr_arn
         )
 
+        # Create an IP set with the two allowed IP addresses
+        webhook_allowed_ip_addresses = sorted(set(
+            ip_info["ip"]
+            for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
+        ))
+
+        allowed_ips = wafv2.CfnIPSet(
+            self, "WebHookAllowedIPs",
+            addresses=webhook_allowed_ip_addresses,
+            ip_address_version="IPV4",
+            scope="REGIONAL", 
+            name="webhook-allowed-ips"
+        )
+
+        sepcific_ip_allowed_rule = wafv2.CfnWebACL.RuleProperty(
+            name="AllowSpecificIPs",
+            priority=10,
+            action=wafv2.CfnWebACL.RuleActionProperty(allow={}),
+            statement=wafv2.CfnWebACL.StatementProperty(
+                ip_set_reference_statement=wafv2.CfnWebACL.IPSetReferenceStatementProperty(
+                    arn=allowed_ips.attr_arn
+                )
+            ),
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name="AllowSpecificIPsRule",
+                sampled_requests_enabled=True
+            )
+        )
+
         allowed_referer = self.environment_context["iframe_generator_api"]["allowed_referer"]
         sepcific_referer_rule = wafv2.CfnWebACL.RuleProperty(
             name="IFramGeneratorAPIWebAclAllowSpecificRefererRule",
-            priority=1,
+            priority=20,
             action=wafv2.CfnWebACL.RuleActionProperty(
                 block={}
             ),
@@ -128,7 +158,7 @@ class IFrameGeneratorApiEndpoint(Construct):
             )
         )
 
-        web_acl.rules = [sepcific_referer_rule]
+        web_acl.rules = [sepcific_ip_allowed_rule, sepcific_referer_rule]
 
         return web_acl
         
@@ -138,11 +168,21 @@ class IFrameGeneratorApiEndpoint(Construct):
             parameter_name="/syntrillo-clinic/aws/route53/hosted_zone_id"
         ).string_value
 
-        return route53.HostedZone.from_hosted_zone_attributes(
+        hosted_zone = route53.HostedZone.from_hosted_zone_attributes(
             self, "SyntrilloClinicBackendHostedZone",
             zone_name=f"{self.environment_name}.syntrillo-clinic-backend.com",
             hosted_zone_id=hosted_zone_id
         )
+
+        # Create a CloudWatch Logs group for the query logs
+        log_group = logs.LogGroup(
+            self, "Route53QueryLogGroup",
+            log_group_name="/aws/route53/query-logging"
+        )
+
+        # MANUALLY ENABLE QUERY LOGGING IN THE HOSTED ZONE : ENABLE PERMISSIONS AND SELECT THE LOGGROUP NAME :/aws/route53/query-logging 
+                
+        return hosted_zone
 
     def _setup_ssl_certificate(self):
         domain_name = f"{self.environment_name}.syntrillo-clinic-backend.com"

@@ -154,10 +154,11 @@ class LLMServer(Construct):
         # )
 
         # create an ec2 instance
+        instance_size = self.environment_context["llm_server"]["llm-server-instance-size"]
         self.instance_linux_2023 = ec2.Instance(self, "LLMServerInstance2023",
             instance_name="LLMServerInstance2023",
             vpc = self.network.vpc,
-            instance_type=ec2.InstanceType("t3.small"),
+            instance_type=ec2.InstanceType(instance_size),
             # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
             # machine_image=ec2.MachineImage.from_ssm_parameter(
             #     "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id",

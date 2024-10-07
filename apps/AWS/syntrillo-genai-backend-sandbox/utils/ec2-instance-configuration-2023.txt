@@ -1,8 +1,15 @@
+sudo rm llm-service.zip
+sudo zip -r llm-service.zip * --exclude __pycache__
+aws s3 cp llm-service.zip s3://sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.zip
+
 sudo yum update -y
 sudo yum install python3.11 -y
 sudo yum install python3.11-pip -y
 
+rm -rf bedrock_operations.py db_operations.py flask_api.py requirements.txt __pycache__/ chroma/ testenv/ llm-service.zip
 aws s3 cp s3://sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.zip .
+aws s3 cp s3://staging.syntrillo-clinic-backend.llm-server-packages/llm-service.zip .
+aws s3 cp s3://prod.syntrillo-clinic-backend.llm-server-packages/llm-service.zip .
 unzip llm-service.zip
 
 sudo pip3.11 install -r requirements.txt
