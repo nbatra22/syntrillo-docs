@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index Demo</title>
     <!-- Link to local CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='healthie/test/iframe_provider.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='healthie/test/iframe_provider.css') }}">
   <!--  <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider.css"> -->
 
     <!-- Bootstrap CSS -->
@@ -28,16 +28,16 @@
         <!-- Tab Content -->
         <div class="tab-content mt-3" id="myTabContent">
             <div class="tab-pane fade show active custom-style" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
-                
+
             <!--Static CDSS Code starts here-->
                 <!-- <iframe src="cdss.html" width="100%" height="800vh" style="border:none;"></iframe> -->
 
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/cdss.html -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Link to local CSS -->
   <!-- <link rel="stylesheet" href="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\iframe_provider_demo.css"> -->
- <link rel="stylesheet" href="{{ url_for('static', filename='healthie/iframe_provider_demo.css') }}">
+ <link rel="stylesheet" href="{{ url_for('static', filename='healthie/demo/iframe_provider.css') }}">
 
 
    <!-- Bootstrap JS and Popper.js -->
@@ -56,13 +56,13 @@
 
   <!--Stroke Risk Score starts here-->
 <div>
-    
+
 <h5>Stroke Risk Score</h5>
-<br> 
+<br>
 
 <!--progress bar-->
 <div class="bi-arrow-bar-down">10.8</div>
-<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-arrow-bar-down" viewBox="0 0 16 16"> 
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-arrow-bar-down" viewBox="0 0 16 16">
     <path fill-rule="evenodd" d="M1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5M8 6a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 .708-.708L7.5 12.293V6.5A.5.5 0 0 1 8 6"/>
   </svg>
 <div class="gradient-bar"></div>
@@ -86,7 +86,7 @@
         <td>Heart Rate Variability of <span class="data-text">30</span></td>
         <td class="data-text">1.1</td>
     </tr>
-    
+
 </table>
 
 
@@ -109,7 +109,7 @@
   <div class="align-content-center">
     <!--When clicked should display blood pressure graph-->
     <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Systolic Blood Pressure</a></h5>
-  <p class="data-text">107 mmHg</p> 
+  <p class="data-text">107 mmHg</p>
   <p class="last-measured"> Last Measured: <span class="data-text">9/27/2024</span></p>
 </div>
 </div>
@@ -121,7 +121,7 @@
       <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
     </svg>
 </div>
-  <div class="align-content-center">   
+  <div class="align-content-center">
     <!--When clicked should display blood pressure graph-->
     <h5><a href="#" data-bs-toggle="modal" data-bs-target="#bpModal">Diastolic Blood Pressure</a></h5>
     <p class="data-text">69 mmHg</p>
@@ -145,7 +145,7 @@
     <p class="last-measured"> Last Measured: <span class="data-text">9/27/2024</span></p>
   </div>
   </div>
-  
+
   <div class="custom-card d-sm-flex" data-toggle="tooltip" title="Last Measured: 9/26/2024">
     <div class="align-content-center">
       <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
@@ -153,7 +153,7 @@
       <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
     </svg>
   </div>
-    <div class="align-content-center">   
+    <div class="align-content-center">
       <!--When clicked should display heart rate graph-->
       <h5><a href="#" data-bs-toggle="modal" data-bs-target="#hrModal">Heart Rate Variability</a></h5>
       <p class="data-text">30 ms</p>
@@ -177,7 +177,7 @@
         <p class="last-measured"> Last Measured: <span class="data-text">9/20/2024</span></p>
     </div>
     </div>
-    
+
     <div class="custom-card d-sm-flex" data-toggle="tooltip" title="Last Measured: 9/24/2024">
       <div class="align-content-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="orange" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
@@ -185,7 +185,7 @@
           <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
           </svg>
     </div>
-      <div class="align-content-center">   
+      <div class="align-content-center">
         <!--When clicked should display steps graph-->
         <h5><a href="#" data-bs-toggle="modal" data-bs-target="#stepsModal">Moderate Physical Activity</a></h5>
         <p class="data-text">60 min/wk</p>
@@ -208,14 +208,14 @@
         <p class="last-measured"> Last Measured: <span class="data-text">8/15/2024</span></p>
       </div>
       </div>
-      
+
       <!--Div below intentionally left blank-->
       <div class=" d-sm-flex custom-card-blank">
         <div class="align-content-center">
-         
+
       </div>
-        <div class="align-content-center">   
-         
+        <div class="align-content-center">
+
         </div>
       </div>
       </div>
@@ -338,7 +338,7 @@
 
             </div>
            <!--  <div class="tab-pane fade custom-style" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
-                
+
                 <iframe src="care_plans.html" width="100%" height="800vh" style="border:none;"></iframe>
             </div> -->
         </div>
@@ -354,7 +354,7 @@
                 </div>
                 <div class="modal-body">
                     <!-- Iframe to load the plot_bp.html -->
-                   <iframe src="{{ url_for('static', filename='healthie/test/plot_bp.html') }}" width="100%" height="400px" style="border:none;"></iframe>
+                   <iframe src="{{ url_for('static', filename='healthie/demo/plot_bp.html') }}" width="100%" height="400px" style="border:none;"></iframe>
                     <!-- <iframe src="C:\Users\cassi\Dropbox\PC\GitHub\SyntrilloClinic\apps\PythonAnywhere\website\static\healthie\test\plot_bp.html" width="100%" height="400px" style="border:none;"></iframe>
                 -->
                 </div>

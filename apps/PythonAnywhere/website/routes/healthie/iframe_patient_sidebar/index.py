@@ -1,11 +1,14 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_patient_sidebar/index.py
 from flask import Blueprint, request, jsonify, render_template, abort
 import json
+import os
 
 # python.analysis.extraPaths added into .vscode/settings.json
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 from syntrillo.system.iframe_validator import IframeValidator
+from syntrillo.api_healthie.user import HealthieUser
+
 
 # -------------------------------------------------
 
@@ -32,10 +35,23 @@ def iframe_healthie_patient_sidebar():
     # Retrieve the JSON data from the GET request
     data_get_request = request.args.to_dict()
 
+    # --------------------------------------------------------------------
     # Extract hl_current_user_id from data_get_request
     # here, it's the patient_id
     healthie_user_id = data_get_request.get('hl_current_user_id')
 
+    if healthie_user_id is None: # if no patient_id in the referrer_url (eg local run), then we use a default one.
+        if os.getenv('OVERDIDE_HEALTHIE_USER_ID') is not None:
+            healthie_user_id = os.getenv('OVERDIDE_HEALTHIE_USER_ID')
+        else:
+            # healthie_user_id = '-1'
+            # healthie_user_id = "1035117" # with onboarding forms
+            healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
+            # healthie_user_id = "dummy456456" # without syntrillo_internal_key
+            # healthie_user_id = "1051529" # Omar's "Patient One" with devices
+
+    # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
     look_up_codes_management = LookUpCodesManagement()
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
@@ -64,13 +80,40 @@ def iframe_healthie_patient_sidebar():
     if syntrillo_internal_key is not None:
         healthie_user_id = "Not transmitted"
 
-    # --------------------------------------------------------------------
 
-    return render_template(
-        'healthie/iframe_patient_sidebar/index.html',
-        patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
-        healthie_user_id=healthie_user_id,
-        temporary_lookup_code=temporary_lookup_code
+    # --------------------------------------------------------------------
+    # is it a demo or test mode?
+
+    # get user tag
+    if entry is not None and entry['healthie_user_id'] is not None:
+        user = HealthieUser(entry['healthie_user_id'])
+        is_demo = user.does_user_have_tag('demo')
+        is_test = user.does_user_have_tag('test')
+    else:
+        is_demo = False
+        is_test = False
+
+    if is_demo:
+        # render the demo template
+        return render_template(
+            'healthie/iframe_patient_sidebar/demo/index.html',
         )
+
+    elif is_test:
+        # render the test template
+        return render_template(
+            'healthie/iframe_patient_sidebar/test/index.html',
+        )
+
+    else:
+
+        # --------------------------------------------------------------------
+
+        return render_template(
+            'healthie/iframe_patient_sidebar/index.html',
+            patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
+            healthie_user_id=healthie_user_id,
+            temporary_lookup_code=temporary_lookup_code
+            )
 
 
