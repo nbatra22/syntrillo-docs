@@ -1,3 +1,6 @@
+# ssm works in powershell =>
+aws ssm start-session --target i-05ea19474218a1328 --document AWS-StartInteractiveCommand --parameters command="sudo su - ubuntu" --profile syntrillo-genai-sandbox
+
 sudo rm llm-service.zip
 sudo zip -r llm-service.zip * --exclude __pycache__
 aws s3 cp llm-service.zip s3://sandbox.syntrillo-clinic-backend.llm-server-packages/llm-service.zip
