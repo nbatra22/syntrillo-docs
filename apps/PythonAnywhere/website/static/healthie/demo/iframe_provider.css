@@ -1,7 +1,51 @@
+/* General Styles from test/iframe_provider.css */
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+h4 {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+}
+
+/* Tab specific styles */
+.tab-content {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+.tab-pane h4 {
+    text-transform: uppercase;
+    font-size: 18px;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.tab-pane p {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Additional Custom Styling for your Test */
+.tab-pane.custom-style {
+    background-color: #f0f0f0;
+    padding: 25px;
+    border-radius: 10px;
+}
+
 
 
 /* Demo code below */
-
 
 .table-secondary td{
     padding: 1.4rem;
@@ -35,7 +79,7 @@
     margin: 1rem;
     width: 20vw;
     font-size: .8rem;
-    
+
 }
 .custom-card svg{
     margin-right: .8rem;
@@ -88,7 +132,7 @@ font-size: 1rem;
     .custom-card{
         width: 100%;
         margin: 1vw;
-        
+
     }
     .barriers-wrapper table{
         width: 98vw;
