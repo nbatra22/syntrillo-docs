@@ -19,6 +19,8 @@ from aws_cdk import (
     aws_secretsmanager as secretsmanager,
     aws_kms as kms,
     aws_iam as iam,
+    aws_logs as logs,
+    
 )
 from constructs import Construct
 
@@ -87,6 +89,7 @@ class DatabaseStack(Stack):
             monitoring_interval=Duration.seconds(60),
             monitoring_role=enhanced_monitoring_role,
             iam_authentication=True,
+            cloudwatch_logs_exports=["error", "general", "slowquery", "audit"],
         )
 
         self.database_admin_secrets = secretsmanager.Secret(
@@ -134,3 +137,28 @@ class DatabaseStack(Stack):
             string_value=self.db_from_snapshot.instance_endpoint.hostname,
             description="Database host",
         )
+
+        # After creating the db_from_snapshot object
+        instance_id = self.db_from_snapshot.instance_identifier
+        
+        # Create a KMS key for log encryption
+        log_encryption_key = kms.Key(self, "RDSLogEncryptionKey",
+            description="KMS key for RDS log encryption",
+            enable_key_rotation=True
+        )
+
+        log_encryption_key.grant_encrypt_decrypt(iam.ServicePrincipal("logs.amazonaws.com"))
+        
+        for log_type in ["error", "general", "slowquery", "audit"]:
+            log_group_name = f"/aws/rds/instance/{instance_id}/{log_type}"
+            log_group = logs.LogGroup(
+                self, 
+                f"LogGroup{log_type.capitalize()}", 
+                log_group_name=log_group_name,
+                retention=logs.RetentionDays.ONE_MONTH,
+                encryption_key=log_encryption_key,
+                removal_policy=RemovalPolicy.DESTROY
+            )
+            log_group_arn = log_group.log_group_arn
+
+            log_encryption_key.grant_encrypt_decrypt(iam.ServicePrincipal("rds.amazonaws.com"))
