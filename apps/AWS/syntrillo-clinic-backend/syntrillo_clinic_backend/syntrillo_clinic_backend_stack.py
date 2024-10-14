@@ -118,17 +118,3 @@ class SyntrilloClinicBackendStack(Stack):
             environment_context=self.environment_context,
             database=self.database,
         )
-
-        # fix_output_dependency_stack = FixOutputDependencyStack(
-        #     self, "FixOutputDependencyStack",
-        #     stack=self.database,
-        # )
-
-        # if self.aws_environment == "sandbox":
-        #     check_functions=SyntrilloClinicBackendCheckFunctionsStack(
-        #         self, "CheckFunctionsStack",
-        #         network=self.network,
-        #         database=self.database,
-        #         storage=self.storage,
-        #         secrets=self.secrets
-        #     )

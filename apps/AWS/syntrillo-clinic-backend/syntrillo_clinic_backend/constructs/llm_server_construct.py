@@ -54,11 +54,6 @@ class LLMServer(Construct):
             ]
         )
 
-        # bedrock_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "BedrockSandboxAccessPolicy", 
-        #     managed_policy_arn="arn:aws:iam::730335351683:policy/BedrockSandboxAccess"
-        # )
-        # role.add_managed_policy(bedrock_access_policy)
-
         role.add_managed_policy(bedrock_access_policy)
 
         cloudwatch_access_policy = iam.ManagedPolicy(self, "SSMSessionManagerLogGroupAccess",
@@ -90,10 +85,6 @@ class LLMServer(Construct):
             ]
         )
 
-        # cloudwatch_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "CloudwatchAccessPolicy", 
-        #     managed_policy_arn="arn:aws:iam::730335351683:policy/ClouwatchLogsSSMLogGroupAccess"
-        # )
-
         role.add_managed_policy(cloudwatch_access_policy)
 
         s3_access_policy = iam.ManagedPolicy(self, "S3Access",
@@ -108,10 +99,6 @@ class LLMServer(Construct):
                 ),
             ]
         )
-
-        # cloudwatch_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "CloudwatchAccessPolicy", 
-        #     managed_policy_arn="arn:aws:iam::730335351683:policy/ClouwatchLogsSSMLogGroupAccess"
-        # )
 
         role.add_managed_policy(s3_access_policy)
 
@@ -136,10 +123,6 @@ class LLMServer(Construct):
                 ]
             )
 
-            # cloudwatch_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "CloudwatchAccessPolicy", 
-            #     managed_policy_arn="arn:aws:iam::730335351683:policy/ClouwatchLogsSSMLogGroupAccess"
-            # )
-
             role.add_managed_policy(secrets_manager_access_policy)
 
 
@@ -150,39 +133,6 @@ class LLMServer(Construct):
             allow_all_outbound=True
         )
 
-        # security_group.add_ingress_rule(
-        #     ec2.Peer.any_ipv4(),
-        #     ec2.Port.tcp(443),
-        #     "Allow LLM server access httpS"
-        # )
-
-        # security_group.add_ingress_rule(
-        #     ec2.Peer.any_ipv4(),
-        #     ec2.Port.tcp(80),
-        #     "Allow LLM server access http"
-        # ) 
-
-        # # create an ec2 instance
-        # self.instance = ec2.Instance(self, "LLMServerInstance",
-        #     instance_name="LLMServerInstance",
-        #     vpc = self.network.vpc,
-        #     instance_type=ec2.InstanceType("t3.micro"),
-        #     # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
-        #     # machine_image=ec2.MachineImage.from_ssm_parameter(
-        #     #     "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id",
-        #     #     os=ec2.OperatingSystemType.LINUX
-        #     # ),
-        #     machine_image = ec2.MachineImage.generic_linux({
-        #         "us-east-1": "ami-04a98573e58903ee0",
-        #     }),
-        #     vpc_subnets=ec2.SubnetSelection(
-        #         subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
-        #     ),
-        #     role=role,
-        #     security_group=self.security_group,
-        #     private_ip_address='10.0.190.145'
-        # )
-
         # create an ec2 instance
         instance_size = self.environment_context["llm_server"]["llm-server-instance-size"]
         ami_id = self.environment_context["llm_server"]["llm-server-ami-id"]
@@ -190,11 +140,6 @@ class LLMServer(Construct):
             instance_name="LLMServerInstance2023",
             vpc = self.network.vpc,
             instance_type=ec2.InstanceType(instance_size),
-            # machine_image=ec2.MachineImage.latest_amazon_linux2023(),
-            # machine_image=ec2.MachineImage.from_ssm_parameter(
-            #     "/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id",
-            #     os=ec2.OperatingSystemType.LINUX
-            # ),
             machine_image = ec2.MachineImage.generic_linux({
                 "us-east-1": ami_id,
             }),

@@ -63,7 +63,6 @@ class ServersStack(Stack):
             database=self.database,
             storage=self.storage, 
             secrets=self.secrets,
-            # llm_server=self.llm_server 
         )
 
         self.llm_server = LLMServer(
