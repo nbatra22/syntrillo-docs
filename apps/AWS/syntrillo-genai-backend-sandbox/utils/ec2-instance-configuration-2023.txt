@@ -1,5 +1,6 @@
 # ssm works in powershell =>
 aws ssm start-session --target i-05ea19474218a1328 --document AWS-StartInteractiveCommand --parameters command="sudo su - ubuntu" --profile syntrillo-genai-sandbox
+aws ssm start-session --target "i-033062b2590a1c4e8" --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-pgfocymgbys3.cf60aoaem0ky.us-east-1.rds.amazonaws.com",portNumber="3306",localPortNumber="13306"  --profilesyntrillo-genai-sandbox
 
 sudo rm llm-service.zip
 sudo zip -r llm-service.zip * --exclude __pycache__
@@ -43,3 +44,9 @@ curl --insecure --location 'https://127.0.0.1/query' --header 'Content-Type: app
     "query": "Robert Johnson is a 64 yo M w/ a history of diabetes, obesity, hypertension, and hyperlipidemia who presents following recent admission for ischemic stroke involving the left internal capsule. Stroke mechanism is small vessel disease. LDL is 86. Hemoglobin A1c is 6.3. Patient is on ASA 81 mg daily and Atorvastatin 20 mg daily. Patient does not smoke but drinks two alcoholic drinks per day. Patient has moderate depression and severe fatigue. What American Heart Association recommendations apply to this patient? Please only include recommendations associated with level A and level B evidence.",
     "model": "claude-3-5-sonnet"
 }'
+
+
+sudo systemctl daemon-reload
+sudo systemctl stop flask_api_updated.service
+sudo systemctl start flask_api_updated.service
+sudo systemctl status flask_api_updated.service
