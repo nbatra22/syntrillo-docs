@@ -115,31 +115,32 @@ class LLMServer(Construct):
 
         role.add_managed_policy(s3_access_policy)
 
-        secrets_manager_access_policy = iam.ManagedPolicy(self, "SecretsManagerAccess",
-            managed_policy_name="SecretsManagerAccess",
-            statements=[
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=[
-                        "secretsmanager:GetSecretValue",
-                    ],
-                    resources=[f"arn:aws:secretsmanager:us-east-1:730335351683:secret:DatabaseAdminSecrets4B85717-UlIzzA9DkHCH-Ma6zBE"]
-                ),
-                iam.PolicyStatement(
-                    effect=iam.Effect.ALLOW,
-                    actions=[
-                        "kms:Decrypt",
-                    ],
-                    resources=[f"arn:aws:kms:us-east-1:730335351683:key/c6479b30-673f-4518-8856-213eb2df0c6a"]
-                ),
-            ]
-        )
+        if self.environment_context['environment_name'] == "sandbox":
+            secrets_manager_access_policy = iam.ManagedPolicy(self, "SecretsManagerAccess",
+                managed_policy_name="SecretsManagerAccess",
+                statements=[
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "secretsmanager:GetSecretValue",
+                        ],
+                        resources=[f"arn:aws:secretsmanager:us-east-1:730335351683:secret:DatabaseAdminSecrets4B85717-UlIzzA9DkHCH-Ma6zBE"]
+                    ),
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "kms:Decrypt",
+                        ],
+                        resources=[f"arn:aws:kms:us-east-1:730335351683:key/c6479b30-673f-4518-8856-213eb2df0c6a"]
+                    ),
+                ]
+            )
 
-        # cloudwatch_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "CloudwatchAccessPolicy", 
-        #     managed_policy_arn="arn:aws:iam::730335351683:policy/ClouwatchLogsSSMLogGroupAccess"
-        # )
+            # cloudwatch_access_policy = iam.ManagedPolicy.from_managed_policy_arn(self, "CloudwatchAccessPolicy", 
+            #     managed_policy_arn="arn:aws:iam::730335351683:policy/ClouwatchLogsSSMLogGroupAccess"
+            # )
 
-        role.add_managed_policy(secrets_manager_access_policy)
+            role.add_managed_policy(secrets_manager_access_policy)
 
 
         # Create a security group
@@ -217,11 +218,12 @@ class LLMServer(Construct):
             "Allow LLM server access http"
         )
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            self.security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from LLM Server on port 3306"
-        )
+        if self.environment_context['environment_name'] == "sandbox":
+            self.database.db_from_snapshot_security_group.add_ingress_rule(
+                self.security_group,
+                ec2.Port.tcp(3306),
+                description=f"Allow inbound traffic from LLM Server on port 3306"
+            )
 
         # Create a security group for the VPC Endpoint
         security_group = ec2.SecurityGroup(
