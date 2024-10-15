@@ -64,18 +64,6 @@ class SyntrilloClinicBackupStack(Stack):
                     )
             )
 
-            # backup_rule = backup_plan.add_rule(
-            #     backup.BackupPlanRule(
-            #         rule_name="CopyToAnotherAccount",
-            #         copy_actions=[
-            #             backup.BackupPlanCopyActionProps(
-            #                 destination_backup_vault_arn='arn:aws:backup:us-east-1:058264215756:backup-vault:syntrillo-clinic-prod-copy-vault',
-            #                 copy_action_name="CopyToAnotherAccount"
-            #             )
-            #         ]
-            #     )
-            # )
-
             backup_plan.add_selection(
                 "MySQLDatabaseFromSnaphotBackup",
                 resources=[
