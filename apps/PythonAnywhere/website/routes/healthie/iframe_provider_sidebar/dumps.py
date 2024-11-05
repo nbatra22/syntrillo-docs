@@ -33,16 +33,9 @@ def iframe_healthie_provider_sidebar_dumps():
 
     # --------------------------------------------------------------------
 
-    # Create an instance of HealthieAPI with the provided API key and organization
-    utils_api = HealthieUtils()
-
-    # Example: Get organization details
-    organization_details = utils_api.get_organization_details()
-
     return render_template(
         'healthie/iframe_provider_sidebar/dumps.html',
         healthie_provider_id=healthie_provider_id,
-        organization_details=organization_details,
         )
 
 # ========================= DOWNLOAD ENDPOINT ==========================
@@ -62,10 +55,36 @@ def download_data_structure_dump():
     # dump_data_type : either 'json' or 'xlsx'
     dump_data_type = data_post_request.get('dump_data_type')
 
+    # get options from the POST request
+    include_labels = data_post_request.get('include_labels', False)
+    include_labels = True if include_labels == 'yes' else False
+
+    include_dates = data_post_request.get('include_dates', False)
+    include_dates = True if include_dates == 'yes' else False
+
+    single_sheet = data_post_request.get('single_sheet', False)
+    single_sheet = True if single_sheet == 'yes' else False
+
+    include_external_ids = data_post_request.get('include_external_ids', False)
+    include_external_ids = True if include_external_ids == 'yes' else False
+
+
+    # --------------------------------------------------------
     # get the file from the database
     manager = DataStructureHealthieDump()
 
-    dump_bytes, full_name, mimetype, log = manager.retrieve_dump(dump_data_type=dump_data_type)
+    # some options here if needed
+    manager.run_query(
+        include_default_templates=False,
+    )
+
+    manager.include_labels = include_labels
+    manager.include_dates = include_dates
+    manager.single_sheet = single_sheet
+    manager.include_external_ids = include_external_ids
+
+    # get the data dump
+    dump_bytes, full_name, mimetype, log = manager.get_data_dump(dump_data_type=dump_data_type)
 
     if dump_bytes is None or not log.get('success', False):
         abort(404)

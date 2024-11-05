@@ -38,18 +38,46 @@
                             </tr>
                             <tr>
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <input class="styled-input-radio" type="radio" id="data_type_excel" name="dump_data_type" value="xlsx" checked>
+                                    File Type :
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <input class="styled-input-radio" type="radio" id="data_type_excel" name="dump_data_type" value="xlsx" checked>
                                     <label for="data_type_excel" class="styled-label">Excel (xlsx)</label>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input class="styled-input-radio" type="radio" id="data_type_json" name="dump_data_type" value="json">
+                                    <label for="data_type_json" class="styled-label">Raw text (json)</label>
                                 </td>
                             </tr>
                             <tr>
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <input class="styled-input-radio" type="radio" id="data_type_json" name="dump_data_type" value="json">
+                                    <input class="styled-input-checkbox" type="checkbox" id="single_sheet" name="single_sheet" value="yes" checked>
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
-                                    <label for="data_type_json" class="styled-label">Raw text (json)</label>
+                                    <label for="single_sheet" class="styled-label">Single sheet</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_dates" name="include_dates" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_dates" class="styled-label">Include dates</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_labels" name="include_labels" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_labels" class="styled-label">Include labels</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_external_ids" name="include_external_ids" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_external_ids" class="styled-label">Include our ids</label>
                                 </td>
                             </tr>
                         </table>
@@ -83,6 +111,7 @@
             if (isDataStructureDumpRunning) return;
             isDataStructureDumpRunning = true;
 
+            document.getElementById('dataStructureDumpSuccess').style.display = 'none';
             document.getElementById('dataStructureDumpLoading').style.display = 'block';
             $('body').addClass('loading'); // Apply loading cursor
 
@@ -102,6 +131,7 @@
                     console.log('Success');
 
                     if (xhr.status === 200) {
+                        document.getElementById('dataStructureDumpLoading').style.display = 'none';
                         $('#dataStructureDumpSuccess').html('<b>Success!</b>').show();
 
                         // Update textarea with log message
