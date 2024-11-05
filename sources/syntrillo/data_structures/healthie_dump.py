@@ -18,6 +18,8 @@ class DataStructureHealthieDump:
 
         self.response = None
 
+        self.file_name = 'healthie_data_structure_dump'
+
         # excel options
         self.include_labels = False
         self.include_dates = False
@@ -156,8 +158,6 @@ class DataStructureHealthieDump:
         # get options
         single_sheet = self.single_sheet
         include_labels = self.include_labels
-        include_dates = self.include_dates
-        include_external_ids = self.include_external_ids
 
         if single_sheet:
             # Initialize lists to hold data for the DataFrame
@@ -246,7 +246,7 @@ class DataStructureHealthieDump:
                 'message': 'JSON data generated successfully.'
             }
 
-            return (json_data_bytes , 'data_dump.json', 'application/txt', log)
+            return (json_data_bytes , self.file_name + '.json', 'application/txt', log)
 
         elif dump_data_type == 'xlsx':
             output = self.convert_to_excel()
@@ -255,7 +255,7 @@ class DataStructureHealthieDump:
                 'success': True,
                 'message': 'XLSX data generated successfully.'
             }
-            return (output.read(), 'data_dump.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', log)
+            return (output.read(), self.file_name + '.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', log)
 
         else:
             log = {

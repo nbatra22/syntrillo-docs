@@ -70,10 +70,10 @@ def download_data_structure_dump():
 
 
     # --------------------------------------------------------
-    # get the file from the database
+    # Create a DataStructureHealthieDump object
     manager = DataStructureHealthieDump()
 
-    # some options here if needed
+    # some options
     manager.run_query(
         include_default_templates=False,
     )
@@ -83,6 +83,7 @@ def download_data_structure_dump():
     manager.single_sheet = single_sheet
     manager.include_external_ids = include_external_ids
 
+    # --------------------------------------------------------
     # get the data dump
     dump_bytes, full_name, mimetype, log = manager.get_data_dump(dump_data_type=dump_data_type)
 
