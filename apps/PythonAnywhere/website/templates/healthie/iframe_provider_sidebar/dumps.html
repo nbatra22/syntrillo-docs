@@ -1,0 +1,188 @@
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/dumps.html -->
+
+<!-- HTML & JavaScript for Data Structure Dump Download -->
+<h2 class="collapsible">
+    <span class="icon-container">
+        <i class="fas fa-chevron-right"></i>
+    </span>
+    Data structure dump
+</h2>
+<div class="collapsible-content">
+    <p>
+    <ul>
+        <li>'form': a questionnaire, see <a target="_blank" href="https://docs.gethealthie.com/schema/custommoduleform.doc">CustomModuleForm</a></li>
+        <li>'module': a question in a questionnaire, see <a target="_blank" href="https://docs.gethealthie.com/schema/custommodule.doc">CustomModule</a></li>
+        <li>'module_type': type/format of the question: text, dropdown, radio, ... </li>
+        <li>'external_id': Syntrillo's internal questionnaire / variable name (defined in data structure Excel files).</li>
+    </ul>
+    </p>
+
+    <style>
+        /* Initially loading indicator and logs */
+        #dataStructureDumpLoading {
+            display: none;
+        }
+        #dataStructureDumpSuccess {
+            display: none;
+        }
+    </style>
+
+    <div class="table-container-button">
+        <table class="compact-table">
+            <tr>
+                <td>
+                    <form id="dataStructureDump" action="{{ url_for('iframe_healthie_provider_sidebar_dumps_bp.download_data_structure_dump') }}" method="POST">
+                        <table>
+                            <tr>
+                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
+                                    <button type="button" id="dataStructureDumpButton" class="styled-button">Retrieve data structure dump</button>
+                                </td>
+                                <td align="left" style="vertical-align: middle;">
+                                    <span id="dataStructureDumpLoading" class="response-message"><b>Running - Please wait ...</b></span>
+                                    <span id="dataStructureDumpSuccess" class="response-message"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    File Type:
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <input class="styled-input-radio" type="radio" id="data_type_excel" name="dump_data_type" value="xlsx" checked>
+                                    <label for="data_type_excel" class="styled-label">Excel (xlsx)</label>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input class="styled-input-radio" type="radio" id="data_type_json" name="dump_data_type" value="json">
+                                    <label for="data_type_json" class="styled-label">Raw text (json)</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    Excel options:
+                                </td>
+                                <td></td>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="single_sheet" name="single_sheet" value="yes" checked>
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="single_sheet" class="styled-label">Single sheet</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_dates" name="include_dates" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_dates" class="styled-label">Include dates</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_labels" name="include_labels" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_labels" class="styled-label">Include labels (when mod_type is 'label' or 'text-area')</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    <input class="styled-input-checkbox" type="checkbox" id="include_external_ids" name="include_external_ids" value="yes" >
+                                </td>
+                                <td align="left" style="vertical-align: middle; padding-left: 10px;">
+                                    <label for="include_external_ids" class="styled-label">Include Syntrillo' IDs (ie 'external_ids')</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
+                                <p class="logs">Logs:</p>
+                            </td>
+                            <td align="left">
+                                <textarea id="dataStructureDumpTextarea" class="monospace-small" rows="5" cols="100" readonly wrap="off"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div> <!-- collapsible-content -->
+
+<script>
+    $(document).ready(function() {
+        var isDataStructureDumpRunning = false;
+
+        document.getElementById('dataStructureDumpButton').addEventListener('click', function() {
+            if (isDataStructureDumpRunning) return;
+            isDataStructureDumpRunning = true;
+
+            document.getElementById('dataStructureDumpSuccess').style.display = 'none';
+            document.getElementById('dataStructureDumpLoading').style.display = 'block';
+            $('body').addClass('loading'); // Apply loading cursor
+
+            $.ajax({
+                url: $('#dataStructureDump').attr('action'),
+                type: 'POST',
+                data: new FormData($('#dataStructureDump')[0]),
+                contentType: false,
+                cache: false,
+                processData: false,
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.responseType = 'blob';
+                    return xhr;
+                },
+                success: function(response, status, xhr) {
+                    console.log('Success');
+
+                    if (xhr.status === 200) {
+                        document.getElementById('dataStructureDumpLoading').style.display = 'none';
+                        $('#dataStructureDumpSuccess').html('<b>Success!</b>').show();
+
+                        // Update textarea with log message
+                        const log = xhr.getResponseHeader('X-Log');
+                        console.log('Log:', log);
+                        // pretify JSON
+                        $('#dataStructureDumpTextarea').val(JSON.stringify(JSON.parse(log), null, 2));
+
+                        // Download the file
+                        const filename = xhr.getResponseHeader('X-Filename');
+                        const mimetype = xhr.getResponseHeader('X-Mimetype');
+                        const blob = response;
+
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = filename || 'download';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    } else {
+                        $('#dataStructureDumpSuccess').html('Error. See logs below.').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    console.error('Status:', status + ' (' + xhr.status + ')');
+                    $('#dataStructureDumpTextarea').val('Ajax Error: ' + error + ' - ' + status + ' (' + xhr.status + ')');
+                },
+                complete: function() {
+                    $('#dataStructureDumpLoading').hide();
+                    $('body').removeClass('loading');
+                    isDataStructureDumpRunning = false;
+                }
+            });
+        });
+    });
+</script>
+
+
+<!-- End of HTML & JavaScript for Data Structure Dump Download -->

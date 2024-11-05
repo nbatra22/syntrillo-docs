@@ -1174,6 +1174,12 @@ if __name__ == "__main__":
     # Example usage of the list_forms function
     forms = HealthieForms()
 
+    if True:
+        # List all forms
+        response = forms.list_forms(sort_by='name_asc' , keywords='onboarding')
+        print('==== All forms ====')
+        HealthieAuth.print_pretty_json(response)
+
     if False:
         # List all forms
         response = forms.list_forms(sort_by='name_asc' , keywords='onboarding')
@@ -1270,7 +1276,7 @@ if __name__ == "__main__":
 
         print(json.dumps(new_form, indent=4, default=str))
 
-    if True:
+    if False:
         # give form details: especially mod_type
         # 1500028
         # 1377148 : Tenovi Pillbox Expectations (v0.2)

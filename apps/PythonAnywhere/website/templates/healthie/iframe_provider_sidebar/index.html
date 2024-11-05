@@ -45,6 +45,9 @@
         <li class="nav-item">
             <a class="nav-link" id="tab-questionnaire-database-tab" data-toggle="tab" href="#tab-questionnaire-database" role="tab" aria-controls="tab-questionnaire-database" aria-selected="false">Questionnaires (database)</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-dumps-tab" data-toggle="tab" href="#tab-dumps" role="tab" aria-controls="tab-dumps" aria-selected="false">Dumps</a>
+        </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
@@ -56,6 +59,7 @@
         <div class="tab-pane fade" id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-questionnaire-tab"></div>
         {% endif %}
         <div class="tab-pane fade" id="tab-questionnaire-database" role="tabpanel" aria-labelledby="tab-questionnaire-database-tab"></div>
+        <div class="tab-pane fade" id="tab-dumps" role="tabpanel" aria-labelledby="tab-dumps-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
     </div>
 </div>
@@ -153,6 +157,8 @@
         {% endif %}
 
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_database_bp.iframe_healthie_provider_sidebar_questionnaire_database") }}', '#tab-questionnaire-database');
+
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_dumps_bp.iframe_healthie_provider_sidebar_dumps") }}', '#tab-dumps');
 
         loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_system_bp.iframe_healthie_provider_sidebar_system") }}', '#tab-system');
     });
