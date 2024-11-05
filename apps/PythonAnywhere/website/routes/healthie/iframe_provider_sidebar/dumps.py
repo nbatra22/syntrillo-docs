@@ -10,12 +10,12 @@ from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.data_structures.healthie_dump import DataStructureHealthieDump
 
-iframe_healthie_provider_sidebar_id_dump_bp = Blueprint('iframe_healthie_provider_sidebar_id_dump_bp', __name__)
+iframe_healthie_provider_sidebar_dumps_bp = Blueprint('iframe_healthie_provider_sidebar_dumps_bp', __name__)
 
 # ========================= HTML PAGE ==========================
 
-@iframe_healthie_provider_sidebar_id_dump_bp.route('/healthie/iframe_provider_sidebar/id_dump', methods=['POST'])
-def iframe_healthie_provider_sidebar_id_dump():
+@iframe_healthie_provider_sidebar_dumps_bp.route('/healthie/iframe_provider_sidebar/dumps', methods=['POST'])
+def iframe_healthie_provider_sidebar_dumps():
     """
     This endpoint is used to dump IDs of questionnaires in the provider sidebar iframe.
     It is called by the healthie_iframe_provider_sidebar index.html
@@ -40,14 +40,14 @@ def iframe_healthie_provider_sidebar_id_dump():
     organization_details = utils_api.get_organization_details()
 
     return render_template(
-        'healthie/iframe_provider_sidebar/id_dump.html',
+        'healthie/iframe_provider_sidebar/dumps.html',
         healthie_provider_id=healthie_provider_id,
         organization_details=organization_details,
         )
 
 # ========================= DOWNLOAD ENDPOINT ==========================
 
-@iframe_healthie_provider_sidebar_id_dump_bp.route('/download/data_structure_dump/', methods=['POST'])
+@iframe_healthie_provider_sidebar_dumps_bp.route('/download/data_structure_dump/', methods=['POST'])
 def download_data_structure_dump():
     """
     This endpoint is used to download a dump of questionnaires structures.
@@ -78,7 +78,7 @@ def download_data_structure_dump():
             dump_file,
             as_attachment=True,
             download_name=full_name,
-            mimetype=mimetype, # 'application/json' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            mimetype=mimetype, # 'application/txt' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
 
         # Now, add the response headers to include filename and mimetype

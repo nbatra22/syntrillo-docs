@@ -1,4 +1,4 @@
-<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/id_dump.html -->
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_sidebar/dumps.html -->
 
 <!-- HTML & JavaScript for Data Structure Dump Download -->
 <h2 class="collapsible">
@@ -24,7 +24,7 @@
         <table class="compact-table">
             <tr>
                 <td>
-                    <form id="dataStructureDump" action="{{ url_for('iframe_healthie_provider_sidebar_id_dump_bp.download_data_structure_dump') }}" method="POST">
+                    <form id="dataStructureDump" action="{{ url_for('iframe_healthie_provider_sidebar_dumps_bp.download_data_structure_dump') }}" method="POST">
                         <table>
                             <tr>
                                 <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
@@ -64,7 +64,7 @@
                                 <p class="logs">Logs:</p>
                             </td>
                             <td align="left">
-                                <textarea id="dataStructureDumpTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
+                                <textarea id="dataStructureDumpTextarea" class="monospace-small" rows="5" cols="100" readonly wrap="off"></textarea>
                             </td>
                         </tr>
                     </table>
@@ -107,7 +107,8 @@
                         // Update textarea with log message
                         const log = xhr.getResponseHeader('X-Log');
                         console.log('Log:', log);
-                        $('#dataStructureDumpTextarea').val(log);
+                        // pretify JSON
+                        $('#dataStructureDumpTextarea').val(JSON.stringify(JSON.parse(log), null, 2));
 
                         // Download the file
                         const filename = xhr.getResponseHeader('X-Filename');
