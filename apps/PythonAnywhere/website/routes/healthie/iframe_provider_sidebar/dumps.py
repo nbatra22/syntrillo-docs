@@ -88,29 +88,30 @@ def download_data_structure_dump():
     dump_bytes, full_name, mimetype, log = manager.get_data_dump(dump_data_type=dump_data_type)
 
     if dump_bytes is None or not log.get('success', False):
-        abort(404)
+        dump_bytes = b''
+        full_name = 'error.txt'
+        mimetype = 'application/txt'
 
-    else:
-        # Wrap the bytes data in an io.BytesIO object
-        dump_file = io.BytesIO(dump_bytes)
+    # Wrap the bytes data in an io.BytesIO object
+    dump_file = io.BytesIO(dump_bytes)
 
-        response = send_file(
-            dump_file,
-            as_attachment=True,
-            download_name=full_name,
-            mimetype=mimetype, # 'application/txt' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+    response = send_file(
+        dump_file,
+        as_attachment=True,
+        download_name=full_name,
+        mimetype=mimetype, # 'application/txt' or 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
-        # Now, add the response headers to include filename and mimetype
-        response.headers['Content-Type'] = mimetype
-        response.headers['X-Filename'] = full_name
-        response.headers['X-Mimetype'] = mimetype
+    # Now, add the response headers to include filename and mimetype
+    response.headers['Content-Type'] = mimetype
+    response.headers['X-Filename'] = full_name
+    response.headers['X-Mimetype'] = mimetype
 
-        # Create a JSON string from the log without any newlines
-        log_json = json.dumps(log)
-        response.headers['X-Log'] = log_json
+    # Create a JSON string from the log without any newlines
+    log_json = json.dumps(log)
+    response.headers['X-Log'] = log_json
 
-        return response
+    return response
 
 
 
