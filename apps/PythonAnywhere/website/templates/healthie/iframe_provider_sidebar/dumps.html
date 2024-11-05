@@ -8,7 +8,14 @@
     Data structure dump
 </h2>
 <div class="collapsible-content">
-    <p>Info.</p>
+    <p>
+    <ul>
+        <li>'form': a questionnaire, see <a target="_blank" href="https://docs.gethealthie.com/schema/custommoduleform.doc">CustomModuleForm</a></li>
+        <li>'module': a question in a questionnaire, see <a target="_blank" href="https://docs.gethealthie.com/schema/custommodule.doc">CustomModule</a></li>
+        <li>'module_type': type/format of the question: text, dropdown, radio, ... </li>
+        <li>'external_id': Syntrillo's internal questionnaire / variable name (defined in data structure Excel files).</li>
+    </ul>
+    </p>
 
     <style>
         /* Initially loading indicator and logs */
@@ -29,7 +36,7 @@
                             <tr>
                                 <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <input type="hidden" name="healthie_provider_id" value="{{ healthie_provider_id }}">
-                                    <button type="button" id="dataStructureDumpButton" class="styled-button">Retrieve structure dump</button>
+                                    <button type="button" id="dataStructureDumpButton" class="styled-button">Retrieve data structure dump</button>
                                 </td>
                                 <td align="left" style="vertical-align: middle;">
                                     <span id="dataStructureDumpLoading" class="response-message"><b>Running - Please wait ...</b></span>
@@ -38,7 +45,7 @@
                             </tr>
                             <tr>
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    File Type :
+                                    File Type:
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
                                     <input class="styled-input-radio" type="radio" id="data_type_excel" name="dump_data_type" value="xlsx" checked>
@@ -48,6 +55,11 @@
                                     <label for="data_type_json" class="styled-label">Raw text (json)</label>
                                 </td>
                             </tr>
+                            <tr>
+                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
+                                    Excel options:
+                                </td>
+                                <td></td>
                             <tr>
                                 <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
                                     <input class="styled-input-checkbox" type="checkbox" id="single_sheet" name="single_sheet" value="yes" checked>
@@ -69,7 +81,7 @@
                                     <input class="styled-input-checkbox" type="checkbox" id="include_labels" name="include_labels" value="yes" >
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
-                                    <label for="include_labels" class="styled-label">Include labels</label>
+                                    <label for="include_labels" class="styled-label">Include labels (when mod_type is 'label' or 'text-area')</label>
                                 </td>
                             </tr>
                             <tr>
@@ -77,7 +89,7 @@
                                     <input class="styled-input-checkbox" type="checkbox" id="include_external_ids" name="include_external_ids" value="yes" >
                                 </td>
                                 <td align="left" style="vertical-align: middle; padding-left: 10px;">
-                                    <label for="include_external_ids" class="styled-label">Include our ids</label>
+                                    <label for="include_external_ids" class="styled-label">Include Syntrillo' IDs (ie 'external_ids')</label>
                                 </td>
                             </tr>
                         </table>

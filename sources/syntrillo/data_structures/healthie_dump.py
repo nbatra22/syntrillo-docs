@@ -60,6 +60,7 @@ class DataStructureHealthieDump:
                     offset: $offset,
                     sort_by: $sortBy
                 ) {
+                    # "A form template" : https://docs.gethealthie.com/schema/custommoduleform.doc
                     id
                     name
                     created_at
@@ -68,6 +69,13 @@ class DataStructureHealthieDump:
                     updated_at
                     use_for_charting
                     use_for_program
+                    has_non_readonly_modules
+                    is_video
+                    prefill
+                    user {
+                        id
+                        name
+                    }
 
                     # "A question in a form template" : https://docs.gethealthie.com/schema/custommodule.doc
                     custom_modules {
@@ -77,6 +85,7 @@ class DataStructureHealthieDump:
                         external_id
                         external_id_type
                         mod_type
+                        hipaa_name
                         options
                         options_array
                     }
