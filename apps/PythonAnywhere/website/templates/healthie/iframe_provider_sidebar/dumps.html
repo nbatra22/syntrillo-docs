@@ -171,8 +171,8 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
-                    console.error('Status:', status);
-                    $('#dataStructureDumpTextarea').val('Ajax Error: ' + error + ' - ' + status);
+                    console.error('Status:', status + ' (' + xhr.status + ')');
+                    $('#dataStructureDumpTextarea').val('Ajax Error: ' + error + ' - ' + status + ' (' + xhr.status + ')');
                 },
                 complete: function() {
                     $('#dataStructureDumpLoading').hide();
