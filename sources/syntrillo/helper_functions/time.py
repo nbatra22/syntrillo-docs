@@ -280,8 +280,8 @@ def get_date_ranges_for_reporting(
     # ------------------------------------------------------
     # Create DataFrame from ranges
     df = pd.DataFrame(date_ranges)
-    df['from_date'] = pd.to_datetime(df['from_date'])
-    df['to_date'] = pd.to_datetime(df['to_date'])
+    df['from_date'] = pd.to_datetime(df['from_date'], utc=True)
+    df['to_date'] = pd.to_datetime(df['to_date'], utc=True)
     df['range_name'] = df['range_name'].astype(str)
 
     # Log success
