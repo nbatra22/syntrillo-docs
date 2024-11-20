@@ -95,7 +95,8 @@
         }
 
         .summary-table .tooltip-cell:hover {
-           border: 2px solid rgb(155, 120, 252) !important;  /* Change border color and thickness on hover */
+           /* border: 1px solid rgb(155, 120, 252) !important; */ /* Change border color and thickness on hover */
+           background-color: rgb(202, 184, 253) !important; /* Change background color on hover */
         }
 
         .summary-table .tooltip-icon {
@@ -264,6 +265,14 @@
                                         {{ period.range_name }}
                                         <div class="tooltip-content">
                                             {{ period.range_name_info|safe }}
+                                            <br>
+                                            n datapoints:
+                                            <br>
+                                            &nbsp;- BP : {{ period.bp_summary_data.num_datapoints_bp|none_string_data_filter(0) }}
+                                            <br>
+                                            &nbsp;- pulse : {{ period.heart_rate_summary_data.num_datapoints_pulse|none_string_data_filter(0) }}
+                                            <br>
+                                            &nbsp;- HR : {{ period.heart_rate_summary_data.num_datapoints_heart_rate_stats|none_string_data_filter(0) }}
                                         </div>
                                     </td>
 
