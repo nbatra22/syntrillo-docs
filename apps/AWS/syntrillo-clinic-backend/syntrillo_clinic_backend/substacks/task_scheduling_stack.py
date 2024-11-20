@@ -68,11 +68,8 @@ class RemoteMonitoringDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        # self.database.admin_secret.grant_read(self.function)
         self.grant_read_secrets(self.secrets.database_lambda_user_secrets)
-        # self.secrets.tenovi_hwi_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
-        # self.secrets.healthie_secrets.grant_read(self.function)
         self.grant_read_secrets(self.secrets.healthie_secrets)
 
         # Create a scheduled event rule

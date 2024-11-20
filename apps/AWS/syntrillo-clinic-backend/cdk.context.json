@@ -28,7 +28,8 @@
       "disable_execute_api_endpoint": false
     },
     "llm_server": {
-      "llm-server-instance-size": "t3.micro"
+      "llm-server-instance-size": "t3.micro",
+      "llm-server-ami-id": "ami-04a98573e58903ee0"
     },
     "database": {
       "snapshot-identifier": "encrypted-snapshot-2",
@@ -51,7 +52,7 @@
     "stacks-termination-protection": true,
     "iframe_generator_function": {
       "log_level": "DEBUG",
-      "provisioned_concurrency_executions": 6,
+      "provisioned_concurrency_executions": 0,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
@@ -79,7 +80,8 @@
       "disable_execute_api_endpoint": false
     },
     "llm_server": {
-      "llm-server-instance-size": "t3.micro"
+      "llm-server-instance-size": "t3.micro",
+      "llm-server-ami-id": "ami-066784287e358dad1"
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-15-encrypted",
@@ -130,7 +132,8 @@
       "disable_execute_api_endpoint": true
     },
     "llm_server": {
-      "llm-server-instance-size": "t3.medium"
+      "llm-server-instance-size": "t3.medium",
+      "llm-server-ami-id": "ami-066784287e358dad1"
     },
     "database": {
       "snapshot-identifier": "manual-syntrillo-clinic-backend-rds-snapshot-2024-08-16-encrypted",

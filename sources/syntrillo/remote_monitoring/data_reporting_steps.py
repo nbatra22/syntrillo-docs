@@ -177,6 +177,9 @@ class DataReportingSteps:
         if self.hourly_steps_df is None or self.hourly_steps_df.empty:
             return None
 
+        # convert timestamp_local to datetime (solves utc timezone issue)
+        self.hourly_steps_df['timestamp_local'] = pd.to_datetime(self.hourly_steps_df['timestamp_local'], utc=True)
+        
         # ---
         # group by date
         daily_steps_df = self.hourly_steps_df.groupby(

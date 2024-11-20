@@ -62,7 +62,7 @@ class IFrameGeneratorApiEndpoint(Construct):
             name="IFramGeneratorAPIWebAcl",
             scope="REGIONAL",
             default_action=wafv2.CfnWebACL.DefaultActionProperty(
-                allow={}
+                allow={} # REPLACE WITH block={} TO BLOC ALL TRAFIC
             ),
             visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
                 cloud_watch_metrics_enabled=True,

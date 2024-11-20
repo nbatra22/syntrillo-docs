@@ -63,13 +63,13 @@ class ServersStack(Stack):
             database=self.database,
             storage=self.storage, 
             secrets=self.secrets,
-            # llm_server=self.llm_server 
         )
 
         self.llm_server = LLMServer(
             self, "LLMServer",
             environment_context=self.environment_context,
             network=self.network,
+            database=self.database,
             iframe_generator_function=self.iframe_generator_function,
         )
 

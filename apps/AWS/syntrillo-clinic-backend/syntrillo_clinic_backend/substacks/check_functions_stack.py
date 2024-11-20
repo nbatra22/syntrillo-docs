@@ -237,8 +237,6 @@ class CheckConstruct(Construct):
             apigw.LambdaIntegration(check_function),
         )
 
-
-
 # -----------------------------------------------------------------------------
 # STACK
 # -----------------------------------------------------------------------------
@@ -260,17 +258,3 @@ class SyntrilloClinicBackendCheckFunctionsStack(Stack):
             self.database,
             self.secrets
         )
-
-        # check_connectivity_function=CheckConnectivityConstruct(
-        #     self, "CheckConnectivityConstruct", 
-        #     self.network.vpc,
-        #     self.database,
-        #     self.efs_access_point,
-        #     self.secrets
-        # )
-
-        # check_behaviour_function=CheckBehaviourConstruct(
-        #     self, "CheckLambdaBehaviourConstruct", 
-        #     self.network.vpc,
-        #     self.efs_access_point,
-        # )

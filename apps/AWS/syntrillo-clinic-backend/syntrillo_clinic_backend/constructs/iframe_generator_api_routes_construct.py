@@ -57,6 +57,11 @@ class IFrameGeneratorAPIRoutes(Construct):
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
         )
+        
+        download_proxy_resource.add_method(
+            "POST",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
         # /healthie_endpoint_post
         iframe_healthie_client_sidebar = self.rest_api.root.add_resource("healthie_endpoint_post")

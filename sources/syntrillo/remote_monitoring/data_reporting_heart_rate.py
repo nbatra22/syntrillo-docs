@@ -349,7 +349,7 @@ class DataReportingHeartRate:
 
         # ---
         # Convert 'timestamp_local' to datetime objects
-        heart_rate_statistics_df['timestamp_local'] = pd.to_datetime(heart_rate_statistics_df['timestamp_local'])
+        heart_rate_statistics_df['timestamp_local'] = pd.to_datetime(heart_rate_statistics_df['timestamp_local'], utc=True)
 
         # ---
         # store the dataframe in the class
