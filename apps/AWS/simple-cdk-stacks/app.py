@@ -3,6 +3,8 @@ import os
 
 import aws_cdk as cdk
 
+from simple_cdk_stacks.simple_lambda_stack import SimpleLambdaStack
+from simple_cdk_stacks.simple_lambda_docker_stack import SimpleLambdaDockerStack
 from simple_cdk_stacks.simple_api_lambda_stack import SimpleApiLambdaStack
 from simple_cdk_stacks.simple_rds_s3_export_stack import SimpleRDSS3ExportStack
 from simple_cdk_stacks.simple_http_resolver_stack import SimpleHttpResolverStack
@@ -31,6 +33,8 @@ SimpleApiLambdaStack(app, "SimpleApiLambdaStack",
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
     )
 
+SimpleLambdaStack(app, "SimpleLambdaStack")
+SimpleLambdaDockerStack(app, "SimpleLambdaDockerStack")
 SimpleRDSS3ExportStack(app, "SimpleRDSS3ExportStack")
 SimpleHttpResolverStack(app, "SimpleHttpResolverStack")
 SimpleFlaskWsgiStack(app, "SimpleFlaskWsgiStack")
