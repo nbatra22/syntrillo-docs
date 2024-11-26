@@ -254,5 +254,5 @@ class SyntrilloClinicBackendCheckFunctionsStack(Stack):
         check_security_function=CheckBehaviourConstruct(
             self, "CheckBehaviourConstruct",
             self.network.vpc,
-            self.storage.efs_access_point_2,
+            self.storage.efs_access_point,
         )

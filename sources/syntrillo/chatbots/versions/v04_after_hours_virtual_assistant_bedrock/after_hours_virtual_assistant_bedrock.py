@@ -15,6 +15,8 @@ from syntrillo.api_healthie.tags import HealthieTags
 from syntrillo.chatbots.conversation_wrapper import ChatBotConversationWrapper
 from syntrillo.chatbots.openai_call import OpenAICall
 
+from syntrillo.chatbots.after_hours.bedrock_operations import process_query
+
 class AfterHoursVirtualAssistantBedrock:
     """
     This class helps providers builind a personalized care plan.
@@ -98,11 +100,12 @@ class AfterHoursVirtualAssistantBedrock:
         # create the response
         response = "AfterHoursVirtualAssistantBedrock.generate_responses says hello!"
 
-        if False:
-            llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
-                "query": last_note["content"],
-                "model": "claude-3-5-sonnet"}))
-            response = json.loads(llm_response.text)['answer']
+        # if False:
+        #     llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
+        #         "query": last_note["content"],
+        #         "model": "claude-3-5-sonnet"}))
+        #     response = json.loads(llm_response.text)['answer']
+        response = process_query(last_note["content"], model='claude-3-sonnet', user_id='0', session_id='0')
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
@@ -111,4 +114,3 @@ class AfterHoursVirtualAssistantBedrock:
         )
 
         return
-

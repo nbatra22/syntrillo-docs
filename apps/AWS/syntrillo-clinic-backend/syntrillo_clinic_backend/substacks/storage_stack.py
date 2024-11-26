@@ -51,6 +51,20 @@ class StorageStack(Stack):
             )
         )
 
+        self.efs_access_point_chatbots = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPointChatbots",
+            file_system=self.efs_file_system,
+            path="/chatbots-resources", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
+            create_acl=efs.Acl(
+                owner_uid="1000",
+                owner_gid="1000",
+                permissions="750"
+            ),
+            posix_user=efs.PosixUser(
+                uid="1000",
+                gid="1000"
+            )
+        )
+
         # ALLOW BASTION HOST TO ACCESS EFS FILE SYSTEM
         efs_security_group = self.efs_file_system.connections.security_groups[0]
 

@@ -9,6 +9,24 @@ from flask import Flask, render_template, abort
 
 app = Flask(__name__)
 
+# =================== Initialiaze chatbot ==========================
+
+# Register your SQLAlchemy instance with your Flask app
+from syntrillo.chatbots.after_hours.models import db
+
+env_secrets = LocalEnvironmentAndSecrets(load_aws_database_secrets=True)
+
+db_host = env_secrets.get_aws_database_host()
+db_user = env_secrets.get_aws_database_user()
+db_password = env_secrets.get_aws_database_password()
+db_name = os.getenv('DB_NAME', 'clinical_trials')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}?ssl_ca=syntrillo/system/rds-certificate-bundle/us-east-1-bundle.pem'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+with app.app_context():
+    db.create_all() 
+
 # =================== tests - Only available on specified machines ==========================
 
 if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().nodename == 'maxwell':

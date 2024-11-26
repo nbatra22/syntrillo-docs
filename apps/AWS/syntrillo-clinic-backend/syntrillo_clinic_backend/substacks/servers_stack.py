@@ -32,6 +32,8 @@ from syntrillo_clinic_backend.constructs.iframe_generator_api_routes_construct i
 from syntrillo_clinic_backend.constructs.iframe_generator_function_construct import IFrameGeneratorFunction
 from syntrillo_clinic_backend.constructs.llm_server_construct import LLMServer
 
+from syntrillo_clinic_backend.constructs.message_endpoint_function_construct import MessageEndpointFunction
+
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -58,6 +60,15 @@ class ServersStack(Stack):
 
         self.iframe_generator_function = IFrameGeneratorFunction(
             self, "IFrameGeneratorFunction",
+            environment_context=self.environment_context,
+            network=self.network,
+            database=self.database,
+            storage=self.storage, 
+            secrets=self.secrets,
+        )
+
+        self.message_endpoint_function = MessageEndpointFunction(
+            self, "MessageEndpointFunction",
             environment_context=self.environment_context,
             network=self.network,
             database=self.database,
