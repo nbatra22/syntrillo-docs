@@ -15,4 +15,4 @@ else
   role_arn="--role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role"	
 fi
 
-cdk deploy --profile syntrillo-clinic-staging $role_arn --context 'environment=staging' $@
+cdk deploy --profile syntrillo-clinic-staging-deployment $role_arn --context 'environment=staging' $@
