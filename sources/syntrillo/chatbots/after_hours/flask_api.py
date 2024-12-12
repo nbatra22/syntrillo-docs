@@ -18,7 +18,7 @@ CORS(app)
 db_user = os.getenv('DB_USER')
 db_password = os.getenv('DB_PASSWORD')
 db_host = os.getenv('DB_HOST', 'localhost')
-db_name = os.getenv('DB_NAME', 'clinical_trials')
+db_name = os.getenv('DB_NAME', 'syntrillo$ChatbotsInformation')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
