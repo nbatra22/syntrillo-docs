@@ -49,142 +49,159 @@ class ChatBotsDispatcher:
 
         """
 
+        logger.info({
+            "message" : "ChatBotsDispatcher.endpoint",
+            "data" : data
+        })
+
         # Get the note_id
         note_id = data['resource_id']
 
         # Load the conversation from the note_id
         self.convo_wrapper = ChatBotConversationWrapper()
-        log = self.convo_wrapper.load_conversation_from_note_id(note_id)
+        # log = self.convo_wrapper.load_conversation_from_note_id(note_id)
 
-        # ------------------------------
-        # dispatch the message to the appropriate chatbot, based on time and several variables
-        note_creator = self.convo_wrapper.get_note_creator()
-        note_content = self.convo_wrapper.get_note_content()
-        convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
-        convo_include_only_providers = self.convo_wrapper.does_convo_include_only_providers()
-        conversation_owner = self.convo_wrapper.get_conversation_owner()
-        patients = self.convo_wrapper.get_patients()
-        is_org_staging = self.healthie_utils.is_org_staging()
+        # # ------------------------------
+        # # dispatch the message to the appropriate chatbot, based on time and several variables
+        # note_creator = self.convo_wrapper.get_note_creator()
+        # note_content = self.convo_wrapper.get_note_content()
+        # convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
+        # convo_include_only_providers = self.convo_wrapper.does_convo_include_only_providers()
+        # conversation_owner = self.convo_wrapper.get_conversation_owner()
+        # patients = self.convo_wrapper.get_patients()
+        # is_org_staging = self.healthie_utils.is_org_staging()
 
-        # ------------------------------
-        # test if note creator is a bot, if so exists
-        if note_creator.does_user_have_tag(v02_AfterHoursVirtualAssistant.CHATBOT_TAG):
-            return
+        # # ------------------------------
+        # # test if note creator is a bot, if so exists
+        # if note_creator.does_user_have_tag(v02_AfterHoursVirtualAssistant.CHATBOT_TAG):
+        #     return
 
-        if note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
-            return
+        # if note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
+        #     return
 
-        if note_creator.does_user_have_tag(v04_AfterHoursVirtualAssistantBedrock.CHATBOT_TAG):
-            return
+        # if note_creator.does_user_have_tag(v04_AfterHoursVirtualAssistantBedrock.CHATBOT_TAG):
+        #     return
 
-        # ------------------------------
-        # logger
-        logger.info(
-            {
-                "code" : "chatbots_dispatcher",
-                "note_id" : note_id,
-                "note_creator" : note_creator,
-                "note_content" : note_content,
-                "convo_includes_multiple_clients" : convo_includes_multiple_clients,
-                "convo_include_only_providers" : convo_include_only_providers,
-                "conversation_owner" : conversation_owner,
-                "is_org_staging" : is_org_staging,
-            }
-        )
+        # # ------------------------------
+        # # logger
+        # logger.info(
+        #     {
+        #         "code" : "chatbots_dispatcher",
+        #         "note_id" : note_id,
+        #         "note_creator" : note_creator,
+        #         "note_content" : note_content,
+        #         "convo_includes_multiple_clients" : convo_includes_multiple_clients,
+        #         "convo_include_only_providers" : convo_include_only_providers,
+        #         "conversation_owner" : conversation_owner,
+        #         "is_org_staging" : is_org_staging,
+        #     }
+        # )
 
-        # Remove HTML tags from note content, so that we can check for keywords at the start of the note
-        note_content_clean = remove_html_tags(note_content)
+        note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
 
-        # chatbot to start or not
-        v00_start_virtual_care_navigator = False
-        v01_start_after_hours_support_chatbot = False
-        v02_start_after_hours_virtual_assistant = False
-        v03_start_care_plan_personalization_assistant = False
-        v04_start_after_hours_virtual_assistant_bedrock = False
+        from syntrillo.api_healthie.user import HealthieUser
+        note_creator = HealthieUser(healthie_user_id=note['user_id'])
 
-        # Get the current time in the EST timezone
-        est = pytz.timezone('US/Eastern')
-        current_time_est = datetime.now(est)
-
-        if is_org_staging:
-            # We are in staging
-
-            # Define the start and end time for the working hours (9 AM to 5 PM)
-            start_time = current_time_est.replace(hour=9, minute=0, second=0, microsecond=0)
-            end_time = current_time_est.replace(hour=17, minute=0, second=0, microsecond=0)
-            is_within_working_hours = start_time <= current_time_est <= end_time
-
-            if note_creator.is_provider():
-                # place holder for direct provider interaction with chatbot
-
-                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
-                    # we have a provider with the AI tag, and the conversation includes only providers
-                    # and the last note is not from the AI (to prevent loops, I've been there...)
-                    v03_start_care_plan_personalization_assistant = True
-
-            else:
-                # if the note creator is a patient and if content starts with a keyword
-                if note_content_clean.startswith(v00_VirtualCareNavigator.MANUAL_KICK_START_TAG_KEYWORD):
-                    v00_start_virtual_care_navigator = True
-
-                elif note_content_clean.startswith(v01_AfterHoursSupportChatBot.MANUAL_KICK_START_TAG_KEYWORD):
-                    v01_start_after_hours_support_chatbot = True
-
-                elif note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
-                    v02_start_after_hours_virtual_assistant = True
-
-                # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
-                #   staging : Patient 'Investor Demo': 1660020; tagged as 'demo'
-                elif note_creator.does_user_have_tag('demo') or note_creator.healthie_user_id == '1660020':
-                    v04_start_after_hours_virtual_assistant_bedrock = True
-
-                # if the note creator is a patient start if after working hours
-                if not is_within_working_hours:
-                    # Not implemented yet
-                    pass
-                    # start_after_hours_support_chatbot = True
-
-        else:
-            # !!! We are in production !!!
-            if note_creator.is_provider():
-                # place holder for direct provider interaction with chatbot
-
-                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
-                    # we have a provider with the AI tag, and the conversation includes only providers
-                    # and the last note is not from the AI (to prevent loops, I've been there...)
-                    v03_start_care_plan_personalization_assistant = True
-
-            else:
-                # place holder for patient interaction with chatbot
-
-                # if the note creator is an investor (demo tag or specific id), start the after hours bot
-                #   production : Demo Patient 'Eleanor Demo': xxxxx ; tagged as 'demo'
-                if note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == '6262139':
-                    v01_start_after_hours_support_chatbot = True
-                    v02_start_after_hours_virtual_assistant = False
-                    v04_start_after_hours_virtual_assistant_bedrock = False
-
-
-        # start the chatbot with the conversationWrapper object
-        if v01_start_after_hours_support_chatbot:
-            ahs_chatbot = v01_AfterHoursSupportChatBot(convo_wrapper=self.convo_wrapper)
-            ahs_chatbot.generate_responses()
-
-        elif v02_start_after_hours_virtual_assistant:
-            ahva_chatbot = v02_AfterHoursVirtualAssistant(convo_wrapper=self.convo_wrapper)
-            ahva_chatbot.generate_responses()
-
-        elif v03_start_care_plan_personalization_assistant:
+        if note_creator.is_provider():
             cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
-            cppa_chatbot.generate_responses()
-
-        elif v04_start_after_hours_virtual_assistant_bedrock:
+            cppa_chatbot.generate_responses(note)
+        else:
             ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)
-            ahvab_chatbot.generate_responses()
+            ahvab_chatbot.generate_responses(note_id)
 
-        elif v00_start_virtual_care_navigator:
-            # TODO : implement legacy virtual care navigator chatbot
-            pass
+        # # Remove HTML tags from note content, so that we can check for keywords at the start of the note
+        # note_content_clean = remove_html_tags(note_content)
+
+        # # chatbot to start or not
+        # v00_start_virtual_care_navigator = False
+        # v01_start_after_hours_support_chatbot = False
+        # v02_start_after_hours_virtual_assistant = False
+        # v03_start_care_plan_personalization_assistant = False
+        # v04_start_after_hours_virtual_assistant_bedrock = False
+
+        # # Get the current time in the EST timezone
+        # est = pytz.timezone('US/Eastern')
+        # current_time_est = datetime.now(est)
+
+        # if is_org_staging:
+        #     # We are in staging
+
+        #     # Define the start and end time for the working hours (9 AM to 5 PM)
+        #     start_time = current_time_est.replace(hour=9, minute=0, second=0, microsecond=0)
+        #     end_time = current_time_est.replace(hour=17, minute=0, second=0, microsecond=0)
+        #     is_within_working_hours = start_time <= current_time_est <= end_time
+
+        #     if note_creator.is_provider():
+        #         # place holder for direct provider interaction with chatbot
+
+        #         if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
+        #             # we have a provider with the AI tag, and the conversation includes only providers
+        #             # and the last note is not from the AI (to prevent loops, I've been there...)
+        #             v03_start_care_plan_personalization_assistant = True
+
+        #     else:
+        #         # if the note creator is a patient and if content starts with a keyword
+        #         if note_content_clean.startswith(v00_VirtualCareNavigator.MANUAL_KICK_START_TAG_KEYWORD):
+        #             v00_start_virtual_care_navigator = True
+
+        #         elif note_content_clean.startswith(v01_AfterHoursSupportChatBot.MANUAL_KICK_START_TAG_KEYWORD):
+        #             v01_start_after_hours_support_chatbot = True
+
+        #         elif note_content_clean.startswith(v02_AfterHoursVirtualAssistant.MANUAL_KICK_START_TAG_KEYWORD):
+        #             v02_start_after_hours_virtual_assistant = True
+
+        #         # if the note creator is an investor (demo tag or specific id), start the bedrock after hours virtual assistant
+        #         #   staging : Patient 'Investor Demo': 1660020; tagged as 'demo'
+        #         elif note_creator.does_user_have_tag('demo') or note_creator.healthie_user_id == '1660020':
+        #             v04_start_after_hours_virtual_assistant_bedrock = True
+
+        #         # if the note creator is a patient start if after working hours
+        #         if not is_within_working_hours:
+        #             # Not implemented yet
+        #             pass
+        #             # start_after_hours_support_chatbot = True
+
+        # else:
+        #     # !!! We are in production !!!
+        #     if note_creator.is_provider():
+        #         # place holder for direct provider interaction with chatbot
+
+        #         if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
+        #             # we have a provider with the AI tag, and the conversation includes only providers
+        #             # and the last note is not from the AI (to prevent loops, I've been there...)
+        #             v03_start_care_plan_personalization_assistant = True
+
+        #     else:
+        #         # place holder for patient interaction with chatbot
+
+        #         # if the note creator is an investor (demo tag or specific id), start the after hours bot
+        #         #   production : Demo Patient 'Eleanor Demo': xxxxx ; tagged as 'demo'
+        #         if note_creator.does_user_have_tag('demo') and note_creator.healthie_user_id == '6262139':
+        #             v01_start_after_hours_support_chatbot = True
+        #             v02_start_after_hours_virtual_assistant = False
+        #             v04_start_after_hours_virtual_assistant_bedrock = False
+
+
+        # # start the chatbot with the conversationWrapper object
+        # if v01_start_after_hours_support_chatbot:
+        #     ahs_chatbot = v01_AfterHoursSupportChatBot(convo_wrapper=self.convo_wrapper)
+        #     ahs_chatbot.generate_responses()
+
+        # elif v02_start_after_hours_virtual_assistant:
+        #     ahva_chatbot = v02_AfterHoursVirtualAssistant(convo_wrapper=self.convo_wrapper)
+        #     ahva_chatbot.generate_responses()
+
+        # elif v03_start_care_plan_personalization_assistant:
+        #     cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
+        #     cppa_chatbot.generate_responses()
+
+        # elif v04_start_after_hours_virtual_assistant_bedrock:
+        #     ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)
+        #     ahvab_chatbot.generate_responses()
+
+        # elif v00_start_virtual_care_navigator:
+        #     # TODO : implement legacy virtual care navigator chatbot
+        #     pass
 
 
 if __name__ == "__main__":

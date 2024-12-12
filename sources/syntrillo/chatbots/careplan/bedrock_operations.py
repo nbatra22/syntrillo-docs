@@ -1,4 +1,4 @@
-from db_operations import get_similar_docs, initialize_db
+from syntrillo.chatbots.careplan.db_operations import get_similar_docs, initialize_db
 import json
 import boto3
 import time

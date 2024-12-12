@@ -67,30 +67,32 @@ class AfterHoursVirtualAssistantBedrock:
             self.responder_user_id = self.convo_wrapper.get_conversation_owner().healthie_user_id
             self.chatbot_user_available_to_answer = False
 
-        # ------------------------------
-        # Detect if the chatbot has already answered
-        if self.chatbot_user_available_to_answer:
-            self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
-        else:
-            self.is_chatbot_already_in_convo = None
+        # # ------------------------------
+        # # Detect if the chatbot has already answered
+        # if self.chatbot_user_available_to_answer:
+        #     self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
+        # else:
+        #     self.is_chatbot_already_in_convo = None
 
 
-    def generate_responses(self):
+    def generate_responses(self, note_id):
         """
         answer the message
 
         """
 
         # the Healthie conversation (list of 'notes') is in self.convo_wrapper
-        notes = self.convo_wrapper.get_all_notes_for_llm()
+        # notes = self.convo_wrapper.get_all_notes_for_llm()
 
         # get last note
         # expected format :
         #   "last_note":{"who":"provider or chatbot","content":"<p>hello</p>","created_at":"2024-09-26 12:14:25 -0400"}}
-        if notes is None:
-            last_note = None
-        else:
-            last_note = notes[-1]
+        # if notes is None:
+        #     last_note = None
+        # else:
+        #     last_note = notes[-1]
+
+        last_note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
 
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",

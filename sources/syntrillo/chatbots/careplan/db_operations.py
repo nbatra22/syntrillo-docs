@@ -14,7 +14,7 @@ def initialize_bedrock_client():
 def initialize_db(collection_name):
     bedrock = initialize_bedrock_client()
     bedrock_embeddings = BedrockEmbeddings(model_id="cohere.embed-english-v3", client=bedrock)
-    persistent_client = chromadb.PersistentClient()
+    persistent_client = chromadb.PersistentClient('/mnt/chatbots-resources/care-plan-chatbot-chroma-db')
 
     return Chroma(
         client=persistent_client,

@@ -76,30 +76,30 @@ class CarePlanPersonalizationVirtualAssistant:
             self.chatbot_user_available_to_answer = False
             self.responder_user_id = None
 
-        # ------------------------------
-        # Detect if the chatbot has already answered
-        if self.chatbot_user_available_to_answer:
-            self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
-        else:
-            self.is_chatbot_already_in_convo = None
+        # # ------------------------------
+        # # Detect if the chatbot has already answered
+        # if self.chatbot_user_available_to_answer:
+        #     self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
+        # else:
+        #     self.is_chatbot_already_in_convo = None
 
 
-    def generate_responses(self):
+    def generate_responses(self, last_note):
         """
         answer the message
 
         """
 
         # the Healthie conversation (list of 'notes') is in self.convo_wrapper
-        notes = self.convo_wrapper.get_all_notes_for_llm()
+        # notes = self.convo_wrapper.get_all_notes_for_llm()
 
         # get last note
         # expected format :
         #   "last_note":{"who":"provider or chatbot","content":"<p>hello</p>","created_at":"2024-09-26 12:14:25 -0400"}}
-        if notes is None:
-            last_note = None
-        else:
-            last_note = notes[-1]
+        # if notes is None:
+        #     last_note = None
+        # else:
+        #     last_note = notes[-1]
 
         logger.info({
             "message": "CarePlanPersonalizationVirtualAssistant.generate_responses",
@@ -109,10 +109,13 @@ class CarePlanPersonalizationVirtualAssistant:
         # create the response
         # response = "CarePlanPersonalizationVirtualAssistant.generate_responses says hello!"
 
-        llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
-            "query": last_note["content"],
-            "model": "claude-3-5-sonnet"}))
-        response = json.loads(llm_response.text)['answer']
+        from syntrillo.chatbots.careplan.bedrock_operations import get_final_answer
+
+        # llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
+        #     "query": last_note["content"],
+        #     "model": "claude-3-5-sonnet"}))
+        # response = json.loads(llm_response.text)['answer']
+        response = get_final_answer(last_note["content"], model='claude-3-sonnet')
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(

@@ -97,6 +97,7 @@ class ServersStack(Stack):
         )
 
         self.iframe_generator_api_routes.create_root_resources(self.iframe_generator_function.function_alias)
+        self.iframe_generator_api_routes.create_healthie_endpoint(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
