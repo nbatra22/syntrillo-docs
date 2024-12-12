@@ -71,16 +71,21 @@ class ChatBotsDispatcher:
         # patients = self.convo_wrapper.get_patients()
         # is_org_staging = self.healthie_utils.is_org_staging()
 
-        # # ------------------------------
-        # # test if note creator is a bot, if so exists
-        # if note_creator.does_user_have_tag(v02_AfterHoursVirtualAssistant.CHATBOT_TAG):
-        #     return
+        note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
 
-        # if note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
-        #     return
+        from syntrillo.api_healthie.user import HealthieUser
+        note_creator = HealthieUser(healthie_user_id=note['user_id'])
 
-        # if note_creator.does_user_have_tag(v04_AfterHoursVirtualAssistantBedrock.CHATBOT_TAG):
-        #     return
+        # ------------------------------
+        # test if note creator is a bot, if so exists
+        if note_creator.does_user_have_tag(v02_AfterHoursVirtualAssistant.CHATBOT_TAG):
+            return
+
+        if note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG):
+            return
+
+        if note_creator.does_user_have_tag(v04_AfterHoursVirtualAssistantBedrock.CHATBOT_TAG):
+            return
 
         # # ------------------------------
         # # logger
@@ -97,17 +102,14 @@ class ChatBotsDispatcher:
         #     }
         # )
 
-        note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
-
-        from syntrillo.api_healthie.user import HealthieUser
-        note_creator = HealthieUser(healthie_user_id=note['user_id'])
 
         if note_creator.is_provider():
             cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
             cppa_chatbot.generate_responses(note)
-        else:
+        
+        if note_creator.is_patient():
             ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)
-            ahvab_chatbot.generate_responses(note_id)
+            ahvab_chatbot.generate_responses(note)
 
         # # Remove HTML tags from note content, so that we can check for keywords at the start of the note
         # note_content_clean = remove_html_tags(note_content)

@@ -332,7 +332,8 @@ class ChatBotConversationWrapper:
     def create_note(
         self,
         content: str,
-        healthie_user_id: str
+        healthie_user_id: str,
+        conversation_id: str = None
         ) -> Tuple[dict, dict]:
         """
         Create a note in the conversation.
@@ -344,6 +345,9 @@ class ChatBotConversationWrapper:
         Returns:
             Tuple[dict, dict]: The note details and the log of the request.
         """
+
+        if conversation_id != None:
+            self.conversation_id = conversation_id
 
         if healthie_user_id is None:
             self.log['success'] = False

@@ -75,7 +75,7 @@ class AfterHoursVirtualAssistantBedrock:
         #     self.is_chatbot_already_in_convo = None
 
 
-    def generate_responses(self, note_id):
+    def generate_responses(self, last_note):
         """
         answer the message
 
@@ -92,8 +92,6 @@ class AfterHoursVirtualAssistantBedrock:
         # else:
         #     last_note = notes[-1]
 
-        last_note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
-
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
             "last_note": last_note
@@ -107,12 +105,25 @@ class AfterHoursVirtualAssistantBedrock:
         #         "query": last_note["content"],
         #         "model": "claude-3-5-sonnet"}))
         #     response = json.loads(llm_response.text)['answer']
-        response = process_query(last_note["content"], model='claude-3-sonnet', user_id='0', session_id='0')
+
+        from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+        look_up_codes_management = LookUpCodesManagement()
+        entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(self.responder_user_id)
+
+        response = process_query(last_note["content"], model='claude-3-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
+
+        logger.info({
+            "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
+            "response": response,
+            "healthie_user_id": self.responder_user_id,
+            "conversation_id": last_note['conversation_id']
+        })
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
             content=response,
-            healthie_user_id=self.responder_user_id
+            healthie_user_id=self.responder_user_id,
+            conversation_id=last_note['conversation_id']
         )
 
         return

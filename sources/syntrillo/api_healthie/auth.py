@@ -6,6 +6,7 @@ import inspect
 from typing import Tuple
 
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.system.logger import logger
 
 class HealthieAuth:
     """
@@ -96,6 +97,8 @@ class HealthieAuth:
             requests.exceptions.RequestException: For other request errors.
             Exception if the response contains an 'errors' or does not contain 'data'
         """
+
+        logger.info(f"Sending GraphQL query to Healthie API: {query}, {variables}")
 
         # Get the name of the calling function for logging purposes
         caller = inspect.stack()[1].function

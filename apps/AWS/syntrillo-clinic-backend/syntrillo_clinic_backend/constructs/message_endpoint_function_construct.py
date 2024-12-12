@@ -74,7 +74,7 @@ class MessageEndpointFunction(Construct):
                 mount_path="/mnt/chatbots-resources"
             ),
             environment={
-                "POWERTOOLS_LOG_LEVEL": self.environment_context['iframe_generator_function']['log_level'],
+                "POWERTOOLS_LOG_LEVEL": self.environment_context['message_endpoint_function']['log_level'],
                 "PYTHONPATH": "/mnt/chatbots-resources/python_modules",
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
@@ -82,16 +82,16 @@ class MessageEndpointFunction(Construct):
                 "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets.openai_secrets.secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
-            memory_size=self.environment_context['iframe_generator_function']['memory_size'], 
-            timeout=Duration.seconds(self.environment_context['iframe_generator_function']['lambda_time_out_seconds']),
-            reserved_concurrent_executions=self.environment_context['iframe_generator_function']['reserved_concurrent_executions']
+            memory_size=self.environment_context['message_endpoint_function']['memory_size'], 
+            timeout=Duration.seconds(self.environment_context['message_endpoint_function']['lambda_time_out_seconds']),
+            reserved_concurrent_executions=self.environment_context['message_endpoint_function']['reserved_concurrent_executions']
         )
 
         self.function_alias = _lambda.Alias(
             self, "LambdaAlias",
             alias_name="provisionned-concurrency",
             version=self.function.current_version,
-            provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
+            provisioned_concurrent_executions=self.environment_context['message_endpoint_function']['provisioned_concurrency_executions']
         )
 
         self.grant_read_secrets(self.secrets.database_lambda_user_secrets)

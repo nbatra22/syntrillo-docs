@@ -117,10 +117,18 @@ class CarePlanPersonalizationVirtualAssistant:
         # response = json.loads(llm_response.text)['answer']
         response = get_final_answer(last_note["content"], model='claude-3-sonnet')
 
+        logger.info({
+            "message": "CarePlanPersonalizationVirtualAssistant.generate_responses",
+            "response": response,
+            "healthie_user_id": self.responder_user_id,
+            "conversation_id": last_note['conversation_id']
+        })
+
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
             content=response,
-            healthie_user_id=self.responder_user_id
+            healthie_user_id=self.responder_user_id,
+            conversation_id=last_note['conversation_id']
         )
 
         return
