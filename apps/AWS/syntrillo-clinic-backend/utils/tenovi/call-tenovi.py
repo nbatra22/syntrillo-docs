@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 
 def get_secret(secret_name, region_name="us-east-1"):
     # Create a Secrets Manager client
-    session = boto3.session.Session()
+    session = boto3.session.Session(profile_name='syntrillo-clinic-staging')
     client = session.client(
         service_name='secretsmanager',
         region_name=region_name
@@ -56,7 +56,7 @@ params={'properties__key': 'pseudo_code_for_tenovi_phi_access', 'properties__val
 response = requests.get(base_url, headers=headers, params=params)
 if response.status_code == 200:
     for device in response.json():
-        print(device['id'])
+        print(device)
     # print(response.json()[0]['device']['id'])
     # print(json.dumps(response.json(), indent=2))
 else:
@@ -65,12 +65,13 @@ else:
 print("##### SECOND REQUEST #####")
 hwi_device_id='e9c24a26-7d69-490f-9546-93c5a31486aa'
 base_url = f"https://api2.tenovi.com/clients/{CLIENT_DOMAIN}/hwi/hwi-devices/{hwi_device_id}/measurements/"
-params={'created__gte': '2024-09-10T14:19:32.202863Z', 'created__lte': '2024-10-07T09:43:46.510493Z'}
+# params={'created__gte': '2024-09-10T14:19:32.202863Z', 'created__lte': '2024-10-07T09:43:46.510493Z'}
+params={}
 
 response = requests.get(base_url, headers=headers, params=params)
 if response.status_code == 200:
     for measurement in response.json():
-        print(measurement['timezone_offset'])
+        print(measurement)
     # print(json.dumps(response.json(), indent=2))
 else:
     print(f"Error: {response.status_code}")
