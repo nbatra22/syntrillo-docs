@@ -2,6 +2,8 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    CfnOutput,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -42,6 +44,24 @@ class MessageEndpointFunction(Construct):
             log_level=_lambda.ParamsAndSecretsLogLevel.NONE
         )
 
+        # Import file system endpoint
+        efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=efs_file_system_id,
+            security_group=storage.efs_security_group
+        )
+
+        efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        efs_access_point_chatbots = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPointChatbots",
+            access_point_arn=efs_access_point_chatbots_arn,
+            file_system=imported_file_system
+        )
+
+        # Create function
         self.function = _lambda.Function(self, "MessageEndpointFunction",
             function_name="MessageEndpointFunction",
             vpc = self.network.vpc,
@@ -50,8 +70,8 @@ class MessageEndpointFunction(Construct):
             code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.storage.efs_access_point_chatbots,
-                "/mnt/chatbots-resources"
+                efs_access_point_chatbots,
+                mount_path="/mnt/chatbots-resources"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": self.environment_context['iframe_generator_function']['log_level'],
@@ -81,16 +101,17 @@ class MessageEndpointFunction(Construct):
 
         self.function_security_group = self.function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            self.function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
-        )
+        # !!! DO NOT USE THE EXAMPLE BELOW OTHERWISE IT'S HARD TO MANAGE EXPORT/IMPORT DELETION BECAUSE OF DEPENDENCIES
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
+        # )
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            self.function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
+        # !!! USE EXPLICIT CFN OUTPUT & Fn.import_value in OTHER TEMPLATES (DB TEMPLATES FOR EXAMPLE)
+        CfnOutput(self, "MessageEndpointFunctionSecurityGroup",
+            value=self.function_security_group.security_group_id,
+            export_name="MessageEndpointFunctionSecurityGroup"
         )
 
         bedrock_access_policy = iam.ManagedPolicy(self, "BedrockAccessPolicy",
