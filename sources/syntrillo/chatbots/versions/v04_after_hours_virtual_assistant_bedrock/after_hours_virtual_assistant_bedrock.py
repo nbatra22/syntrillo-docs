@@ -118,7 +118,7 @@ class AfterHoursVirtualAssistantBedrock:
             "conversation_id": last_note['conversation_id']
         })
 
-        response = process_query(last_note["content"], model='claude-3-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
+        response = process_query(last_note["content"], model='claude-3-5-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
 
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",

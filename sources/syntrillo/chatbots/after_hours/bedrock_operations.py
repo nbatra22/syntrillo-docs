@@ -5,6 +5,7 @@ import boto3
 import time
 import uuid
 
+from syntrillo.system.logger import logger
 
 def create_message(user_id, content, sender_role, session_id):
     new_message = Messages(user_id=user_id.bytes, content=content, sender_role=sender_role, session_id=session_id)
@@ -20,6 +21,7 @@ def initialize_bedrock_client():
 
 
 def model_invoke(prompt, model, user_id, session_id, is_history=False):
+    logger.info(f"Invoking model {model}")
     messages = Messages.query.filter_by(user_id=user_id, session_id=session_id).order_by(Messages.timestamp.asc()).all()
     bedrock = initialize_bedrock_client()
     model_mapping = {

@@ -115,7 +115,7 @@ class CarePlanPersonalizationVirtualAssistant:
         #     "query": last_note["content"],
         #     "model": "claude-3-5-sonnet"}))
         # response = json.loads(llm_response.text)['answer']
-        response = get_final_answer(last_note["content"], model='claude-3-sonnet')
+        response = get_final_answer(last_note["content"], model='claude-3-5-sonnet')
 
         logger.info({
             "message": "CarePlanPersonalizationVirtualAssistant.generate_responses",
