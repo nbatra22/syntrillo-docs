@@ -3,10 +3,11 @@ from syntrillo.chatbots.after_hours.models import Messages, db
 import json
 import boto3
 import time
+import uuid
 
 
 def create_message(user_id, content, sender_role, session_id):
-    new_message = Messages(user_id=user_id, content=content, sender_role=sender_role, session_id=session_id)
+    new_message = Messages(user_id=user_id.bytes, content=content, sender_role=sender_role, session_id=session_id)
     db.session.add(new_message)
     db.session.commit()
 

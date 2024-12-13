@@ -94,7 +94,9 @@ class AfterHoursVirtualAssistantBedrock:
 
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
-            "last_note": last_note
+            "last_note": last_note,
+            "healthie_user_id": last_note["user_id"],
+            "responder_user_id": self.responder_user_id,
         })
 
         # create the response
@@ -108,14 +110,21 @@ class AfterHoursVirtualAssistantBedrock:
 
         from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
         look_up_codes_management = LookUpCodesManagement()
-        entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(self.responder_user_id)
+        entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(last_note["user_id"])
+
+        logger.info({
+            "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
+            "syntrillo_internal_key": entry['syntrillo_internal_key'],
+            "conversation_id": last_note['conversation_id']
+        })
 
         response = process_query(last_note["content"], model='claude-3-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
 
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
             "response": response,
-            "healthie_user_id": self.responder_user_id,
+            "syntrillo_internal_key": entry['syntrillo_internal_key'],
+            "responder_user_id": self.responder_user_id,
             "conversation_id": last_note['conversation_id']
         })
 

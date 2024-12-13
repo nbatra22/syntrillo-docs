@@ -7,7 +7,7 @@ class Messages(db.Model):
     __tablename__ = 'Messages'
     
     message_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, nullable=True)
+    user_id = db.Column(db.BINARY(16), nullable=True)    
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
     content = db.Column(db.Text, nullable=False)
     sender_role = db.Column(Enum('user', 'assistant', name='sender_roles'), nullable=True)
