@@ -19,6 +19,8 @@ from aws_cdk import (
     aws_events_targets as targets,
     aws_secretsmanager as secretsmanager,
     aws_iam as iam,
+    aws_stepfunctions as sfn,
+    aws_stepfunctions_tasks as tasks,
 )
 from constructs import Construct
 
@@ -72,6 +74,58 @@ class RemoteMonitoringDataSync(Construct):
         self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
         self.grant_read_secrets(self.secrets.healthie_secrets)
 
+
+
+        # -----------------------------------------------------------------------
+        # Step functions workflow
+
+        # Create Step Functions tasks
+        list_patients_task = tasks.LambdaInvoke(
+            self, "ListPatients",
+            lambda_function=self.remote_monitoring_data_sync_function,
+            payload=sfn.TaskInput.from_object({
+                "action": "list_patients"
+            }),
+            result_path="$",
+            result_selector={
+                "users.$": "$.Payload.users",
+            }
+        )
+
+        sync_patient_task = tasks.LambdaInvoke(
+            self, "SyncPatientData",
+            lambda_function=self.remote_monitoring_data_sync_function,
+            payload=sfn.TaskInput.from_object({
+                "action": "sync_patient",
+                "id.$": "$.id"
+            }),
+            result_path="$",
+            result_selector={
+                "success.$": "$.Payload.success",
+                "error.$": "$.Payload.error"
+            }
+        )
+
+        # Create Map state for processing patients
+        map_state = sfn.Map(
+            self, "ProcessEachPatient",
+            max_concurrency=5,
+            items_path="$.users"
+        )
+
+        map_state.item_processor(sync_patient_task)
+
+        # Create the state machine
+        state_machine = sfn.StateMachine(
+            self, "RemoteMonitoringDataSyncWorkflow",
+            state_machine_name="RemoteMonitoringDataSyncWorkflow",
+            definition_body=sfn.DefinitionBody.from_chainable(
+                list_patients_task.next(map_state)
+            ),
+            timeout=Duration.minutes(30),
+            tracing_enabled=True
+        )
+
         # Create a scheduled event rule
         # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
         # the lambda is triggered. With cron, you can decide exactly when you start.
@@ -90,11 +144,16 @@ class RemoteMonitoringDataSync(Construct):
             enabled=True,
         )
 
-        # Add the Lambda function as a target for the scheduled event
+        # # Add the Lambda function as a target for the scheduled event
+        # event_rule.add_target(
+        #     targets.LambdaFunction(
+        #         self.remote_monitoring_data_sync_function,
+        #     )
+        # )
+
+        # Add the state machine as a target for the rule
         event_rule.add_target(
-            targets.LambdaFunction(
-                self.remote_monitoring_data_sync_function,
-            )
+            targets.SfnStateMachine(state_machine)
         )
 
         function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
