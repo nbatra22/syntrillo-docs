@@ -13,4 +13,4 @@ dependencies = [
 
 [tool.uv.sources]
 syntrillo = { path = "../../sources/syntrillo", editable = true }
-syntrillo-lib = { path = "../../sources/syntrillo-lib", editable = true }
+syntrillo-lib = { path = "../../../sources/syntrillo-lib", editable = true }

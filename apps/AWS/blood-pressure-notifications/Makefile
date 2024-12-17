@@ -1,5 +1,5 @@
 add-syntrillo:
-	uv add --editable ../../sources/syntrillo-lib
+	uv add --editable ../../../sources/syntrillo-lib
 
 run-staging:
 	cp .staging.env .env
