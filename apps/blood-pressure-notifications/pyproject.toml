@@ -8,8 +8,9 @@ dependencies = [
     "loguru>=0.7.3",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
-    "syntrillo",
+    "syntrillo-lib",
 ]
 
 [tool.uv.sources]
 syntrillo = { path = "../../sources/syntrillo", editable = true }
+syntrillo-lib = { path = "../../sources/syntrillo-lib", editable = true }

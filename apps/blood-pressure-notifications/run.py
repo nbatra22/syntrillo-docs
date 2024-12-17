@@ -2,8 +2,8 @@ import os
 from typing import List
 from loguru import logger
 
-from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
-from syntrillo.api_tenovi.devices import Devices
+from syntrillo_lib.api_tenovi.device_measurements import DeviceMeasurements
+from syntrillo_lib.api_tenovi.devices import Devices
 
 from utils import find_devices_with_measurements, my_pprint
 
