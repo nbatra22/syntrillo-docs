@@ -1,0 +1,134 @@
+{
+    "metadata": {
+        "name": "Onboarding Charting Note for Clinicians",
+        "internal_name": "onboarding_clinician",
+        "type": "Charting Notes (for providers)",
+        "description": "This is the onboarding questionnaire filled-up by clinicians from discharge documents. A LLM will do this job in the future"
+    },
+    "variables": [
+        {
+            "internal_name": "form_title",
+            "question": "On boarding questionnaire for clinicians",
+            "display": "label",
+            "special_values": null,
+            "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": null,
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "age",
+            "question": "Age (years)",
+            "display": "number",
+            "special_values": null,
+            "values": null,
+            "add_unknown": null,
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Continuous",
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "gender",
+            "question": "Sex at birth",
+            "display": "horizontal_radio",
+            "special_values": null,
+            "values": [
+                "Male",
+                "Female",
+                "unknown"
+            ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Nominal",
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "stroke_etiology",
+            "question": "Stroke Etiology",
+            "display": "dropdown",
+            "special_values": null,
+            "values": [
+                "Cardioembolic",
+                "Large Vessel",
+                "Small Vessel",
+                "Other",
+                "Cryptogenic",
+                "unknown"
+            ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Nominal",
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "stroke_risk_factors",
+            "question": "Which risk factors for stroke do you have or have had in the past? (Select all that apply)",
+            "display": "checkbox",
+            "special_values": null,
+            "values": [
+                "High blood pressure",
+                "Diabetes",
+                "High cholesterol levels",
+                "Smoking",
+                "Family history of stroke",
+                "Heart disease or atrial fibrillation",
+                "unknown"
+            ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Multiple",
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "stroke_impact_physical_walking",
+            "question": "Impact of stroke- physical - Difficulty with walking",
+            "display": "radio",
+            "special_values": "LikertAgreement_5values",
+            "values": [
+                "Strongly Disagree",
+                "Disagree",
+                "Neutral",
+                "Agree",
+                "Strongly Agree",
+                "unknown"
+            ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Ordinal",
+            "LLM_prompt": null,
+            "comment": null
+        },
+        {
+            "internal_name": "stroke_impact_physical_balance",
+            "question": "Impact of stroke- physical - Difficulty with balance",
+            "display": "radio",
+            "special_values": "LikertAgreement_5values",
+            "values": [
+                "Strongly Disagree",
+                "Disagree",
+                "Neutral",
+                "Agree",
+                "Strongly Agree",
+                "unknown"
+            ],
+            "add_unknown": "yes",
+            "add_not_applicable": null,
+            "user_description": null,
+            "type": "Ordinal",
+            "LLM_prompt": null,
+            "comment": null
+        }
+    ]
+}
