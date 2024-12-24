@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+
+# Entry point for the CDK app
+# app.synth() will synthesize the stack and create the CloudFormation template
+
 import os
 
 import aws_cdk as cdk
 
-from blood_pressure_notifier.blood_pressure_notifier_stack import BloodPressureNotifierStack
+from stacks.blood_pressure_notifier_stack import BloodPressureNotifierStack
 
 
 app = cdk.App()
