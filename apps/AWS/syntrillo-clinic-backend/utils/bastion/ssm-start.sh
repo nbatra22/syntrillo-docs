@@ -20,6 +20,11 @@ if [ "$(which session-manager-plugin)" == "" ]; then
 fi
 
 PROFILE="syntrillo-clinic-$ENVIRONMENT"
+if [ "$ENVIRONMENT" == "staging" ]; then
+  if grep -q "syntrillo-clinic-staging-database" ~/.aws/config; then
+    PROFILE="syntrillo-clinic-staging-database"
+  fi
+fi
 
 # Find instance id with name as BastionHost that is Running
 INSTANCE_ID=$(aws ec2 describe-instances --profile $PROFILE \
@@ -56,6 +61,8 @@ if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
 
     local_port=3307
 
+    echo "-----"
+    echo "Profile: $PROFILE"
     echo "-----"
     echo "$> mysql -h 127.0.0.1 -P $local_port -u admin -p --ssl # => To excute in another terminal"
     echo "OR"
