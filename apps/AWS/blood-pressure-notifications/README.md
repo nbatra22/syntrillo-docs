@@ -19,4 +19,9 @@ Steps
 - [ ] Compute alarms for historical data
 - [ ] Build real-time visualizations in Kibana.
 
+- [ ] Add context to notification message.
+    Blood pressure high is the trigger.
+    Past medical history
+    Medications
 
+- 
