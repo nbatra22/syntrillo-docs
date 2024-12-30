@@ -15,6 +15,8 @@ from syntrillo.api_healthie.tags import HealthieTags
 from syntrillo.chatbots.conversation_wrapper import ChatBotConversationWrapper
 from syntrillo.chatbots.openai_call import OpenAICall
 
+from syntrillo.chatbots.after_hours.bedrock_operations import process_query
+
 class AfterHoursVirtualAssistantBedrock:
     """
     This class helps providers builind a personalized care plan.
@@ -65,50 +67,72 @@ class AfterHoursVirtualAssistantBedrock:
             self.responder_user_id = self.convo_wrapper.get_conversation_owner().healthie_user_id
             self.chatbot_user_available_to_answer = False
 
-        # ------------------------------
-        # Detect if the chatbot has already answered
-        if self.chatbot_user_available_to_answer:
-            self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
-        else:
-            self.is_chatbot_already_in_convo = None
+        # # ------------------------------
+        # # Detect if the chatbot has already answered
+        # if self.chatbot_user_available_to_answer:
+        #     self.is_chatbot_already_in_convo = self.convo_wrapper.is_user_in_convo(self.chatbot_user_id)
+        # else:
+        #     self.is_chatbot_already_in_convo = None
 
 
-    def generate_responses(self):
+    def generate_responses(self, last_note):
         """
         answer the message
 
         """
 
         # the Healthie conversation (list of 'notes') is in self.convo_wrapper
-        notes = self.convo_wrapper.get_all_notes_for_llm()
+        # notes = self.convo_wrapper.get_all_notes_for_llm()
 
         # get last note
         # expected format :
         #   "last_note":{"who":"provider or chatbot","content":"<p>hello</p>","created_at":"2024-09-26 12:14:25 -0400"}}
-        if notes is None:
-            last_note = None
-        else:
-            last_note = notes[-1]
+        # if notes is None:
+        #     last_note = None
+        # else:
+        #     last_note = notes[-1]
 
         logger.info({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
-            "last_note": last_note
+            "last_note": last_note,
+            "healthie_user_id": last_note["user_id"],
+            "responder_user_id": self.responder_user_id,
         })
 
         # create the response
         response = "AfterHoursVirtualAssistantBedrock.generate_responses says hello!"
 
-        if False:
-            llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
-                "query": last_note["content"],
-                "model": "claude-3-5-sonnet"}))
-            response = json.loads(llm_response.text)['answer']
+        # if False:
+        #     llm_response = requests.post('https://10.0.190.146/query', verify=False, headers= {'Content-Type': 'application/json'} , data = json.dumps({
+        #         "query": last_note["content"],
+        #         "model": "claude-3-5-sonnet"}))
+        #     response = json.loads(llm_response.text)['answer']
+
+        from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+        look_up_codes_management = LookUpCodesManagement()
+        entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(last_note["user_id"])
+
+        logger.info({
+            "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
+            "syntrillo_internal_key": entry['syntrillo_internal_key'],
+            "conversation_id": last_note['conversation_id']
+        })
+
+        response = process_query(last_note["content"], model='claude-3-5-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
+
+        logger.info({
+            "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
+            "response": response,
+            "syntrillo_internal_key": entry['syntrillo_internal_key'],
+            "responder_user_id": self.responder_user_id,
+            "conversation_id": last_note['conversation_id']
+        })
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
             content=response,
-            healthie_user_id=self.responder_user_id
+            healthie_user_id=self.responder_user_id,
+            conversation_id=last_note['conversation_id']
         )
 
         return
-
