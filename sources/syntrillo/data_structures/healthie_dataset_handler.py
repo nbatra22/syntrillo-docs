@@ -12,9 +12,9 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 
 class DataStructureHealthieDatasetHandler:
     """
-    Retrives data from Healthie questionnaires derived from data structures stored here.
+    Retrieves data from Healthie questionnaires derived from data structures stored here.
 
-    Can retreive single or multiple patients and questionnaires
+    Can retrieve single or multiple patients and questionnaires
 
     TODO : add request for completion ?
     TODO : add json to db ?
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # Test the class
     #  : enrollment_patient_information
     #  : tenovi_pillbox_expectations
-    data_structure = DataStructureHealthieDatasetHandler(structure_name="enrollment_patient_information")
+    data_structure = DataStructureHealthieDatasetHandler(structure_name="tenovi_pillbox_expectations")
 
     syntrillo_internal_key = data_structure.lookup_codes.retrieve_entry_by_healthie_user_id(healthie_user_id="1035117").get("syntrillo_internal_key", None)
 

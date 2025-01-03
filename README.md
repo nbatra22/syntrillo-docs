@@ -47,7 +47,7 @@ SyntrilloClinic
     - **`databases_management/`**: Connection to and setting-up of Syntrillo databases.
     - **`patient_initialization/`**: Initialization procedures for patients at Healthie and Tenovi.
     - **`patient_onboarding/`**: Management of patients onboarding procedures at Healthie.
-    - **`pseudonyms_management/`**: HIPAA compliant creation, pairing and management of look-up codes (identifiers, keys, pseudonyms). [See its README.md](./sources/pseudonyms_management/README.md)
+    - **`pseudonyms_management/`**: HIPAA compliant creation, pairing and management of look-up codes (identifiers, keys, pseudonyms). [See its README.md](./sources/syntrillo/pseudonyms_management/README.md)
     - **`virtual_care_navigator/`**: Interface with LLM.
 
 - **`tests/`**: Contains test cases and unittests for various modules and environments.
