@@ -173,6 +173,8 @@
     }
   },
   "acknowledged-issue-numbers": [
-    30444
+    30444,
+    32510,
+    32653
   ]
 }
