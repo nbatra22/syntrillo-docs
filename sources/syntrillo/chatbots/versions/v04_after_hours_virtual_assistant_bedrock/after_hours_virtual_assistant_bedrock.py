@@ -92,7 +92,7 @@ class AfterHoursVirtualAssistantBedrock:
         # else:
         #     last_note = notes[-1]
 
-        logger.info({
+        logger.debug({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
             "last_note": last_note,
             "healthie_user_id": last_note["user_id"],
@@ -120,7 +120,7 @@ class AfterHoursVirtualAssistantBedrock:
 
         response = process_query(last_note["content"], model='claude-3-5-sonnet', user_id=entry['syntrillo_internal_key'], session_id=last_note['conversation_id'])
 
-        logger.info({
+        logger.debug({
             "message": "AfterHoursVirtualAssistantBedrock.generate_responses",
             "response": response,
             "syntrillo_internal_key": entry['syntrillo_internal_key'],

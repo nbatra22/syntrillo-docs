@@ -421,7 +421,6 @@ class LocalEnvironmentAndSecretsNoCache:
     
     @staticmethod
     def get_secrets(secret_arn : str) -> dict:
-        print("}}}}}}}}}}}}}}oooooooooooooo", secret_arn, os.environ.get('AWS_SESSION_TOKEN'))
         max_retries = 5
         wait_time = 0.0
         for attempt in range(max_retries):
