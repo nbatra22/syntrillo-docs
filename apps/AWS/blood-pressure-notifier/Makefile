@@ -1,5 +1,5 @@
 # Set here the name of the stack you want to deploy
-STACK_NAME=BloodPressureNotifierStack
+STACK_NAME=SyntrilloClinicBackendBloodPressureNotifierStack
 
 # AWS profile to use for deployment
 # check ~/.aws/config for the profile name

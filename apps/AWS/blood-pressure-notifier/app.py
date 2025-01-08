@@ -9,9 +9,8 @@ import aws_cdk as cdk
 
 from stacks.blood_pressure_notifier_stack import BloodPressureNotifierStack
 
-
 app = cdk.App()
-BloodPressureNotifierStack(app, "BloodPressureNotifierStack",
+BloodPressureNotifierStack(app, "SyntrilloClinicBackendBloodPressureNotifierStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.
