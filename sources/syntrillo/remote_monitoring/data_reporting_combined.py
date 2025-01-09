@@ -15,6 +15,8 @@ from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
 
 from syntrillo.helper_functions.time import get_date_ranges_for_reporting
 
+from syntrillo.system.logger import logger
+
 class DataReportingCombination:
     """
     Combine data from different Tenovi sources for a user.
@@ -323,6 +325,8 @@ class DataReportingCombination:
 
         """
 
+        logger.info({"process_id": "care_plan_process", "date_ranges": self.date_ranges})
+
         # check if date_ranges is not None and not empty
         if self.date_ranges is None or self.date_ranges.empty:
             log = {
@@ -401,6 +405,7 @@ class DataReportingCombination:
             }
 
         except Exception as e:
+            logger.error({"process_id": "care_plan_process", "Error": 'Error obtaining summary statistics and information: ' + str(e)})
             log = {
                 'success': False,
                 'message': 'Error obtaining summary statistics and information: ' + str(e),
@@ -431,6 +436,8 @@ class DataReportingCombination:
             'heart_rate_information': heart_rate_information,
             'steps_information': steps_information,
         }
+
+        logger.debug({"process_id": "care_plan_process", "combined_summary_and_information": combined_summary_and_information})
 
         return combined_summary_and_information, log
 

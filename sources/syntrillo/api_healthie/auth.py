@@ -98,7 +98,7 @@ class HealthieAuth:
             Exception if the response contains an 'errors' or does not contain 'data'
         """
 
-        logger.info(f"Sending GraphQL query to Healthie API: {query}, {variables}")
+        logger.debug(f"Sending GraphQL query to Healthie API: {query}, {variables}")
 
         # Get the name of the calling function for logging purposes
         caller = inspect.stack()[1].function
