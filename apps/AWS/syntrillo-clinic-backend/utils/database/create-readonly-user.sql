@@ -5,3 +5,5 @@ GRANT SELECT ON syntrillo$HealthInformation.* TO 'syntrillo_clinic_readonly_user
 FLUSH PRIVILEGES;
 GRANT SELECT ON syntrillo$PseudonymManagement.* TO 'syntrillo_clinic_readonly_user'@'%';
 FLUSH PRIVILEGES;
+GRANT SELECT ON syntrillo$ChatbotsInformation.* TO 'syntrillo_clinic_readonly_user'@'%';
+FLUSH PRIVILEGES;

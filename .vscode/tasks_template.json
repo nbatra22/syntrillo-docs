@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cdk-diff-with-staging",
+            "label": "task - cdk-diff-with-staging",
             "type": "shell",
             "command": [
                 "bash --login -c 'source /Users/joshpascual/Projects/Syntrillio/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /Users/joshpascual/Projects/Syntrillio/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-diff-with-staging.sh'"
@@ -20,13 +20,19 @@
             },
             "runOptions": {
                 "runOn": "default"
+            },
+            "options": {
+                "statusbar": {
+                    "label" : "diff-with-staging",
+                    "hide" : false
+                }
             }
         },
         {
-            "label": "cdk-deploy-to-staging",
+            "label": "task - cdk-deploy-to-staging",
             "type": "shell",
             "command": [
-                "bash --login -c 'source /Users/joshpascual/Projects/Syntrillio/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /Users/joshpascual/Projects/Syntrillio/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-deploy-to-staging.sh'"
+                "bash --login -c 'source /home/olivier/projects/Syntrillo/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-deploy-to-staging.sh'"
             ],
             "problemMatcher": [],
             "group": {
@@ -41,13 +47,19 @@
             },
             "runOptions": {
                 "runOn": "default"
+            },
+            "options": {
+                "statusbar": {
+                    "label" : "deploy-to-staging",
+                    "hide" : false
+                }
             }
         },
         {
-            "label": "bastion-mysql-tunnel",
+            "label": "task - cdk-cloudwatch-tail-staging",
             "type": "shell",
             "command": [
-                "bash --login -c 'cd /Users/joshpascual/Projects/Syntrillio/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/bastion && ./ssm-start.sh staging mysql-tunnel'"
+                "bash --login -c 'cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/bastion && ./ssm-start.sh staging mysql-tunnel'"
             ],
             "problemMatcher": [],
             "group": {
@@ -62,7 +74,67 @@
             },
             "runOptions": {
                 "runOn": "default"
+            },
+            "options": {
+                "statusbar": {
+                    "label" : "deploy-to-staging",
+                    "hide" : true
+                }
             }
-        }
+        },
+        {
+            "label": "task - bastion-mysql-tunnel",
+            "type": "shell",
+            "command": [
+                "bash --login -c 'cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/bastion && ./ssm-start.sh staging mysql-tunnel'"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "options": {
+                "statusbar": {
+                    "label" : "mysql-tunnel",
+                    "hide" : false
+                }
+            }
+        },
+        {
+            "label": "task - PythonAnywhere-ssh-tunnel",
+            "type": "shell",
+            "command": [
+                "bash --login -c 'cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic/system/ && ./ssh_tunnel_PythonAnywhere.sh'"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "options": {
+                "statusbar": {
+                    "label" : "pa-mysql-tunnel",
+                    "hide" : true
+                }
+            }
+        },
     ]
 }

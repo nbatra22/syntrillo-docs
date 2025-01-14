@@ -21,13 +21,20 @@ if [ "$(which jq)" == "" ]; then
   exit
 fi
 
-username=$(aws secretsmanager --profile syntrillo-clinic-$ENVIRONMENT \
+PROFILE="syntrillo-clinic-$ENVIRONMENT"
+if [ "$ENVIRONMENT" == "staging" ]; then
+  if grep -q "syntrillo-clinic-staging-database" ~/.aws/config; then
+    PROFILE="syntrillo-clinic-staging-database"
+  fi
+fi
+
+username=$(aws secretsmanager --profile $PROFILE \
 		get-secret-value \
 		--secret-id $SECRET_NAME \
 		--query 'SecretString' \
 		--output text | jq -r '.username')
 
-password=$(aws secretsmanager --profile syntrillo-clinic-$ENVIRONMENT \
+password=$(aws secretsmanager --profile $PROFILE \
 		get-secret-value \
 		--secret-id $SECRET_NAME \
 		--query 'SecretString' \
@@ -37,6 +44,7 @@ local_port='3307'
 
 echo '---'
 echo "ENVIRONEMENT: $ENVIRONMENT"
+echo "PROFILE: $PROFILE"
 echo "MYSQL DATABASE $ENVIRONMENT USER NAME: $username"
 echo "MYSQL DATABASE $ENVIRONMENT PASSWORD: $password"
 echo "!!! N.B. : Using password is temporary, we should connect with IAM roles in the future"

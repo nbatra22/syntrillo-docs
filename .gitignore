@@ -1,6 +1,9 @@
 # ignore all logs
 _**
 
+# keep __init__.py files
+!**/__init__.py
+
 # ignore all backups
 *~
 
@@ -65,3 +68,6 @@ MANIFEST
 
 # AWS Specific
 .aws-sam
+
+# .env files
+**.env

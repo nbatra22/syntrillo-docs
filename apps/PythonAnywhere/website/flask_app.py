@@ -3,7 +3,7 @@
 import os
 from math import isnan
 
-from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecretsNoCache
 
 from flask import Flask, render_template, abort
 
@@ -34,12 +34,6 @@ if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().node
     app.register_blueprint(tests_ui_index_bp)
     app.register_blueprint(tests_ui_tab1_bp)
     app.register_blueprint(tests_ui_tab2_bp)
-
-# ================== Healthie route for webhook endpoints ========================
-
-from routes.healthie.endpoints import healthie_endpoint_bp
-
-app.register_blueprint(healthie_endpoint_bp)
 
 # ================= Healthie Routes and Blueprints ===========================
 

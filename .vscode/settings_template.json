@@ -1,9 +1,56 @@
 {
-    "python.defaultInterpreterPath": "/Users/joshpascual/Projects/Syntrillio/python_environments/p3.9_Syntrillo_Clinic/bin/python3.9",
+    "python.defaultInterpreterPath": "/home/olivier/projects/Syntrillo/python_environments/p3.9_Syntrillo_Clinic/bin/python3.9",
     "python.analysis.extraPaths": [
         "./sources/"
     ],
     "python.autoComplete.extraPaths": [
         "./sources/"
-    ]
+    ],
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "127.0.0.1",
+            "port": 3366,
+            "driver": "MySQL",
+            "name": "SyntrilloPythonAnywhere",
+            "username": "syntrillo",
+            "password": "xxxxxxxxxxxxxxxxxxxx",
+            "database": "syntrillo$PseudonymManagement",
+            "connectionTimeout": 600
+        }
+    ],
+    "favorites.resources": [
+        {
+            "filePath": "apps/PythonAnywhere/website/flask_app.py",
+            "group": "Default"
+        },
+        {
+            "filePath": ".env",
+            "group": "Default"
+        },
+        {
+            "filePath": "system/delrieu/diff-with-staging.sh",
+            "group": "Default"
+        },
+        {
+            "filePath": "system/delrieu/deploy-to-staging.sh",
+            "group": "Default"
+        },
+        {
+            "filePath": "apps/PythonAnywhere/website",
+            "group": "Default"
+        },
+        {
+            "filePath": "sources/syntrillo/api_healthie",
+            "group": "Default"
+        },
+        {
+            "filePath": ".vscode/tasks.json",
+            "group": "Default"
+        }
+    ],
 }

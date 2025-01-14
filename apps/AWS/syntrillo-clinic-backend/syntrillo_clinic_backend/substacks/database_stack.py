@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -121,6 +122,19 @@ class DatabaseStack(Stack):
             description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
         )
 
+        message_endpoint_function_security_group_id = Fn.import_value("MessageEndpointFunctionSecurityGroup")
+        message_endpoint_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "MessageEndpointFunctionImportedSecurityGroup",
+            security_group_id=message_endpoint_function_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            message_endpoint_function_imported_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
+        )
+
         db_host_param = ssm.StringParameter(
             self,
             "DatabaseHostParameter",
@@ -153,3 +167,5 @@ class DatabaseStack(Stack):
             log_group_arn = log_group.log_group_arn
 
             log_encryption_key.grant_encrypt_decrypt(iam.ServicePrincipal("rds.amazonaws.com"))
+        
+

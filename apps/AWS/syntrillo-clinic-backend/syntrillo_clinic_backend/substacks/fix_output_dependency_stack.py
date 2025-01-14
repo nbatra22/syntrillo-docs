@@ -28,10 +28,16 @@ class FixOutputDependencyStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, stack: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.llm_server = stack
+        self.storage = stack
 
         ssm.StringParameter(
             self, "TemporaryFixOutputDependencyParameter",
             parameter_name="/tmp/fix_output_dependency",
-            string_value=self.llm_server.security_group.security_group_id,
+            string_value=self.storage.efs_access_point_3.access_point_arn,
+        )
+
+        ssm.StringParameter(
+            self, "TemporaryFixOutputDependencyParameter2",
+            parameter_name="/tmp/fix_output_dependency2",
+            string_value=self.storage.efs_access_point_4.access_point_arn,
         )
