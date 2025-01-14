@@ -107,6 +107,6 @@ Move to pymysql:
         - Replaced `MySQLdb.Error` with `pymysql.MySQLError`.
         - Replaced `MySQLdb.OperationalError`with `pymysql.OperationalError`
 
-
+ 
 
 
