@@ -61,7 +61,10 @@ class DatabaseStack(Stack):
                 "slow_query_log": "1",
                 "long_query_time": "2",  # Logs queries longer than 2 seconds
                 "log_output": "FILE",
-                "require_secure_transport": "ON"  # Enforce SSL/TLS
+                "require_secure_transport": "ON",  # Enforce SSL/TLS
+                "binlog_format": "ROW",     # Necessary for 
+                "binlog_row_image": "FULL"
+
             }
         )
 
