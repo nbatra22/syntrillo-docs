@@ -36,6 +36,8 @@ class DatabaseStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         self.environment_context = environment_context
+        self.aws_environment = environment_context["environment_name"]
+
         self.network = network
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
@@ -61,7 +63,10 @@ class DatabaseStack(Stack):
                 "slow_query_log": "1",
                 "long_query_time": "2",  # Logs queries longer than 2 seconds
                 "log_output": "FILE",
-                "require_secure_transport": "ON"  # Enforce SSL/TLS
+                "require_secure_transport": "ON",  # Enforce SSL/TLS
+                "binlog_format": "ROW",     # Necessary for 
+                "binlog_row_image": "FULL"
+
             }
         )
 
@@ -121,6 +126,20 @@ class DatabaseStack(Stack):
             ec2.Port.tcp(3306),
             description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
         )
+
+        if self.aws_environment == "staging":
+            DMS_instance_security_group_id = Fn.import_value("SyntrilloAnalyticsNetworkDMSSecurityGroupId")
+            DMS_instance_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+                self,
+                "DMSInstanceImportedSecurityGroup",
+                security_group_id=DMS_instance_security_group_id
+            )
+
+            self.db_from_snapshot_security_group.add_ingress_rule(
+                DMS_instance_imported_security_group_id,
+                ec2.Port.tcp(3306),
+                description=f"Allow inbound traffic from Analytics DMS Instance on port 3306"
+            )
 
         message_endpoint_function_security_group_id = Fn.import_value("MessageEndpointFunctionSecurityGroup")
         message_endpoint_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(

@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -63,3 +64,11 @@ class NetworkStack(Stack):
             "BastionHostSecurityGroup",
             vpc=self.vpc,
         )
+
+        # For VPC Peering with Analytics network
+        CfnOutput(self, "SyntrilloClinicNetworkId", value=self.vpc.vpc_id, export_name="SyntrilloClinicNetworkId")
+
+        for subnet in self.vpc.private_subnets:
+            CfnOutput(self, f"SyntrilloClinicNetworkRouteTable{subnet.node.id}", value=subnet.route_table.route_table_id, export_name=f"SyntrilloClinicNetworkRouteTable-{subnet.node.id}")
+        
+        CfnOutput(self, "SyntrilloClinicNetworkCidrBlock", value=self.vpc.vpc_cidr_block, export_name="SyntrilloClinicNetworkCidrBlock")
