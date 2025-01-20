@@ -44,7 +44,7 @@ def handler(event, context):
     sync_patient(patient_id)
 
     # 3. Validate systolic BP (value_1)
-    if extreme_systolic(systolic_bp):
+    if systolic_bp > 170 or systolic_bp < 90:
         # 4. Send notification to clinicians when extreme blood pressure (>170 || <90) is detected
         return notify_clinicians()
 
@@ -52,13 +52,6 @@ def handler(event, context):
         'statusCode': 200,
         'body': 'Hello World!'
     }
-
-# Return True is systolic BP is above 170 or below 90, else False
-def extreme_systolic(systolic_bp):
-    if systolic_bp > 170 or systolic_bp < 90:
-        return True
-    else:
-        return False
 
 # Adds measurements to database (copy and pasyed from remote-monitoring-data-sync-function handler)
 def sync_patient(patient_id):
@@ -83,6 +76,7 @@ def sync_patient(patient_id):
             'error': error_msg,
             'syntrillo_internal_key': patient_id
         }
+
 
 def notify_clinicians(patient_id):
     return 'Hello'
