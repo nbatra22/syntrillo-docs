@@ -7,7 +7,7 @@ from syntrillo.system.tracer import tracer
 
 import uuid
 
-
+@logger.inject_lambda_context(log_event=True)
 def handler(event, context):
     print(event)
 
@@ -41,7 +41,8 @@ def handler(event, context):
     timestamp = event.get('timestamp')
 
     # 2. Push these measurements to MySQL database
-    sync_patient(patient_id)
+    syntrillo_internal_key = get_syntrillo_internal_key_id_from_patient_id(patient_id) # <= we have to look for syntrillo_internal_key_id (syntrillo internal patient id)
+    sync_patient(syntrillo_internal_key)
 
     # 3. Validate systolic BP (value_1)
     if systolic_bp > 170 or systolic_bp < 90:
@@ -77,6 +78,8 @@ def sync_patient(patient_id):
             'syntrillo_internal_key': patient_id
         }
 
-
 def notify_clinicians(patient_id):
     return 'Hello'
+
+def get_syntrillo_internal_key_id_from_patient_id(event):
+    return '123e4567-e89b-12d3-a456-426614174000'
