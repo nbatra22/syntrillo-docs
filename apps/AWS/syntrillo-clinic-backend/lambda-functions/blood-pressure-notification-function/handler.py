@@ -82,4 +82,4 @@ def notify_clinicians(patient_id):
     return 'Hello'
 
 def get_syntrillo_internal_key_id_from_patient_id(event):
-    return '123e4567-e89b-12d3-a456-426614174000'
+    return '4feec83c-b32a-4844-8ea2-f473f6f25da9'
