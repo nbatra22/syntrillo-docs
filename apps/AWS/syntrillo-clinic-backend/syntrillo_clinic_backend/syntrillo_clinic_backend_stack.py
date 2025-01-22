@@ -40,6 +40,8 @@ from syntrillo_clinic_backend.substacks.fix_output_dependency_stack import FixOu
 
 from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
 
+from syntrillo_clinic_backend.substacks.deployment_pipelines_stack import DeploymentPipelinesStack
+
 import json
 
 class SyntrilloClinicBackendStack(Stack):
@@ -118,6 +120,12 @@ class SyntrilloClinicBackendStack(Stack):
             environment_context=self.environment_context,
             database=self.database,
         )
+
+        if self.aws_environment == 'staging':
+            backupStack = DeploymentPipelinesStack(
+                self, "DeploymentPipelinesStack",
+                environment_context=self.environment_context,
+            )
 
         # backupStack = FixOutputDependencyStack(
         #     self, "FixOutputDependencyStack",

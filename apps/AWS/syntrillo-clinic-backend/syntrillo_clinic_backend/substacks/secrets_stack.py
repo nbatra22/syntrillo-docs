@@ -98,6 +98,11 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        self.github_oauth_token = secretsmanager.Secret(
+            self, "GithubOAuthToken",
+            encryption_key=custom_kms_key
+        )
+
         CfnOutput(
             self, "DatabaseCertificateSecretArn", 
             value=self.database_certificate.secret_arn, 
@@ -114,5 +119,11 @@ class SecretsStack(Stack):
             self, "SecretsCutomKMSKeyArn",
             value=custom_kms_key.key_arn,
             export_name="SecretsCutomKMSKeyArn"
+        )
+
+        CfnOutput(
+            self, "GithubOAuthTokenSecretsName", 
+            value=self.github_oauth_token.secret_name, 
+            export_name="GithubOAuthTokenSecretsName"
         )
 

@@ -7,7 +7,7 @@ cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")";
 #  : ./apps/AWS/syntrillo-clinic-backend
 cd ../../
 
-if [ "$1" == "admin" ]; then
+if [ "$1" == "--admin" ]; then
   echo "deploy with ADMIN permissions"
   role_arn=""
   shift
