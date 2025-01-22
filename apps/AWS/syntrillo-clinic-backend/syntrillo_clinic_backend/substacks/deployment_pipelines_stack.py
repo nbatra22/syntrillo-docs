@@ -91,7 +91,7 @@ class DeploymentPipelinesStack(Stack):
                 actions=[
                     "s3:PutObject", 
                     "s3:GetObject",
-                    "s3:DeleteObject"
+                    "s3:DeleteObject",
                 ],
                 resources=[
                     f"arn:aws:s3:::cdk-hnb659fds-assets-{self.account}-us-east-1/*"
@@ -102,7 +102,7 @@ class DeploymentPipelinesStack(Stack):
         cdk_build.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
-                    "s3:ListBucket"
+                    "s3:List*",
                 ],
                 resources=[
                     f"arn:aws:s3:::cdk-hnb659fds-assets-{self.account}-us-east-1"
