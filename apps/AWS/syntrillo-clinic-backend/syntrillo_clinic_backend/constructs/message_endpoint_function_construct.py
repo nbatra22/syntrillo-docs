@@ -67,7 +67,7 @@ class MessageEndpointFunction(Construct):
             vpc = self.network.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_12,
-            code=_lambda.Code.from_asset("lambda-functions/message-endpoint-function", exclude=['.env']),
+            code=_lambda.Code.from_asset("lambda-functions/message-endpoint-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 efs_access_point_chatbots,

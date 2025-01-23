@@ -37,6 +37,20 @@ class IFrameGeneratorFunction(Construct):
         self.storage = storage
         self.secrets = secrets
 
+        # ---------------------------------------------------------------------
+        # IMPORT VALUES
+        # ---------------------------------------------------------------------
+
+        self.network_vpc = ''
+        self.database_security_group = ''
+        self.storage_efs_access_point = ''
+        self.secrets_database_lambda_user_secrets_secret_arn = ''
+        self.secrets_tenovi_hwi_secrets_secret_arn = ''
+        self.secrets_healthie_secrets_secret_arn = ''
+        self.secrets_openai_secrets_secret_arn = ''
+
+        # ---------------------------------------------------------------------      
+
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
             log_level=_lambda.ParamsAndSecretsLogLevel.NONE
@@ -47,7 +61,7 @@ class IFrameGeneratorFunction(Construct):
             vpc = self.network.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env']),
+            code=_lambda.Code.from_asset("lambda-functions/iframe-generator-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.storage.efs_access_point,
