@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -60,6 +61,23 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        self.database_dms_user_secrets = secretsmanager.Secret(
+            self, "DatabaseDMSUserSecrets",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template=json.dumps({
+                    "username": "syntrillo_analytics_dms_user",
+                    "host": db_host_param,
+                    "port": "3306",
+                    "database": "syntrillo$HealthInformation"
+                }),
+                generate_string_key="password",
+                exclude_characters=';.:+{}',
+                include_space=False,
+                password_length=32
+            ),
+            encryption_key=custom_kms_key
+        )
+
         self.tenovi_hwi_secrets = secretsmanager.Secret(
             self, "TenoviHWISecrets",
             encryption_key=custom_kms_key
@@ -74,3 +92,38 @@ class SecretsStack(Stack):
             self, "OpenAiSecrets",
             encryption_key=custom_kms_key
         )
+
+        self.database_certificate = secretsmanager.Secret(
+            self, "DatabaseCertificate",
+            encryption_key=custom_kms_key
+        )
+
+        self.github_oauth_token = secretsmanager.Secret(
+            self, "GithubOAuthToken",
+            encryption_key=custom_kms_key
+        )
+
+        CfnOutput(
+            self, "DatabaseCertificateSecretArn", 
+            value=self.database_certificate.secret_arn, 
+            export_name="DatabaseCertificateSecretArn"
+        )
+
+        CfnOutput(
+            self, "DatabaseDMSUserSecretsArn", 
+            value=self.database_dms_user_secrets.secret_arn, 
+            export_name="DatabaseDMSUserSecretsArn"
+        )
+
+        CfnOutput(
+            self, "SecretsCutomKMSKeyArn",
+            value=custom_kms_key.key_arn,
+            export_name="SecretsCutomKMSKeyArn"
+        )
+
+        CfnOutput(
+            self, "GithubOAuthTokenSecretsName", 
+            value=self.github_oauth_token.secret_name, 
+            export_name="GithubOAuthTokenSecretsName"
+        )
+

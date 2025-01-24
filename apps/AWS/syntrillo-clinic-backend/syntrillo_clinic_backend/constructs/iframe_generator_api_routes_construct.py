@@ -80,6 +80,15 @@ class IFrameGeneratorAPIRoutes(Construct):
             apigw.LambdaIntegration(message_endpoint_function),
         )
 
+    def create_tenovi_endpoint(self, tenovi_endpoint_function: _lambda.Function):
+           
+        # /tenovi_endpoint_post
+        iframe_healthie_client_sidebar = self.rest_api.root.add_resource("tenovi_endpoint_post")
+        iframe_healthie_client_sidebar.add_method(
+            "POST",
+            apigw.LambdaIntegration(tenovi_endpoint_function),
+        )
+
     def create_static_resources(self, iframe_generator_function: _lambda.Function):
         static = self.rest_api.root.add_resource("static")
 

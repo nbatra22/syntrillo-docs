@@ -33,6 +33,7 @@ from syntrillo_clinic_backend.constructs.iframe_generator_function_construct imp
 from syntrillo_clinic_backend.constructs.llm_server_construct import LLMServer
 
 from syntrillo_clinic_backend.constructs.message_endpoint_function_construct import MessageEndpointFunction
+from syntrillo_clinic_backend.constructs.blood_pressure_notification_function_construct import BloodPressureNotificationFunction
 
 # -----------------------------------------------------------------------------
 # STACKS
@@ -101,3 +102,16 @@ class ServersStack(Stack):
         self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
+
+
+        if self.environment_context["environment_name"] == "staging":
+            self.blood_pressure_notification_function = BloodPressureNotificationFunction(
+                self, "BloodPressureNotificationFunction",
+                environment_context=self.environment_context,
+                network=self.network,
+                database=self.database,
+                storage=self.storage, 
+                secrets=self.secrets,
+            )
+
+            self.iframe_generator_api_routes.create_tenovi_endpoint(self.blood_pressure_notification_function.function_alias)

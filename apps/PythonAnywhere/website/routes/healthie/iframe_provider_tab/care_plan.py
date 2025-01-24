@@ -17,6 +17,8 @@ from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
 
+from syntrillo.system.logger import logger
+
 @iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan', methods=['POST'])
 def iframe_healthie_provider_tab_care_plan():
     """
@@ -58,6 +60,9 @@ def iframe_healthie_provider_tab_care_plan():
     # if there is data, get the summary
     # TODO : transfer logs to the template
     # TODO : get information to display table headers
+
+    logger.info({"process_id": "care_plan_process", "drc.max_timestamp": drc.max_timestamp, "drc.min_timestamp": drc.min_timestamp})
+
     if drc.max_timestamp is not None and drc.min_timestamp is not None:
 
         # --- Weekly summary

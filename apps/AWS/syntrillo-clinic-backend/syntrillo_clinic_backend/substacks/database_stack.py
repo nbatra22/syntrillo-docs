@@ -36,6 +36,8 @@ class DatabaseStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         self.environment_context = environment_context
+        self.aws_environment = environment_context["environment_name"]
+
         self.network = network
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
@@ -61,7 +63,10 @@ class DatabaseStack(Stack):
                 "slow_query_log": "1",
                 "long_query_time": "2",  # Logs queries longer than 2 seconds
                 "log_output": "FILE",
-                "require_secure_transport": "ON"  # Enforce SSL/TLS
+                "require_secure_transport": "ON",  # Enforce SSL/TLS
+                "binlog_format": "ROW",     # Necessary for 
+                "binlog_row_image": "FULL"
+
             }
         )
 
@@ -110,31 +115,6 @@ class DatabaseStack(Stack):
 
         self.db_from_snapshot.credentials = rds.Credentials.from_secret(self.database_admin_secrets)
 
-        # Allow Database Access
-        self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]
-
-        self.admin_secret = self.db_from_snapshot.secret
-
-        # Done in the database stack (not the bastion stack) because the bastion security group can be used by the ec2 bastion or cloud shell
-        self.db_from_snapshot_security_group.add_ingress_rule(
-            self.network.bastion_host_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
-        )
-
-        message_endpoint_function_security_group_id = Fn.import_value("MessageEndpointFunctionSecurityGroup")
-        message_endpoint_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
-            self,
-            "MessageEndpointFunctionImportedSecurityGroup",
-            security_group_id=message_endpoint_function_security_group_id
-        )
-
-        self.db_from_snapshot_security_group.add_ingress_rule(
-            message_endpoint_function_imported_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
-        )
-
         db_host_param = ssm.StringParameter(
             self,
             "DatabaseHostParameter",
@@ -169,3 +149,60 @@ class DatabaseStack(Stack):
             log_encryption_key.grant_encrypt_decrypt(iam.ServicePrincipal("rds.amazonaws.com"))
         
 
+        # ----
+        # Add ingress rules from security group for database 
+        # ----
+
+        # Allow Bastion Access
+        self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]
+
+        self.admin_secret = self.db_from_snapshot.secret
+
+        # Done in the database stack (not the bastion stack) because the bastion security group can be used by the ec2 bastion or cloud shell
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            self.network.bastion_host_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        )
+
+         # Allow DMS access
+        if self.aws_environment == "staging":
+            DMS_instance_security_group_id = Fn.import_value("SyntrilloAnalyticsNetworkDMSSecurityGroupId")
+            DMS_instance_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+                self,
+                "DMSInstanceImportedSecurityGroup",
+                security_group_id=DMS_instance_security_group_id
+            )
+
+            self.db_from_snapshot_security_group.add_ingress_rule(
+                DMS_instance_imported_security_group_id,
+                ec2.Port.tcp(3306),
+                description=f"Allow inbound traffic from Analytics DMS Instance on port 3306"
+            )
+        
+        # Allow message endpoint access
+        message_endpoint_function_security_group_id = Fn.import_value("MessageEndpointFunctionSecurityGroup")
+        message_endpoint_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "MessageEndpointFunctionImportedSecurityGroup",
+            security_group_id=message_endpoint_function_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            message_endpoint_function_imported_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
+        )
+
+        iframe_generator_function_security_group_id = Fn.import_value("IframeGeneratorFunctionSecurityGroup")
+        iframe_generator_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "IframeGeneratorFunctionImportedSecurityGroup",
+            security_group_id=iframe_generator_function_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            iframe_generator_function_imported_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from IframeGeneratorFunction on port 3306"
+        )

@@ -5,7 +5,7 @@
             "label": "task - cdk-diff-with-staging",
             "type": "shell",
             "command": [
-                "bash --login -c 'source /home/olivier/projects/Syntrillo/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-diff-with-staging.sh'"
+                "bash --login -c 'source /Users/joshpascual/Projects/Syntrillio/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /Users/joshpascual/Projects/Syntrillio/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-diff-with-staging.sh'"
             ],
             "problemMatcher": [],
             "group": {
@@ -32,7 +32,7 @@
             "label": "task - cdk-deploy-to-staging",
             "type": "shell",
             "command": [
-                "/home/olivier/projects/Syntrillo/Syntrillo_Clinic/system/delrieu/deploy-to-staging.sh"
+                "bash --login -c 'source /home/olivier/projects/Syntrillo/python_environments/p3.9_Syntrillo_Clinic_v7/bin/activate && bash /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/cdk-deploy-to-staging.sh'"
             ],
             "problemMatcher": [],
             "group": {
@@ -59,7 +59,7 @@
             "label": "task - cdk-cloudwatch-tail-staging",
             "type": "shell",
             "command": [
-                "bash --login -c 'cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/deployments/ && ./cloudwatch-logs-tail-f-staging.sh'"
+                "bash --login -c 'cd /home/olivier/projects/Syntrillo/Syntrillo_Clinic/apps/AWS/syntrillo-clinic-backend/utils/bastion && ./ssm-start.sh staging mysql-tunnel'"
             ],
             "problemMatcher": [],
             "group": {
@@ -138,4 +138,3 @@
         },
     ]
 }
-

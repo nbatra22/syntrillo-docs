@@ -68,3 +68,6 @@ MANIFEST
 
 # AWS Specific
 .aws-sam
+
+# .env files
+**.env
