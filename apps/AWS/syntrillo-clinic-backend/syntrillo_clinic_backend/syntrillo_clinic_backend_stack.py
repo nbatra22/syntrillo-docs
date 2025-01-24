@@ -129,7 +129,7 @@ class SyntrilloClinicBackendStack(Stack):
 
         # backupStack = FixOutputDependencyStack(
         #     self, "FixOutputDependencyStack",
-        #     stack=self.storage,
+        #     stack=self.servers,
         # )
 
         # self.check_function = SyntrilloClinicBackendCheckFunctionsStack(

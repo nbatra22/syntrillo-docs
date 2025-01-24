@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -95,17 +96,14 @@ class IFrameGeneratorFunction(Construct):
 
         self.function_security_group = self.function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            self.function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
-        )
+        # ---------------------------------------------------------------------
+        # EXPORT VALUES
+        # ---------------------------------------------------------------------
 
-        # self.database.db_from_snapshot_security_group.add_ingress_rule(
-        #     self.function_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
-        # )
+        CfnOutput(self, "IframeGeneratorFunctionSecurityGroup",
+            value=self.function_security_group.security_group_id,
+            export_name="IframeGeneratorFunctionSecurityGroup"
+        )
     
     def grant_read_secrets(self, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
