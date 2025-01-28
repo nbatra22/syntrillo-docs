@@ -1,3 +1,9 @@
+import os
+import pandas as pd
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+from PyPDF2 import PdfMerger
+
 def save_to_pdf(analysis, extremes, output_file):
     with PdfPages(output_file) as pdf:
         # Analysis table
