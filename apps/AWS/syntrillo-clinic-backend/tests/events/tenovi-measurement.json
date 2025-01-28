@@ -1,0 +1,15 @@
+{
+    "metric": "pulse",
+    "device_name": "Tenovi BPM",
+    "hwi_device_id": "12345678-abcd-1234-abcd-1234567890ab",
+    "patient_id": "54321",
+    "hardware_uuid": "1234ABCD5678",
+    "sensor_code": "10",
+    "value_1": "100.00",
+    "value_2": "0.00",
+    "created": "2025-01-16T17:34:47.025219Z",
+    "timestamp": "2025-01-16T17:34:47.025219Z",
+    "timezone_offset": 0,
+    "estimated_timestamp": false,
+    "filter_params": null
+}
