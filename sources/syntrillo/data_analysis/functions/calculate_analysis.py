@@ -1,33 +1,36 @@
 import pandas as pd
 
-HYPERTENSION_THRESHOLD = 170
-HYPOTENSION_THRESHOLD = 95
+HYPERTENSION_SBP_THRESHOLD = 170
+HYPERTENSION_DBP_THRESHOLD = 110
+HYPOTENSION_SBP_THRESHOLD = 95
 
 def calculate_analysis(timeframes):
     analysis = {}
     current_timeframe = next((name for name in timeframes if name.startswith("Current")), None)
     prior_timeframe = next((name for name in timeframes if name.startswith("Prior")), None)
+    baseline_timeframe = next((name for name in timeframes if name.startswith("Baseline")), None)
 
     for name, frame in timeframes.items():
         if frame.empty:
             analysis[name] = {
                 'Avg Systolic BP (mmHg)': None,
                 'Avg Diastolic BP (mmHg)': None,
-                'Hypotensive Measurements¹': None,
-                'Peak SBP² (mmHg)': None,
-                'Peak DBP² (mmHg)': None,
-                'Low SBP³ (mmHg)': None,
-                'Low DBP³ (mmHg)': None,
+                'Peak SBP¹ (mmHg)': None,
+                'Peak DBP¹ (mmHg)': None,
+                'Low SBP² (mmHg)': None,
+                'Low DBP² (mmHg)': None,
                 'SBP SD (mmHg)': None,
                 'DBP SD (mmHg)': None,
                 'SBP CV (%)': None,
-                'DBP CV (%)': None
+                'DBP CV (%)': None,
+                'Hypertensive SBP Count³': None,
+                'Hypertensive DBP Count³': None,
+                'Hypotensive Count⁴': None,
             }
             continue
 
         avg_systolic = round(frame['Value 1'].mean(), 2)
         avg_diastolic = round(frame['Value 2'].mean(), 2)
-        hypotensive_count = len(frame[frame['Value 1'] <= HYPOTENSION_THRESHOLD + 5])
         peak_systolic = round(frame['Value 1'].nlargest(3).mean(), 2)  # Avg of 3 highest values
         peak_diastolic = round(frame['Value 2'].nlargest(3).mean(), 2)  # Avg of 3 highest values
         low_systolic = round(frame['Value 1'].min(), 2)
@@ -36,19 +39,25 @@ def calculate_analysis(timeframes):
         diastolic_sd = round(frame['Value 2'].std(), 2)
         systolic_cv = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
         diastolic_cv = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
+        hypertensive_sbp_count = len(frame[frame['Value 1'] >= HYPERTENSION_SBP_THRESHOLD])
+        hypertensive_dbp_count = len(frame[frame['Value 2'] >= HYPERTENSION_DBP_THRESHOLD])
+        hypotensive_count = len(frame[frame['Value 1'] <= HYPOTENSION_SBP_THRESHOLD + 5])
+
 
         analysis[name] = {
             'Avg Systolic BP (mmHg)': avg_systolic,
             'Avg Diastolic BP (mmHg)': avg_diastolic,
-            'Hypotensive Measurements¹': hypotensive_count,
-            'Peak SBP² (mmHg)': peak_systolic,
-            'Peak DBP² (mmHg)': peak_diastolic,
-            'Low SBP³ (mmHg)': low_systolic,
-            'Low DBP³ (mmHg)': low_diastolic,
+            'Peak SBP¹ (mmHg)': peak_systolic,
+            'Peak DBP¹ (mmHg)': peak_diastolic,
+            'Low SBP² (mmHg)': low_systolic,
+            'Low DBP² (mmHg)': low_diastolic,
             'SBP SD (mmHg)': systolic_sd,
             'DBP SD (mmHg)': diastolic_sd,
             'SBP CV (%)': systolic_cv,
-            'DBP CV (%)': diastolic_cv
+            'DBP CV (%)': diastolic_cv,
+            'Hypertensive SBP Count³': hypertensive_sbp_count,
+            'Hypertensive DBP Count³': hypertensive_dbp_count,
+            'Hypotensive Count⁴': hypotensive_count,
         }
 
     points = {
@@ -58,8 +67,8 @@ def calculate_analysis(timeframes):
         'DBP CV (%)': {'increase': -1, 'decrease': 1},
         'SBP SD (mmHg)': {'increase': -1, 'decrease': 1},
         'DBP SD (mmHg)': {'increase': -1, 'decrease': 1},
-        'Peak SBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2},
-        'Peak DBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2}
+        'Peak SBP¹ (mmHg)': {'above_threshold': -2, 'below_threshold': 2},
+        'Peak DBP¹ (mmHg)': {'above_threshold': -2, 'below_threshold': 2}
     }
 
     thresholds = {
@@ -69,50 +78,105 @@ def calculate_analysis(timeframes):
         'DBP CV (%)': 1.4,
         'SBP SD (mmHg)': 1.5,
         'DBP SD (mmHg)': 1.3,
-        'Peak SBP² (mmHg)': 170,
-        'Peak DBP² (mmHg)': 110
+        'Peak SBP¹ (mmHg)': 170,
+        'Peak DBP¹ (mmHg)': 110
     }
 
     delta = 0
+    baseline_delta = 0
 
-    if current_timeframe and prior_timeframe:
+    if current_timeframe and prior_timeframe and baseline_timeframe:
         for metric in analysis[current_timeframe]:
             current_value = analysis[current_timeframe][metric]
             prior_value = analysis[prior_timeframe].get(metric, "-")
+            baseline_value = analysis[baseline_timeframe].get(metric, "-")
 
-            if current_value is not None and prior_value != "-" and isinstance(prior_value, (int, float)):
+            if current_value is not None and prior_value != "-" and baseline_value != "-" and isinstance(prior_value, (int, float)) and isinstance(baseline_value, (int, float)):
                 change = current_value - prior_value
+                percent_change = (
+                    (current_value - prior_value) / prior_value * 100
+                    if prior_value != 0
+                    else 0
+                )
                 abs_change = abs(change)
+                abs_percent_change = abs(percent_change)
+
+                baseline_change = current_value - baseline_value
+                baseline_percent_change = (
+                    (current_value - baseline_value) / baseline_value * 100
+                    if baseline_value != 0
+                    else 0
+                )
+                baseline_abs_change = abs(baseline_change)
+                baseline_abs_percent_change = abs(baseline_percent_change)
 
                 # Handle average SBP and DBP
                 if metric in ['Avg Systolic BP (mmHg)', 'Avg Diastolic BP (mmHg)']:
                     if current_value >= thresholds[metric]:
-                        if change > 0:  # Increase
+                        if change > 0:  # Increase in curr change
                             delta += points[metric]['increase']
                             analysis[current_timeframe][metric] = f"{current_value} -"
-                        elif change < 0:  # Decrease
+                        elif baseline_change > 0: # Increase in baseline change
+                            baseline_delta += points[metric]['increase']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                        elif change < 0:  # Decrease in curr change
                             delta += points[metric]['decrease']
                             analysis[current_timeframe][metric] = f"{current_value} +"
+                        elif baseline_change < 0: # Decrease in baseline change
+                            baseline_delta += points[metric]['decrease']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
 
-                # Handle SBP-CV, DBP-CV, SBP-SD, DBP-SD
-                elif metric in ['SBP CV (%)', 'DBP CV (%)', 'SBP SD (mmHg)', 'DBP SD (mmHg)']:
+                # Handle SBP-SD and DBP-SD
+                elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
                     if abs_change >= thresholds[metric]:
-                        if change > 0:  # Increase
+                        if change > 0:  # Increase in curr change
                             delta += points[metric]['increase']
                             analysis[current_timeframe][metric] = f"{current_value} -"
-                        elif change < 0:  # Decrease
+                        elif change < 0:  # Decrease in curr change
                             delta += points[metric]['decrease']
                             analysis[current_timeframe][metric] = f"{current_value} +"
+                    if baseline_abs_change >= thresholds[metric]:
+                        if baseline_change > 0:  # Increase in baseline change
+                            baseline_delta += points[metric]['increase']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                        elif baseline_change < 0:  # Decrease in baseline change
+                            baseline_delta += points[metric]['decrease']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
+
+                # Handle SBP-CV and DBP-CV
+                elif metric in ['SBP CV (%)', 'DBP CV (%)']:
+                    if abs_percent_change >= thresholds[metric]:
+                        if percent_change > 0:  # Increase in curr change
+                            delta += points[metric]['increase']
+                            analysis[current_timeframe][metric] = f"{current_value} -"
+                        elif percent_change < 0:  # Decrease in curr change
+                            delta += points[metric]['decrease']
+                            analysis[current_timeframe][metric] = f"{current_value} +"
+                    if baseline_abs_percent_change >= thresholds[metric]:
+                        if baseline_percent_change > 0:  # Increase in baseline change
+                            baseline_delta += points[metric]['increase']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                        elif baseline_percent_change < 0:  # Decrease in baseline change
+                            baseline_delta += points[metric]['decrease']
+                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
 
                 # Handle categorical change for Peak BP
                 elif metric.startswith('Peak') and isinstance(current_value, (int, float)):
                     high_threshold = thresholds[metric]
+                    # Curr change
                     if prior_value < high_threshold < current_value:
                         delta += points[metric]['above_threshold']
                         analysis[current_timeframe][metric] = f"{current_value} -"
                     elif prior_value > high_threshold >= current_value:
                         delta += points[metric]['below_threshold']
                         analysis[current_timeframe][metric] = f"{current_value} +"
+                    # Baseline change
+                    if baseline_value < high_threshold < current_value:
+                        baseline_delta += points[metric]['above_threshold']
+                        analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                    elif baseline_value > high_threshold >= current_value:
+                        baseline_delta += points[metric]['below_threshold']
+                        analysis[baseline_timeframe][metric] = f"{baseline_value} +"
 
                 # Handle no change
                 # else:
@@ -120,11 +184,15 @@ def calculate_analysis(timeframes):
 
     # Add the total delta as a new key for the extra cell
     progress = "Improving" if delta > 0 else "Worsening" if delta < 0 else "Same"
+    baseline_progress = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
     analysis[current_timeframe]['Progress (pts)'] = f"{progress} ({delta})"
+    analysis[current_timeframe]['Baseline Progress (pts)'] = f"{baseline_progress} ({baseline_delta})"
 
     # Ensure the Progress row has "-" in baseline and prior columns
     analysis[prior_timeframe].setdefault('Progress (pts)', '-')
     analysis[next(k for k in analysis if "Baseline" in k)]['Progress (pts)'] = '-'
+    analysis[prior_timeframe].setdefault('Baseline Progress (pts)', '-')
+    analysis[next(k for k in analysis if "Baseline" in k)]['Baseline Progress (pts)'] = '-'
 
     df = pd.DataFrame.from_dict(analysis, orient='index').T
 

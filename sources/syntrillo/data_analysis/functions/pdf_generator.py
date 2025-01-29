@@ -78,12 +78,12 @@ def save_to_pdf(analysis, extremes, output_file):
                             color = 'yellow'
                         else:
                             color = 'red'
-                    elif metric == 'Peak SBP² (mmHg)' and value is not None:
+                    elif metric == 'Peak SBP¹ (mmHg)' and value is not None:
                         if value < 170:
                             color = 'lightgreen'
                         else:
                             color = 'red'
-                    elif metric == 'Peak DBP² (mmHg)' and value is not None:
+                    elif metric == 'Peak DBP¹ (mmHg)' and value is not None:
                         if value < 110:
                             color = 'lightgreen'
                         else:
