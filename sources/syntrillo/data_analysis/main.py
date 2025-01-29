@@ -34,19 +34,24 @@ if __name__ == "__main__":
 
             # Load and preprocess data
             data = read_csv_file(filepath)
-            data = preprocess_data(data)
+            bp_data = preprocess_data(data)
+
+            # Extract metadata
+            num_measurements = len(bp_data)  # Count number of rows
+            start_date = bp_data['Time stamp'].min()  # Earliest date
+            end_date = bp_data['Time stamp'].max()  # Latest date
 
             # Calculate timeframes and analysis
-            timeframes = calculate_timeframes(data)
+            timeframes = calculate_timeframes(bp_data)
             analysis_table = calculate_analysis(timeframes)
 
             # Add Since Inception column to aggregate data
-            extracted_data = extract_since_inception(analysis_table, patient_id)
+            extracted_data = extract_since_inception(analysis_table, patient_id, num_measurements, start_date, end_date)
             if extracted_data is not None:
                 aggregate_data.append(extracted_data)
 
             # Calculate extremes
-            extremes_table = calculate_extremes(data)
+            extremes_table = calculate_extremes(bp_data)
 
             # Save results to a unique PDF
             save_to_pdf(analysis_table, extremes_table, output_file)

@@ -86,33 +86,33 @@ def calculate_analysis(timeframes):
 
                 # Handle average SBP and DBP
                 if metric in ['Avg Systolic BP (mmHg)', 'Avg Diastolic BP (mmHg)']:
-                    if abs_change >= thresholds[metric]:
+                    if current_value >= thresholds[metric]:
                         if change > 0:  # Increase
                             delta += points[metric]['increase']
-                            analysis[current_timeframe][metric] = f"{current_value} +"
+                            analysis[current_timeframe][metric] = f"{current_value} -"
                         elif change < 0:  # Decrease
                             delta += points[metric]['decrease']
-                            analysis[current_timeframe][metric] = f"{current_value} -"
+                            analysis[current_timeframe][metric] = f"{current_value} +"
 
                 # Handle SBP-CV, DBP-CV, SBP-SD, DBP-SD
                 elif metric in ['SBP CV (%)', 'DBP CV (%)', 'SBP SD (mmHg)', 'DBP SD (mmHg)']:
                     if abs_change >= thresholds[metric]:
                         if change > 0:  # Increase
                             delta += points[metric]['increase']
-                            analysis[current_timeframe][metric] = f"{current_value} +"
+                            analysis[current_timeframe][metric] = f"{current_value} -"
                         elif change < 0:  # Decrease
                             delta += points[metric]['decrease']
-                            analysis[current_timeframe][metric] = f"{current_value} -"
+                            analysis[current_timeframe][metric] = f"{current_value} +"
 
                 # Handle categorical change for Peak BP
                 elif metric.startswith('Peak') and isinstance(current_value, (int, float)):
                     high_threshold = thresholds[metric]
-                    if prior_value > high_threshold >= current_value:
+                    if prior_value < high_threshold < current_value:
                         delta += points[metric]['above_threshold']
-                        analysis[current_timeframe][metric] = f"{current_value} +"
-                    elif prior_value < high_threshold <= current_value:
-                        delta += points[metric]['below_threshold']
                         analysis[current_timeframe][metric] = f"{current_value} -"
+                    elif prior_value > high_threshold >= current_value:
+                        delta += points[metric]['below_threshold']
+                        analysis[current_timeframe][metric] = f"{current_value} +"
 
                 # Handle no change
                 # else:

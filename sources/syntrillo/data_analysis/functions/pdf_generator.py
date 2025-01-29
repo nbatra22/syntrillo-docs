@@ -93,6 +93,14 @@ def save_to_pdf(analysis, extremes, output_file):
 
         ax.set_title(os.path.basename(output_file).replace('_report.pdf', ' Analysis'))
 
+        # Add note about Peak rows
+        ax.text(0, 0, "¹ 'Hypotensive Measurements' indicates the count of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg.",
+                fontsize=8, transform=ax.transAxes, ha='left', va='top')
+        ax.text(0, -0.05, "² 'Peak' values represent the average of the three highest values in the timeframe.",
+                fontsize=8, transform=ax.transAxes, ha='left', va='top')
+        ax.text(0, -0.10, "³ 'Low' values represent the single lowest value in the timeframe.",
+                fontsize=8, transform=ax.transAxes, ha='left', va='top')
+
         pdf.savefig(fig)
         plt.close(fig)
 
