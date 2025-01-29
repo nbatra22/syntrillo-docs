@@ -191,4 +191,20 @@ def calculate_analysis(timeframes):
 
     df.loc['Overall'] = df.apply(calculate_overall, axis=0)
 
+    def calculate_change(row, baseline_col, current_col):
+        baseline_val = pd.to_numeric(str(row[baseline_col]).replace('+', '').replace('-', '').strip(), errors='coerce')
+        current_val = pd.to_numeric(str(row[current_col]).replace('+', '').replace('-', '').strip(), errors='coerce')
+
+        if pd.notna(baseline_val) and pd.notna(current_val):
+            numeric_change = round(current_val - baseline_val, 2)
+            return numeric_change
+        return ''
+
+    # Add Since Inception column comparing Baseline to Current
+    baseline_col = next((col for col in df.columns if 'Baseline' in col), None)
+    current_col = next((col for col in df.columns if 'Current' in col), None)
+    if baseline_col and current_col:
+        df['Since Inception'] = df.apply(lambda row: calculate_change(row, baseline_col, current_col), axis=1)
+
+
     return df
