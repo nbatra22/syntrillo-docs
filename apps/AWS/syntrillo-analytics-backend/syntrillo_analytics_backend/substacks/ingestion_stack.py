@@ -97,7 +97,9 @@ class IngestionStack(Stack):
             replication_subnet_group_description="DMS subnet group",
             subnet_ids=self.subnet_ids
         )
-
+        # Add explicit dependency on the DMS VPC role
+        dms_subnet_group.node.add_dependency(dms_vpc_role)
+        
         # Create replication instance
         dms_instance = dms.CfnReplicationInstance(
             self, "DMSInstance",
@@ -207,6 +209,18 @@ class IngestionStack(Stack):
                         "table-name": "tenovi_raw_measurements"
                     },
                     "rule-action": "include"
+                },
+                {
+                    "rule-type": "transformation",
+                    "rule-id": "2",
+                    "rule-name": "Remove json column",
+                    "rule-action": "remove-column",
+                    "rule-target": "column",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "tenovi_raw_measurements",
+                        "column-name": "data_json"
+                    }
                 }
                 ]
             }
