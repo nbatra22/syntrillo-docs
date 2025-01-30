@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -47,6 +48,9 @@ class RemoteMonitoringDataSync(Construct):
             log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
         )
 
+        # -----------------------------------------------------------------------
+        # Remote monitoring Lambdas
+
         self.remote_monitoring_data_sync_function = _lambda.Function(self, "RemoteMonitoringDataSyncFunction",
             function_name="RemoteMonitoringDataSyncFunction",
             vpc = self.network.vpc,
@@ -70,11 +74,9 @@ class RemoteMonitoringDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.secrets.database_lambda_user_secrets)
-        self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
-        self.grant_read_secrets(self.secrets.healthie_secrets)
-
-
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.database_lambda_user_secrets)
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.tenovi_hwi_secrets)
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.healthie_secrets)
 
         # -----------------------------------------------------------------------
         # Step functions workflow
@@ -164,16 +166,98 @@ class RemoteMonitoringDataSync(Construct):
             description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
         )
 
-    def grant_read_secrets(self, secrets):
+    def grant_read_secrets(self, function, secrets):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
-        self.remote_monitoring_data_sync_function.add_to_role_policy(iam.PolicyStatement(
+        function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
             resources=[secrets.secret_arn],
         ))
-        self.remote_monitoring_data_sync_function.add_to_role_policy(iam.PolicyStatement(
+        function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
             resources=[secrets.encryption_key.key_arn],
         ))
+
+class PIIDataSync(Construct):
+    def __init__(self, scope: Construct, id: str, 
+                 aws_environment: str, 
+                 network: Construct, 
+                 database: Construct,
+                 storage: Construct,
+                 secrets: Construct,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        self.network = network
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
+
+        self.aws_environment = aws_environment
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
+
+        # -----------------------------------------------------------------------
+        # Pii Sync Lambdas
+
+        self.pii_data_sync_function = _lambda.Function(self, "PIIDataSyncFunction",
+            function_name="PIIDataSyncFunction",
+            vpc = self.network.vpc,
+            handler="handler.handler",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            code=_lambda.Code.from_asset("lambda-functions/pii-data-sync-function", exclude=['.env']),
+            params_and_secrets=params_and_secrets,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.storage.efs_access_point,
+                "/mnt/python_modules"
+            ),
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "/mnt/python_modules",
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn,
+                "PII_DATA_BUCKET": f"{self.aws_environment}.syntrillo-analytics.pii-data"
+            },
+            tracing=_lambda.Tracing.ACTIVE,
+            memory_size=512,
+            timeout=Duration.seconds(600),
+        )
+
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.database_lambda_user_secrets)
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.tenovi_hwi_secrets)
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.healthie_secrets)
+
+        self.function_security_group = self.pii_data_sync_function.connections.security_groups[0]
+
+        # ---------------------------------------------------------------------
+        # EXPORT VALUES
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "PIIDataSyncFunctionSecurityGroup",
+            value=self.function_security_group.security_group_id,
+            export_name="PIIDataSyncFunctionSecurityGroup"
+        )
+
+        CfnOutput(self, "PIIDataSyncFunctionRoleArn",
+            value=self.pii_data_sync_function.role.role_arn,
+            export_name="PIIDataSyncFunctionRoleArn"
+        )
+
+    def grant_read_secrets(self, function, secrets):
+        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
+            resources=[secrets.secret_arn],
+        ))
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["kms:Decrypt"],
+            resources=[secrets.encryption_key.key_arn],
+        ))
+
+
 
 # -----------------------------------------------------------------------------
 # STACKS
@@ -201,6 +285,15 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         remote_monitoring_data_sync = RemoteMonitoringDataSync(
             self, "RemoteMonitoringDataSyncFunction",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+        )
+
+        pii_data_sync = PIIDataSync(
+            self, "PIIDataSyncFunction",
             aws_environment=self.aws_environment,
             network=self.network,
             database=self.database,

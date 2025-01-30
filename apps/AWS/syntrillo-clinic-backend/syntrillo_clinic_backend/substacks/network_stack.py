@@ -64,6 +64,12 @@ class NetworkStack(Stack):
             vpc=self.vpc,
         )
 
+        # Add S3 Gateway Endpoint
+        self.vpc.add_gateway_endpoint(
+            "S3Endpoint",
+            service=ec2.GatewayVpcEndpointAwsService.S3
+        )
+
         # For VPC Peering with Analytics network
         CfnOutput(self, "SyntrilloClinicNetworkId", value=self.vpc.vpc_id, export_name="SyntrilloClinicNetworkId")
 

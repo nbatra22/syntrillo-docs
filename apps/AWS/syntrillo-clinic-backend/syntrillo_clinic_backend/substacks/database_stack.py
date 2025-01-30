@@ -205,3 +205,16 @@ class DatabaseStack(Stack):
             ec2.Port.tcp(3306),
             description=f"Allow inbound traffic from IframeGeneratorFunction on port 3306"
         )
+
+        pii_data_sync_function_security_group_id = Fn.import_value("PIIDataSyncFunctionSecurityGroup")
+        pii_data_sync_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "PIIDataSyncFunctionImportedSecurityGroup",
+            security_group_id=pii_data_sync_function_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            pii_data_sync_function_imported_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from PIIDataSyncFunction on port 3306"
+        )

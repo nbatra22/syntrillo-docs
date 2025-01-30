@@ -48,7 +48,7 @@ class QueryStack(Stack):
             )
         )
 
-        # Define the columns for the table
+        # TenoviRawMeasurementsTable
         columns = [
             glue.CfnTable.ColumnProperty(
                 name="operation",
@@ -110,6 +110,48 @@ class QueryStack(Stack):
                 storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
                     columns=columns,
                     location=f"s3://{self.environment_name}.syntrillo-analytics.raw-data/syntrillo$HealthInformation/tenovi_raw_measurements",
+                    input_format="org.apache.hadoop.mapred.TextInputFormat",
+                    output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+                    serde_info=glue.CfnTable.SerdeInfoProperty(
+                        serialization_library="org.apache.hadoop.hive.serde2.OpenCSVSerde",
+                        parameters={
+                            "separatorChar": ",",
+                            "quoteChar": '"',
+                            "escapeChar": "\\"
+                        }
+                    )
+                )
+            )
+        )
+
+        # PIITable
+        columns = [
+            glue.CfnTable.ColumnProperty(
+                name="syntrillo_internal_key",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="patient_name",
+                type="string"
+            ),
+        ]
+
+        # Create the Glue Table
+        csv_table = glue.CfnTable(
+            self, "PatientPIIDataTable",
+            database_name=glue_database.ref,
+            catalog_id=self.account,
+            table_input=glue.CfnTable.TableInputProperty(
+                name="patient_pii_data",
+                # description="Sample CSV table",
+                table_type="EXTERNAL_TABLE",
+                parameters={
+                    "classification": "csv",
+                    "skip.header.line.count": "0"
+                },
+                storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
+                    columns=columns,
+                    location=f"s3://{self.environment_name}.syntrillo-analytics.pii-data/",
                     input_format="org.apache.hadoop.mapred.TextInputFormat",
                     output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
                     serde_info=glue.CfnTable.SerdeInfoProperty(
