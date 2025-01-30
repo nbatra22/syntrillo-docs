@@ -23,9 +23,15 @@ def calculate_analysis(timeframes):
                 'DBP SD (mmHg)': None,
                 'SBP CV (%)': None,
                 'DBP CV (%)': None,
-                'Hypertensive SBP Count³': None,
-                'Hypertensive DBP Count³': None,
-                'Hypotensive Count⁴': None,
+                'SBP Count (>= 160 mmHg)': None,
+                'SBP Count (>= 165 mmHg)': None,
+                'SBP Count (>= 170 mmHg)': None,
+                'SBP Count (>= 175 mmHg)': None,
+                'DBP Count (>=80 mmHg)': None,
+                'DBP Count (>=85 mmHg)': None,
+                'DBP Count (>=90 mmHg)': None,
+                'DBP Count (>=95 mmHg)': None,
+                'Hypotensive Count³': None,
             }
             continue
 
@@ -39,7 +45,14 @@ def calculate_analysis(timeframes):
         diastolic_sd = round(frame['Value 2'].std(), 2)
         systolic_cv = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
         diastolic_cv = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
-        hypertensive_sbp_count = len(frame[frame['Value 1'] >= HYPERTENSION_SBP_THRESHOLD])
+        sbp_count_160 = len(frame[frame['Value 1'] >= 160])
+        sbp_count_165 = len(frame[frame['Value 1'] >= 165])
+        sbp_count_170 = len(frame[frame['Value 1'] >= 170])
+        sbp_count_175 = len(frame[frame['Value 1'] >= 175])
+        dbp_count_80 = len(frame[frame['Value 2'] >= 80])
+        dbp_count_85 = len(frame[frame['Value 2'] >= 85])
+        dbp_count_90 = len(frame[frame['Value 2'] >= 90])
+        dbp_count_95 = len(frame[frame['Value 2'] >= 95])
         hypertensive_dbp_count = len(frame[frame['Value 2'] >= HYPERTENSION_DBP_THRESHOLD])
         hypotensive_count = len(frame[frame['Value 1'] <= HYPOTENSION_SBP_THRESHOLD + 5])
 
@@ -55,7 +68,14 @@ def calculate_analysis(timeframes):
             'DBP SD (mmHg)': diastolic_sd,
             'SBP CV (%)': systolic_cv,
             'DBP CV (%)': diastolic_cv,
-            'Hypertensive SBP Count³': hypertensive_sbp_count,
+            'SBP Count (>= 160 mmHg)': sbp_count_160,
+            'SBP Count (>= 165 mmHg)': sbp_count_165,
+            'SBP Count (>= 170 mmHg)': sbp_count_170,
+            'SBP Count (>= 175 mmHg)': sbp_count_175,
+            'DBP Count (>=80 mmHg)': dbp_count_80,
+            'DBP Count (>=85 mmHg)': dbp_count_85,
+            'DBP Count (>=90 mmHg)': dbp_count_90,
+            'DBP Count (>=95 mmHg)': dbp_count_95,
             'Hypertensive DBP Count³': hypertensive_dbp_count,
             'Hypotensive Count⁴': hypotensive_count,
         }
@@ -259,20 +279,5 @@ def calculate_analysis(timeframes):
 
     df.loc['Overall'] = df.apply(calculate_overall, axis=0)
 
-    def calculate_change(row, baseline_col, current_col):
-        baseline_val = pd.to_numeric(str(row[baseline_col]).replace('+', '').replace('-', '').strip(), errors='coerce')
-        current_val = pd.to_numeric(str(row[current_col]).replace('+', '').replace('-', '').strip(), errors='coerce')
-
-        if pd.notna(baseline_val) and pd.notna(current_val):
-            numeric_change = round(current_val - baseline_val, 2)
-            return numeric_change
-        return ''
-
-    # Add Since Inception column comparing Baseline to Current
-    baseline_col = next((col for col in df.columns if 'Baseline' in col), None)
-    current_col = next((col for col in df.columns if 'Current' in col), None)
-    if baseline_col and current_col:
-        df['Since Inception'] = df.apply(lambda row: calculate_change(row, baseline_col, current_col), axis=1)
-
-
     return df
+

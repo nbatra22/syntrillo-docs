@@ -1,6 +1,6 @@
 
-def extract_since_inception(analysis_table, patient_id, num_measurements, start_date, end_date):
-    since_inception_col = next((col for col in analysis_table.columns if "Since Inception" in col), None)
+def extract_since_inception(analysis_table, patient_id, num_measurements, start_date, end_date, type):
+    since_inception_col = next((col for col in analysis_table.columns if f"Since Inception {type}" in col), None)
     if since_inception_col:
         extracted_data = analysis_table[[since_inception_col]].copy()
         extracted_data.columns = [f"{patient_id}"]  # Rename column to patient ID with Change label
