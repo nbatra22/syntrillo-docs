@@ -46,17 +46,16 @@ class NetworkStack(Stack):
         )
 
         # VPC Flow Logs
-        if self.aws_environment == "prod":
-            self.vpc_flow_logs_log_group = logs.LogGroup(
-                self, "VPCFlowLogsLogGroup",
-                log_group_name="/aws/vpc/flowlogs",
-                removal_policy=RemovalPolicy.DESTROY
-            )
+        self.vpc_flow_logs_log_group = logs.LogGroup(
+            self, "VPCFlowLogsLogGroup",
+            log_group_name="/aws/vpc/flowlogs",
+            removal_policy=RemovalPolicy.DESTROY
+        )
 
-            self.vpc.add_flow_log("SyntrilloClinicBackendVPCFlowLogCloudWatch",
-                destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
-                traffic_type=ec2.FlowLogTrafficType.ALL,
-            )
+        self.vpc.add_flow_log("SyntrilloClinicBackendVPCFlowLogCloudWatch",
+            destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
+            traffic_type=ec2.FlowLogTrafficType.ALL,
+        )
 
         # Security groups
         self.bastion_host_security_group = ec2.SecurityGroup(
