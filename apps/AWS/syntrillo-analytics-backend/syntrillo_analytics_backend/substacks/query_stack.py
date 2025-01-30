@@ -51,6 +51,10 @@ class QueryStack(Stack):
         # Define the columns for the table
         columns = [
             glue.CfnTable.ColumnProperty(
+                name="operation",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
                 name="id",
                 type="int"
             ),
@@ -78,12 +82,12 @@ class QueryStack(Stack):
                 name="timestamp_local",
                 type="string"
             ),
-            glue.CfnTable.ColumnProperty(
-                name="data_json",
-                type="string"  # For JSON data
-                #type="struct<metric:string,created:string,value_1:string,value_2:string,timestamp:string,dummy_data:boolean,patient_id:string,device_name:string,sensor_code:string,filter_params:struct<measurement_index:int>,hardware_uuid:string,hwi_device_id:string,timezone_offset:int,estimated_timestamp:boolean>"
+            # glue.CfnTable.ColumnProperty(
+            #     name="data_json",
+            #     type="string"  # For JSON data
+            #     #type="struct<metric:string,created:string,value_1:string,value_2:string,timestamp:string,dummy_data:boolean,patient_id:string,device_name:string,sensor_code:string,filter_params:struct<measurement_index:int>,hardware_uuid:string,hwi_device_id:string,timezone_offset:int,estimated_timestamp:boolean>"
 
-            ),
+            # ),
             glue.CfnTable.ColumnProperty(
                 name="date",
                 type="string"
@@ -105,7 +109,7 @@ class QueryStack(Stack):
                 },
                 storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
                     columns=columns,
-                    location=f"s3://{self.environment_name}.syntrillo-analytics.transformed-data/tables/tenovi_raw_measurements",
+                    location=f"s3://{self.environment_name}.syntrillo-analytics.raw-data/syntrillo$HealthInformation/tenovi_raw_measurements",
                     input_format="org.apache.hadoop.mapred.TextInputFormat",
                     output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
                     serde_info=glue.CfnTable.SerdeInfoProperty(
