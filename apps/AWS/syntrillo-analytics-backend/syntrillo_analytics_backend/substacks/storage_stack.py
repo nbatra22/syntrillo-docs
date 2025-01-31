@@ -119,7 +119,7 @@ class StorageStack(Stack):
                     actions=[
                         "s3:PutObject"
                     ],
-                    resources=[f"{self.pii_data_bucket.bucket_arn}/patient_piis.csv"]
+                    resources=[f"{self.pii_data_bucket.bucket_arn}/patient_piis/patient_piis.csv"]
                 )
             ]
         )

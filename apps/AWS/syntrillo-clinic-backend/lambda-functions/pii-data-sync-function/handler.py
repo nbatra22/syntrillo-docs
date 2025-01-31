@@ -17,7 +17,7 @@ s3 = boto3.client('s3')
 def handler(event, context):
     patient_piis_json = list_patient_piis()
     csv_file = build_csv_file(patient_piis_json)
-    s3.put_object(Bucket=os.getenv('PII_DATA_BUCKET'), Key='patient_piis.csv', Body=csv_file)
+    s3.put_object(Bucket=os.getenv('PII_DATA_BUCKET'), Key='patient_piis/patient_piis.csv', Body=csv_file)
 
 def build_csv_file(patient_piis):
     csv_file = ""

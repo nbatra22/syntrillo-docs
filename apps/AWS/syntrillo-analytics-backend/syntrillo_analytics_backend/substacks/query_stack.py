@@ -151,7 +151,7 @@ class QueryStack(Stack):
                 },
                 storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
                     columns=columns,
-                    location=f"s3://{self.environment_name}.syntrillo-analytics.pii-data/",
+                    location=f"s3://{self.environment_name}.syntrillo-analytics.pii-data/patient_piis/",
                     input_format="org.apache.hadoop.mapred.TextInputFormat",
                     output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
                     serde_info=glue.CfnTable.SerdeInfoProperty(
