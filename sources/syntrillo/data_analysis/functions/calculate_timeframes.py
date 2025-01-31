@@ -14,6 +14,6 @@ def calculate_timeframes(df):
         f"Baseline ({baseline_start.strftime('%m/%d/%y')}-{baseline_end.strftime('%m/%d/%y')})": df[(df['Time stamp'] >= baseline_start) & (df['Time stamp'] < baseline_end)],
         f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})": df[(df['Time stamp'] >= prior_start) & (df['Time stamp'] < prior_end)],
         # f"Current ({prior_end.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['Time stamp'] >= prior_end]
-        f"Current ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['Time stamp'] >= current_start]
+        f"Current¹ ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['Time stamp'] >= current_start]
     }
     return timeframes

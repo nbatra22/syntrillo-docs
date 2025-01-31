@@ -15,23 +15,23 @@ def calculate_analysis(timeframes):
             analysis[name] = {
                 'Avg Systolic BP (mmHg)': None,
                 'Avg Diastolic BP (mmHg)': None,
-                'Peak SBP¹ (mmHg)': None,
-                'Peak DBP¹ (mmHg)': None,
-                'Low SBP² (mmHg)': None,
-                'Low DBP² (mmHg)': None,
+                'Peak SBP² (mmHg)': None,
+                'Peak DBP² (mmHg)': None,
+                'Low SBP³ (mmHg)': None,
+                'Low DBP³ (mmHg)': None,
                 'SBP SD (mmHg)': None,
                 'DBP SD (mmHg)': None,
                 'SBP CV (%)': None,
                 'DBP CV (%)': None,
-                'SBP Count (>= 160 mmHg)': None,
-                'SBP Count (>= 165 mmHg)': None,
-                'SBP Count (>= 170 mmHg)': None,
-                'SBP Count (>= 175 mmHg)': None,
-                'DBP Count (>=80 mmHg)': None,
-                'DBP Count (>=85 mmHg)': None,
-                'DBP Count (>=90 mmHg)': None,
-                'DBP Count (>=95 mmHg)': None,
-                'Hypotensive Count³': None,
+                'SBP Count (>= 160)': None,
+                'SBP Count (>= 165)': None,
+                'SBP Count (>= 170)': None,
+                'SBP Count (>= 175)': None,
+                'SBP Count (<=80)': None,
+                'SBP Count (<=85)': None,
+                'SBP Count (<=90)': None,
+                'SBP Count (<=95)': None,
+                # 'Hypotensive Count³': None,
             }
             continue
 
@@ -49,10 +49,10 @@ def calculate_analysis(timeframes):
         sbp_count_165 = len(frame[frame['Value 1'] >= 165])
         sbp_count_170 = len(frame[frame['Value 1'] >= 170])
         sbp_count_175 = len(frame[frame['Value 1'] >= 175])
-        dbp_count_80 = len(frame[frame['Value 2'] >= 80])
-        dbp_count_85 = len(frame[frame['Value 2'] >= 85])
-        dbp_count_90 = len(frame[frame['Value 2'] >= 90])
-        dbp_count_95 = len(frame[frame['Value 2'] >= 95])
+        sbp_count_80 = len(frame[frame['Value 1'] <= 80])
+        sbp_count_85 = len(frame[frame['Value 1'] <= 85])
+        sbp_count_90 = len(frame[frame['Value 1'] <= 90])
+        sbp_count_95 = len(frame[frame['Value 1'] <= 95])
         hypertensive_dbp_count = len(frame[frame['Value 2'] >= HYPERTENSION_DBP_THRESHOLD])
         hypotensive_count = len(frame[frame['Value 1'] <= HYPOTENSION_SBP_THRESHOLD + 5])
 
@@ -60,24 +60,23 @@ def calculate_analysis(timeframes):
         analysis[name] = {
             'Avg Systolic BP (mmHg)': avg_systolic,
             'Avg Diastolic BP (mmHg)': avg_diastolic,
-            'Peak SBP¹ (mmHg)': peak_systolic,
-            'Peak DBP¹ (mmHg)': peak_diastolic,
-            'Low SBP² (mmHg)': low_systolic,
-            'Low DBP² (mmHg)': low_diastolic,
+            'Peak SBP² (mmHg)': peak_systolic,
+            'Peak DBP² (mmHg)': peak_diastolic,
+            'Low SBP³ (mmHg)': low_systolic,
+            'Low DBP³ (mmHg)': low_diastolic,
             'SBP SD (mmHg)': systolic_sd,
             'DBP SD (mmHg)': diastolic_sd,
             'SBP CV (%)': systolic_cv,
             'DBP CV (%)': diastolic_cv,
-            'SBP Count (>= 160 mmHg)': sbp_count_160,
-            'SBP Count (>= 165 mmHg)': sbp_count_165,
-            'SBP Count (>= 170 mmHg)': sbp_count_170,
-            'SBP Count (>= 175 mmHg)': sbp_count_175,
-            'DBP Count (>=80 mmHg)': dbp_count_80,
-            'DBP Count (>=85 mmHg)': dbp_count_85,
-            'DBP Count (>=90 mmHg)': dbp_count_90,
-            'DBP Count (>=95 mmHg)': dbp_count_95,
-            'Hypertensive DBP Count³': hypertensive_dbp_count,
-            'Hypotensive Count⁴': hypotensive_count,
+            'SBP Count (>= 160)': sbp_count_160,
+            'SBP Count (>= 165)': sbp_count_165,
+            'SBP Count (>= 170)': sbp_count_170,
+            'SBP Count (>= 175)': sbp_count_175,
+            'SBP Count (<=80)': sbp_count_80,
+            'SBP Count (<=85)': sbp_count_85,
+            'SBP Count (<=90)': sbp_count_90,
+            'SBP Count (<=95)': sbp_count_95,
+            # 'Hypotensive Count³': hypotensive_count,
         }
 
     points = {
@@ -87,8 +86,8 @@ def calculate_analysis(timeframes):
         'DBP CV (%)': {'increase': -1, 'decrease': 1},
         'SBP SD (mmHg)': {'increase': -1, 'decrease': 1},
         'DBP SD (mmHg)': {'increase': -1, 'decrease': 1},
-        'Peak SBP¹ (mmHg)': {'above_threshold': -2, 'below_threshold': 2},
-        'Peak DBP¹ (mmHg)': {'above_threshold': -2, 'below_threshold': 2}
+        'Peak SBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2},
+        'Peak DBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2}
     }
 
     thresholds = {
@@ -98,8 +97,8 @@ def calculate_analysis(timeframes):
         'DBP CV (%)': 1.4,
         'SBP SD (mmHg)': 1.5,
         'DBP SD (mmHg)': 1.3,
-        'Peak SBP¹ (mmHg)': 170,
-        'Peak DBP¹ (mmHg)': 110
+        'Peak SBP² (mmHg)': 170,
+        'Peak DBP² (mmHg)': 110
     }
 
     delta = 0
@@ -130,73 +129,106 @@ def calculate_analysis(timeframes):
                 baseline_abs_change = abs(baseline_change)
                 baseline_abs_percent_change = abs(baseline_percent_change)
 
+                default_progress = "=/="
+
                 # Handle average SBP and DBP
                 if metric in ['Avg Systolic BP (mmHg)', 'Avg Diastolic BP (mmHg)']:
+
                     if current_value >= thresholds[metric]:
-                        if change > 0:  # Increase in curr change
+                        curr_progress = "="  # Default for current change
+                        base_progress = "="  # Default for baseline change
+
+                        if change > 0:  # Increase in current change
                             delta += points[metric]['increase']
-                            analysis[current_timeframe][metric] = f"{current_value} -"
-                        elif baseline_change > 0: # Increase in baseline change
-                            baseline_delta += points[metric]['increase']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
-                        elif change < 0:  # Decrease in curr change
+                            curr_progress = "-"  # Indicates a decrease is needed
+                        elif change < 0:  # Decrease in current change
                             delta += points[metric]['decrease']
-                            analysis[current_timeframe][metric] = f"{current_value} +"
-                        elif baseline_change < 0: # Decrease in baseline change
+                            curr_progress = "+"  # Indicates an increase is needed
+
+                        if baseline_change > 0:  # Increase in baseline change
+                            baseline_delta += points[metric]['increase']
+                            base_progress = "-"  # Indicates a decrease is needed
+                        elif baseline_change < 0:  # Decrease in baseline change
                             baseline_delta += points[metric]['decrease']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
+                            base_progress = "+"  # Indicates an increase is needed
+
+                    # Update progress format as "(current change sign) / (baseline change sign)"
+                    progress = f"{curr_progress}/{base_progress}"
+
+                    # Keep the last f-string with the updated progress
+                    analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
                 # Handle SBP-SD and DBP-SD
                 elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
+                    curr_progress = "="  # Default for current change
+                    base_progress = "="  # Default for baseline change
                     if abs_change >= thresholds[metric]:
-                        if change > 0:  # Increase in curr change
+                        if change > 0:  # Increase in current change
                             delta += points[metric]['increase']
-                            analysis[current_timeframe][metric] = f"{current_value} -"
-                        elif change < 0:  # Decrease in curr change
+                            curr_progress = "-"  # Indicates a decrease is needed
+                        elif change < 0:  # Decrease in current change
                             delta += points[metric]['decrease']
-                            analysis[current_timeframe][metric] = f"{current_value} +"
+                            curr_progress = "+"  # Indicates an increase is needed
                     if baseline_abs_change >= thresholds[metric]:
                         if baseline_change > 0:  # Increase in baseline change
                             baseline_delta += points[metric]['increase']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                            base_progress = "-"  # Indicates a decrease is needed
                         elif baseline_change < 0:  # Decrease in baseline change
                             baseline_delta += points[metric]['decrease']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
+                            base_progress = "+"  # Indicates an increase is needed
+
+                    progress = f"{curr_progress}/{base_progress}"
+                    analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
                 # Handle SBP-CV and DBP-CV
                 elif metric in ['SBP CV (%)', 'DBP CV (%)']:
                     if abs_percent_change >= thresholds[metric]:
-                        if percent_change > 0:  # Increase in curr change
+                        curr_progress = "="  # Default for current change
+                        base_progress = "="  # Default for baseline change
+
+                        if percent_change > 0:  # Increase in current change
                             delta += points[metric]['increase']
-                            analysis[current_timeframe][metric] = f"{current_value} -"
-                        elif percent_change < 0:  # Decrease in curr change
+                            curr_progress = "-"  # Indicates a decrease is needed
+                        elif percent_change < 0:  # Decrease in current change
                             delta += points[metric]['decrease']
-                            analysis[current_timeframe][metric] = f"{current_value} +"
+                            curr_progress = "+"  # Indicates an increase is needed
+
                     if baseline_abs_percent_change >= thresholds[metric]:
                         if baseline_percent_change > 0:  # Increase in baseline change
                             baseline_delta += points[metric]['increase']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} -"
+                            base_progress = "-"  # Indicates a decrease is needed
                         elif baseline_percent_change < 0:  # Decrease in baseline change
                             baseline_delta += points[metric]['decrease']
-                            analysis[baseline_timeframe][metric] = f"{baseline_value} +"
+                            base_progress = "+"  # Indicates an increase is needed
+
+                    progress = f"{curr_progress}/{base_progress}"
+                    analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
                 # Handle categorical change for Peak BP
                 elif metric.startswith('Peak') and isinstance(current_value, (int, float)):
                     high_threshold = thresholds[metric]
-                    # Curr change
-                    if prior_value < high_threshold < current_value:
+                    curr_progress = "="  # Default for current change
+                    base_progress = "="  # Default for baseline change
+
+                    # Current change logic
+                    if prior_value < high_threshold < current_value:  # Crossed above threshold
                         delta += points[metric]['above_threshold']
-                        analysis[current_timeframe][metric] = f"{current_value} -"
-                    elif prior_value > high_threshold >= current_value:
+                        curr_progress = "-"  # Indicates a decrease is needed
+                    elif prior_value > high_threshold >= current_value:  # Crossed below threshold
                         delta += points[metric]['below_threshold']
-                        analysis[current_timeframe][metric] = f"{current_value} +"
-                    # Baseline change
-                    if baseline_value < high_threshold < current_value:
+                        curr_progress = "+"  # Indicates an increase is needed
+
+                    # Baseline change logic
+                    if baseline_value < high_threshold < current_value:  # Crossed above threshold
                         baseline_delta += points[metric]['above_threshold']
-                        analysis[baseline_timeframe][metric] = f"{baseline_value} -"
-                    elif baseline_value > high_threshold >= current_value:
+                        base_progress = "-"  # Indicates a decrease is needed
+                    elif baseline_value > high_threshold >= current_value:  # Crossed below threshold
                         baseline_delta += points[metric]['below_threshold']
-                        analysis[baseline_timeframe][metric] = f"{baseline_value} +"
+                        base_progress = "+"  # Indicates an increase is needed
+
+                    progress = f"{curr_progress}/{base_progress}"
+                    analysis[current_timeframe][metric] = f"{current_value} {progress}"
+
 
                 # Handle no change
                 # else:
@@ -266,11 +298,11 @@ def calculate_analysis(timeframes):
                 elif 6 <= value < 13:
                     overall_rating = 'Okay'
 
-            elif metric == 'Peak SBP¹ (mmHg)' and value is not None:
+            elif metric == 'Peak SBP² (mmHg)' and value is not None:
                 if value >= 170:
                     return 'Poor'
 
-            elif metric == 'Peak DBP¹ (mmHg)' and value is not None:
+            elif metric == 'Peak DBP² (mmHg)' and value is not None:
                 if value >= 110:
                     return 'Poor'
 
@@ -280,4 +312,3 @@ def calculate_analysis(timeframes):
     df.loc['Overall'] = df.apply(calculate_overall, axis=0)
 
     return df
-

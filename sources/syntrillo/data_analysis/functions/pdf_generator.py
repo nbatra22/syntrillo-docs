@@ -3,24 +3,43 @@ import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 from PyPDF2 import PdfMerger
+import textwrap
+
+def wrap_text(text, width=16):
+    """Manually inserts line breaks to wrap text in table headers."""
+    return "\n".join(textwrap.wrap(text, width))
+
 
 def save_to_pdf(analysis, extremes, output_file):
     with PdfPages(output_file) as pdf:
+
+        wrapped_col_labels = ['Metric'] + [wrap_text(col) for col in analysis.columns]
+
         # Analysis table
+
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.axis('off')
         ax.axis('tight')
+        # table = ax.table(cellText=analysis.reset_index().values,
+        #                  colLabels=[''] + list(analysis.columns),
+        #                  cellLoc='center', loc='center',
+        #                 #  bbox=[0, 0, 1, 1])
+        # )
         table = ax.table(cellText=analysis.reset_index().values,
-                         colLabels=[''] + list(analysis.columns),
-                         cellLoc='center', loc='center')
+                         colLabels=wrapped_col_labels,
+                         cellLoc='center', loc='center',
+                        #  bbox=[0, 0, 1, 1]
+                         )  # Fit the table inside figure
+
         table.auto_set_font_size(False)
         table.scale(1.2, 1.2)
 
         # Adjust cell formatting
         for (row, col), cell in table.get_celld().items():
             if row == 0:  # Wrap text for column headers
-                cell.set_text_props(wrap=True)
+                cell.set_height(cell.get_height() * 2)
                 cell.set_fontsize(8)
+                cell.set_text_props(wrap=True)
             elif col == 0:  # Wrap text for row headers
                 cell.set_text_props(wrap=True)
                 cell.set_fontsize(8)
@@ -34,7 +53,7 @@ def save_to_pdf(analysis, extremes, output_file):
                     color = 'white'
                     if isinstance(value, str):
                         # Remove trend arrows and convert to numeric
-                        value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
+                        value = pd.to_numeric(value.replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
 
                     if metric == 'Avg Systolic BP (mmHg)' and value is not None:
                         if value < 130:
@@ -78,12 +97,12 @@ def save_to_pdf(analysis, extremes, output_file):
                             color = 'yellow'
                         else:
                             color = 'red'
-                    elif metric == 'Peak SBP¹ (mmHg)' and value is not None:
+                    elif metric == 'Peak SBP² (mmHg)' and value is not None:
                         if value < 170:
                             color = 'lightgreen'
                         else:
                             color = 'red'
-                    elif metric == 'Peak DBP¹ (mmHg)' and value is not None:
+                    elif metric == 'Peak DBP² (mmHg)' and value is not None:
                         if value < 110:
                             color = 'lightgreen'
                         else:
@@ -93,14 +112,23 @@ def save_to_pdf(analysis, extremes, output_file):
 
         ax.set_title(os.path.basename(output_file).replace('_report.pdf', ' Analysis'))
 
-        # Add note about Peak rows
-        ax.text(0, 0, "¹ 'Peak' values represent the average of the three highest values in the timeframe.",
-                fontsize=8, transform=ax.transAxes, ha='left', va='top')
-        ax.text(0, -0.05, "² 'Low' values represent the single lowest value in the timeframe.",
-                fontsize=8, transform=ax.transAxes, ha='left', va='top')
-        ax.text(0, -0.10, "³ 'Hypotensive Measurements' indicates the count of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg.",
-                fontsize=8, transform=ax.transAxes, ha='left', va='top')
+         # Dynamically position footnotes below the table
+        table_bbox = table.get_window_extent(ax.figure.canvas.get_renderer()).transformed(ax.transAxes.inverted())
+        table_bottom = table_bbox.y0  # Get table's bottom y-coordinate
+        footnote_y_offset = 0.03  # Space between table and footnotes
 
+        # ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹
+        footnotes = [
+            "¹ (+ or -) / (+ or -) indicates the progress point allocation, from prior and baseline respectively",
+            "² 'Peak' values represent the average of the three highest values in the timeframe.",
+            "³ 'Low' values represent the single lowest value in the timeframe.",
+            # "³ 'Hypotensive Measurements' indicates the count of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
+        ]
+
+        # Add footnotes below the table
+        for i, text in enumerate(footnotes):
+            ax.text(0, table_bottom - (i + 1) * footnote_y_offset, text,
+                    fontsize=8, transform=ax.transAxes, ha='left', va='top')
 
         pdf.savefig(fig)
         plt.close(fig)
@@ -117,6 +145,9 @@ def save_to_pdf(analysis, extremes, output_file):
             ax.axis('tight')
             ax.text(0.5, 0.5, 'No extreme values found', transform=ax.transAxes, ha='center', va='center')
             ax.set_title(os.path.basename(output_file).replace('_report.pdf', " Extremes"))
+            # ax.text(0.5, 0.4, "Below are measurements where the patient recorded a Systolic BP above 170 mmHg\n"
+            #           "or below 90 mmHg, in addition to any Diastolic BP above 110 mmHg.",
+            #         fontsize=9, transform=ax.transAxes, ha='center', va='top')
             pdf.savefig(fig)
             plt.close(fig)
         else:
@@ -133,6 +164,9 @@ def save_to_pdf(analysis, extremes, output_file):
                          colLabels=['Date', 'Systolic BP', 'Diastolic BP'],
                          cellLoc='center', loc='center')
                 ax.set_title(os.path.basename(output_file).replace('_report.pdf', f" Extremes (Page {page + 1} of {num_pages})"))
+                # ax.text(0.5, 0.85, "Below are measurements where the patient recorded a Systolic BP above 170 mmHg\n"
+                #            "or below 90 mmHg, in addition to any Diastolic BP above 110 mmHg.",
+                #     fontsize=9, transform=ax.transAxes, ha='center', va='top')
                 pdf.savefig(fig)
                 plt.close(fig)
 

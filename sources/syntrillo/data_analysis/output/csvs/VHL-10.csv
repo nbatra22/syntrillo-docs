@@ -1,0 +1,22 @@
+,Baseline (10/29/24-11/11/24),Prior (01/01/25-01/14/25),Current¹ (01/15/25-01/28/25),Since Inception (Δ Unit),Since Inception (Δ Percent),Since Inception (Total)
+Avg Systolic BP (mmHg),115.49,130.44,118.69 +/-,3.2,2.8%,122.65
+Avg Diastolic BP (mmHg),65.94,76.31,71.74 +/-,5.8,8.8%,72.03
+Peak SBP² (mmHg),149.67,150.0,147.0 =/=,-2.67,-1.8%,168.67
+Peak DBP² (mmHg),85.0,87.67,88.0 =/=,3.0,3.5%,97.0
+Low SBP³ (mmHg),79,105,85,6,7.6%,71
+Low DBP³ (mmHg),43,63,52,9,20.9%,41
+SBP SD (mmHg),19.2,11.87,16.56 -/+,-2.64,-13.8%,17.36
+DBP SD (mmHg),9.2,6.08,8.86 -/=,-0.34,-3.7%,9.5
+SBP CV (%),16.62,9.1,13.95 -/+,-2.67,-16.1%,14.15
+DBP CV (%),13.95,7.97,12.35 -/+,-1.6,-11.5%,13.18
+SBP Count (>= 160),1,0,0,-1,-100.0%,10
+SBP Count (>= 165),0,0,0,0,0.0%,4
+SBP Count (>= 170),0,0,0,0,0.0%,1
+SBP Count (>= 175),0,0,0,0,0.0%,0
+SBP Count (<=80),3,0,0,-3,-100.0%,4
+SBP Count (<=85),4,0,1,-3,-75.0%,8
+SBP Count (<=90),7,0,3,-4,-57.1%,19
+SBP Count (<=95),8,0,4,-4,-50.0%,32
+Progress (pts),-,-,Same (0),,%,
+Baseline Progress (pts),-,-,Worsening (-1),,%,
+Overall,Poor,Okay,Good,,%,
