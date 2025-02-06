@@ -78,13 +78,35 @@ class RemoteMonitoringDataSync(Construct):
         self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.tenovi_hwi_secrets)
         self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.healthie_secrets)
 
-        # -----------------------------------------------------------------------
-        # Step functions workflow
+        function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        )
+
+    def grant_read_secrets(self, function, secrets):
+        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
+            resources=[secrets.secret_arn],
+        ))
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["kms:Decrypt"],
+            resources=[secrets.encryption_key.key_arn],
+        ))
+
+class DataSyncWorkflow(Construct):
+    def __init__(self, scope: Construct, id: str,
+                 remote_monitoring_data_sync_function: _lambda.Function,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
 
         # Create Step Functions tasks
         list_patients_task = tasks.LambdaInvoke(
             self, "ListPatients",
-            lambda_function=self.remote_monitoring_data_sync_function,
+            lambda_function=remote_monitoring_data_sync_function,
             payload=sfn.TaskInput.from_object({
                 "action": "list_patients"
             }),
@@ -96,7 +118,7 @@ class RemoteMonitoringDataSync(Construct):
 
         sync_patient_task = tasks.LambdaInvoke(
             self, "SyncPatientData",
-            lambda_function=self.remote_monitoring_data_sync_function,
+            lambda_function=remote_monitoring_data_sync_function,
             payload=sfn.TaskInput.from_object({
                 "action": "sync_patient",
                 "id.$": "$.id"
@@ -118,9 +140,9 @@ class RemoteMonitoringDataSync(Construct):
         map_state.item_processor(sync_patient_task)
 
         # Create the state machine
-        state_machine = sfn.StateMachine(
-            self, "RemoteMonitoringDataSyncWorkflow",
-            state_machine_name="RemoteMonitoringDataSyncWorkflow",
+        self.state_machine = sfn.StateMachine(
+            self, "StepFunctionsDataSyncWorkflow",
+            state_machine_name="StepFunctionsDataSyncWorkflow",
             definition_body=sfn.DefinitionBody.from_chainable(
                 list_patients_task.next(map_state)
             ),
@@ -146,37 +168,11 @@ class RemoteMonitoringDataSync(Construct):
             enabled=True,
         )
 
-        # # Add the Lambda function as a target for the scheduled event
-        # event_rule.add_target(
-        #     targets.LambdaFunction(
-        #         self.remote_monitoring_data_sync_function,
-        #     )
-        # )
-
         # Add the state machine as a target for the rule
         event_rule.add_target(
-            targets.SfnStateMachine(state_machine)
+            targets.SfnStateMachine(self.state_machine)
         )
-
-        function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
-
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
-        )
-
-    def grant_read_secrets(self, function, secrets):
-        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
-        function.add_to_role_policy(iam.PolicyStatement(
-            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
-            resources=[secrets.secret_arn],
-        ))
-        function.add_to_role_policy(iam.PolicyStatement(
-            actions=["kms:Decrypt"],
-            resources=[secrets.encryption_key.key_arn],
-        ))
-
+        
 class PIIDataSync(Construct):
     def __init__(self, scope: Construct, id: str, 
                  aws_environment: str, 
@@ -299,4 +295,9 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
             database=self.database,
             storage=self.storage,
             secrets=self.secrets,
+        )
+
+        data_sync_workflow = DataSyncWorkflow(
+            self, "DataSyncFunction",
+            remote_monitoring_data_sync_function = remote_monitoring_data_sync.remote_monitoring_data_sync_function,
         )
