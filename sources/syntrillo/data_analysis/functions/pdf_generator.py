@@ -43,7 +43,7 @@ def save_to_pdf(analysis, extremes, output_file):
             elif col == 0:  # Wrap text for row headers
                 cell.set_text_props(wrap=True)
                 cell.set_fontsize(8)
-            elif row > 0 and "Since Inception" in analysis.columns[col - 1]:  # Exclude coloring for Since Inception column
+            elif row > 0 and "Δ" in analysis.columns[col - 1]:  # Exclude coloring for Since Inception column
                 cell.set_facecolor('white')
             else:  # Apply colorization logic
                 metric = analysis.index[row - 1] if row > 0 else None
@@ -55,14 +55,14 @@ def save_to_pdf(analysis, extremes, output_file):
                         # Remove trend arrows and convert to numeric
                         value = pd.to_numeric(value.replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
 
-                    if metric == 'Avg Systolic BP (mmHg)' and value is not None:
+                    if metric == 'Avg SBP (mmHg)' and value is not None:
                         if value < 130:
                             color = 'lightgreen'
                         elif 130 <= value <= 139:
                             color = 'yellow'
                         else:
                             color = 'red'
-                    elif metric == 'Avg Diastolic BP (mmHg)' and value is not None:
+                    elif metric == 'Avg DBP (mmHg)' and value is not None:
                         if value < 80:
                             color = 'lightgreen'
                         elif 80 <= value <= 89:
@@ -119,10 +119,10 @@ def save_to_pdf(analysis, extremes, output_file):
 
         # ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹
         footnotes = [
-            "¹ (+ or -) / (+ or -) indicates the progress point allocation, from prior and baseline respectively",
+            '¹ (+/=/-) / (+/=/-) indicates the progress point allocation, from prior and baseline respectively. "=" means no points were allocated.',
             "² 'Peak' values represent the average of the three highest values in the timeframe.",
             "³ 'Low' values represent the single lowest value in the timeframe.",
-            # "³ 'Hypotensive Measurements' indicates the count of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
+            "⁴ 'Hypotensive Count' indicates the number of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
         ]
 
         # Add footnotes below the table

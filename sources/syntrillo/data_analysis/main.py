@@ -4,7 +4,7 @@ import pandas as pd
 from functions.process_csv import read_csv_file, preprocess_data
 from functions.calculate_analysis import calculate_analysis
 from functions.calculate_extremes import calculate_extremes
-from functions.calculate_since_inception import calculate_since_inception
+from syntrillo.data_analysis.functions.calculate_since_baseline import calculate_since_baseline
 from functions.calculate_timeframes import calculate_timeframes
 from functions.calculate_total_counts import calculate_total_counts
 from functions.pdf_generator import save_to_pdf, combine_pdfs, save_aggregate_pdf
@@ -64,7 +64,7 @@ if __name__ == "__main__":
             # Calculate timeframes and analysis
             timeframes = calculate_timeframes(bp_data)
             analysis_table_without_inception = calculate_analysis(timeframes)
-            analysis_table_with_inception = calculate_since_inception(total_counts, analysis_table_without_inception)
+            analysis_table_with_inception = calculate_since_baseline(total_counts, analysis_table_without_inception)
 
             # Create CSV
             csv_data.append(analysis_table_without_inception)

@@ -1,6 +1,6 @@
 import pandas as pd
 
-def calculate_since_inception(counts_dict, analysis_table):
+def calculate_since_baseline(counts_dict, analysis_table):
     def calculate_unit_change(row, baseline_col, current_col):
         baseline_val = pd.to_numeric(str(row[baseline_col]).replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
         current_val = pd.to_numeric(str(row[current_col]).replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
@@ -28,11 +28,11 @@ def calculate_since_inception(counts_dict, analysis_table):
 
     if baseline_col and current_col:
         # Add the "Δ Unit" column from analysis_table, matching index labels
-        analysis_table['Since Inception (Δ Unit)'] = analysis_table.apply(lambda row: calculate_unit_change(row, baseline_col, current_col), axis=1)
+        analysis_table['Since Baseline (Δ Unit)'] = analysis_table.apply(lambda row: calculate_unit_change(row, baseline_col, current_col), axis=1)
         # Add the "Δ Percent" column from analysis_table, matching index labels
-        analysis_table['Since Inception (Δ Percent)'] = analysis_table.apply(lambda row: f"{calculate_percent_change(row, baseline_col, current_col)}%", axis=1)
+        analysis_table['Since Baseline (Δ Percent)'] = analysis_table.apply(lambda row: f"{calculate_percent_change(row, baseline_col, current_col)}%", axis=1)
 
     # Add the "Total" column from counts_dict, matching index labels
-    analysis_table['Since Inception (Total)'] = analysis_table.index.map(lambda idx: counts_dict.get(idx, ''))
+    analysis_table['Since Baseline (Total)'] = analysis_table.index.map(lambda idx: counts_dict.get(idx, ''))
 
     return analysis_table

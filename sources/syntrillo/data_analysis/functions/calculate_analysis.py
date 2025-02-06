@@ -13,8 +13,8 @@ def calculate_analysis(timeframes):
     for name, frame in timeframes.items():
         if frame.empty:
             analysis[name] = {
-                'Avg Systolic BP (mmHg)': None,
-                'Avg Diastolic BP (mmHg)': None,
+                'Avg SBP (mmHg)': None,
+                'Avg DBP (mmHg)': None,
                 'Peak SBP² (mmHg)': None,
                 'Peak DBP² (mmHg)': None,
                 'Low SBP³ (mmHg)': None,
@@ -23,15 +23,15 @@ def calculate_analysis(timeframes):
                 'DBP SD (mmHg)': None,
                 'SBP CV (%)': None,
                 'DBP CV (%)': None,
-                'SBP Count (>= 160)': None,
-                'SBP Count (>= 165)': None,
+                # 'SBP Count (>= 160)': None,
+                # 'SBP Count (>= 165)': None,
                 'SBP Count (>= 170)': None,
                 'SBP Count (>= 175)': None,
-                'SBP Count (<=80)': None,
-                'SBP Count (<=85)': None,
-                'SBP Count (<=90)': None,
-                'SBP Count (<=95)': None,
-                # 'Hypotensive Count³': None,
+                # 'SBP Count (<=80)': None,
+                # 'SBP Count (<=85)': None,
+                # 'SBP Count (<=90)': None,
+                # 'SBP Count (<=95)': None,
+                'Hypotensive Count⁴': None,
             }
             continue
 
@@ -58,8 +58,8 @@ def calculate_analysis(timeframes):
 
 
         analysis[name] = {
-            'Avg Systolic BP (mmHg)': avg_systolic,
-            'Avg Diastolic BP (mmHg)': avg_diastolic,
+            'Avg SBP (mmHg)': avg_systolic,
+            'Avg DBP (mmHg)': avg_diastolic,
             'Peak SBP² (mmHg)': peak_systolic,
             'Peak DBP² (mmHg)': peak_diastolic,
             'Low SBP³ (mmHg)': low_systolic,
@@ -68,20 +68,20 @@ def calculate_analysis(timeframes):
             'DBP SD (mmHg)': diastolic_sd,
             'SBP CV (%)': systolic_cv,
             'DBP CV (%)': diastolic_cv,
-            'SBP Count (>= 160)': sbp_count_160,
-            'SBP Count (>= 165)': sbp_count_165,
+            # 'SBP Count (>= 160)': sbp_count_160,
+            # 'SBP Count (>= 165)': sbp_count_165,
             'SBP Count (>= 170)': sbp_count_170,
             'SBP Count (>= 175)': sbp_count_175,
-            'SBP Count (<=80)': sbp_count_80,
-            'SBP Count (<=85)': sbp_count_85,
-            'SBP Count (<=90)': sbp_count_90,
-            'SBP Count (<=95)': sbp_count_95,
-            # 'Hypotensive Count³': hypotensive_count,
+            # 'SBP Count (<=80)': sbp_count_80,
+            # 'SBP Count (<=85)': sbp_count_85,
+            # 'SBP Count (<=90)': sbp_count_90,
+            # 'SBP Count (<=95)': sbp_count_95,
+            'Hypotensive Count⁴': hypotensive_count,
         }
 
     points = {
-        'Avg Systolic BP (mmHg)': {'increase': -2, 'decrease': 2},
-        'Avg Diastolic BP (mmHg)': {'increase': -2, 'decrease': 2},
+        'Avg SBP (mmHg)': {'increase': -2, 'decrease': 2},
+        'Avg DBP (mmHg)': {'increase': -2, 'decrease': 2},
         'SBP CV (%)': {'increase': -1, 'decrease': 1},
         'DBP CV (%)': {'increase': -1, 'decrease': 1},
         'SBP SD (mmHg)': {'increase': -1, 'decrease': 1},
@@ -91,8 +91,8 @@ def calculate_analysis(timeframes):
     }
 
     thresholds = {
-        'Avg Systolic BP (mmHg)': 2,
-        'Avg Diastolic BP (mmHg)': 2,
+        'Avg SBP (mmHg)': 2,
+        'Avg DBP (mmHg)': 2,
         'SBP CV (%)': 1.1,
         'DBP CV (%)': 1.4,
         'SBP SD (mmHg)': 1.5,
@@ -129,10 +129,9 @@ def calculate_analysis(timeframes):
                 baseline_abs_change = abs(baseline_change)
                 baseline_abs_percent_change = abs(baseline_percent_change)
 
-                default_progress = "=/="
 
-                # Handle average SBP and DBP
-                if metric in ['Avg Systolic BP (mmHg)', 'Avg Diastolic BP (mmHg)']:
+                # Handle average SBP and DBP ------------------
+                if metric in ['Avg SBP (mmHg)', 'Avg DBP (mmHg)']:
 
                     if current_value >= thresholds[metric]:
                         curr_progress = "="  # Default for current change
@@ -158,7 +157,7 @@ def calculate_analysis(timeframes):
                     # Keep the last f-string with the updated progress
                     analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
-                # Handle SBP-SD and DBP-SD
+                # Handle SBP-SD and DBP-SD ------------------
                 elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
                     curr_progress = "="  # Default for current change
                     base_progress = "="  # Default for baseline change
@@ -180,7 +179,7 @@ def calculate_analysis(timeframes):
                     progress = f"{curr_progress}/{base_progress}"
                     analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
-                # Handle SBP-CV and DBP-CV
+                # Handle SBP-CV and DBP-CV ------------------
                 elif metric in ['SBP CV (%)', 'DBP CV (%)']:
                     if abs_percent_change >= thresholds[metric]:
                         curr_progress = "="  # Default for current change
@@ -230,10 +229,6 @@ def calculate_analysis(timeframes):
                     analysis[current_timeframe][metric] = f"{current_value} {progress}"
 
 
-                # Handle no change
-                # else:
-                #     analysis[current_timeframe][metric] = f"{current_value} ="
-
     # Add the total delta as a new key for the extra cell
     progress = "Improving" if delta > 0 else "Worsening" if delta < 0 else "Same"
     baseline_progress = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
@@ -262,13 +257,13 @@ def calculate_analysis(timeframes):
                 # Remove trend arrows (↑/↓) and convert to numeric
                 value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
 
-            if metric == 'Avg Systolic BP (mmHg)' and value is not None:
+            if metric == 'Avg SBP (mmHg)' and value is not None:
                 if value >= 140:
                     return 'Poor'  # Immediate return for highest priority
                 elif 130 <= value < 140:
                     overall_rating = 'Okay'
 
-            elif metric == 'Avg Diastolic BP (mmHg)' and value is not None:
+            elif metric == 'Avg DBP (mmHg)' and value is not None:
                 if value >= 90:
                     return 'Poor'
                 elif 80 <= value < 90:
