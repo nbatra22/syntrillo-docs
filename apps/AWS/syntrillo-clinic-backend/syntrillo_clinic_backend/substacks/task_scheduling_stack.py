@@ -100,6 +100,7 @@ class RemoteMonitoringDataSync(Construct):
 class DataSyncWorkflow(Construct):
     def __init__(self, scope: Construct, id: str,
                  remote_monitoring_data_sync_function: _lambda.Function,
+                 pii_data_sync_function: _lambda.Function,
                  **kwargs):
         super().__init__(scope, id, **kwargs)
 
@@ -139,12 +140,22 @@ class DataSyncWorkflow(Construct):
 
         map_state.item_processor(sync_patient_task)
 
+        # Add PII sync task
+        pii_sync_task = tasks.LambdaInvoke(
+            self, "PIISyncTask",
+            lambda_function=pii_data_sync_function,
+            payload=sfn.TaskInput.from_object({
+                "action": "sync_pii"
+            }),
+            result_path="$"
+        )
+
         # Create the state machine
         self.state_machine = sfn.StateMachine(
             self, "StepFunctionsDataSyncWorkflow",
             state_machine_name="StepFunctionsDataSyncWorkflow",
             definition_body=sfn.DefinitionBody.from_chainable(
-                list_patients_task.next(map_state)
+                list_patients_task.next(map_state.next(pii_sync_task))
             ),
             timeout=Duration.minutes(30),
             tracing_enabled=True
@@ -300,4 +311,5 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
         data_sync_workflow = DataSyncWorkflow(
             self, "DataSyncFunction",
             remote_monitoring_data_sync_function = remote_monitoring_data_sync.remote_monitoring_data_sync_function,
+            pii_data_sync_function = pii_data_sync.pii_data_sync_function,
         )
