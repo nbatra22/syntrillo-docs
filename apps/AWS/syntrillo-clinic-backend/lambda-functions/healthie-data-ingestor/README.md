@@ -5,6 +5,10 @@
   - [Forms definitions](#forms-definitions)
   - [Form responses](#form-responses)
 
+- [Questions for Omar](#question-for-omar)
+- [Questions and answers to help Alex](#questions-and-answers-to-help-alex)
+- [TODOs for Pau](#todos-for-pau)
+
 ### What data do we need to ingest?
 
 We need to track
@@ -15,7 +19,6 @@ We daily sync the data from Healthie to our Amzon RDS.
 From there, the Amazon Data Migration Service will copy the data to a raw data bucket on S3 (aka data lake).
 
 Once we have the data in S3, we need to transform it into a more usable format for our analytics and reporting. But this is something we do in the data warehouse, not here.
-
 
 ### Forms definitions
 
@@ -85,7 +88,7 @@ We need to track the responses to the forms that patients (or sometimes clinicia
 
 ```graphql
 query formAnswerGroups(
-  $date: ISO8601DateTime, # e.g "2021-10-29"
+  $date: String, # e.g "2021-10-29" using type ISO8601DateTime does not work
   $custom_module_form_id: ID, # e.g "11"
   ) {
   formAnswerGroups(
@@ -120,6 +123,22 @@ The response will be a nested JSON, that we can transform into a flat dictionary
 - `answer`: answer to the question, from the `"displayed_answer"` field in the response
 - `created_at`: date and time when the answer was submitted
 
+## Question for Omar
 
+- What about capturing forms that are sent to patients but not answered?
+  - Is this a potential sign of risk we should collect in our DB?
+
+## Questions and answers to help Alex
+- How to run a GraphQL query to fetch data from Healthie
+  [Check this](https://github.com/Syntrillo/SyntrilloClinic/blob/e207f714a5ccdde39569b9e29026aaff0525dc6d/sources/syntrillo/api_healthie/forms.py#L44)
+
+- How to create the two tables we need `healthie.forms` and `healthie.form_responses`
+  [This is the file with some example queries](https://github.com/Syntrillo/SyntrilloClinic/blob/prod/apps/AWS/syntrillo-clinic-backend/utils/database/create-or-recreate-tables.sql)
+
+## TODOs for Pau
+
+- Quick docs on how to:
+  - Run an SQL query against our AWS RDS.
+  - How to define a new table in our database.
 
 
