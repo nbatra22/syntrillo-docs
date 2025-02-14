@@ -1,0 +1,17 @@
+,Baseline (12/03/24-12/16/24),Prior (12/19/24-01/01/25),Current¹ (01/02/25-01/15/25),Since Baseline (Δ Unit),Since Baseline (Δ Percent),Since Baseline (Total)
+Avg SBP (mmHg),133.83,133.0,131.8 +/+,-2.03,-1.5%,132.74
+Avg DBP (mmHg),83.67,82.92,82.55 +/+,-1.12,-1.3%,82.6
+Peak SBP² (mmHg),165.33,172.33,161.67 +/=,-3.66,-2.2%,174.67
+Peak DBP² (mmHg),106.33,110.67,102.33 +/=,-4.0,-3.8%,112.67
+Low SBP³ (mmHg),87,94,93,6,6.9%,87
+Low DBP³ (mmHg),58,59,61,3,5.2%,58
+SBP SD (mmHg),17.61,17.94,15.91 +/+,-1.7,-9.7%,16.76
+DBP SD (mmHg),11.25,10.8,9.3 +/+,-1.95,-17.3%,10.4
+SBP CV (%),13.16,13.49,12.07 +/+,-1.09,-8.3%,12.63
+DBP CV (%),13.45,13.02,11.27 +/+,-2.18,-16.2%,12.59
+SBP Count (>= 170),0,1,0,0,0.0%,1
+SBP Count (>= 175),0,1,0,0,0.0%,1
+Hypotensive Count⁴,5,2,1,-4,-80.0%,8
+Progress (pts),-,-,Improving (12),,%,
+Baseline Progress (pts),-,-,Improving (8),,%,
+Overall,Poor,Poor,Good,,%,
