@@ -77,48 +77,14 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def fetchAndInsertAllFormTemplates():
     '''
-    Fetch all form templates from Healthie API
-    See https://docs.gethealthie.com/docs/#retrieving-a-form
+    Fetch all form templates from Healthie API for a given healthie_user_id
+    See https://docs.gethealthie.com/docs/#form-templates
 
     Parameters:
         None
 
     Returns:
-        dict:   Returns a CustomModuleForm object, with all CustomModule objects
-                : https://docs.gethealthie.com/schema/custommoduleform.doc
-                : https://docs.gethealthie.com/schema/custommodule.doc
-
-        For example:
-            {
-            "customModuleForm": {
-                "id": "1377148",
-                "is_video": false,
-                "name": "Tenovi Pillbox Expectations (v0.2)",
-                "prefill": false,
-                "uploaded_by_healthie_team": false,
-                "created_at": "2024-07-11 17:51:16 +0200",
-                "external_id": "tenovi_pillbox_expectations",
-                "external_id_type": null,
-                "has_matrix_field": false,
-                "has_non_readonly_modules": true,
-                "updated_at": "2024-07-15 01:20:49 +0200",
-                "use_for_charting": true,
-                "use_for_program": false,
-                "custom_modules": [
-                    {
-                        "id": "11843042",
-                        "external_id": "openings_pm",
-                        "external_id_type": null,
-                        "label": "Number of PM opening(s)",
-                        "sublabel": "Leave blank if you have to use daily total",
-                        "is_custom": false,
-                        "mod_type": "number",
-                        "options": null,
-                        "options_array": [],
-                        "position": 4000000000.0,
-                        "required": false
-                    },
-
+        dict:   dict: The JSON response 'data' from the API.
     '''
     # Set up the GraphQL query to list custom module forms
     query = '''
@@ -180,48 +146,14 @@ def fetchAndInsertAllFormTemplates():
 
 def fetchAndInsertAllFormResponses():
     '''
-    Fetch all form templates from Healthie API
-    See https://docs.gethealthie.com/docs/#retrieving-a-form
+        Fetch all form templates from Healthie API for a given healthie_user_id
+    See https://docs.gethealthie.com/docs/#form-templates
 
     Parameters:
         None
 
     Returns:
-        dict:   Returns a CustomModuleForm object, with all CustomModule objects
-                : https://docs.gethealthie.com/schema/custommoduleform.doc
-                : https://docs.gethealthie.com/schema/custommodule.doc
-
-        For example:
-            {
-            "customModuleForm": {
-                "id": "1377148",
-                "is_video": false,
-                "name": "Tenovi Pillbox Expectations (v0.2)",
-                "prefill": false,
-                "uploaded_by_healthie_team": false,
-                "created_at": "2024-07-11 17:51:16 +0200",
-                "external_id": "tenovi_pillbox_expectations",
-                "external_id_type": null,
-                "has_matrix_field": false,
-                "has_non_readonly_modules": true,
-                "updated_at": "2024-07-15 01:20:49 +0200",
-                "use_for_charting": true,
-                "use_for_program": false,
-                "custom_modules": [
-                    {
-                        "id": "11843042",
-                        "external_id": "openings_pm",
-                        "external_id_type": null,
-                        "label": "Number of PM opening(s)",
-                        "sublabel": "Leave blank if you have to use daily total",
-                        "is_custom": false,
-                        "mod_type": "number",
-                        "options": null,
-                        "options_array": [],
-                        "position": 4000000000.0,
-                        "required": false
-                    },
-
+        dict:   dict: The JSON response 'data' from the API.
     '''
     # Set up the GraphQL query to list custom module forms
     query = '''
@@ -253,8 +185,9 @@ def fetchAndInsertAllFormResponses():
 
     # Set up the variables for the GraphQL query
     variables = {}
-    auth = HealthieAuth()
+
     # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+    auth = HealthieAuth()
     json_response, log_response = auth.send_query(query, variables)
     print(log_response)
 

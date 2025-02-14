@@ -621,10 +621,10 @@ class SyntrilloDatabaseManager:
 
     def insert_overwrite_healthie_form_templates(self, data_json: dict) -> dict:
         """
-            Insert a new raw measurement for a Tenovi device
+            Inserts or updates form template data into the healthie_form_templates table from a JSON payload
 
             Args:
-                data_json (dict): The data in JSON format
+                data_json (dict): The data in JSON string format
 
             Returns:
                 log (dict): The log of the request, with "success" key set to True or False
@@ -680,7 +680,7 @@ class SyntrilloDatabaseManager:
 
     def insert_overwrite_healthie_form_responses(self, data_json: dict) -> dict:
             """
-                Insert a new raw measurement for a Tenovi device
+                Inserts or updates form template data into the healthie_form_responses table from a JSON payload
 
                 Args:
                     data_json (dict): The data in JSON format
