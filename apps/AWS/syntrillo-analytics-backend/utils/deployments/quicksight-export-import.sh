@@ -3,6 +3,7 @@ AWS_ACCOUNT_ID='381491864638' # Prod
 
 AWS_REGION='us-east-1'
 AWS_PROFILE='syntrillo-clinic-prod'
+# AWS_PROFILE='syntrillo-clinic-staging'
 ANALYSIS_ID='syntrillo-billing-report'
 NAME="SyntrilloBillingReport"
 USER_ROLE='SyntrilloClinicStagingUserRole'
@@ -16,9 +17,6 @@ USER_NAME='olemaitre'
 aws quicksight delete-analysis --profile $AWS_PROFILE --aws-account-id  $AWS_ACCOUNT_ID --analysis-id $ANALYSIS_ID --region $AWS_REGION
 # aws quicksight list-analyses --profile $AWS_PROFILE --aws-account-id $AWS_ACCOUNT_ID # --query 'AnalysisSummaryList[].DataSetArns[]'
 
-# IF ANALYSIS CREATION FAILS
-# aws quicksight describe-analysis --aws-account-id $AWS_ACCOUNT_ID --analysis-id $ANALYSIS_ID --profile $AWS_PROFILE
-
 # exit
 
 # aws quicksight list-analyses  --aws-account-id $AWS_ACCOUNT_ID  --region $AWS_REGION
@@ -26,6 +24,10 @@ aws quicksight delete-analysis --profile $AWS_PROFILE --aws-account-id  $AWS_ACC
 
 aws quicksight create-analysis  --profile $AWS_PROFILE --aws-account-id $AWS_ACCOUNT_ID --analysis-id $ANALYSIS_ID  --name $NAME  --definition file://quicksight-dashboard-definition.json
 # aws quicksight update-analysis  --profile $AWS_PROFILE --aws-account-id $AWS_ACCOUNT_ID --analysis-id $ANALYSIS_ID  --name $NAME  --definition file://quicksight-dashboard-definition.json
+
+# IF ANALYSIS CREATION FAILS
+aws quicksight describe-analysis --aws-account-id $AWS_ACCOUNT_ID --analysis-id $ANALYSIS_ID --profile $AWS_PROFILE
+
 
 # exit
 
