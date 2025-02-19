@@ -1,0 +1,57 @@
+
+<!-- Main Content -->
+<div class="">
+
+    <div class="bp_header">
+        <h2 class="">
+            Blood Pressure Analysis
+        </h2>
+
+        <a
+            href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure', pdf=True) }}"
+            target="_blank"
+            class="styled-button"
+            id="bp-download"
+        >
+            <span class="icon-container">
+                <i class="fas fa-download" id="download-icon"></i>
+            </span>
+            Download Report
+        </a>
+    </div>
+
+    <div class="bp-content">
+        {{ analysis_html | safe }}
+    </div>
+
+</div>
+
+<!-- Styling -->
+<style>
+    .bp_header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+    }
+</style>
+
+<!-- Scripts -->
+<script>
+    document.getElementById("bp-download").addEventListener("click", function() {
+        let downloadIcon = document.getElementById("download-icon");
+
+        // Save original classes
+        let originalClasses = downloadIcon.className;
+
+        // Change to a loading spinner
+        downloadIcon.className = "fas fa-spinner fa-spin";
+
+        // Simulate a file download delay (e.g., 2 seconds)
+        setTimeout(() => {
+            downloadIcon.className = originalClasses; // Restore original icon
+        }, 2000);
+
+    });
+
+</script>

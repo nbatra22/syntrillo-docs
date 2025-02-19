@@ -53,6 +53,9 @@
         <li class="nav-item">
             <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-bp-analysis-tab" data-toggle="tab" href="#tab-bp-analysis" role="tab" aria-controls="tab-bp-analysis" aria-selected="false">Blood Pressure</a>
+        </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
@@ -66,6 +69,7 @@
         <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
         <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
         <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
+        <div class="tab-pane fade" id="tab-bp-analysis" role="tabpanel" aria-labelledby="tab-bp-analysis-tab"></div>
         <div class="tab-pane fade" id="tab-cdss" role="tabpanel" aria-labelledby="tab-cdss-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
         <div class="tab-pane fade" id="tab-system-devices" role="tabpanel" aria-labelledby="tab-system-devices-tab"></div>
@@ -220,6 +224,7 @@
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-bp-analysis');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
 
@@ -230,4 +235,3 @@
 
 </body>
 </html>
-
