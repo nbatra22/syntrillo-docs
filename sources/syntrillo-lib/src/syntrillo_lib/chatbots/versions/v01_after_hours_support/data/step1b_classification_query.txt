@@ -1,1 +1,0 @@
-Are the last messages technical or clinical? You have to answer with a single word: 'technical', 'medical', 'unknown' or 'other'.
