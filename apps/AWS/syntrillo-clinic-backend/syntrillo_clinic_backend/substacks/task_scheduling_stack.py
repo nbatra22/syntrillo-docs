@@ -167,7 +167,7 @@ class DataSyncWorkflow(Construct):
         # This avoids using database resources during working hours
         schedule = events.Schedule.cron(
             minute="0",
-            hour="0",
+            hour="0/6",
             month="*",
             week_day="*",
             year="*",
