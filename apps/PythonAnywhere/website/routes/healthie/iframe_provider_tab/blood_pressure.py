@@ -35,10 +35,16 @@ from syntrillo.system.logger import logger
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure', methods=['GET','POST'])
 def iframe_healthie_provider_tab_blood_pressure():
     """
-    This endpoint is used to display blood pressure analysis table and a pdf download,
-    which is called by the healthie_iframe_provider_tab index.html.
 
-    The pdf can be viewed in sources/bp_analysis/reports.
+    This endpoint is used to display blood pressure tab, which is called by the healthie_iframe_provider_tab index.html.
+
+    Visualizes blood pressure analysis table and a pdf download button.
+
+    To do:
+        - Add form to html to allow provider options to:
+            a. show/hide patient name
+            b. custom name report
+
     """
     # Check if the request origin/referer is allowed
     iframe_validator = IframeValidator()
@@ -49,43 +55,31 @@ def iframe_healthie_provider_tab_blood_pressure():
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
-    # deal with patients not registered at Syntrillo
+    # Deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
-    # --------------------------------------------------------------------
-
-    # ---
-    # Get the data and generate plot
+    # Establish connection to BloodPressureAnalysis class
     data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
 
-    # Get all available data
+    # Get all available blood pressure data
     _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe(
         start_date=None,
         end_date=None,
     )
 
-    # If no data, return None
-    # If data, return the plot as html or json as requested
+    # Confirm blood pressure data is pulled
     if log['success'] == False:
         return jsonify({'html': 'Internal error: Unable to obtain blood pressure dataframe' })
 
-    # Check if pdf is required (for download button)
-    is_pdf = request.form.get('pdf')
+    # Generate analysis + extremes table using BloodPressureAnalysis class methods
+    metadata = data_reporting_blood_pressure.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
+    timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
+    analysis_table = data_reporting_blood_pressure.calculate_analysis() # Calculates row values for each timeframe
+    analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
+    extremes = data_reporting_blood_pressure.calculate_extremes() # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
 
-    metadata = data_reporting_blood_pressure.calculate_metadata()
-    timeframes = data_reporting_blood_pressure.calculate_timeframes()
-    analysis_table = data_reporting_blood_pressure.calculate_analysis()
-    analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table)
-    extremes = data_reporting_blood_pressure.calculate_extremes()
-
-    # if is_pdf == True:
-    #     # Convert rendered HTML to PDF
-    #     bp_analysis_pdf = data_reporting_blood_pressure.generate_pdf(analysis_table_with_inception, extremes)
-
-    #     # Return the PDF for download
-    #     return send_file(bp_analysis_pdf, as_attachment=True, download_name="blood-pressure-report.pdf")
-
+    # Prepare html + json variables to send to "Blood Pressure" tab
     analysis_html = analysis_table_with_inception.to_html(classes="table table-striped")
     analysis_json = analysis_table_with_inception.to_json()
     extremes_json = extremes.to_json()
@@ -99,6 +93,12 @@ def iframe_healthie_provider_tab_blood_pressure():
 
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
 def iframe_healthie_provider_tab_download_bp_pdf():
+    """
+
+    This endpoint is linked to the report download button in the Blood Pressure tab.
+
+    """
+    # Obtain the json strings from url params
     analysis_json = request.args.get('analysis_json')
     extremes_json = request.args.get('extremes_json')
 
@@ -108,12 +108,14 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
-    # deal with patients not registered at Syntrillo
+    # Deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
+    # Establish connection to BloodPressureAnalysis class
     data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
 
+    # Convert json variables to dataframes and send to generate_pdf class method
     analysis_df = pd.read_json(analysis_json)
     extremes_df = pd.read_json(extremes_json)
     bp_pdf = data_reporting_blood_pressure.generate_pdf(analysis=analysis_df, extremes=extremes_df)

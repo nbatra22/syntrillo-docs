@@ -2,15 +2,9 @@ import uuid
 import json
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta, timezone
-import plotly.graph_objs as go
-import plotly.io as pio
-import plotly.utils as pu
+from datetime import datetime, timezone
 from typing import Tuple
 import matplotlib
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-from PyPDF2 import PdfMerger
 import textwrap
 import io
 
@@ -19,38 +13,35 @@ from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
-matplotlib.use('Agg')
-
-from syntrillo.system.matplotlib_setup import setup_matplotlib
-setup_matplotlib()
-
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-from matplotlib import colormaps
-
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
-from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
-from syntrillo.clinical_decision_support.color_coding.blood_pressure_categories import ColorCodingBloodPressureCategories, ColorCodingBloodPressureCategoriesWrapper
-from syntrillo.clinical_decision_support.color_coding.blood_pressure_rainbow import ColorCodingBloodPressureRainbows
-
-from syntrillo.bp_analysis.functions.determine_cell_color import determine_cell_color
 
 class BloodPressureAnalysis:
     """
-    Handle patient level blood pressure analysis, including:
-        - Avg SBP/DBP
-        - SBP/DBP standard deviation (SD)
-        - SBP/DBP coefficent of variation (CV)
-        - Peak SBP/DBP (avg of top 3)
-        - Low SBP/DBP
-        - Hyper/hypotensive counts
-        - Progress Point calculation (per Tech Roadmap slide deck)
+
+    Handle patient level blood pressure analysis. Class methods include:
+        1. __init__()
+            - sets PHI database connection
+        2. get_blood_pressure_dataframe()
+            - retrieves tenovi BP values; sets bpm_df and returns bpm_df
+        3. calculate_metadata()
+            - returns dict containing total values since baseline for analysis rows; used for calculate_since_baseline()
+        4. calculate_timeframes()
+            - returns new bpm_df sorted by timeframes; used for calculate_analysis()
+        5. calculate_analysis()
+            - returns analysis dataframe table with progress rows
+        6. calculate_since_baseline()
+            - returns updated analysis dataframe with 3 additional columns
+        7. calculate_extremes()
+            - returns extremes dataframe
+        8. generate_pdf()
+            - returns pdf that combines analysis df and extremes df
+
     """
 
-    # class variables
+    # Class variables
     syntrillo_internal_key : uuid.UUID = None
     syntrillo_database_manager : SyntrilloDatabaseManager = None
     bpm_df : pd.DataFrame = None
@@ -66,12 +57,6 @@ class BloodPressureAnalysis:
     HYPERTENSION_DBP_THRESHOLD = 110
     HYPOTENSION_SBP_THRESHOLD = 95
 
-    # color maps for systolic and diastolic
-    alpha : float = 0.5
-
-    # no data string
-    no_data_string : str = "no data"
-
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
@@ -79,6 +64,7 @@ class BloodPressureAnalysis:
 
         # set up PHI database connection for this user
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+
 
     def get_blood_pressure_dataframe(
         self,
@@ -177,6 +163,7 @@ class BloodPressureAnalysis:
         # return the dataframe and the log
         return bpm_df, log
 
+
     def calculate_metadata(self):
         df = self.bpm_df
 
@@ -206,6 +193,11 @@ class BloodPressureAnalysis:
 
 
     def calculate_timeframes(self) -> dict:
+        """
+
+        Extracts bpm_df values into Current (latest 2 weeks), Prior (2 weeks prior to current), and Baseline (first 2 weeks)
+
+        """
         df = self.bpm_df
 
         latest_date = df['timestamp_local'].max()
@@ -230,6 +222,32 @@ class BloodPressureAnalysis:
 
 
     def calculate_analysis(self) -> pd.DataFrame:
+        """
+
+        Creates analysis dataframe using self.timeframed_data. Each column is a timeframe.
+
+        Rows below:
+            - Avg SBP
+            - Avg DBP
+            - Peak SBP (avg of 3 highest values)
+            - Peak DBP
+            - Low SBP (single lowest)
+            - Low DBP
+            - SBP SD (standard deviation)
+            - DBP SD
+            - SBP CV (coefficient of variation)
+            - DBP CV
+            - SBP Count >= 170
+            - SBP Count >= 175
+            - Hypotensive Count (low SBP)
+
+        Appends three additional rows regarding progress and timeframe grading:
+            - "Progress (pts)" (current vs. prior)
+            - "Baseline Progress (pts)" (current vs. baseline)
+            - Overall
+            * Should be separated out in different class method?
+
+        """
         timeframes = self.timeframed_data
 
         analysis = {}
@@ -550,6 +568,11 @@ class BloodPressureAnalysis:
 
 
     def calculate_since_baseline(self, metadata, analysis_table):
+        """
+
+        Appends 3 additional columns (unit change, percent change, totals) to analysis df
+
+        """
         def calculate_unit_change(row, baseline_col, current_col):
             baseline_val = pd.to_numeric(str(row[baseline_col]).replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
             current_val = pd.to_numeric(str(row[current_col]).replace('+', '').replace('-', '').replace('/', '').replace('=', '').strip(), errors='coerce')
@@ -586,7 +609,13 @@ class BloodPressureAnalysis:
 
         return analysis_table
 
+
     def calculate_extremes(self):
+        """
+
+        Returns df containing only values that lie outside of low and high boundaries
+
+        """
         BLOOD_PRESSURE_LOW = 90
         BLOOD_PRESSURE_HIGH_VALUE1 = 170
         BLOOD_PRESSURE_HIGH_VALUE2 = 110
@@ -596,85 +625,13 @@ class BloodPressureAnalysis:
                   (df['diastolic'] > BLOOD_PRESSURE_HIGH_VALUE2)]
         return extremes[['timestamp_local', 'systolic', 'diastolic']]
 
-    # def generate_pdf(self, extremes):
-    #     # Create an in-memory PDF buffer
-    #     pdf_buffer = io.BytesIO()
-    #     analysis = self.bpm_df
-
-    #     def wrap_text(text, width=16):
-    #         """Manually inserts line breaks to wrap text in table headers."""
-    #         return "\n".join(textwrap.wrap(text, width))
-
-    #     with PdfPages(pdf_buffer) as pdf:
-    #         wrapped_col_labels = ['Metric'] + [wrap_text(col) for col in analysis.columns]
-
-    #         # Analysis Table
-    #         fig, ax = plt.subplots(figsize=(10, 6))
-    #         ax.axis('off')
-    #         ax.axis('tight')
-
-    #         table = ax.table(cellText=analysis.reset_index().values,
-    #                         colLabels=wrapped_col_labels,
-    #                         cellLoc='center', loc='center')
-
-    #         table.auto_set_font_size(False)
-    #         table.scale(1.2, 1.2)
-
-    #         # Adjust cell formatting
-    #         for (row, col), cell in table.get_celld().items():
-    #             if row == 0:  # Wrap text for column headers
-    #                 cell.set_height(cell.get_height() * 2)
-    #                 cell.set_fontsize(8)
-    #                 cell.set_text_props(wrap=True)
-    #             elif col == 0:  # Wrap text for row headers
-    #                 cell.set_text_props(wrap=True)
-    #                 cell.set_fontsize(8)
-    #             else:  # Apply colorization logic
-    #                 metric = analysis.index[row - 1] if row > 0 else None
-    #                 value = analysis.iloc[row - 1, col - 1] if row > 0 and col > 0 else None
-    #                 color = determine_cell_color(metric, value)
-    #                 cell.set_facecolor(color)
-
-    #         ax.set_title("Analysis Report")
-    #         pdf.savefig(fig)
-    #         plt.close(fig)
-
-    #         # Extremes Table with Pagination
-    #         rows_per_page = 25
-    #         total_rows = len(extremes)
-    #         num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
-
-    #         if extremes.empty:
-    #             fig, ax = plt.subplots(figsize=(10, 6))
-    #             ax.axis('off')
-    #             ax.axis('tight')
-    #             ax.text(0.5, 0.5, 'No extreme values found', transform=ax.transAxes, ha='center', va='center')
-    #             ax.set_title("Extremes Report")
-    #             pdf.savefig(fig)
-    #             plt.close(fig)
-    #         else:
-    #             for page in range(num_pages):
-    #                 start_row = page * rows_per_page
-    #                 end_row = min(start_row + rows_per_page, total_rows)
-    #                 fig, ax = plt.subplots(figsize=(10, 6))
-    #                 ax.axis('off')
-    #                 ax.axis('tight')
-
-    #                 subset = extremes.iloc[start_row:end_row]
-    #                 ax.table(cellText=subset.values,
-    #                         colLabels=['Date', 'Systolic BP', 'Diastolic BP'],
-    #                         cellLoc='center', loc='center')
-    #                 ax.set_title(f"Extremes Report (Page {page + 1} of {num_pages})")
-    #                 pdf.savefig(fig)
-    #                 plt.close(fig)
-
-    #     # Ensure buffer is set to the beginning
-    #     pdf_buffer.seek(0)
-
-    #     return pdf_buffer
 
     def generate_pdf(self, analysis, extremes):
-        """Generates a PDF with a formatted analysis table and extremes table using ReportLab."""
+        """
+
+        Generates a PDF with a formatted analysis table and extremes table using ReportLab.
+
+        """
 
         pdf_buffer = io.BytesIO()
         doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
