@@ -3,7 +3,7 @@
 <div class="">
 
     <section class="bp_header">
-        <h2 class="">
+        <h2 class="text-lg font-bold">
             Blood Pressure Analysis
         </h2>
 
@@ -21,7 +21,7 @@
         <a
             href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', analysis_json=analysis_json, extremes_json=extremes_json) }}"
             target="_blank"
-            class="styled-button"
+            class="flex gap-2 px-3 py-2 text-md text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
             id="bp-download"
         >
             <span class="icon-container">
@@ -31,13 +31,16 @@
         </a>
     </section>
 
-    <section class="bp-content">
+    <section class="px-20 py-8">
         <div class="">
             {{ analysis_html | safe }}
         </div>
-        <div class="">
-            
-        </div>
+        <ul class="text-sm text-gray-600 pl-4">
+            <li>¹ (+/=/-) / (+/=/-) indicates the progress point allocation, from prior and baseline respectively. "=" means no points were allocated.</li>
+            <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
+            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
+            <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average decrease of 5 mmHg.</li>
+        </ul>
     </section>
 
 </div>
