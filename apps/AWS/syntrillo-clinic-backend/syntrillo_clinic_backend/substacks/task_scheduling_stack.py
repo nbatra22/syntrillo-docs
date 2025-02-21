@@ -56,7 +56,7 @@ class RemoteMonitoringDataSync(Construct):
             vpc = self.network.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/remote-monitoring-data-sync-function", exclude=['.env']),
+            code=_lambda.Code.from_asset("lambda-functions/remote-monitoring-data-sync-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.storage.efs_access_point,
@@ -79,6 +79,76 @@ class RemoteMonitoringDataSync(Construct):
         self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.healthie_secrets)
 
         function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+
+        self.database.db_from_snapshot_security_group.add_ingress_rule(
+            function_security_group,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        )
+
+    def grant_read_secrets(self, function, secrets):
+        # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
+            resources=[secrets.secret_arn],
+        ))
+        function.add_to_role_policy(iam.PolicyStatement(
+            actions=["kms:Decrypt"],
+            resources=[secrets.encryption_key.key_arn],
+        ))
+
+
+class HealthieDataIngestor(Construct):
+    def __init__(self, scope: Construct, id: str, 
+                 aws_environment: str, 
+                 network: Construct, 
+                 database: Construct,
+                 storage: Construct,
+                 secrets: Construct,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        self.network = network
+        self.database = database
+        self.storage = storage
+        self.secrets = secrets
+
+        params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
+            cache_size=500,
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
+        )
+
+        # -----------------------------------------------------------------------
+        # Remote monitoring Lambdas
+
+        self.healthie_data_ingestor_function = _lambda.Function(self, "HealthieDataIngestorFunction",
+            function_name="HealthieDataIngestorFunction",
+            vpc = self.network.vpc,
+            handler="handler.handler",
+            runtime=_lambda.Runtime.PYTHON_3_10,
+            code=_lambda.Code.from_asset("lambda-functions/healthie-data-ingestor-function", exclude=['.env', '__pycache__']),
+            params_and_secrets=params_and_secrets,
+            filesystem =_lambda.FileSystem.from_efs_access_point(
+                self.storage.efs_access_point,
+                "/mnt/python_modules"
+            ),
+            environment={
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
+                "PYTHONPATH": "/mnt/python_modules",
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
+            },
+            tracing=_lambda.Tracing.ACTIVE,
+            memory_size=512,
+            timeout=Duration.seconds(600),
+        )
+
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.database_lambda_user_secrets)
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.tenovi_hwi_secrets)
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.healthie_secrets)
+
+        function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
 
         self.database.db_from_snapshot_security_group.add_ingress_rule(
             function_security_group,
@@ -312,4 +382,13 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
             self, "DataSyncFunction",
             remote_monitoring_data_sync_function = remote_monitoring_data_sync.remote_monitoring_data_sync_function,
             pii_data_sync_function = pii_data_sync.pii_data_sync_function,
+        )
+
+        healthie_data_ingestor = HealthieDataIngestor(
+            self, "HealthieDataIngestor",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
         )
