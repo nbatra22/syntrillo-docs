@@ -111,7 +111,7 @@
                                 "CellStyle": {
                                     "FontConfiguration": {
                                         "FontSize": {
-                                            "Relative": "MEDIUM"
+                                            "Relative": "LARGE"
                                         }
                                     },
                                     "HorizontalTextAlignment": "CENTER",
@@ -271,12 +271,12 @@
                                     "TextWrap": "WRAP",
                                     "HorizontalTextAlignment": "LEFT",
                                     "BackgroundColor": "#081F5C",
-                                    "Height": 90
+                                    "Height": 80
                                 },
                                 "CellStyle": {
                                     "FontConfiguration": {
                                         "FontSize": {
-                                            "Relative": "MEDIUM"
+                                            "Relative": "LARGE"
                                         }
                                     },
                                     "HorizontalTextAlignment": "LEFT",
@@ -378,6 +378,25 @@
                                                                 "Color": "#DE3B00"
                                                             }
                                                         ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.measurements_remaining.1.1738970235134",
+                                        "TextFormat": {
+                                            "Icon": {
+                                                "CustomCondition": {
+                                                    "Expression": "SUM({measurements_remaining}) = 0",
+                                                    "IconOptions": {
+                                                        "Icon": "CHECKMARK"
+                                                    },
+                                                    "Color": "#0251D3",
+                                                    "DisplayConfiguration": {
+                                                        "IconDisplayOption": "ICON_ONLY"
                                                     }
                                                 }
                                             }
