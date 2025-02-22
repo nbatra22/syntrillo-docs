@@ -12,7 +12,7 @@ from form_templates import ( process_form_templates )
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Basic AWS Lambda handler function.
 
