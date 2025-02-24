@@ -12,7 +12,7 @@ from form_templates import ( process_form_templates )
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Basic AWS Lambda handler function.
 
@@ -23,21 +23,32 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Returns:
         dict: Response object containing statusCode and body
     """
+    # TODO: use lambda power tools library for logging instead of logger
     logger.info("Event received: %s", json.dumps(event))
+    try:
+        # Fetch form templates from Healthie and push data into Amazon RDS
+        process_form_templates()
+        # Fetch form responses from Healthie and push data into Amazon RDS
+        process_form_responses()
 
-    # Fetch form templates from Healthie and push data into Amazon RDS
-    process_form_templates()
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": "Data successfully ingested into RDS"
+            }),
+        }
 
-    # Fetch form responses from Healthie and push data into Amazon RDS
-    process_form_responses()
+    except Exception as e:
+        logger.info(f"Error in Lambda execution: {str(e)}")
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "Data successfully ingested into RDS"
-        }),
-    }
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': 'Error processing data',
+                'error': str(e)
+            })
+        }
 
 
 if __name__ == "__main__":
-    lambda_handler( {}, None)
+    handler( {}, None)

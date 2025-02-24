@@ -164,11 +164,7 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                     module_options
                 )
                 VALUES (
-                    %(form_id)s,
-                    %(module_id)s,
-                    %(form_name)s,
-                    %(module_label)s,
-                    %(module_options)s
+                    %s, %s, %s, %s, %s
                 )
                 ON DUPLICATE KEY UPDATE
                     form_name=VALUES(form_name),
@@ -178,13 +174,13 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
 
             # Convert FormTemplate objects to dictionaries
             template_records = [
-                {
-                    'form_id': template.form_id,
-                    'module_id': template.module_id,
-                    'form_name': template.form_name,
-                    'module_label': template.module_label,
-                    'module_options': template.module_options
-                }
+                (
+                    template.form_id,
+                    template.module_id,
+                    template.form_name,
+                    template.module_label,
+                    template.module_options
+                )
                 for template in flattened_templates
             ]
 

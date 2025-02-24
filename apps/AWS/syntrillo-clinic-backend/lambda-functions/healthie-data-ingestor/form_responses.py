@@ -169,32 +169,33 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
                     answer,
                     created_at
                 )
-                VALUES (
-                    %(form_id)s,
-                    %(module_id)s,
-                    %(user_id)s,
-                    %(answer)s,
-                    %(created_at)s
-                )
+                VALUES (%s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     answer=VALUES(answer),
                     created_at=VALUES(created_at);
             """
-            lookup_codes = LookUpCodesManagement()
+
+            # Convert to list of tuples for executemany
             response_records = [
-                {
-                    'form_id': response.form_id,
-                    'module_id': response.module_id,
-                    'user_id':  lookup_codes.retrieve_entry_by_healthie_user_id(response.user_id),
-                    'answer': response.answer,
-                    'created_at': response.created_at
-                }
+                (
+                    response.form_id,
+                    response.module_id,
+                    response.user_id,
+                    response.answer,
+                    response.created_at
+                )
                 for response in flattened_responses
             ]
 
-            # Execute a bulk query for all records. More performant than cursor.execute() in a loop.
+            # Execute a bulk query with tuples
             cursor.executemany(sql_query, response_records)
             db_connection.commit()
+
+            # TODO: Implement a proper lookup code management system for masking
+            # user_id in the database. Below line is too slow for bulk inserts.
+            # lookup_codes = LookUpCodesManagement()
+            # 'user_id':  lookup_codes.retrieve_entry_by_healthie_user_id(response.user_id),
+
 
             # TODO: Implement proper AWS Lambda function logging
             print(f"Inserted or updated {len(response_records)} form responses enties into RDS")
