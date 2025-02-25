@@ -112,6 +112,10 @@ class IFrameGeneratorAPIRoutes(Construct):
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
         )
+        healthie_iframe_provider_tab_proxy_resources.add_method(
+            "GET", 
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
     def create_provider_sidebar_resources(self, iframe_generator_function: _lambda.Function):
         healthie_iframe_provider_side_bar = self.healthie_resource.add_resource("iframe_provider_sidebar")
