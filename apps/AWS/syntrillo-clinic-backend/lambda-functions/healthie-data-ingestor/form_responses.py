@@ -106,45 +106,49 @@ def flatten_form_responses(json_data: dict) -> list[FormResponse]:
     Returns:
         list[FormResponse]
     """
-    flattened_responses = []
+    try:
+        flattened_responses = []
 
-    # Get the form answer groups from the JSON
-    form_answer_groups = json_data.get("formAnswerGroups", [])
+        # Get the form answer groups from the JSON
+        form_answer_groups = json_data.get("formAnswerGroups", [])
 
-    if not form_answer_groups:
-        logger.warning("No form answer groups found in the API response")
+        if not form_answer_groups:
+            logger.warning("No form answer groups found in the API response")
+            return []
+
+        # Process each form answer group
+        for form_group in form_answer_groups:
+            form_id = form_group.get("custom_module_form", {}).get("id")
+
+            # Process each form answer within the group
+            for answer in form_group.get("form_answers", []):
+                module_id = answer.get("custom_module", {}).get("id")
+                user_id = answer.get("user_id")
+                displayed_answer = clean_text(answer.get("displayed_answer", None))
+
+                # Parse the created_at timestamp
+                created_at_str = answer.get("created_at")
+                try:
+                    created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S %z")
+                except (ValueError, TypeError):
+                    # Default to current timestamp if parsing fails
+                    created_at = datetime.now()
+
+                # Create FormResponse object if we have all required fields
+                if all([module_id, form_id, user_id]):
+                    response = FormResponse(
+                        form_id = form_id,
+                        module_id = module_id,
+                        user_id = user_id,
+                        answer = displayed_answer,
+                        created_at = created_at
+                    )
+                    flattened_responses.append(response)
+
+        return flattened_responses
+    except Exception as e:
+        logger.error(f"Error flattening JSON form responses: {e}")
         return []
-
-    # Process each form answer group
-    for form_group in form_answer_groups:
-        form_id = form_group.get("custom_module_form", {}).get("id")
-
-        # Process each form answer within the group
-        for answer in form_group.get("form_answers", []):
-            module_id = answer.get("custom_module", {}).get("id")
-            user_id = answer.get("user_id")
-            displayed_answer = clean_text(answer.get("displayed_answer", None))
-
-            # Parse the created_at timestamp
-            created_at_str = answer.get("created_at")
-            try:
-                created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S %z")
-            except (ValueError, TypeError):
-                # Default to current timestamp if parsing fails
-                created_at = datetime.now()
-
-            # Create FormResponse object if we have all required fields
-            if all([module_id, form_id, user_id]):
-                response = FormResponse(
-                    form_id = form_id,
-                    module_id = module_id,
-                    user_id = user_id,
-                    answer = displayed_answer,
-                    created_at = created_at
-                )
-                flattened_responses.append(response)
-
-    return flattened_responses
 
 
 
@@ -205,12 +209,12 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
             cursor.executemany(sql_query, response_records)
             db_connection.commit()
 
+            logger.info(f"Successfully inserted or updated {len(response_records)} form responses enties into RDS")
+
             # TODO: Implement a proper lookup code management system for masking
             # user_id in the database. Below line is too slow for bulk inserts.
             # lookup_codes = LookUpCodesManagement()
             # 'user_id':  lookup_codes.retrieve_entry_by_healthie_user_id(response.user_id),
-
-            logger.info(f"Inserted or updated {len(response_records)} form responses enties into RDS")
 
     except Exception as e:
         logger.exception = {
@@ -219,5 +223,5 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
         raise e
 
     finally:
-        db_manager.close_connection()
+        db_connection.close()
         logger.info("Database connection closed")

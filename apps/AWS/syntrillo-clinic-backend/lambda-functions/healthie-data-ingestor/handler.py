@@ -26,7 +26,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     # TODO: use lambda power tools library for logging instead of logger
     logger.info({
         "message": f"Event received: {json.dumps(event)}",
-        "correlation_id": event.get("correlation_id", "unknown"),
+        "correlation_id": context.get("aws_request_id", "unknown"),
     })
     try:
         # Fetch form templates from Healthie and push data into Amazon RDS
@@ -44,7 +44,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     except Exception as e:
         logger.error({
             "message": f"Error in Healthie Data Ingestor Lambda execution: {str(e)}",
-            "correlation_id": event.get("correlation_id", "unknown"),
+            "correlation_id": context.get("aws_request_id", "unknown"),
         })
 
         return {

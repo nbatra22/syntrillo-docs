@@ -110,38 +110,41 @@ def flatten_form_templates(json_data: dict) -> list[FormTemplate]:
     Returns:
         list[FormResponse]
     """
+    try:
+        flattened_templates = []
 
-    flattened_templates = []
+        # Extract the custom module forms from the JSON
+        custom_module_forms = json_data.get("customModuleForms", [])
 
-    # Extract the custom module forms from the JSON
-    custom_module_forms = json_data.get("customModuleForms", [])
+        if not custom_module_forms:
+            logger.warning("No custom module forms found in the API response")
+            return []
 
-    if not custom_module_forms:
-        logger.warning("No custom module forms found in the API response")
+        # Iterate through each form
+        for form in custom_module_forms:
+            form_id = form.get("id", None)
+            form_name = form.get("name", None)
+
+            # Process each module within the form
+            custom_modules = form.get("custom_modules", [])
+            for module in custom_modules:
+                module_id = module.get("id", None)
+
+                # Create FormTemplate object if we have all required fields
+                if all([module_id, form_id]):
+                    template = FormTemplate(
+                        form_id = form_id,
+                        module_id = module_id,
+                        form_name = form_name,
+                        module_label = clean_text(module.get("label", None)),
+                        module_options = clean_text(module.get("options", None))
+                    )
+                    flattened_templates.append(template)
+
+        return flattened_templates
+    except Exception as e:
+        logger.error(f"Error flattening JSON form templates: {e}")
         return []
-
-    # Iterate through each form
-    for form in custom_module_forms:
-        form_id = form.get("id", None)
-        form_name = form.get("name", None)
-
-        # Process each module within the form
-        custom_modules = form.get("custom_modules", [])
-        for module in custom_modules:
-            module_id = module.get("id", None)
-
-            # Create FormTemplate object if we have all required fields
-            if all([module_id, form_id]):
-                template = FormTemplate(
-                    form_id = form_id,
-                    module_id = module_id,
-                    form_name = form_name,
-                    module_label = clean_text(module.get("label", None)),
-                    module_options = clean_text(module.get("options", None))
-                )
-                flattened_templates.append(template)
-
-    return flattened_templates
 
 
 
@@ -204,7 +207,7 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
             cursor.executemany(sql_query, template_records)
             db_connection.commit()
 
-            logger.info(f"Database updated with {len(template_records)} form template entries")
+            logger.info(f"Successfully updated database with {len(template_records)} form template entries")
 
     except Exception as e:
         logger.exception = {
@@ -212,5 +215,5 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
         }
         raise e
     finally:
-        db_manager.close_connection()
+        db_connection.close()
         logger.info("Database connection closed")
