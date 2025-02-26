@@ -9,10 +9,15 @@ cd ../../
 
 if [ "$1" == "--admin" ]; then
   echo "deploy with ADMIN permissions"
-  role_arn=""
+  ROLE_ARN=""
   shift
 else
-  role_arn="--role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role"	
+  ROLE_ARN="--role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role"	
 fi
 
-cdk deploy --profile syntrillo-clinic-staging-deployment $role_arn --context 'environment=staging' $@
+PROFILE="--profile syntrillo-clinic-staging-deployment"
+if [ -n "$CODEBUILD_BUILD_ID" ]; then
+    PROFILE=""
+fi
+
+cdk deploy $PROFILE $ROLE_ARN --context 'environment=staging' $@
