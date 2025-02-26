@@ -2,7 +2,7 @@ from datetime import datetime
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-
+from syntrillo.system.logger import logger
 
 from healthie_api import run_graphql_query
 from helpers import clean_text
@@ -88,8 +88,13 @@ def fetch_all_form_responses_from_healthie() -> dict:
     #     }
     # ]
     # }
-    output: dict = run_graphql_query(graphql_query)
-    return output
+    logger.info("Fetching form responses from Healthie")
+    try:
+        output: dict = run_graphql_query(graphql_query)
+        logger.info("Successfully fetched form responses")
+        return output
+    except Exception as e:
+        logger.error(f"Error fetching form responses from Healthie: {e}")
 
 
 def flatten_form_responses(json_data: dict) -> list[FormResponse]:
@@ -105,6 +110,10 @@ def flatten_form_responses(json_data: dict) -> list[FormResponse]:
 
     # Get the form answer groups from the JSON
     form_answer_groups = json_data.get("formAnswerGroups", [])
+
+    if not form_answer_groups:
+        logger.warning("No form answer groups found in the API response")
+        return []
 
     # Process each form answer group
     for form_group in form_answer_groups:
@@ -156,6 +165,11 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
     # Use it when it speeds you up, but don't implement more methods in it
     # This object should allow us to run arbitrary SQL queries against our internal
     # operational Amazon RDS
+
+    if not flattened_responses:
+        logger.warning("No responses to insert into database")
+        return
+
     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key="NOT_USED")
     db_connection = db_manager.conn
 
@@ -196,16 +210,14 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
             # lookup_codes = LookUpCodesManagement()
             # 'user_id':  lookup_codes.retrieve_entry_by_healthie_user_id(response.user_id),
 
-
-            # TODO: Implement proper AWS Lambda function logging
-            print(f"Inserted or updated {len(response_records)} form responses enties into RDS")
-            log = { "success": True }
+            logger.info(f"Inserted or updated {len(response_records)} form responses enties into RDS")
 
     except Exception as e:
-        log = {
-            "success": False,
-            "error": str(e)
+        logger.exception = {
+            f"Database error while inserting form responses. Error: {str(e)}"
         }
-        # TODO: replace with proper logging for AWS Lambda functions
-        print(f"Error log: {log}")
         raise e
+
+    finally:
+        db_manager.close_connection()
+        logger.info("Database connection closed")
