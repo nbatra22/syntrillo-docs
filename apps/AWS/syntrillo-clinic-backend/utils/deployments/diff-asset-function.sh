@@ -13,8 +13,16 @@ fi
 
 REMOTE_CODE_URL=$(aws $PROFILE lambda get-function --function-name $arg_2 --query 'Code.Location' --output text)
 
-curl -L -o remote_code.zip "$REMOTE_CODE_URL"
-unzip -q -o remote_code.zip -d /tmp/remote_code
+if [ -d "/tmp/remote_code" ]; then
+    rm -r /tmp/remote_code
+fi
+
+if [ -f "/tmp/remote_code.zip" ]; then
+    rm /tmp/remote_code.zip
+fi
+
+curl -L -o /tmp/remote_code.zip "$REMOTE_CODE_URL"
+unzip -q -o /tmp/remote_code.zip -d /tmp/remote_code
 
 asset_1="../../cdk.out/asset.$arg_1"
 asset_2="/tmp/remote_code"
