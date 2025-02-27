@@ -76,12 +76,37 @@ def iframe_healthie_provider_tab_blood_pressure():
     metadata = data_reporting_blood_pressure.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
     analysis_table = data_reporting_blood_pressure.calculate_analysis() # Calculates row values for each timeframe
-    analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
+    # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
     extremes = data_reporting_blood_pressure.calculate_extremes() # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
+    styled_analysis_table = (
+        analysis_table
+            .style
+                .apply(data_reporting_blood_pressure.style_row, axis=1)
+                .set_properties(**{'text-align': 'center'})
+                .set_table_styles(
+                    [
+                        {"selector": "th", "props": [("text-align", "center"),
+                                                    ("padding", "10px"),
+                                                    ("border", "1px solid gray")]},  # Column headers
+
+                        {"selector": "td", "props": [("padding", "8px"),
+                                                    ("border", "1px solid gray")]},  # Data cells
+
+                        {"selector": "table", "props": [("border-collapse", "collapse")]}  # Ensure borders collapse properly
+                    ]
+                )
+    )
+
+    analysis_html = styled_analysis_table.format(lambda x: f"{x:.2f}" if isinstance(x, float) else x).to_html()
+
 
     # Prepare html + json variables to send to "Blood Pressure" tab
-    analysis_html = analysis_table_with_inception.to_html(classes="table table-striped")
-    analysis_json = analysis_table_with_inception.to_json()
+    # analysis_html = styled_analysis_table.to_html(classes="")
+    # analysis_html = analysis_table_with_inception.to_html(classes="table table-striped text-sm text-center")
+
+
+    analysis_json = analysis_table.to_json()
+    # analysis_json = analysis_table_with_inception.to_json()
     extremes_json = extremes.to_json()
 
     return render_template(

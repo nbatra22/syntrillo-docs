@@ -213,7 +213,7 @@ class BloodPressureAnalysis:
             f"Baseline ({baseline_start.strftime('%m/%d/%y')}-{baseline_end.strftime('%m/%d/%y')})": df[(df['timestamp_local'] >= baseline_start) & (df['timestamp_local'] < baseline_end)],
             f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})": df[(df['timestamp_local'] >= prior_start) & (df['timestamp_local'] < prior_end)],
             # f"Current ({prior_end.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['timestamp_local'] >= prior_end]
-            f"Current¹ ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['timestamp_local'] >= current_start]
+            f"Current ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['timestamp_local'] >= current_start]
         }
 
         self.timeframed_data = timeframes
@@ -324,6 +324,9 @@ class BloodPressureAnalysis:
                 'Hypotensive Count⁴': hypotensive_count,
             }
 
+            # End loop
+
+
         points = {
             'Avg SBP (mmHg)': {'increase': -2, 'decrease': 2},
             'Avg DBP (mmHg)': {'increase': -2, 'decrease': 2},
@@ -355,6 +358,28 @@ class BloodPressureAnalysis:
             'DBP SD (mmHg)': [0, 5],
             'Peak SBP² (mmHg)': [0, 170],
             'Peak DBP² (mmHg)': [0, 110]
+        }
+
+        analysis['Progress¹ (pts)'] = {
+            'Avg SBP (mmHg)': "-",
+            'Avg DBP (mmHg)': "-",
+            'Peak SBP² (mmHg)': "-",
+            'Peak DBP² (mmHg)': "-",
+            'Low SBP³ (mmHg)': "-",
+            'Low DBP³ (mmHg)': "-",
+            'SBP SD (mmHg)': "-",
+            'DBP SD (mmHg)': "-",
+            'SBP CV (%)': "-",
+            'DBP CV (%)': "-",
+            # 'SBP Count (>= 160)': "-",
+            # 'SBP Count (>= 165)': "-",
+            'SBP Count (>= 170)': "-",
+            'SBP Count (>= 175)': "-",
+            # 'SBP Count (<=80)': "-",
+            # 'SBP Count (<=85)': "-",
+            # 'SBP Count (<=90)': "-",
+            # 'SBP Count (<=95)': "-",
+            'Hypotensive Count⁴': "-",
         }
 
         delta = 0
@@ -406,11 +431,8 @@ class BloodPressureAnalysis:
                                 baseline_delta += points[metric]['decrease']
                                 base_progress = "+"  # Indicates an increase is needed
 
-                            # Update progress format as "(current change sign) / (baseline change sign)"
-                            progress = f"{curr_progress}/{base_progress}"
-
-                            # Keep the last f-string with the updated progress
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                            # Store progress format as "(current change sign) / (baseline change sign)"
+                            analysis['Progress¹ (pts)'][metric] = f"{curr_progress}/{base_progress}"
 
                     # Handle SBP-SD and DBP-SD ------------------
                     elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
@@ -432,8 +454,8 @@ class BloodPressureAnalysis:
                                     baseline_delta += points[metric]['decrease']
                                     base_progress = "+"  # Indicates an increase is needed
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                            # Store progress format as "(current change sign) / (baseline change sign)"
+                            analysis['Progress¹ (pts)'][metric] = f"{curr_progress}/{base_progress}"
 
                     # Handle SBP-CV and DBP-CV ------------------
                     elif metric in ['SBP CV (%)', 'DBP CV (%)']:
@@ -457,8 +479,8 @@ class BloodPressureAnalysis:
                                     baseline_delta += points[metric]['decrease']
                                     base_progress = "+"  # Indicates an increase is needed
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                            # Store progress format as "(current change sign) / (baseline change sign)"
+                            analysis['Progress¹ (pts)'][metric] = f"{curr_progress}/{base_progress}"
 
                     # Handle categorical change for Peak BP
                     elif metric.startswith('Peak') and isinstance(current_value, (int, float)):
@@ -483,88 +505,92 @@ class BloodPressureAnalysis:
                                 baseline_delta += points[metric]['below_threshold']
                                 base_progress = "+"  # Indicates an increase is needed
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                            # Store progress format as "(current change sign) / (baseline change sign)"
+                            analysis['Progress¹ (pts)'][metric] = f"{curr_progress}/{base_progress}"
 
 
         # Add the total delta as a new key for the extra cell
         progress = "Improving" if delta > 0 else "Worsening" if delta < 0 else "Same"
         baseline_progress = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
-        analysis[current_timeframe]['Progress (pts)'] = f"{progress} ({delta})"
-        analysis[current_timeframe]['Baseline Progress (pts)'] = f"{baseline_progress} ({baseline_delta})"
+        analysis['Progress¹ (pts)']['Last 4 weeks (pts)'] = f"{progress} ({delta})"
+        analysis['Progress¹ (pts)']['Since Baseline (pts)'] = f"{baseline_progress} ({baseline_delta})"
 
-        # Ensure the Progress row has "-" in baseline and prior columns
-        analysis[prior_timeframe].setdefault('Progress (pts)', '-')
-        analysis[next(k for k in analysis if "Baseline" in k)]['Progress (pts)'] = '-'
-        analysis[prior_timeframe].setdefault('Baseline Progress (pts)', '-')
-        analysis[next(k for k in analysis if "Baseline" in k)]['Baseline Progress (pts)'] = '-'
+        # Ensure the Progress row has "-" in baseline, prior, and current columns
+        analysis[baseline_timeframe].setdefault('Last 4 weeks (pts)', '-')
+        analysis[prior_timeframe].setdefault('Last 4 weeks (pts)', '-')
+        analysis[current_timeframe].setdefault('Last 4 weeks (pts)', '-')
+        analysis[baseline_timeframe].setdefault('Since Baseline (pts)', '-')
+        analysis[prior_timeframe].setdefault('Since Baseline (pts)', '-')
+        analysis[current_timeframe].setdefault('Since Baseline (pts)', '-')
 
         df = pd.DataFrame.from_dict(analysis, orient='index').T
 
-        def calculate_overall(column):
-            """
-            Calculate the overall rating for a timeframe based on individual metrics.
-            Priority: Poor > Okay > Good
-            """
-            # Initialize the default rating as 'Good'
-            overall_rating = 'Good'
-
-            # Iterate through each metric in the column
-            for metric, value in column.items():
-                if isinstance(value, str):
-                    # Remove trend arrows (↑/↓) and convert to numeric
-                    value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
-
-                if metric == 'Avg SBP (mmHg)' and value is not None:
-                    if value >= 140:
-                        return 'Poor'  # Immediate return for highest priority
-                    elif 130 <= value < 140:
-                        overall_rating = 'Okay'
-
-                elif metric == 'Avg DBP (mmHg)' and value is not None:
-                    if value >= 90:
-                        return 'Poor'
-                    elif 80 <= value < 90:
-                        overall_rating = 'Okay'
-
-                elif metric == 'SBP SD (mmHg)' and value is not None:
-                    if value >= 15:
-                        return 'Poor'
-                    elif 7.5 <= value < 15:
-                        overall_rating = 'Okay'
-
-                elif metric == 'DBP SD (mmHg)' and value is not None:
-                    if value >= 11.5:
-                        return 'Poor'
-                    elif 5 <= value < 11.5:
-                        overall_rating = 'Okay'
-
-                elif metric == 'SBP CV (%)' and value is not None:
-                    if value >= 11:
-                        return 'Poor'
-                    elif 5.5 <= value < 11:
-                        overall_rating = 'Okay'
-
-                elif metric == 'DBP CV (%)' and value is not None:
-                    if value >= 13:
-                        return 'Poor'
-                    elif 6 <= value < 13:
-                        overall_rating = 'Okay'
-
-                elif metric == 'Peak SBP² (mmHg)' and value is not None:
-                    if value >= 170:
-                        return 'Poor'
-
-                elif metric == 'Peak DBP² (mmHg)' and value is not None:
-                    if value >= 110:
-                        return 'Poor'
-
-            # Return the overall rating ('Okay' or 'Good')
-            return overall_rating
-
-        df.loc['Overall'] = df.apply(calculate_overall, axis=0)
+        df.loc['Overall'] = df.apply(self.calculate_overall, axis=0)
 
         return df
+
+
+    @staticmethod
+    def calculate_overall(column):
+        """
+        Calculate the overall rating for a timeframe based on individual metrics.
+        Priority: Poor > Okay > Good
+        """
+        # Initialize the default rating as 'Good'
+        overall_rating = 'Good'
+
+        # Iterate through each metric in the column
+        for metric, value in column.items():
+            if isinstance(value, str):
+                # Remove trend arrows (↑/↓) and convert to numeric
+                value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
+
+            if metric == 'Avg SBP (mmHg)' and value is not None:
+                if value >= 140:
+                    return 'Poor'  # Immediate return for highest priority
+                elif 130 <= value < 140:
+                    overall_rating = 'Okay'
+
+            elif metric == 'Avg DBP (mmHg)' and value is not None:
+                if value >= 90:
+                    return 'Poor'
+                elif 80 <= value < 90:
+                    overall_rating = 'Okay'
+
+            elif metric == 'SBP SD (mmHg)' and value is not None:
+                if value >= 15:
+                    return 'Poor'
+                elif 7.5 <= value < 15:
+                    overall_rating = 'Okay'
+
+            elif metric == 'DBP SD (mmHg)' and value is not None:
+                if value >= 11.5:
+                    return 'Poor'
+                elif 5 <= value < 11.5:
+                    overall_rating = 'Okay'
+
+            elif metric == 'SBP CV (%)' and value is not None:
+                if value >= 11:
+                    return 'Poor'
+                elif 5.5 <= value < 11:
+                    overall_rating = 'Okay'
+
+            elif metric == 'DBP CV (%)' and value is not None:
+                if value >= 13:
+                    return 'Poor'
+                elif 6 <= value < 13:
+                    overall_rating = 'Okay'
+
+            elif metric == 'Peak SBP² (mmHg)' and value is not None:
+                if value >= 170:
+                    return 'Poor'
+
+            elif metric == 'Peak DBP² (mmHg)' and value is not None:
+                if value >= 110:
+                    return 'Poor'
+
+        # Return the overall rating ('Okay' or 'Good')
+        return overall_rating
 
 
     def calculate_since_baseline(self, metadata, analysis_table):
@@ -624,6 +650,93 @@ class BloodPressureAnalysis:
                   (df['systolic'] > BLOOD_PRESSURE_HIGH_VALUE1) |
                   (df['diastolic'] > BLOOD_PRESSURE_HIGH_VALUE2)]
         return extremes[['timestamp_local', 'systolic', 'diastolic']]
+
+
+    @staticmethod
+    def style_row(row):
+        """
+
+        Colorizes analysis df.
+
+        """
+        if not hasattr(row, 'name'):
+            return ['background-color: white; padding: 8px; text-align: center' for _ in row]
+
+        metric = row.name
+        styles = []
+        for val in row:
+            color = 'white'
+            if pd.notna(val):
+                # Convert string values to a numeric value
+                try:
+                    if isinstance(val, str):
+                        value_num = pd.to_numeric(val, errors='coerce')
+                    else:
+                        value_num = val
+                except Exception:
+                    value_num = None
+
+                if isinstance(value_num, float):
+                    print(f"{value_num} is float")
+                    value_num = round(value_num, 1)
+
+                if value_num is not None and not pd.isna(value_num):
+                    if metric == 'Avg SBP (mmHg)':
+                        if value_num < 130:
+                            color = 'lightgreen'
+                        elif 130 <= value_num <= 139:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'Avg DBP (mmHg)':
+                        if value_num < 80:
+                            color = 'lightgreen'
+                        elif 80 <= value_num <= 89:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'SBP SD (mmHg)':
+                        if value_num < 7.5:
+                            color = 'lightgreen'
+                        elif value_num < 15:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'DBP SD (mmHg)':
+                        if value_num < 5:
+                            color = 'lightgreen'
+                        elif value_num < 11.5:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'SBP CV (%)':
+                        if value_num < 5.5:
+                            color = 'lightgreen'
+                        elif value_num < 11:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'DBP CV (%)':
+                        if value_num < 6:
+                            color = 'lightgreen'
+                        elif value_num < 13:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'Peak SBP² (mmHg)':
+                        if value_num < 170:
+                            color = 'lightgreen'
+                        else:
+                            color = 'red'
+                    elif metric == 'Peak DBP² (mmHg)':
+                        if value_num < 110:
+                            color = 'lightgreen'
+                        else:
+                            color = 'red'
+            # Append the style for this cell
+            styles.append(f'background-color: {color}; padding: 8px')
+
+        return styles
 
 
     def generate_pdf(self, analysis, extremes):
