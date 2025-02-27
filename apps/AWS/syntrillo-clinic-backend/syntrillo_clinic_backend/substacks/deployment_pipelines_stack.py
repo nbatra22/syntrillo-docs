@@ -71,6 +71,7 @@ class DeploymentPipelinesStack(Stack):
                             "cd utils/deployments",
                             "./symlinks-recreate.sh",       
                             "./diff-local-assets-with-remote-functions.sh staging",
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
                         ]
                     }
                 },
