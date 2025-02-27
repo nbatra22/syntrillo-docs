@@ -1,11 +1,13 @@
+#!/bin/bash
+
 create_symlinks() {
     local dir=$1
     
     cd "$dir"
     
     # Array of files/dirs to process
-    local items=("routes" "static" "syntrillo" "templates" "api.py")
-    
+    local items="routes static syntrillo templates api.py"    
+
     # Process each item
     for item in "${items[@]}"; do
         if [ -e "$item" ]; then
