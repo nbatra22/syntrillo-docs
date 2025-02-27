@@ -27,6 +27,8 @@ class DeploymentPipelinesStack(Stack):
         pipeline = codepipeline.Pipeline(
             self, "DeploymentPipeline",
             pipeline_name="DeploymentPipeline",
+            pipeline_type=codepipeline.PipelineType.V2,
+            execution_mode=codepipeline.ExecutionMode.QUEUED,
             artifact_bucket=s3.Bucket(
                 self, "ArtifactBucket",
                 bucket_name="staging.syntrillo-clinic-backend.deployment-pipeline.artifacts", 
