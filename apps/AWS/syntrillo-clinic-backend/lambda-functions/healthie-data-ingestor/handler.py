@@ -10,8 +10,8 @@ from form_templates import process_form_templates
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 
-# @tracer.capture_lambda_handler
-# @logger.inject_lambda_context(log_event=True)
+@tracer.capture_lambda_handler
+@logger.inject_lambda_context(log_event=True)
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Basic AWS Lambda handler function.
