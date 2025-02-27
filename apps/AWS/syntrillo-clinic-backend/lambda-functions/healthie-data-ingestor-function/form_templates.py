@@ -1,4 +1,5 @@
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.system.logger import logger
 
 from healthie_api import run_graphql_query
 from helpers import clean_text
@@ -90,8 +91,16 @@ def fetch_all_form_templates_from_healthie() -> dict:
     #     ]
     # }
 
-    output: dict = run_graphql_query(graphql_query)
-    return output
+    logger.info("Fetching form templates from Healthie")
+    try:
+        output: dict = run_graphql_query(graphql_query)
+        logger.info(f"Successfully fetched {len(output)} form templates")
+
+        return output
+
+    except Exception as e:
+        logger.error(f"Error fetching form templates from Healthie: {e}")
+
 
 
 def flatten_form_templates(json_data: dict) -> list[FormTemplate]:
@@ -103,34 +112,42 @@ def flatten_form_templates(json_data: dict) -> list[FormTemplate]:
     Returns:
         list[FormResponse]
     """
+    try:
+        flattened_templates = []
 
-    flattened_templates = []
+        # Extract the custom module forms from the JSON
+        custom_module_forms = json_data.get("customModuleForms", [])
 
-    # Extract the custom module forms from the JSON
-    custom_module_forms = json_data.get("customModuleForms", [])
+        if not custom_module_forms:
+            logger.warning("No custom module forms found in the API response")
+            return []
 
-    # Iterate through each form
-    for form in custom_module_forms:
-        form_id = form.get("id", None)
-        form_name = form.get("name", None)
+        # Iterate through each form
+        for form in custom_module_forms:
+            form_id = form.get("id", None)
+            form_name = form.get("name", None)
 
-        # Process each module within the form
-        custom_modules = form.get("custom_modules", [])
-        for module in custom_modules:
-            module_id = module.get("id", None)
+            # Process each module within the form
+            custom_modules = form.get("custom_modules", [])
+            for module in custom_modules:
+                module_id = module.get("id", None)
 
-            # Create FormTemplate object if we have all required fields
-            if all([module_id, form_id]):
-                template = FormTemplate(
-                    form_id = form_id,
-                    module_id = module_id,
-                    form_name = form_name,
-                    module_label = clean_text(module.get("label", None)),
-                    module_options = clean_text(module.get("options", None))
-                )
-                flattened_templates.append(template)
+                # Create FormTemplate object if we have all required DB table index fields
+                if all([module_id, form_id]):
+                    template = FormTemplate(
+                        form_id = form_id,
+                        module_id = module_id,
+                        form_name = form_name,
+                        module_label = clean_text(module.get("label", None)),
+                        module_options = clean_text(module.get("options", None))
+                    )
+                    flattened_templates.append(template)
 
-    return flattened_templates
+        return flattened_templates
+
+    except Exception as e:
+        logger.error(f"Error flattening JSON form templates: {e}")
+        return []
 
 
 
@@ -150,6 +167,11 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
     # Use it when it speeds you up, but don't implement more methods in it
     # This object should allow us to run arbitrary SQL queries against our internal
     # operational Amazon RDS
+
+    if not flattened_templates:
+        logger.warning("No templates to insert into database.")
+        return
+
     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key="NOT_USED")
     db_connection = db_manager.conn
 
@@ -172,7 +194,8 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                     module_options=VALUES(module_options);
             """
 
-            # Convert FormTemplate objects to dictionaries
+            # Convert FormTemplate objects to tuples for SQL insertion
+            # PyMySQL requires a list of tuples for executemany as opposed to dicts
             template_records = [
                 (
                     template.form_id,
@@ -184,19 +207,19 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                 for template in flattened_templates
             ]
 
-            # Execute a bulk query for all records. More performant than cursor.execute() in a loop.
+            # Execute a bulk query for all records.
+            # More performant than cursor.execute() in a loop.
             cursor.executemany(sql_query, template_records)
             db_connection.commit()
 
-            # TODO: Implement proper AWS Lambda function logging
-            print(f"Inserted or updated {len(template_records)} form template enties into RDS")
-            log = { "success": True }
+            logger.info(f"Successfully updated database with {len(template_records)} form template entries.")
 
     except Exception as e:
-        log = {
-            "success": False,
-            "error": str(e)
+        logger.exception = {
+            f"Database error while inserting form templates. Error: {str(e)}"
         }
-        # TODO: replace with proper logging for AWS Lambda functions
-        print(f"Error log: {log}")
         raise e
+
+    finally:
+        db_connection.close()
+        logger.info("Database connection closed.")

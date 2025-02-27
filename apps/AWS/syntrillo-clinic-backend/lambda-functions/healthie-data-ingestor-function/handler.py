@@ -1,17 +1,17 @@
 # Python standard library
 from typing import Dict, Any
 import json
-import logging
 
 # third party libraries (things you `pip install`)
 
 # own/local libraries
-from form_responses import ( process_form_responses )
-from form_templates import ( process_form_templates )
+from form_responses import process_form_responses
+from form_templates import process_form_templates
+from syntrillo.system.logger import logger
+from syntrillo.system.tracer import tracer
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+@tracer.capture_lambda_handler
+@logger.inject_lambda_context(log_event=True)
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     Basic AWS Lambda handler function.
@@ -23,8 +23,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Returns:
         dict: Response object containing statusCode and body
     """
-    # TODO: use lambda power tools library for logging instead of logger
-    logger.info("Event received: %s", json.dumps(event))
+    logger.info({
+        "message": f"Event received: {json.dumps(event)}",
+    })
     try:
         # Fetch form templates from Healthie and push data into Amazon RDS
         process_form_templates()
@@ -39,7 +40,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.info(f"Error in Lambda execution: {str(e)}")
+        logger.error({
+            "message": f"Error in Healthie Data Ingestor Lambda execution: {str(e)}",
+        })
 
         return {
             'statusCode': 500,

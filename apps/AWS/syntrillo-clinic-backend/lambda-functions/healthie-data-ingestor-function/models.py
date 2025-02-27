@@ -19,6 +19,6 @@ class FormTemplate(BaseModel):
 class FormResponse(BaseModel):
     form_id: str
     module_id: str
-    user_id: str
+    syntrillo_internal_key: str
     answer: str
     created_at: datetime
