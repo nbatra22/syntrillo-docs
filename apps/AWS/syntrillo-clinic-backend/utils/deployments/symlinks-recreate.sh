@@ -6,11 +6,12 @@ create_symlinks() {
     cd "$dir"
     
     # Array of files/dirs to process
-    local items="routes static syntrillo templates api.py"    
+    local items=("routes" "static" "syntrillo" "templates" "api.py") 
 
     # Process each item
     for item in "${items[@]}"; do
         if [ -e "$item" ]; then
+            # echo "Processing $item"
             mv "$item" "${item}.tmp"
             ln -s "$(cat ${item}.tmp)" "$item"
             rm "${item}.tmp"
