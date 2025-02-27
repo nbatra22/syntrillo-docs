@@ -88,8 +88,8 @@ CREATE TABLE IF NOT EXISTS healthie_form_templates (
 CREATE TABLE IF NOT EXISTS healthie_form_responses (
     module_id VARCHAR(255) NOT NULL,
     form_id VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255) NOT NULL,
+    syntrillo_internal_key VARCHAR(255) NOT NULL,
     answer TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (module_id, form_id, user_id)
+    PRIMARY KEY (module_id, form_id, syntrillo_internal_key)
 );

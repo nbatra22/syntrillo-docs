@@ -94,8 +94,10 @@ def fetch_all_form_templates_from_healthie() -> dict:
     logger.info("Fetching form templates from Healthie")
     try:
         output: dict = run_graphql_query(graphql_query)
-        logger.info("Successfully fetched form templates")
+        logger.info(f"Successfully fetched {len(output)} form templates")
+
         return output
+
     except Exception as e:
         logger.error(f"Error fetching form templates from Healthie: {e}")
 
@@ -130,7 +132,7 @@ def flatten_form_templates(json_data: dict) -> list[FormTemplate]:
             for module in custom_modules:
                 module_id = module.get("id", None)
 
-                # Create FormTemplate object if we have all required fields
+                # Create FormTemplate object if we have all required DB table index fields
                 if all([module_id, form_id]):
                     template = FormTemplate(
                         form_id = form_id,
@@ -142,6 +144,7 @@ def flatten_form_templates(json_data: dict) -> list[FormTemplate]:
                     flattened_templates.append(template)
 
         return flattened_templates
+
     except Exception as e:
         logger.error(f"Error flattening JSON form templates: {e}")
         return []
@@ -166,7 +169,7 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
     # operational Amazon RDS
 
     if not flattened_templates:
-        logger.warning("No templates to insert into database")
+        logger.warning("No templates to insert into database.")
         return
 
     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key="NOT_USED")
@@ -191,7 +194,8 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                     module_options=VALUES(module_options);
             """
 
-            # Convert FormTemplate objects to dictionaries
+            # Convert FormTemplate objects to tuples for SQL insertion
+            # PyMySQL requires a list of tuples for executemany as opposed to dicts
             template_records = [
                 (
                     template.form_id,
@@ -203,17 +207,19 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                 for template in flattened_templates
             ]
 
-            # Execute a bulk query for all records. More performant than cursor.execute() in a loop.
+            # Execute a bulk query for all records.
+            # More performant than cursor.execute() in a loop.
             cursor.executemany(sql_query, template_records)
             db_connection.commit()
 
-            logger.info(f"Successfully updated database with {len(template_records)} form template entries")
+            logger.info(f"Successfully updated database with {len(template_records)} form template entries.")
 
     except Exception as e:
         logger.exception = {
             f"Database error while inserting form templates. Error: {str(e)}"
         }
         raise e
+
     finally:
         db_connection.close()
-        logger.info("Database connection closed")
+        logger.info("Database connection closed.")
