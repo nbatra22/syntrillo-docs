@@ -4,6 +4,7 @@ from aws_cdk import (
     CfnOutput,
     Fn,
     aws_ec2 as ec2,
+    aws_logs as logs,
 )
 from constructs import Construct
 
@@ -38,17 +39,16 @@ class NetworkStack(Stack):
         )
 
         # VPC Flow Logs
-        if self.aws_environment == "prod":
-            self.vpc_flow_logs_log_group = logs.LogGroup(
-                self, "VPCFlowLogsLogGroup",
-                log_group_name="/aws/vpc/flowlogs",
-                removal_policy=RemovalPolicy.DESTROY
-            )
+        self.vpc_flow_logs_log_group = logs.LogGroup(
+            self, "VPCFlowLogsLogGroup",
+            log_group_name="/aws/vpc/flowlogs/syntrillo-analytics",
+            removal_policy=RemovalPolicy.DESTROY
+        )
 
-            self.vpc.add_flow_log("SyntrilloAnalyticsBackendVPCFlowLogCloudWatch",
-                destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
-                traffic_type=ec2.FlowLogTrafficType.ALL,
-            )
+        self.vpc.add_flow_log("SyntrilloAnalyticsBackendVPCFlowLogCloudWatch",
+            destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
+            traffic_type=ec2.FlowLogTrafficType.ALL,
+        )
 
         self.dms_security_group = ec2.SecurityGroup(
             self, "DMSSecurityGroup",

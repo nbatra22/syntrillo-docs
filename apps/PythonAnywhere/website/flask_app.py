@@ -44,6 +44,7 @@ from routes.healthie.iframe_provider_tab.devices import iframe_healthie_provider
 from routes.healthie.iframe_provider_tab.onboarding import iframe_healthie_provider_tab_onboarding_bp
 from routes.healthie.iframe_provider_tab.care_plan import iframe_healthie_provider_tab_care_plan_bp
 from routes.healthie.iframe_provider_tab.cdss import iframe_healthie_provider_tab_cdss_bp
+from routes.healthie.iframe_provider_tab.blood_pressure import iframe_healthie_provider_tab_bp_analysis
 from routes.healthie.iframe_provider_tab.system import iframe_healthie_provider_tab_system_bp
 from routes.healthie.iframe_provider_tab.system_devices import iframe_healthie_provider_tab_system_devices_bp
 
@@ -53,6 +54,7 @@ app.register_blueprint(iframe_healthie_provider_tab_devices_bp)
 app.register_blueprint(iframe_healthie_provider_tab_onboarding_bp)
 app.register_blueprint(iframe_healthie_provider_tab_care_plan_bp)
 app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
+app.register_blueprint(iframe_healthie_provider_tab_bp_analysis)
 app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_devices_bp)
 
@@ -113,9 +115,3 @@ def index():
         return render_template("main_page.html")
     else:
         return abort(403, description="Access Denied")
-
-
-
-
-
-

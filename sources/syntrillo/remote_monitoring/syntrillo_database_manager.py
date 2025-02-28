@@ -620,6 +620,7 @@ class SyntrilloDatabaseManager:
         return log
 
 
+
 if __name__ == '__main__':
 
     lookup_codes = LookUpCodesManagement()

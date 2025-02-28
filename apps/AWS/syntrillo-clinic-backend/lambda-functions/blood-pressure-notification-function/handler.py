@@ -21,8 +21,8 @@ def handler(event, context):
     # {
     #   "metric": "pulse",
     #   "device_name": "Tenovi BPM",
-    #   "hwi_device_id": UUID,
-    #   "patient_id": INT,
+    #   "hwi_device_id": "12345678-abcd-1234-abcd-1234567890ab",
+    #   "patient_id": "54321",
     #   "hardware_uuid": "1234ABCD5678",
     #   "sensor_code": "10",
     #   "value_1": "100.00",
@@ -34,20 +34,39 @@ def handler(event, context):
     #   "filter_params": null
     # }
 
+    # {
+    #     "metric": "string",
+    #     "device_name": "string",
+    #     "hwi_device_id": "string",
+    #     "patient_id": "string",
+    #     "hardware_uuid": "string",
+    #     "sensor_code": "string",
+    #     "value_1": "string",
+    #     "value_2": "string",
+    #     "created": "2019-08-24T14:16:18Z",
+    #     "timestamp": "2019-08-24T14:15:22Z",
+    #     "timezone_offset": -2147483648,
+    #     "estimated_timestamp": false,
+    #     "filter_params": {}
+    # }
+
     # 1. Extract patient_id and measurement data from event
     patient_id = event.get('patient_id')
     systolic_bp = event.get('value_1')
     diastolic_bp = event.get('value_2')
     timestamp = event.get('timestamp')
 
+    logger.info(f"Patient ID: {patient_id}")
+
     # 2. Push these measurements to MySQL database
     syntrillo_internal_key = get_syntrillo_internal_key_id_from_patient_id(patient_id) # <= we have to look for syntrillo_internal_key_id (syntrillo internal patient id)
     sync_patient(syntrillo_internal_key)
 
     # 3. Validate systolic BP (value_1)
-    if systolic_bp > 170 or systolic_bp < 90:
-        # 4. Send notification to clinicians when extreme blood pressure (>170 || <90) is detected
-        return notify_clinicians()
+    if systolic_bp is not None:
+        if systolic_bp > 170 or systolic_bp < 90:
+            # 4. Send notification to clinicians when extreme blood pressure (>170 || <90) is detected
+            notify_clinicians()
 
     return {
         'statusCode': 200,

@@ -7,4 +7,9 @@ cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")";
 #  : ./apps/AWS/syntrillo-clinic-backend
 cd ../../
 
-cdk diff --profile syntrillo-clinic-staging-deployment --context 'environment=staging' $@
+PROFILE="--profile syntrillo-clinic-staging-deployment"
+if [ -n "$CODEBUILD_BUILD_ID" ]; then
+    PROFILE=""
+fi
+
+cdk diff $PROFILE --context 'environment=staging' $@

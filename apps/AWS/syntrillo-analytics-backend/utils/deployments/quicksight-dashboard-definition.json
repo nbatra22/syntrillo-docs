@@ -1,0 +1,568 @@
+{
+    "DataSetIdentifierDeclarations": [
+        {
+            "Identifier": "bp_measurement_count_view",
+            "DataSetArn": "arn:aws:quicksight:us-east-1:381491864638:dataset/ee53868d-354a-4f7e-a167-ac590d132285"
+        },
+        {
+            "Identifier": "trailing_three_months_view",
+            "DataSetArn": "arn:aws:quicksight:us-east-1:381491864638:dataset/a73e6e82-190f-455a-9e27-73822e96f099"
+        }
+    ],
+    "Sheets": [
+        {
+            "SheetId": "d3942610-e818-484f-9ccd-060ca77e8053_4c458a06-10f9-43f1-8f43-7c3ed741b62a",
+            "Name": "Sheet 1",
+            "Visuals": [
+                {
+                    "TableVisual": {
+                        "VisualId": "d3942610-e818-484f-9ccd-060ca77e8053_9d02c48f-7d27-4a7b-90b7-3f09ca628ee3",
+                        "Title": {
+                            "Visibility": "VISIBLE",
+                            "FormatText": {
+                                "RichText": "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"32px\">\n      <b>Trailing Three Intervals</b>\n    </inline>\n  </block>\n</visual-title>"
+                            }
+                        },
+                        "Subtitle": {
+                            "Visibility": "VISIBLE"
+                        },
+                        "ChartConfiguration": {
+                            "FieldWells": {
+                                "TableAggregatedFieldWells": {
+                                    "GroupBy": [
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "f180e16d-d56f-4223-8dd4-9b112dbf16de.previous_month.2.1737678557300",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "end_current_date"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_current_date.1.1738970810175",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "start_current_date"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.end_prev_date.2.1738970814813",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "end_prev_date"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_prev_date.3.1738970816483",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "start_prev_date"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.end_two_ago_date.4.1738970817949",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "end_two_ago_date"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_two_ago_date.5.1738970819390",
+                                                "Column": {
+                                                    "DataSetIdentifier": "trailing_three_months_view",
+                                                    "ColumnName": "start_two_ago_date"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "Values": []
+                                }
+                            },
+                            "SortConfiguration": {},
+                            "TableOptions": {
+                                "HeaderStyle": {
+                                    "FontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "MEDIUM"
+                                        },
+                                        "FontColor": "#FFFFFF"
+                                    },
+                                    "TextWrap": "WRAP",
+                                    "HorizontalTextAlignment": "CENTER",
+                                    "BackgroundColor": "#081F5C",
+                                    "Height": 30,
+                                    "Border": {
+                                        "UniformBorder": {
+                                            "Color": "#E0E0E0",
+                                            "Style": "SOLID"
+                                        }
+                                    }
+                                },
+                                "CellStyle": {
+                                    "FontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "LARGE"
+                                        }
+                                    },
+                                    "HorizontalTextAlignment": "CENTER",
+                                    "Height": 30
+                                },
+                                "RowAlternateColorOptions": {
+                                    "Status": "DISABLED",
+                                    "UsePrimaryBackgroundColor": "ENABLED"
+                                }
+                            },
+                            "FieldOptions": {
+                                "SelectedFieldOptions": [
+                                    {
+                                        "FieldId": "f180e16d-d56f-4223-8dd4-9b112dbf16de.previous_month.2.1737678557300",
+                                        "Width": "220px"
+                                    },
+                                    {
+                                        "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_current_date.1.1738970810175",
+                                        "Width": "216px"
+                                    },
+                                    {
+                                        "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.end_prev_date.2.1738970814813",
+                                        "Width": "193px"
+                                    },
+                                    {
+                                        "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_prev_date.3.1738970816483",
+                                        "Width": "205px"
+                                    },
+                                    {
+                                        "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.end_two_ago_date.4.1738970817949",
+                                        "Width": "240px"
+                                    },
+                                    {
+                                        "FieldId": "d5cc093b-5f31-4fcc-9df3-e16f54ff5e28.start_two_ago_date.5.1738970819390",
+                                        "Width": "231px"
+                                    }
+                                ]
+                            }
+                        },
+                        "Actions": []
+                    }
+                },
+                {
+                    "TableVisual": {
+                        "VisualId": "d3942610-e818-484f-9ccd-060ca77e8053_7df66cc1-a5f7-4987-8abc-79b1c585dd61",
+                        "Title": {
+                            "Visibility": "VISIBLE",
+                            "FormatText": {
+                                "RichText": "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"36px\">\n      <b>Number of Days with at least one Measurement</b>\n    </inline>\n  </block>\n</visual-title>"
+                            }
+                        },
+                        "Subtitle": {
+                            "Visibility": "VISIBLE",
+                            "FormatText": {
+                                "RichText": "<visual-subtitle>\n  <block align=\"center\">\n    <inline font-size=\"36px\">\n      <b>As of </b>\n    </inline>\n    <inline font-size=\"36px\">\n      <b>\n        <parameter>${DateToday}</parameter>\n      </b>\n    </inline>\n  </block>\n</visual-subtitle>"
+                            }
+                        },
+                        "ChartConfiguration": {
+                            "FieldWells": {
+                                "TableAggregatedFieldWells": {
+                                    "GroupBy": [
+                                        {
+                                            "CategoricalDimensionField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.patient_name.4.1738696453934",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "patient_name"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "Values": [
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.measurements_remaining.1.1738970235134",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "measurements_remaining"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.current_interval_count.2.1738970248037",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "current_interval_count"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.current_interval_sbp_avg.6.1739031344430",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "current_interval_sbp_avg"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.one_interval_ago_count.3.1738970251728",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "one_interval_ago_count"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.one_interval_ago_sbp_avg.6.1739031350172",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "one_interval_ago_sbp_avg"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "NumericalMeasureField": {
+                                                "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.two_intervals_ago_count.4.1738970253625",
+                                                "Column": {
+                                                    "DataSetIdentifier": "bp_measurement_count_view",
+                                                    "ColumnName": "two_intervals_ago_count"
+                                                },
+                                                "AggregationFunction": {
+                                                    "SimpleNumericalAggregation": "SUM"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "SortConfiguration": {},
+                            "TableOptions": {
+                                "HeaderStyle": {
+                                    "FontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "MEDIUM"
+                                        },
+                                        "FontColor": "#FFFFFF"
+                                    },
+                                    "TextWrap": "WRAP",
+                                    "HorizontalTextAlignment": "LEFT",
+                                    "BackgroundColor": "#081F5C",
+                                    "Height": 80
+                                },
+                                "CellStyle": {
+                                    "FontConfiguration": {
+                                        "FontSize": {
+                                            "Relative": "LARGE"
+                                        }
+                                    },
+                                    "HorizontalTextAlignment": "LEFT",
+                                    "BackgroundColor": "#E0E0E0",
+                                    "Height": 41
+                                },
+                                "RowAlternateColorOptions": {
+                                    "Status": "ENABLED"
+                                }
+                            },
+                            "TotalOptions": {
+                                "TotalsVisibility": "HIDDEN",
+                                "Placement": "END",
+                                "ScrollStatus": "SCROLLED"
+                            },
+                            "FieldOptions": {
+                                "SelectedFieldOptions": [
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.patient_name.4.1738696453934",
+                                        "Width": "339px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.measurements_remaining.1.1738970235134",
+                                        "Width": "295px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.current_interval_count.2.1738970248037",
+                                        "Width": "182px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.current_interval_sbp_avg.6.1739031344430",
+                                        "Width": "174px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.one_interval_ago_count.3.1738970251728",
+                                        "Width": "189px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.one_interval_ago_sbp_avg.6.1739031350172",
+                                        "Width": "185px"
+                                    },
+                                    {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.two_intervals_ago_count.4.1738970253625",
+                                        "Width": "199px"
+                                    }
+                                ]
+                            }
+                        },
+                        "ConditionalFormatting": {
+                            "ConditionalFormattingOptions": [
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.two_intervals_ago_count.4.1738970253625",
+                                        "TextFormat": {
+                                            "TextColor": {
+                                                "Solid": {
+                                                    "Expression": "SUM({two_intervals_ago_count}) >= 16",
+                                                    "Color": "#2CAD00"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.one_interval_ago_count.3.1738970251728",
+                                        "TextFormat": {
+                                            "TextColor": {
+                                                "Solid": {
+                                                    "Expression": "SUM({one_interval_ago_count}) >= 16",
+                                                    "Color": "#2CAD00"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.measurements_remaining.1.1738970235134",
+                                        "TextFormat": {
+                                            "BackgroundColor": {
+                                                "Gradient": {
+                                                    "Expression": "SUM({measurements_remaining})",
+                                                    "Color": {
+                                                        "Stops": [
+                                                            {
+                                                                "GradientOffset": 0.0,
+                                                                "DataValue": 0.0,
+                                                                "Color": "#2CAD00"
+                                                            },
+                                                            {
+                                                                "GradientOffset": 50.0,
+                                                                "DataValue": 8.0,
+                                                                "Color": "#F2E61E"
+                                                            },
+                                                            {
+                                                                "GradientOffset": 100.0,
+                                                                "DataValue": 16.0,
+                                                                "Color": "#DE3B00"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.measurements_remaining.1.1738970235134",
+                                        "TextFormat": {
+                                            "Icon": {
+                                                "CustomCondition": {
+                                                    "Expression": "SUM({measurements_remaining}) = 0",
+                                                    "IconOptions": {
+                                                        "Icon": "CHECKMARK"
+                                                    },
+                                                    "Color": "#0251D3",
+                                                    "DisplayConfiguration": {
+                                                        "IconDisplayOption": "ICON_ONLY"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "Cell": {
+                                        "FieldId": "6537c629-6bce-44fe-8db0-4d477c93cf5f.current_interval_count.2.1738970248037",
+                                        "TextFormat": {
+                                            "TextColor": {
+                                                "Solid": {
+                                                    "Expression": "SUM({current_interval_count}) >= 16",
+                                                    "Color": "#2CAD00"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "Actions": []
+                    }
+                },
+                {
+                    "KPIVisual": {
+                        "VisualId": "d3942610-e818-484f-9ccd-060ca77e8053_1c60197a-312c-4e1a-aa36-2fd7c9ef5600",
+                        "Title": {
+                            "Visibility": "VISIBLE",
+                            "FormatText": {
+                                "RichText": "<visual-title>\n  <block align=\"center\">\n    <inline font-size=\"24px\">Total Patients with Measurements</inline>\n  </block>\n</visual-title>"
+                            }
+                        },
+                        "Subtitle": {
+                            "Visibility": "VISIBLE"
+                        },
+                        "ChartConfiguration": {
+                            "FieldWells": {
+                                "Values": [
+                                    {
+                                        "NumericalMeasureField": {
+                                            "FieldId": "e1c7d938-f730-461b-8784-9c6f9d2b3145.0.1738972504098",
+                                            "Column": {
+                                                "DataSetIdentifier": "bp_measurement_count_view",
+                                                "ColumnName": "Total Patients with Measurements"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "TargetValues": [],
+                                "TrendGroups": []
+                            },
+                            "SortConfiguration": {},
+                            "KPIOptions": {
+                                "Comparison": {
+                                    "ComparisonMethod": "PERCENT_DIFFERENCE"
+                                },
+                                "PrimaryValueDisplayType": "ACTUAL",
+                                "PrimaryValueFontConfiguration": {
+                                    "FontSize": {
+                                        "Relative": "LARGE"
+                                    },
+                                    "FontColor": "#212121"
+                                },
+                                "SecondaryValueFontConfiguration": {
+                                    "FontSize": {
+                                        "Relative": "EXTRA_LARGE"
+                                    }
+                                },
+                                "Sparkline": {
+                                    "Visibility": "VISIBLE",
+                                    "Type": "AREA"
+                                },
+                                "VisualLayoutOptions": {
+                                    "StandardLayout": {
+                                        "Type": "VERTICAL"
+                                    }
+                                }
+                            }
+                        },
+                        "Actions": [],
+                        "ColumnHierarchies": []
+                    }
+                }
+            ],
+            "Layouts": [
+                {
+                    "Configuration": {
+                        "GridLayout": {
+                            "Elements": [
+                                {
+                                    "ElementId": "d3942610-e818-484f-9ccd-060ca77e8053_1c60197a-312c-4e1a-aa36-2fd7c9ef5600",
+                                    "ElementType": "VISUAL",
+                                    "ColumnIndex": 0,
+                                    "ColumnSpan": 6,
+                                    "RowIndex": 0,
+                                    "RowSpan": 4
+                                },
+                                {
+                                    "ElementId": "d3942610-e818-484f-9ccd-060ca77e8053_9d02c48f-7d27-4a7b-90b7-3f09ca628ee3",
+                                    "ElementType": "VISUAL",
+                                    "ColumnIndex": 6,
+                                    "ColumnSpan": 30,
+                                    "RowIndex": 0,
+                                    "RowSpan": 4
+                                },
+                                {
+                                    "ElementId": "d3942610-e818-484f-9ccd-060ca77e8053_7df66cc1-a5f7-4987-8abc-79b1c585dd61",
+                                    "ElementType": "VISUAL",
+                                    "ColumnIndex": 0,
+                                    "ColumnSpan": 36,
+                                    "RowIndex": 4,
+                                    "RowSpan": 12
+                                }
+                            ],
+                            "CanvasSizeOptions": {
+                                "ScreenCanvasSizeOptions": {
+                                    "ResizeOption": "FIXED",
+                                    "OptimizedViewPortWidth": "1600px"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "ContentType": "INTERACTIVE"
+        }
+    ],
+    "CalculatedFields": [
+        {
+            "DataSetIdentifier": "bp_measurement_count_view",
+            "Name": "Total Patients with Measurements",
+            "Expression": "count({patient_name})"
+        }
+    ],
+    "ParameterDeclarations": [
+        {
+            "DateTimeParameterDeclaration": {
+                "Name": "DateToday",
+                "DefaultValues": {
+                    "StaticValues": [],
+                    "RollingDate": {
+                        "Expression": "truncDate('DD', now())"
+                    }
+                },
+                "TimeGranularity": "DAY"
+            }
+        }
+    ],
+    "FilterGroups": [],
+    "AnalysisDefaults": {
+        "DefaultNewSheetConfiguration": {
+            "InteractiveLayoutConfiguration": {
+                "Grid": {
+                    "CanvasSizeOptions": {
+                        "ScreenCanvasSizeOptions": {
+                            "ResizeOption": "FIXED",
+                            "OptimizedViewPortWidth": "1600px"
+                        }
+                    }
+                }
+            },
+            "SheetContentType": "INTERACTIVE"
+        }
+    },
+    "Options": {
+        "WeekStart": "SUNDAY"
+    }
+}

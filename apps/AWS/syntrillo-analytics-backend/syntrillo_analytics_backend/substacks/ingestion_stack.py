@@ -97,7 +97,9 @@ class IngestionStack(Stack):
             replication_subnet_group_description="DMS subnet group",
             subnet_ids=self.subnet_ids
         )
-
+        # Add explicit dependency on the DMS VPC role
+        dms_subnet_group.node.add_dependency(dms_vpc_role)
+        
         # Create replication instance
         dms_instance = dms.CfnReplicationInstance(
             self, "DMSInstance",
@@ -205,6 +207,59 @@ class IngestionStack(Stack):
                     "object-locator": {
                         "schema-name": "syntrillo$HealthInformation",
                         "table-name": "tenovi_raw_measurements"
+                    },
+                    "rule-action": "include"
+                },
+                {
+                    "rule-type": "transformation",
+                    "rule-id": "2",
+                    "rule-name": "Remove json column",
+                    "rule-action": "remove-column",
+                    "rule-target": "column",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "tenovi_raw_measurements",
+                        "column-name": "data_json"
+                    }
+                }
+                ]
+            }
+            ''',
+            replication_task_settings='''
+            {
+                "Logging": {
+                    "EnableLogging": true
+                }
+            }
+            '''
+        )
+
+        dms.CfnReplicationTask(
+            self, "HealthieFormsReplicationTask",
+            replication_instance_arn=dms_instance.ref,
+            migration_type="full-load-and-cdc",
+            source_endpoint_arn=source_endpoint.ref,
+            target_endpoint_arn=target_endpoint.ref,
+            table_mappings='''
+            {
+                "rules": [
+                {
+                    "rule-type": "selection",
+                    "rule-id": "1",
+                    "rule-name": "1",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "healthie_form_templates"
+                    },
+                    "rule-action": "include"
+                },
+                {
+                    "rule-type": "selection",
+                    "rule-id": "2",
+                    "rule-name": "2",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "healthie_form_responses"
                     },
                     "rule-action": "include"
                 }
