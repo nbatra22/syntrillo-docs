@@ -109,11 +109,15 @@ def iframe_healthie_provider_tab_blood_pressure():
     # analysis_json = analysis_table_with_inception.to_json()
     extremes_json = extremes.to_json()
 
+    # TEST
+    measurements_html = _.to_html(classes="table table-striped", border=1)
+
     return render_template(
         'healthie/iframe_provider_tab/blood_pressure.html',
         analysis_html=analysis_html,
         analysis_json=analysis_json,
-        extremes_json=extremes_json
+        extremes_json=extremes_json,
+        # measurements_html=measurements_html
     )
 
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
