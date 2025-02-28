@@ -2,33 +2,60 @@
 <!-- Main Content -->
 <div class="">
 
-    <section class="bp_header py-4">
+    <section class="bp_header py-4 flex space-between items-center">
         <h2 class="text-lg font-bold">
             Blood Pressure Analysis
         </h2>
 
-        <!-- <a
-            href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure', pdf=True) }}"
-            target="_blank"
-            class="styled-button"
-            id="bp-download"
-        >
-            <span class="icon-container">
-                <i class="fas fa-download" id="download-icon"></i>
-            </span>
-            Download Report
-        </a> -->
-        <a
-            href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', analysis_json=analysis_json, extremes_json=extremes_json) }}"
-            target="_blank"
-            class="flex gap-2 px-3 py-2 text-sm text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
-            id="bp-download"
-        >
-            <span class="icon-container">
-                <i class="fas fa-download" id="download-icon"></i>
-            </span>
-            Download Report
-        </a>
+        <div class="relative inline-block text-left">
+            <!-- Dropdown Button -->
+            <button id="bp-download-dropdown" class="px-4 py-2 flex gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800">
+                Download
+
+                <i class="fa-solid fa-caret-down"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="bp-download-menu" class="absolute right-0 mt-2 p-4 w-[400px] flex flex-col gap-4 bg-white border border-gray-300 rounded-md shadow-lg hidden">
+                <div class="flex flex-col gap-2">
+                    <div class="w-full text-sm flex flex-col">
+                        <label for="file-name" class="mb-1 text-xs font-bold">
+                            File name
+                        </label>
+                        <input
+                            type="text"
+                            id="file-name"
+                            name="file-name"
+                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter file name"
+                        />
+                    </div>
+                    <div class="w-full text-sm flex flex-col">
+                        <label for="file-name" class="mb-1 text-xs font-bold">
+                            Title
+                        </label>
+                        <input
+                            type="text"
+                            id="download-title"
+                            name="download-title"
+                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder='"Patient Analysis"'
+                        />
+                    </div>
+                </div>
+                <a
+                    href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', analysis_json=analysis_json, extremes_json=extremes_json) }}"
+                    target="_blank"
+                    class="flex justify-center gap-2 px-3 py-2 text-sm text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
+                    id="bp-download-button"
+                >
+                    <span class="icon-container">
+                        <i class="fas fa-download" id="download-icon"></i>
+                    </span>
+                    Download Report
+                </a>
+            </div>
+        </div>
     </section>
 
     <section class="w-full mx-auto flex flex-col gap-4">
@@ -61,7 +88,21 @@
 
 <!-- Scripts -->
 <script>
-    document.getElementById("bp-download").addEventListener("click", function() {
+    // Toggle Dropdown Visibility
+    document.getElementById('bp-download-dropdown').addEventListener('click', function() {
+        document.getElementById('bp-download-menu').classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('bp-download-menu');
+        const button = document.getElementById('bp-download-dropdown');
+        if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    document.getElementById("bp-download-button").addEventListener("click", function() {
         let downloadIcon = document.getElementById("download-icon");
 
         // Save original classes
