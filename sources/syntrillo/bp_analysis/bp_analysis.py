@@ -1,17 +1,15 @@
 import uuid
-import json
 import pandas as pd
-import numpy as np
 from datetime import datetime, timezone
 from typing import Tuple
-import matplotlib
 import textwrap
 import io
-
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+import base64
+import re
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+matplotlib.use('Agg')
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
@@ -24,19 +22,25 @@ class BloodPressureAnalysis:
     Handle patient level blood pressure analysis. Class methods include:
         1. __init__()
             - sets PHI database connection
-        2. get_blood_pressure_dataframe()
+        2. initialize_data()
+            - streamlines method calls (3-6)
+        3. get_blood_pressure_dataframe()
             - retrieves tenovi BP values; sets bpm_df and returns bpm_df
-        3. calculate_metadata()
+        4. calculate_metadata()
             - returns dict containing total values since baseline for analysis rows; used for calculate_since_baseline()
-        4. calculate_timeframes()
+        5. calculate_timeframes()
             - returns new bpm_df sorted by timeframes; used for calculate_analysis()
-        5. calculate_analysis()
+        6. calculate_analysis()
             - returns analysis dataframe table with progress rows
-        6. calculate_since_baseline()
-            - returns updated analysis dataframe with 3 additional columns
-        7. calculate_extremes()
+        7. calculate_progress()
+            - attaches progress cells to analysis dataframe; used in calculate_analysis
+        8. calculate_since_baseline()
+            - returns updated analysis dataframe with 3 additional columns; redacted
+        9. calculate_extremes()
             - returns extremes dataframe
-        8. generate_pdf()
+        10. style_row()
+            - styles df rows depending on metric and value
+        11. save_to_pdf()
             - returns pdf that combines analysis df and extremes df
 
     """
@@ -52,6 +56,7 @@ class BloodPressureAnalysis:
             "diastolic": int
         }
     """
+    analysis_df : pd.DataFrame = None
     timeframed_data : dict = None
     HYPERTENSION_SBP_THRESHOLD = 170
     HYPERTENSION_DBP_THRESHOLD = 110
@@ -64,6 +69,24 @@ class BloodPressureAnalysis:
 
         # set up PHI database connection for this user
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+
+
+    def initialize_data(self) -> None:
+        # Get all available blood pressure data
+        _, log = self.get_blood_pressure_dataframe(
+            start_date=None,
+            end_date=None,
+        )
+
+        # Generate analysis + extremes table using BloodPressureAnalysis class methods
+        self.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
+        self.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
+        self.calculate_analysis() # Calculates row values for each timeframe
+
+        if self.analysis_df is not None:
+            return True
+        else:
+            return False
 
 
     def get_blood_pressure_dataframe(
@@ -194,30 +217,50 @@ class BloodPressureAnalysis:
 
     def calculate_timeframes(self) -> dict:
         """
-
-        Extracts bpm_df values into Current (latest 2 weeks), Prior (2 weeks prior to current), and Baseline (first 2 weeks)
-
+        Extracts bpm_df values into Baseline (first 2 weeks), Prior (2 weeks before Current), and Current (latest 2 weeks).
+        Dynamically includes only relevant timeframes based on total available data.
+        Ensures a minimum of 3 measurements per timeframe and at least one non-null measurement for it to be included.
         """
         df = self.bpm_df
 
         latest_date = df['timestamp_local'].max()
-        current_start = latest_date - pd.Timedelta(weeks=2) + pd.Timedelta(days=1)
-
         baseline_start = df['timestamp_local'].min()
-        baseline_end = df['timestamp_local'].min() + pd.Timedelta(weeks=1, days=6)
 
+        # Calculate total elapsed time in weeks
+        total_weeks = (latest_date - baseline_start).days / 7
+
+        # Define time ranges
+        current_start = latest_date - pd.Timedelta(weeks=2) + pd.Timedelta(days=1)
+        baseline_end = baseline_start + pd.Timedelta(weeks=1, days=6)
         prior_end = current_start - pd.Timedelta(days=1)
         prior_start = prior_end - pd.Timedelta(weeks=1, days=6)
 
-        timeframes = {
-            f"Baseline ({baseline_start.strftime('%m/%d/%y')}-{baseline_end.strftime('%m/%d/%y')})": df[(df['timestamp_local'] >= baseline_start) & (df['timestamp_local'] < baseline_end)],
-            f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})": df[(df['timestamp_local'] >= prior_start) & (df['timestamp_local'] < prior_end)],
-            # f"Current ({prior_end.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['timestamp_local'] >= prior_end]
-            f"Current¹ ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})": df[df['timestamp_local'] >= current_start]
-        }
+        # Minimum number of required measurements
+        min_measurements = 3
+
+        # Initialize timeframes in correct order
+        timeframes = {}
+
+        def is_valid_timeframe(timeframe_df):
+            """Check if a timeframe has at least one valid (non-null) measurement and meets the min count."""
+            return len(timeframe_df.dropna()) >= min_measurements and timeframe_df.notna().any().any()
+
+        # Include Baseline first if at least 4 weeks of data and it has enough measurements
+        baseline_df = df[(df['timestamp_local'] >= baseline_start) & (df['timestamp_local'] < baseline_end)]
+        if total_weeks >= 4 and is_valid_timeframe(baseline_df):
+            timeframes[f"Baseline ({baseline_start.strftime('%m/%d/%y')}-{baseline_end.strftime('%m/%d/%y')})"] = baseline_df
+
+        # Include Prior in the middle if at least 6 weeks of data and it has enough measurements
+        prior_df = df[(df['timestamp_local'] >= prior_start) & (df['timestamp_local'] < prior_end)]
+        if total_weeks >= 6 and is_valid_timeframe(prior_df):
+            timeframes[f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})"] = prior_df
+
+        # Always include Current last, but only if it has enough measurements
+        current_df = df[df['timestamp_local'] >= current_start]
+        if is_valid_timeframe(current_df):
+            timeframes[f"Current ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})"] = current_df
 
         self.timeframed_data = timeframes
-
         return timeframes
 
 
@@ -251,13 +294,11 @@ class BloodPressureAnalysis:
         timeframes = self.timeframed_data
 
         analysis = {}
-        current_timeframe = next((name for name in timeframes if name.startswith("Current")), None)
-        prior_timeframe = next((name for name in timeframes if name.startswith("Prior")), None)
-        baseline_timeframe = next((name for name in timeframes if name.startswith("Baseline")), None)
 
         for name, frame in timeframes.items():
             if frame.empty:
                 analysis[name] = {
+                    'Measurement Count': None,
                     'Avg SBP (mmHg)': None,
                     'Avg DBP (mmHg)': None,
                     'Peak SBP² (mmHg)': None,
@@ -280,6 +321,7 @@ class BloodPressureAnalysis:
                 }
                 continue
 
+            measurement_count = len(frame)
             avg_systolic = round(frame['systolic'].mean(), 2)
             avg_diastolic = round(frame['diastolic'].mean(), 2)
             peak_systolic = round(frame['systolic'].nlargest(3).mean(), 2)  # Avg of 3 highest values
@@ -290,19 +332,20 @@ class BloodPressureAnalysis:
             diastolic_sd = round(frame['diastolic'].std(), 2)
             systolic_cv = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
             diastolic_cv = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
-            sbp_count_160 = len(frame[frame['systolic'] >= 160])
-            sbp_count_165 = len(frame[frame['systolic'] >= 165])
+            # sbp_count_160 = len(frame[frame['systolic'] >= 160])
+            # sbp_count_165 = len(frame[frame['systolic'] >= 165])
             sbp_count_170 = len(frame[frame['systolic'] >= 170])
             sbp_count_175 = len(frame[frame['systolic'] >= 175])
-            sbp_count_80 = len(frame[frame['systolic'] <= 80])
-            sbp_count_85 = len(frame[frame['systolic'] <= 85])
-            sbp_count_90 = len(frame[frame['systolic'] <= 90])
-            sbp_count_95 = len(frame[frame['systolic'] <= 95])
-            hypertensive_dbp_count = len(frame[frame['diastolic'] >= self.HYPERTENSION_DBP_THRESHOLD])
+            # sbp_count_80 = len(frame[frame['systolic'] <= 80])
+            # sbp_count_85 = len(frame[frame['systolic'] <= 85])
+            # sbp_count_90 = len(frame[frame['systolic'] <= 90])
+            # sbp_count_95 = len(frame[frame['systolic'] <= 95])
+            # hypertensive_dbp_count = len(frame[frame['diastolic'] >= self.HYPERTENSION_DBP_THRESHOLD])
             hypotensive_count = len(frame[frame['systolic'] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
 
 
             analysis[name] = {
+                'Measurement Count': measurement_count,
                 'Avg SBP (mmHg)': avg_systolic,
                 'Avg DBP (mmHg)': avg_diastolic,
                 'Peak SBP² (mmHg)': peak_systolic,
@@ -324,247 +367,266 @@ class BloodPressureAnalysis:
                 'Hypotensive Count⁴': hypotensive_count,
             }
 
+            # End loop
+
+        analysis_with_progress = self.calculate_progress(analysis=analysis, timeframed_data=timeframes)
+        df = pd.DataFrame.from_dict(analysis_with_progress, orient='index').T
+
+        df.loc['Overall'] = df.apply(self.calculate_overall, axis=0)
+
+        # Set class variable
+        self.analysis_df = df
+
+        return df
+
+    @staticmethod
+    def calculate_progress(analysis: dict, timeframed_data: dict) -> dict:
+        """
+        Calculates progress based on timeframed data.
+        Adjusts dynamically based on available timeframes (Baseline, Prior, Current).
+        """
+
+        # Define point system and thresholds
         points = {
-            'Avg SBP (mmHg)': {'increase': -2, 'decrease': 2},
-            'Avg DBP (mmHg)': {'increase': -2, 'decrease': 2},
-            'SBP CV (%)': {'increase': -1, 'decrease': 1},
-            'DBP CV (%)': {'increase': -1, 'decrease': 1},
-            'SBP SD (mmHg)': {'increase': -1, 'decrease': 1},
-            'DBP SD (mmHg)': {'increase': -1, 'decrease': 1},
-            'Peak SBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2},
-            'Peak DBP² (mmHg)': {'above_threshold': -2, 'below_threshold': 2}
+            'Avg SBP (mmHg)': 2,
+            'Avg DBP (mmHg)': 2,
+            'SBP CV (%)': 1,
+            'DBP CV (%)': 1,
+            'SBP SD (mmHg)': 1,
+            'DBP SD (mmHg)': 1,
+            'Peak SBP² (mmHg)': 2,
+            'Peak DBP² (mmHg)': 2
         }
 
         thresholds = {
-            'Avg SBP (mmHg)': 2,
-            'Avg DBP (mmHg)': 2,
-            'SBP CV (%)': 1.1,
-            'DBP CV (%)': 1.4,
-            'SBP SD (mmHg)': 1.5,
-            'DBP SD (mmHg)': 1.3,
-            'Peak SBP² (mmHg)': 170,
-            'Peak DBP² (mmHg)': 110
+            'Avg SBP (mmHg)': 2, 'Avg DBP (mmHg)': 2,
+            'SBP CV (%)': 1.1, 'DBP CV (%)': 1.4,
+            'SBP SD (mmHg)': 1.5, 'DBP SD (mmHg)': 1.3,
+            'Peak SBP² (mmHg)': 170, 'Peak DBP² (mmHg)': 110
         }
 
         boundaries = {
-            'Avg SBP (mmHg)': [0, 130],
-            'Avg DBP (mmHg)': [0, 80],
-            'SBP CV (%)': [0, 5.5],
-            'DBP CV (%)': [0, 6],
-            'SBP SD (mmHg)': [0, 7.5],
-            'DBP SD (mmHg)': [0, 5],
-            'Peak SBP² (mmHg)': [0, 170],
-            'Peak DBP² (mmHg)': [0, 110]
+            'Avg SBP (mmHg)': [0, 130], 'Avg DBP (mmHg)': [0, 80],
+            'SBP CV (%)': [0, 5.5], 'DBP CV (%)': [0, 6],
+            'SBP SD (mmHg)': [0, 7.5], 'DBP SD (mmHg)': [0, 5],
+            'Peak SBP² (mmHg)': [0, 170], 'Peak DBP² (mmHg)': [0, 110]
         }
 
-        delta = 0
-        baseline_delta = 0
+        delta, baseline_delta = 0, 0
 
-        if current_timeframe and prior_timeframe and baseline_timeframe:
-            for metric in analysis[current_timeframe]:
-                current_value = analysis[current_timeframe][metric]
-                prior_value = analysis[prior_timeframe].get(metric, "-")
-                baseline_value = analysis[baseline_timeframe].get(metric, "-")
+        # Extract available timeframes
+        current_timeframe = next((key for key in timeframed_data if "Current" in key), None)
+        prior_timeframe = next((key for key in timeframed_data if "Prior" in key), None)
+        baseline_timeframe = next((key for key in timeframed_data if "Baseline" in key), None)
 
-                if current_value is not None and prior_value != "-" and baseline_value != "-" and isinstance(prior_value, (int, float)) and isinstance(baseline_value, (int, float)):
-                    change = current_value - prior_value
-                    percent_change = (
-                        (current_value - prior_value) / prior_value * 100
-                        if prior_value != 0
-                        else 0
-                    )
-                    abs_change = abs(change)
-                    abs_percent_change = abs(percent_change)
+        if not current_timeframe:
+            return analysis  # No current timeframe means no comparison can be made
 
-                    baseline_change = current_value - baseline_value
-                    baseline_percent_change = (
-                        (current_value - baseline_value) / baseline_value * 100
-                        if baseline_value != 0
-                        else 0
-                    )
-                    baseline_abs_change = abs(baseline_change)
-                    baseline_abs_percent_change = abs(baseline_percent_change)
+        # Initialize the progress tracking
+        if baseline_timeframe:
+            analysis['Since Baseline¹'] = {metric: "-" for metric in points.keys()}
 
+        if prior_timeframe:
+            analysis['Since Prior¹'] = {metric: "-" for metric in points.keys()}
 
-                    # Handle average SBP and DBP ------------------
-                    if metric in ['Avg SBP (mmHg)', 'Avg DBP (mmHg)']:
-                        if any(val > boundaries[metric][1] for val in [baseline_value, current_value, prior_value]):
-                            curr_progress = "="  # Default for current change
-                            base_progress = "="  # Default for baseline change
+        for metric in analysis[current_timeframe]:
 
-                            if change > 0:  # Increase in current change
-                                delta += points[metric]['increase']
-                                curr_progress = "-"  # Indicates a decrease is needed
-                            elif change < 0:  # Decrease in current change
-                                delta += points[metric]['decrease']
-                                curr_progress = "+"  # Indicates an increase is needed
+            current_value = analysis[current_timeframe][metric]
+            prior_value = analysis.get(prior_timeframe, {}).get(metric, "-")
+            baseline_value = analysis.get(baseline_timeframe, {}).get(metric, "-")
 
-                            if baseline_change > 0:  # Increase in baseline change
-                                baseline_delta += points[metric]['increase']
-                                base_progress = "-"  # Indicates a decrease is needed
-                            elif baseline_change < 0:  # Decrease in baseline change
-                                baseline_delta += points[metric]['decrease']
-                                base_progress = "+"  # Indicates an increase is needed
+            # print(f"{metric}: {type(current_value)}")
 
-                            # Update progress format as "(current change sign) / (baseline change sign)"
-                            progress = f"{curr_progress}/{base_progress}"
+            # Ensure values are valid for comparison
+            valid_prior = prior_value != "-" and prior_value != None and isinstance(prior_value, (int, float))
+            valid_baseline = baseline_value != "-" and baseline_value != None and isinstance(baseline_value, (int, float))
 
-                            # Keep the last f-string with the updated progress
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+            # Ensure values are not in green threshold
+            # green_prior = any(val > boundaries[metric][1] for val in [prior_value, current_value])
+            # green_baseline = any(val > boundaries[metric][1] for val in [baseline_value, current_value])
 
-                    # Handle SBP-SD and DBP-SD ------------------
-                    elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
-                        if any(val > boundaries[metric][1] for val in [baseline_value, current_value, prior_value]):
-                            curr_progress = "="  # Default for current change
-                            base_progress = "="  # Default for baseline change
-                            if abs_change >= thresholds[metric]:
-                                if change > 0:  # Increase in current change
-                                    delta += points[metric]['increase']
-                                    curr_progress = "-"  # Indicates a decrease is needed
-                                elif change < 0:  # Decrease in current change
-                                    delta += points[metric]['decrease']
-                                    curr_progress = "+"  # Indicates an increase is needed
-                            if baseline_abs_change >= thresholds[metric]:
-                                if baseline_change > 0:  # Increase in baseline change
-                                    baseline_delta += points[metric]['increase']
-                                    base_progress = "-"  # Indicates a decrease is needed
-                                elif baseline_change < 0:  # Decrease in baseline change
-                                    baseline_delta += points[metric]['decrease']
-                                    base_progress = "+"  # Indicates an increase is needed
+            if current_value is not None:
+                change = current_value - prior_value if valid_prior else None
+                percent_change = (change / prior_value * 100) if valid_prior and prior_value != 0 else None
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                baseline_change = current_value - baseline_value if valid_baseline else None
+                baseline_percent_change = (baseline_change / baseline_value * 100) if valid_baseline and baseline_value != 0 else None
 
-                    # Handle SBP-CV and DBP-CV ------------------
-                    elif metric in ['SBP CV (%)', 'DBP CV (%)']:
-                        if any(val > boundaries[metric][1] for val in [baseline_value, current_value, prior_value]):
-                            if abs_percent_change >= thresholds[metric]:
-                                curr_progress = "="  # Default for current change
-                                base_progress = "="  # Default for baseline change
+                # Default progress symbols
+                curr_progress = ""
+                base_progress = ""
 
-                                if percent_change > 0:  # Increase in current change
-                                    delta += points[metric]['increase']
-                                    curr_progress = "-"  # Indicates a decrease is needed
-                                elif percent_change < 0:  # Decrease in current change
-                                    delta += points[metric]['decrease']
-                                    curr_progress = "+"  # Indicates an increase is needed
+                # Skip metrics without thresholds
+                # if metric not in thresholds.keys():
+                #     continue
 
-                            if baseline_abs_percent_change >= thresholds[metric]:
-                                if baseline_percent_change > 0:  # Increase in baseline change
-                                    baseline_delta += points[metric]['increase']
-                                    base_progress = "-"  # Indicates a decrease is needed
-                                elif baseline_percent_change < 0:  # Decrease in baseline change
-                                    baseline_delta += points[metric]['decrease']
-                                    base_progress = "+"  # Indicates an increase is needed
+                # Handle Avg SBP and DBP
+                if metric in ['Avg SBP (mmHg)', 'Avg DBP (mmHg)']:
+                    if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if change > 0:
+                            delta -= points[metric]
+                            curr_progress = "--"
+                        elif change < 0:
+                            delta += points[metric]
+                            curr_progress = "++"
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                    if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                        if baseline_change > 0:
+                            baseline_delta -= points[metric]
+                            base_progress = "--"
+                        elif baseline_change < 0:
+                            baseline_delta += points[metric]
+                            base_progress = "++"
 
-                    # Handle categorical change for Peak BP
-                    elif metric.startswith('Peak') and isinstance(current_value, (int, float)):
-                        if any(val > boundaries[metric][1] for val in [baseline_value, current_value, prior_value]):
-                            high_threshold = thresholds[metric]
-                            curr_progress = "="  # Default for current change
-                            base_progress = "="  # Default for baseline change
+                    # print(f"Baseline Delta (after Avg): {baseline_delta}")
 
-                            # Current change logic
-                            if prior_value < high_threshold < current_value:  # Crossed above threshold
-                                delta += points[metric]['above_threshold']
-                                curr_progress = "-"  # Indicates a decrease is needed
-                            elif prior_value > high_threshold >= current_value:  # Crossed below threshold
-                                delta += points[metric]['below_threshold']
-                                curr_progress = "+"  # Indicates an increase is needed
+                # Handle SBP-SD and DBP-SD
+                elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
+                    if valid_prior and abs(change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if change > 0:
+                            delta -= points[metric]
+                            curr_progress = "-"
+                        elif change < 0:
+                            delta += points[metric]
+                            curr_progress = "+"
 
-                            # Baseline change logic
-                            if baseline_value < high_threshold < current_value:  # Crossed above threshold
-                                baseline_delta += points[metric]['above_threshold']
-                                base_progress = "-"  # Indicates a decrease is needed
-                            elif baseline_value > high_threshold >= current_value:  # Crossed below threshold
-                                baseline_delta += points[metric]['below_threshold']
-                                base_progress = "+"  # Indicates an increase is needed
+                    if valid_baseline and abs(baseline_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                        if baseline_change > 0:
+                            baseline_delta -= points[metric]
+                            base_progress = "-"
+                        elif baseline_change < 0:
+                            baseline_delta += points[metric]
+                            base_progress = "+"
 
-                            progress = f"{curr_progress}/{base_progress}"
-                            analysis[current_timeframe][metric] = f"{current_value} {progress}"
+                    # print(f"Baseline Delta (after SD): {baseline_delta}")
 
+                # Handle SBP-CV and DBP-CV
+                elif metric in ['SBP CV (%)', 'DBP CV (%)']:
+                    if valid_prior and abs(percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if percent_change > 0:
+                            delta -= points[metric]
+                            curr_progress = "-"
+                        elif percent_change < 0:
+                            delta += points[metric]
+                            curr_progress = "+"
 
-        # Add the total delta as a new key for the extra cell
+                    if valid_baseline and abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                        if baseline_percent_change > 0:
+                            baseline_delta -= points[metric]
+                            base_progress = "-"
+                        elif baseline_percent_change < 0:
+                            baseline_delta += points[metric]
+                            base_progress = "+"
+
+                    # print(f"Baseline Delta (after CV): {baseline_delta}")
+
+                # Handle Peak SBP/DBP
+                elif metric.startswith('Peak'):
+                    high_threshold = thresholds[metric]
+                    if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if prior_value < high_threshold < current_value:
+                            delta -= points[metric]
+                            curr_progress = "--"
+                        elif prior_value > high_threshold >= current_value:
+                            delta += points[metric]
+                            curr_progress = "++"
+
+                    if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                        if baseline_value < high_threshold < current_value:
+                            baseline_delta -= points[metric]
+                            base_progress = "--"
+                        elif baseline_value > high_threshold >= current_value:
+                            baseline_delta += points[metric]
+                            base_progress = "++"
+
+                # print(f"Baseline Delta (after Peak): {baseline_delta}")
+
+                # Store progress result
+                if valid_baseline:
+                    analysis['Since Baseline¹'][metric] = f"{base_progress}"
+
+                if valid_prior:
+                    analysis['Since Prior¹'][metric] = f"{curr_progress}"
+
+        # Overall progress
         progress = "Improving" if delta > 0 else "Worsening" if delta < 0 else "Same"
         baseline_progress = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
-        analysis[current_timeframe]['Progress (pts)'] = f"{progress} ({delta})"
-        analysis[current_timeframe]['Baseline Progress (pts)'] = f"{baseline_progress} ({baseline_delta})"
 
-        # Ensure the Progress row has "-" in baseline and prior columns
-        analysis[prior_timeframe].setdefault('Progress (pts)', '-')
-        analysis[next(k for k in analysis if "Baseline" in k)]['Progress (pts)'] = '-'
-        analysis[prior_timeframe].setdefault('Baseline Progress (pts)', '-')
-        analysis[next(k for k in analysis if "Baseline" in k)]['Baseline Progress (pts)'] = '-'
+        if valid_prior:
+            analysis['Since Prior¹']['Progress (pts)'] = f"{progress} ({delta})"
 
-        df = pd.DataFrame.from_dict(analysis, orient='index').T
+        if valid_baseline:
+            analysis['Since Baseline¹']['Progress (pts)'] = f"{baseline_progress} ({baseline_delta})"
 
-        def calculate_overall(column):
-            """
-            Calculate the overall rating for a timeframe based on individual metrics.
-            Priority: Poor > Okay > Good
-            """
-            # Initialize the default rating as 'Good'
-            overall_rating = 'Good'
+        # Ensure keys exist in all timeframes
+        for tf in [baseline_timeframe, prior_timeframe, current_timeframe]:
+            if tf:
+                analysis.setdefault(tf, {}).setdefault('Progress (pts)', '-')
 
-            # Iterate through each metric in the column
-            for metric, value in column.items():
-                if isinstance(value, str):
-                    # Remove trend arrows (↑/↓) and convert to numeric
-                    value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
+        return analysis
 
-                if metric == 'Avg SBP (mmHg)' and value is not None:
-                    if value >= 140:
-                        return 'Poor'  # Immediate return for highest priority
-                    elif 130 <= value < 140:
-                        overall_rating = 'Okay'
 
-                elif metric == 'Avg DBP (mmHg)' and value is not None:
-                    if value >= 90:
-                        return 'Poor'
-                    elif 80 <= value < 90:
-                        overall_rating = 'Okay'
+    @staticmethod
+    def calculate_overall(column):
+        """
+        Calculate the overall rating for a timeframe based on individual metrics.
+        Priority: Poor > Okay > Good
+        """
+        # Initialize the default rating as 'Good'
+        overall_rating = 'Good'
 
-                elif metric == 'SBP SD (mmHg)' and value is not None:
-                    if value >= 15:
-                        return 'Poor'
-                    elif 7.5 <= value < 15:
-                        overall_rating = 'Okay'
+        # Iterate through each metric in the column
+        for metric, value in column.items():
+            if isinstance(value, str):
+                # Remove trend arrows (↑/↓) and convert to numeric
+                value = pd.to_numeric(value.replace('+', '').replace('-', '').strip(), errors='coerce')
 
-                elif metric == 'DBP SD (mmHg)' and value is not None:
-                    if value >= 11.5:
-                        return 'Poor'
-                    elif 5 <= value < 11.5:
-                        overall_rating = 'Okay'
+            if metric == 'Avg SBP (mmHg)' and value is not None:
+                if value >= 140:
+                    return 'Poor'  # Immediate return for highest priority
+                elif 130 <= value < 140:
+                    overall_rating = 'Okay'
 
-                elif metric == 'SBP CV (%)' and value is not None:
-                    if value >= 11:
-                        return 'Poor'
-                    elif 5.5 <= value < 11:
-                        overall_rating = 'Okay'
+            elif metric == 'Avg DBP (mmHg)' and value is not None:
+                if value >= 90:
+                    return 'Poor'
+                elif 80 <= value < 90:
+                    overall_rating = 'Okay'
 
-                elif metric == 'DBP CV (%)' and value is not None:
-                    if value >= 13:
-                        return 'Poor'
-                    elif 6 <= value < 13:
-                        overall_rating = 'Okay'
+            elif metric == 'SBP SD (mmHg)' and value is not None:
+                if value >= 15:
+                    return 'Poor'
+                elif 7.5 <= value < 15:
+                    overall_rating = 'Okay'
 
-                elif metric == 'Peak SBP² (mmHg)' and value is not None:
-                    if value >= 170:
-                        return 'Poor'
+            elif metric == 'DBP SD (mmHg)' and value is not None:
+                if value >= 11.5:
+                    return 'Poor'
+                elif 5 <= value < 11.5:
+                    overall_rating = 'Okay'
 
-                elif metric == 'Peak DBP² (mmHg)' and value is not None:
-                    if value >= 110:
-                        return 'Poor'
+            elif metric == 'SBP CV (%)' and value is not None:
+                if value >= 11:
+                    return 'Poor'
+                elif 5.5 <= value < 11:
+                    overall_rating = 'Okay'
 
-            # Return the overall rating ('Okay' or 'Good')
-            return overall_rating
+            elif metric == 'DBP CV (%)' and value is not None:
+                if value >= 13:
+                    return 'Poor'
+                elif 6 <= value < 13:
+                    overall_rating = 'Okay'
 
-        df.loc['Overall'] = df.apply(calculate_overall, axis=0)
+            elif metric == 'Peak SBP² (mmHg)' and value is not None:
+                if value >= 170:
+                    return 'Poor'
 
-        return df
+            elif metric == 'Peak DBP² (mmHg)' and value is not None:
+                if value >= 110:
+                    return 'Poor'
+
+        # Return the overall rating ('Okay' or 'Good')
+        return overall_rating
 
 
     def calculate_since_baseline(self, metadata, analysis_table):
@@ -626,67 +688,232 @@ class BloodPressureAnalysis:
         return extremes[['timestamp_local', 'systolic', 'diastolic']]
 
 
-    def generate_pdf(self, analysis, extremes):
+    @staticmethod
+    def style_row(row):
         """
 
-        Generates a PDF with a formatted analysis table and extremes table using ReportLab.
+        Colorizes analysis df.
 
         """
+        if not hasattr(row, 'name'):
+            return ['background-color: white; padding: 8px; text-align: center' for _ in row]
 
-        pdf_buffer = io.BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-        elements = []
-        styles = getSampleStyleSheet()
+        metric = row.name
+        styles = []
+        for val in row:
+            color = 'white'
+            if pd.notna(val):
+                # Convert string values to a numeric value
+                try:
+                    if isinstance(val, str):
+                        value_num = pd.to_numeric(val, errors='coerce')
+                    else:
+                        value_num = val
+                except Exception:
+                    value_num = None
 
-        def wrap_text(text, width=16):
-            """Wraps text manually to fit table headers."""
-            return "\n".join(textwrap.wrap(text, width))
+                if isinstance(value_num, float):
+                    # print(f"{value_num} is float")
+                    value_num = round(value_num, 1)
 
-        # **1️⃣ Analysis Table**
-        wrapped_col_labels = ['Metric'] + [wrap_text(col) for col in analysis.columns]
-        data = [wrapped_col_labels] + analysis.reset_index().values.tolist()
+                if value_num is not None and not pd.isna(value_num):
+                    if metric == 'Avg SBP (mmHg)':
+                        if value_num < 130:
+                            color = 'lightgreen'
+                        elif 130 <= value_num <= 139:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'Avg DBP (mmHg)':
+                        if value_num < 80:
+                            color = 'lightgreen'
+                        elif 80 <= value_num <= 89:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'SBP SD (mmHg)':
+                        if value_num < 7.5:
+                            color = 'lightgreen'
+                        elif value_num < 15:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'DBP SD (mmHg)':
+                        if value_num < 5:
+                            color = 'lightgreen'
+                        elif value_num < 11.5:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'SBP CV (%)':
+                        if value_num < 5.5:
+                            color = 'lightgreen'
+                        elif value_num < 11:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'DBP CV (%)':
+                        if value_num < 6:
+                            color = 'lightgreen'
+                        elif value_num < 13:
+                            color = 'yellow'
+                        else:
+                            color = 'red'
+                    elif metric == 'Peak SBP² (mmHg)':
+                        if value_num < 170:
+                            color = 'lightgreen'
+                        else:
+                            color = 'red'
+                    elif metric == 'Peak DBP² (mmHg)':
+                        if value_num < 110:
+                            color = 'lightgreen'
+                        else:
+                            color = 'red'
+            # Append the style for this cell
+            styles.append(f'background-color: {color}; padding: 8px')
 
-        table = Table(data)
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Header background
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold header
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Padding
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Alternating row color
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Grid lines
-        ]))
+        return styles
 
-        elements.append(Paragraph("Analysis Report", styles['Title']))
-        elements.append(table)
 
-        # **2️⃣ Extremes Table with Pagination**
-        rows_per_page = 25
-        total_rows = len(extremes)
-        num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
+    @staticmethod
+    def wrap_text(text, width=16):
+        """Manually inserts line breaks to wrap text in table headers."""
+        return "\n".join(textwrap.wrap(text, width))
 
-        if extremes.empty:
-            elements.append(Paragraph("No extreme values found", styles['Normal']))
-        else:
-            for page in range(num_pages):
-                start_row = page * rows_per_page
-                end_row = min(start_row + rows_per_page, total_rows)
-                subset = extremes.iloc[start_row:end_row].values.tolist()
+    @staticmethod
+    def save_to_pdf(analysis, extremes, report_title="Report"):
+        """
+        Saves analysis and extremes tables as a PDF with conditional cell coloring.
+        :param analysis: DataFrame containing analysis data
+        :param extremes: DataFrame containing extreme values
+        :param report_title: Title for the report
+        :return: BytesIO buffer containing the PDF
+        """
+        pdf_buffer = io.BytesIO()  # Create an in-memory buffer
 
-                extremes_table = Table([['Date', 'Systolic BP', 'Diastolic BP']] + subset)
-                extremes_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
+        with PdfPages(pdf_buffer) as pdf:
+            wrapped_col_labels = ['Metric'] + list(analysis.columns)
 
-                elements.append(Paragraph(f"Extremes Report (Page {page + 1} of {num_pages})", styles['Heading2']))
-                elements.append(extremes_table)
+            # Create figure for analysis table
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.axis('off')
+            ax.axis('tight')
 
-        # **Build the PDF**
-        doc.build(elements)
-        pdf_buffer.seek(0)
+            # Convert DataFrame to a 2D list for the table
+            table_data = analysis.reset_index().values.tolist()
 
+            # Create the table
+            table = ax.table(cellText=table_data,
+                            colLabels=wrapped_col_labels,
+                            cellLoc='center', loc='center')
+
+            table.auto_set_font_size(False)
+            table.scale(1.2, 1.2)
+
+            # Regex pattern to detect only `+`, `-`, or `=`
+            trend_symbol_pattern = re.compile(r'^[+=/-]+$')
+
+            # Apply cell color logic
+            for (row, col), cell in table.get_celld().items():
+                if row == 0:  # Header row
+                    cell.set_fontsize(8)
+                    cell.set_facecolor("lightgray")
+                elif col == 0:  # Row labels
+                    cell.set_fontsize(8)
+                else:  # Data cells
+                    metric = analysis.index[row - 1] if row > 0 else None
+                    value = analysis.iloc[row - 1, col - 1] if row > 0 and col > 0 else None
+
+                    # Ensure `value` is a valid string before calling `.strip()`**
+                    if isinstance(value, str):
+                        value = value.strip()
+
+                        # Skip styling if the cell is empty or contains only `+`, `-`, `=`**
+                        if value == "" or trend_symbol_pattern.fullmatch(value):
+                            continue  # Leave these cells white (default)
+
+                        # Convert string-based numbers to numeric values safely
+                        value = pd.to_numeric(value.replace('+', '').replace('-', '').replace('/', '').replace('=', ''), errors='coerce')
+
+                    # *Skip `None` values completely (leave them white)**
+                    if value is None or pd.isna(value):
+                        continue
+
+                    # Default cell color
+                    color = "white"
+
+                    # Apply color coding for specific metrics
+                    if metric == 'Avg SBP (mmHg)':
+                        color = 'lightgreen' if value < 130 else 'yellow' if value <= 139 else 'red'
+                    elif metric == 'Avg DBP (mmHg)':
+                        color = 'lightgreen' if value < 80 else 'yellow' if value <= 89 else 'red'
+                    elif metric == 'SBP SD (mmHg)':
+                        color = 'lightgreen' if value < 7.5 else 'yellow' if value < 15 else 'red'
+                    elif metric == 'DBP SD (mmHg)':
+                        color = 'lightgreen' if value < 5 else 'yellow' if value < 11.5 else 'red'
+                    elif metric == 'SBP CV (%)':
+                        color = 'lightgreen' if value < 5.5 else 'yellow' if value < 11 else 'red'
+                    elif metric == 'DBP CV (%)':
+                        color = 'lightgreen' if value < 6 else 'yellow' if value < 13 else 'red'
+                    elif metric == 'Peak SBP² (mmHg)':
+                        color = 'lightgreen' if value < 170 else 'red'
+                    elif metric == 'Peak DBP² (mmHg)':
+                        color = 'lightgreen' if value < 110 else 'red'
+
+                    cell.set_facecolor(color)
+
+            ax.set_title(report_title)
+
+            # Dynamically position footnotes below the table
+            table_bbox = table.get_window_extent(ax.figure.canvas.get_renderer()).transformed(ax.transAxes.inverted())
+            table_bottom = table_bbox.y0  # Get table's bottom y-coordinate
+            footnote_y_offset = 0.03  # Space between table and footnotes
+
+            # ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹
+            footnotes = [
+                '¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were allocated for the respective metric.',
+                "² 'Peak' values represent the average of the three highest values in the timeframe.",
+                "³ 'Low' values represent the single lowest value in the timeframe.",
+                "⁴ 'Hypotensive Count' indicates the number of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
+            ]
+
+            # Add footnotes below the table
+            for i, text in enumerate(footnotes):
+                ax.text(0, table_bottom - (i + 1) * footnote_y_offset, text,
+                        fontsize=8, transform=ax.transAxes, ha='left', va='top')
+
+            pdf.savefig(fig)
+            plt.close(fig)
+
+            # Handle extremes table
+            if extremes.empty:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.axis('off')
+                ax.axis('tight')
+                ax.text(0.5, 0.5, 'No extreme values found', transform=ax.transAxes, ha='center', va='center')
+                ax.set_title(f"{report_title} - Extremes")
+                pdf.savefig(fig)
+                plt.close(fig)
+            else:
+                rows_per_page = 25
+                total_rows = len(extremes)
+                num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
+
+                for page in range(num_pages):
+                    start_row = page * rows_per_page
+                    end_row = min(start_row + rows_per_page, total_rows)
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    ax.axis('off')
+                    ax.axis('tight')
+
+                    subset = extremes.iloc[start_row:end_row]
+                    ax.table(cellText=subset.values,
+                            colLabels=['Date', 'Systolic BP', 'Diastolic BP'],
+                            cellLoc='center', loc='center')
+
+                    ax.set_title(f"{report_title} - Extremes (Page {page + 1} of {num_pages})")
+                    pdf.savefig(fig)
+                    plt.close(fig)
+
+        pdf_buffer.seek(0)  # Reset buffer position to the beginning
         return pdf_buffer

@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, abort, Response, send_file
 import pandas as pd
 import json
+import base64
+import io
 
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
@@ -76,19 +78,46 @@ def iframe_healthie_provider_tab_blood_pressure():
     metadata = data_reporting_blood_pressure.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
     analysis_table = data_reporting_blood_pressure.calculate_analysis() # Calculates row values for each timeframe
-    analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
+    # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
     extremes = data_reporting_blood_pressure.calculate_extremes() # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
+    styled_analysis_table = (
+        analysis_table
+            .style
+                .apply(data_reporting_blood_pressure.style_row, axis=1)
+                .set_properties(**{'text-align': 'center'})
+                .set_table_styles(
+                    [
+                        {"selector": "th", "props": [("text-align", "center"),
+                                                    ("padding", "10px"),
+                                                    ("border", "1px solid gray")]},  # Column headers
+
+                        {"selector": "td", "props": [("padding", "8px"),
+                                                    ("border", "1px solid gray")]},  # Data cells
+
+                        {"selector": "table", "props": [("border-collapse", "collapse")]}  # Ensure borders collapse properly
+                    ]
+                )
+    )
+
+    rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.2f}" if isinstance(x, float) else x)
 
     # Prepare html + json variables to send to "Blood Pressure" tab
-    analysis_html = analysis_table_with_inception.to_html(classes="table table-striped")
-    analysis_json = analysis_table_with_inception.to_json()
+    analysis_html = rounded_analysis_table.to_html(classes="")
+
+    if extremes.empty:
+        extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
+    else:
+        extremes_html = extremes.to_html(classes="table table-striped")
+
+    analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()
 
     return render_template(
         'healthie/iframe_provider_tab/blood_pressure.html',
         analysis_html=analysis_html,
+        extremes_html=extremes_html,
         analysis_json=analysis_json,
-        extremes_json=extremes_json
+        extremes_json=extremes_json,
     )
 
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
@@ -98,26 +127,19 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     This endpoint is linked to the report download button in the Blood Pressure tab.
 
     """
-    # Obtain the json strings from url params
-    analysis_json = request.args.get('analysis_json')
-    extremes_json = request.args.get('extremes_json')
-
-    if not analysis_json or not extremes_json:
-        return "Error, Insufficient data received", 400
 
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
-    # Deal with patients not registered at Syntrillo
-    if post_manager.patient_not_registered_at_syntrillo:
-        return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
+    # Obtain form variables
+    file_name = request.form.get("file-name").strip() or "BP-report.pdf"
+    report_title = request.form.get("report-title") or "Blood Pressure Analysis"
+    analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
+    extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
     # Establish connection to BloodPressureAnalysis class
     data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
 
-    # Convert json variables to dataframes and send to generate_pdf class method
-    analysis_df = pd.read_json(analysis_json)
-    extremes_df = pd.read_json(extremes_json)
-    bp_pdf = data_reporting_blood_pressure.generate_pdf(analysis=analysis_df, extremes=extremes_df)
+    bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
 
-    return send_file(bp_pdf, as_attachment=True, download_name="BP-report.pdf", mimetype="application/pdf")
+    return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
