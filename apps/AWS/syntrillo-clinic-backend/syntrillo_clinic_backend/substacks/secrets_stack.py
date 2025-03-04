@@ -103,6 +103,42 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(
+            self, "SecretsDatabaseLambdaUserSecretsArn",
+            value=self.database_lambda_user_secrets.secret_arn,
+            export_name="Secrets-Database-LambdaUserSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsTenoviHwiSecretsArn",
+            value=self.tenovi_hwi_secrets.secret_arn,
+            export_name="Secrets-TenoviHwiSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsHealthieSecretsArn",
+            value=self.healthie_secrets.secret_arn,
+            export_name="Secrets-HealthieSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsOpenAiSecretsArn",
+            value=self.openai_secrets.secret_arn,
+            export_name="Secrets-OpenAiSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsCutomKMSKeyArn",
+            value=custom_kms_key.key_arn,
+            export_name="Secrets-SecretsKMSKey-Arn"
+        )
+
+        # ---
+
         CfnOutput(
             self, "DatabaseCertificateSecretArn", 
             value=self.database_certificate.secret_arn, 
@@ -115,11 +151,7 @@ class SecretsStack(Stack):
             export_name="DatabaseDMSUserSecretsArn"
         )
 
-        CfnOutput(
-            self, "SecretsCutomKMSKeyArn",
-            value=custom_kms_key.key_arn,
-            export_name="SecretsCutomKMSKeyArn"
-        )
+
 
         CfnOutput(
             self, "GithubOAuthTokenSecretsName", 
