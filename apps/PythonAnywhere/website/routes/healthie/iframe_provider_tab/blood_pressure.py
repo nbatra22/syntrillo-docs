@@ -107,7 +107,7 @@ def iframe_healthie_provider_tab_blood_pressure():
     if extremes.empty:
         extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
     else:
-        extremes_html = extremes.to_html(classes="")
+        extremes_html = extremes.to_html(classes="table table-striped")
 
     analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()
