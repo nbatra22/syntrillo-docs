@@ -39,47 +39,97 @@ class MessageEndpointFunction(Construct):
         self.storage = storage
         self.secrets = secrets
 
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
+
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+
+        self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
+        self.clinic_storage_efs_access_point_chatbot_resources_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-ChatbotResources-Arn")
+        self.clinic_storage_efs_file_system_security_group_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id")
+
+        # # Import file system endpoint
+
+        file_system_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "ImportedFileSystemSecurityGroup",
+            security_group_id=self.clinic_storage_efs_file_system_security_group_id
+        )
+
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=self.clinic_storage_efs_file_system_id,
+            security_group=file_system_security_group
+        )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        self.clinic_storage_efs_access_point_chatbot_resources = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPoint",
+            access_point_arn=self.clinic_storage_efs_access_point_chatbot_resources_arn,
+            file_system=imported_file_system
+        )
+
+        # # Import file system endpoint
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        # imported_file_system = efs.FileSystem.from_file_system_attributes(
+        #     self,
+        #     "ImportedFileSystem",
+        #     file_system_id=efs_file_system_id,
+        #     security_group=file_system_security_group
+        # )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        # efs_access_point_chatbots = efs.AccessPoint.from_access_point_attributes(
+        #     self,
+        #     "EFSAccessPointChatbots",
+        #     access_point_arn=efs_access_point_chatbots_arn,
+        #     file_system=imported_file_system
+        # )
+
+        self.secrets_openai_secrets_secret_arn = Fn.import_value("Secrets-OpenAiSecrets-Arn")
+
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
+        # ---------------------------------------------------------------------   
+
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
             log_level=_lambda.ParamsAndSecretsLogLevel.NONE
         )
 
-        # Import file system endpoint
-        efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
-        imported_file_system = efs.FileSystem.from_file_system_attributes(
-            self,
-            "ImportedFileSystem",
-            file_system_id=efs_file_system_id,
-            security_group=storage.efs_security_group
-        )
-
-        efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
-        efs_access_point_chatbots = efs.AccessPoint.from_access_point_attributes(
-            self,
-            "EFSAccessPointChatbots",
-            access_point_arn=efs_access_point_chatbots_arn,
-            file_system=imported_file_system
-        )
-
         # Create function
         self.function = _lambda.Function(self, "MessageEndpointFunction",
             function_name="MessageEndpointFunction",
-            vpc = self.network.vpc,
+            vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_12,
-            code=_lambda.Code.from_asset("lambda-functions/message-endpoint-function", exclude=['.env']),
+            code=_lambda.Code.from_asset("lambda-functions/message-endpoint-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                efs_access_point_chatbots,
+                self.clinic_storage_efs_access_point_chatbot_resources,
                 mount_path="/mnt/chatbots-resources"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": self.environment_context['message_endpoint_function']['log_level'],
                 "PYTHONPATH": "/mnt/chatbots-resources/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets.openai_secrets.secret_arn
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn ,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets_openai_secrets_secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=self.environment_context['message_endpoint_function']['memory_size'], 
@@ -94,10 +144,10 @@ class MessageEndpointFunction(Construct):
             provisioned_concurrent_executions=self.environment_context['message_endpoint_function']['provisioned_concurrency_executions']
         )
 
-        self.grant_read_secrets(self.secrets.database_lambda_user_secrets)
-        self.grant_read_secrets(self.secrets.tenovi_hwi_secrets)
-        self.grant_read_secrets(self.secrets.healthie_secrets)
-        self.grant_read_secrets(self.secrets.openai_secrets)
+        self.grant_read_secrets(self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.secrets_openai_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
         self.function_security_group = self.function.connections.security_groups[0]
 
@@ -133,13 +183,13 @@ class MessageEndpointFunction(Construct):
 
         self.function.role.add_managed_policy(bedrock_access_policy)   
          
-    def grant_read_secrets(self, secrets):
+    def grant_read_secrets(self, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         self.function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
-            resources=[secrets.secret_arn],
+            resources=[secrets_arn],
         ))
         self.function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
-            resources=[secrets.encryption_key.key_arn],
+            resources=[secrets_kms_key_arn],
         ))

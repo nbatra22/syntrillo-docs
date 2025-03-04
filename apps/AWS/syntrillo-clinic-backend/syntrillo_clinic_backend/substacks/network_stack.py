@@ -46,17 +46,16 @@ class NetworkStack(Stack):
         )
 
         # VPC Flow Logs
-        if self.aws_environment == "prod":
-            self.vpc_flow_logs_log_group = logs.LogGroup(
-                self, "VPCFlowLogsLogGroup",
-                log_group_name="/aws/vpc/flowlogs",
-                removal_policy=RemovalPolicy.DESTROY
-            )
+        self.vpc_flow_logs_log_group = logs.LogGroup(
+            self, "VPCFlowLogsLogGroup",
+            log_group_name="/aws/vpc/flowlogs",
+            removal_policy=RemovalPolicy.DESTROY
+        )
 
-            self.vpc.add_flow_log("SyntrilloClinicBackendVPCFlowLogCloudWatch",
-                destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
-                traffic_type=ec2.FlowLogTrafficType.ALL,
-            )
+        self.vpc.add_flow_log("SyntrilloClinicBackendVPCFlowLogCloudWatch",
+            destination=ec2.FlowLogDestination.to_cloud_watch_logs(self.vpc_flow_logs_log_group),
+            traffic_type=ec2.FlowLogTrafficType.ALL,
+        )
 
         # Security groups
         self.bastion_host_security_group = ec2.SecurityGroup(
@@ -65,10 +64,28 @@ class NetworkStack(Stack):
             vpc=self.vpc,
         )
 
-        # For VPC Peering with Analytics network
-        CfnOutput(self, "SyntrilloClinicNetworkId", value=self.vpc.vpc_id, export_name="SyntrilloClinicNetworkId")
+        # Add S3 Gateway Endpoint
+        self.vpc.add_gateway_endpoint(
+            "S3Endpoint",
+            service=ec2.GatewayVpcEndpointAwsService.S3
+        )
 
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+        CfnOutput(self, "SyntrilloClinicNetworkVpcId", value=self.vpc.vpc_id, export_name="SyntrilloClinic-Network-Vpc-Id")
+        CfnOutput(self, "SyntrilloClinicNetworkVpcCidrBlock", value=self.vpc.vpc_cidr_block, export_name="SyntrilloClinic-Network-Vpc-CidrBlock")
+
+        # Output route table ID and subnet ID for each private subnet
         for subnet in self.vpc.private_subnets:
-            CfnOutput(self, f"SyntrilloClinicNetworkRouteTable{subnet.node.id}", value=subnet.route_table.route_table_id, export_name=f"SyntrilloClinicNetworkRouteTable-{subnet.node.id}")
+            CfnOutput(self, f"SyntrilloClinicNetworkVpc{subnet.node.id}RouteTableId", value=subnet.route_table.route_table_id, export_name=f"SyntrilloClinic-Network-Vpc-{subnet.node.id}-RouteTable-Id")
+            CfnOutput(self, f"SyntrilloClinicNetworkVpc{subnet.node.id}SubnetId", value=subnet.subnet_id, export_name=f"SyntrilloClinic-Network-Vpc-{subnet.node.id}-Id")
+            
+        # Output route table ID and subnet ID for each public subnet    
+        for subnet in self.vpc.public_subnets:
+            CfnOutput(self, f"SyntrilloClinicNetworkVpc{subnet.node.id}RouteTableId", value=subnet.route_table.route_table_id, export_name=f"SyntrilloClinic-Network-Vpc-{subnet.node.id}-RouteTable-Id")
+            CfnOutput(self, f"SyntrilloClinicNetworkVpc{subnet.node.id}SubnetId", value=subnet.subnet_id, export_name=f"SyntrilloClinic-Network-Vpc-{subnet.node.id}-Id")    
         
-        CfnOutput(self, "SyntrilloClinicNetworkCidrBlock", value=self.vpc.vpc_cidr_block, export_name="SyntrilloClinicNetworkCidrBlock")
+        # output availability zones
+        for i, az in enumerate(self.vpc.availability_zones):
+            CfnOutput(self, f"SyntrilloClinicNetworkVpcAvailabilityZone{i}", value=az, export_name=f"SyntrilloClinic-Network-Vpc-AvailabilityZone-{i}")

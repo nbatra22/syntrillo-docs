@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -28,16 +29,10 @@ class FixOutputDependencyStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, stack: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.storage = stack
+        self.servers = stack
 
         ssm.StringParameter(
             self, "TemporaryFixOutputDependencyParameter",
             parameter_name="/tmp/fix_output_dependency",
-            string_value=self.storage.efs_access_point_3.access_point_arn,
-        )
-
-        ssm.StringParameter(
-            self, "TemporaryFixOutputDependencyParameter2",
-            parameter_name="/tmp/fix_output_dependency2",
-            string_value=self.storage.efs_access_point_4.access_point_arn,
+            string_value=self.servers.iframe_generator_function.function_security_group.security_group_id,
         )

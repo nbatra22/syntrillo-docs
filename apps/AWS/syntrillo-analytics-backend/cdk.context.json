@@ -1,0 +1,29 @@
+{
+  "sandbox": {
+    "environment-name": "sandbox",
+    "stacks-termination-protection": false,
+    "storage": {
+      "removal-policy": "DESTROY"
+    }
+  },
+  "staging": {
+    "environment-name": "staging",
+    "stacks-termination-protection": true,
+    "storage": {
+      "removal-policy": "DESTROY"
+    }
+  },
+  "prod": {
+    "environment-name": "prod",
+    "stacks-termination-protection": true,
+    "storage": {
+      "removal-policy": "RETAIN"
+    }
+  },
+  "acknowledged-issue-numbers": [
+    30444,
+    32510,
+    32653,
+    32775
+  ]
+}

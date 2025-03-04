@@ -1,0 +1,5 @@
+aws quicksight --profile syntrillo-clinic-staging describe-analysis-definition     --aws-account-id 021891579520    --analysis-id 45fdc9fd-b9c8-41a0-acf1-16d8a4433217 --region us-east-1 --query "Definition" > analysis_definition.json
+aws quicksight create-analysis     --profile syntrillo-clinic-staging     --aws-account-id 021891579520     --analysis-id xxx-aaa     --name "New Analysis Name"     --definition file://analysis_definition.json
+aws quicksight list-analyses     --aws-account-id 021891579520   --region us-east-1
+aws quicksight describe-analysis-permissions     --aws-account-id YOUR_AWS_ACCOUNT_ID     --analysis-id YOUR_ANALYSIS_ID     --region YOUR_REGION
+aws quicksight update-analysis-permissions  --profile syntrillo-clinic-staging   --aws-account-id 021891579520 --analysis-id xxx-aaa --region us-east-1 --grant-permissions "[{\"Principal\": \"arn:aws:quicksight:us-east-1:021891579520:namespace/default\", \"Actions\": [\"quicksight:DescribeAnalysis\",\"quicksight:QueryAnalysis\"]}]"

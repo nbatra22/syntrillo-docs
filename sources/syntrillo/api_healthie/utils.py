@@ -155,6 +155,7 @@ class HealthieUtils():
                 ) {
                     id
                     email
+                    name
                 }
             }
         '''
