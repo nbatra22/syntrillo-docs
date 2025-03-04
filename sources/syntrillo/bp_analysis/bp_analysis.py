@@ -1,17 +1,18 @@
 import uuid
-import json
 import pandas as pd
-import numpy as np
 from datetime import datetime, timezone
 from typing import Tuple
-import matplotlib
 import textwrap
 import io
+import base64
+import re
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
+
+from bs4 import BeautifulSoup
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
@@ -24,19 +25,23 @@ class BloodPressureAnalysis:
     Handle patient level blood pressure analysis. Class methods include:
         1. __init__()
             - sets PHI database connection
-        2. get_blood_pressure_dataframe()
+        2. initialize_data()
+            - streamlines method calls (3-6)
+        3. get_blood_pressure_dataframe()
             - retrieves tenovi BP values; sets bpm_df and returns bpm_df
-        3. calculate_metadata()
+        4. calculate_metadata()
             - returns dict containing total values since baseline for analysis rows; used for calculate_since_baseline()
-        4. calculate_timeframes()
+        5. calculate_timeframes()
             - returns new bpm_df sorted by timeframes; used for calculate_analysis()
-        5. calculate_analysis()
+        6. calculate_analysis()
             - returns analysis dataframe table with progress rows
-        6. calculate_since_baseline()
-            - returns updated analysis dataframe with 3 additional columns
-        7. calculate_extremes()
+        7. calculate_progress()
+            - attaches progress cells to analysis dataframe; used in calculate_analysis
+        8. calculate_since_baseline()
+            - returns updated analysis dataframe with 3 additional columns; redacted
+        9. calculate_extremes()
             - returns extremes dataframe
-        8. generate_pdf()
+        10. generate_pdf()
             - returns pdf that combines analysis df and extremes df
 
     """
@@ -52,6 +57,7 @@ class BloodPressureAnalysis:
             "diastolic": int
         }
     """
+    analysis_df : pd.DataFrame = None
     timeframed_data : dict = None
     HYPERTENSION_SBP_THRESHOLD = 170
     HYPERTENSION_DBP_THRESHOLD = 110
@@ -64,6 +70,24 @@ class BloodPressureAnalysis:
 
         # set up PHI database connection for this user
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+
+
+    def initialize_data(self) -> None:
+        # Get all available blood pressure data
+        _, log = self.get_blood_pressure_dataframe(
+            start_date=None,
+            end_date=None,
+        )
+
+        # Generate analysis + extremes table using BloodPressureAnalysis class methods
+        self.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
+        self.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
+        self.calculate_analysis() # Calculates row values for each timeframe
+
+        if self.analysis_df is not None:
+            return True
+        else:
+            return False
 
 
     def get_blood_pressure_dataframe(
@@ -350,6 +374,9 @@ class BloodPressureAnalysis:
         df = pd.DataFrame.from_dict(analysis_with_progress, orient='index').T
 
         df.loc['Overall'] = df.apply(self.calculate_overall, axis=0)
+
+        # Set class variable
+        self.analysis_df = df
 
         return df
 
@@ -749,67 +776,136 @@ class BloodPressureAnalysis:
         return styles
 
 
-    def generate_pdf(self, analysis, extremes):
+    def generate_pdf(self, analysis_encoded, extremes, report_title):
         """
 
         Generates a PDF with a formatted analysis table and extremes table using ReportLab.
 
         """
 
+        # Decoded encoded analysis html
+        analysis_decoded = base64.b64decode(analysis_encoded).decode()
+        soup = BeautifulSoup(analysis_decoded, "html.parser")  # Parse the HTML with BeautifulSoup
+
+        # Extract styles (background colors) from the HTML
+        bg_colors = {}
+        data = []
+
+        style_tag = soup.find("style")
+        css_styles = style_tag.text if style_tag else ""
+        color_map = self.extract_background_colors(css_styles)  # Parse CSS styles
+
+        rows = soup.find_all("tr")
+
+        # print(f"---------------- {analysis_decoded}")
+
+        for row_idx, row in enumerate(rows):
+            row_class = row.get("class", [])  # Extract row class (if any)
+            row_bg_color = None
+
+            # If the row has a class, check if a matching background color exists
+            for cls in row_class:
+                if cls in color_map:
+                    row_bg_color = color_map[cls]  # Use row class color if available
+
+            cells = row.find_all(["th", "td"])
+            row_data = []
+
+            for col_idx, cell in enumerate(cells):
+                text = cell.text.strip()
+                row_data.append(text)
+
+                # Extract cell class if present
+                cell_class = cell.get("class", [])
+                cell_bg_color = None
+
+                # Use cell class background color
+                for cls in cell_class:
+                    if cls in color_map:
+                        cell_bg_color = color_map[cls]
+
+                # Prioritize cell color, then row color
+                bg_color = cell_bg_color or row_bg_color
+
+                if bg_color:
+                    bg_colors[(row_idx, col_idx)] = bg_color
+
+            data.append(row_data)  # Append row text to data
+
+
+
+        # print(f"---------------- {data}")
+        # print(f"---------------- {bg_colors}")
+
+        # Initialize PDF elements
         pdf_buffer = io.BytesIO()
         doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
         elements = []
-        styles = getSampleStyleSheet()
 
-        def wrap_text(text, width=16):
-            """Wraps text manually to fit table headers."""
-            return "\n".join(textwrap.wrap(text, width))
-
-        # **1️⃣ Analysis Table**
-        wrapped_col_labels = ['Metric'] + [wrap_text(col) for col in analysis.columns]
-        data = [wrapped_col_labels] + analysis.reset_index().values.tolist()
-
+        # Create ReportLab Table
         table = Table(data)
-        table.setStyle(TableStyle([
+
+        # Default styling
+        table_style = TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Header background
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold header
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Padding
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),  # Alternating row color
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Grid lines
-        ]))
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align all cells
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Header padding
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Add grid lines
+        ])
 
-        elements.append(Paragraph("Analysis Report", styles['Title']))
+        # Apply extracted background colors
+        for (row_idx, col_idx), bg_color in bg_colors.items():
+            table_style.add('BACKGROUND', (col_idx, row_idx), (col_idx, row_idx), bg_color)
+
+        table.setStyle(table_style)
+
+        # Ensure report title is wrapped in a Paragraph
+        elements.append(Paragraph(str(report_title), getSampleStyleSheet()['Title']))  # Convert to string
         elements.append(table)
 
-        # **2️⃣ Extremes Table with Pagination**
-        rows_per_page = 25
-        total_rows = len(extremes)
-        num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
+        # # **2️⃣ Extremes Table with Pagination**
+        # rows_per_page = 25
+        # total_rows = len(extremes)
+        # num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
 
-        if extremes.empty:
-            elements.append(Paragraph("No extreme values found", styles['Normal']))
-        else:
-            for page in range(num_pages):
-                start_row = page * rows_per_page
-                end_row = min(start_row + rows_per_page, total_rows)
-                subset = extremes.iloc[start_row:end_row].values.tolist()
+        # if extremes.empty:
+        #     elements.append(Paragraph("No extreme values found", styles['Normal']))
+        # else:
+        #     for page in range(num_pages):
+        #         start_row = page * rows_per_page
+        #         end_row = min(start_row + rows_per_page, total_rows)
+        #         subset = extremes.iloc[start_row:end_row].values.tolist()
 
-                extremes_table = Table([['Date', 'Systolic BP', 'Diastolic BP']] + subset)
-                extremes_table.setStyle(TableStyle([
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
-                ]))
+        #         extremes_table = Table([['Date', 'Systolic BP', 'Diastolic BP']] + subset)
+        #         extremes_table.setStyle(TableStyle([
+        #             ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+        #             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        #             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        #             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        #             ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        #         ]))
 
-                elements.append(Paragraph(f"Extremes Report (Page {page + 1} of {num_pages})", styles['Heading2']))
-                elements.append(extremes_table)
+        #         elements.append(Paragraph(f"Extremes Report (Page {page + 1} of {num_pages})", styles['Heading2']))
+        #         elements.append(extremes_table)
 
         # **Build the PDF**
         doc.build(elements)
         pdf_buffer.seek(0)
 
         return pdf_buffer
+
+    @staticmethod
+    def extract_background_colors(css_text):
+        """Parses CSS text and extracts background colors for table rows."""
+        color_map = {}  # Store class-to-color mappings
+
+        # ✅ Extract CSS rules like `.row1 { background-color: yellow; }`
+        matches = re.findall(r"(\..*?)\s*\{[^}]*background-color:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\([^)]*\));", css_text)
+
+        for class_name, bg_color in matches:
+            clean_class = class_name.strip().replace(".", "")  # Remove leading `.`
+            color_map[clean_class] = colors.HexColor(bg_color)  # Convert for ReportLab
+
+        return color_map  # Returns dictionary mapping class -> color

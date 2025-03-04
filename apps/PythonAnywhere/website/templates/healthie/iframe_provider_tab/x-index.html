@@ -26,6 +26,9 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
         /* space before system tab */
         .nav-tabs .nav-item.ml-auto {
@@ -41,13 +44,16 @@
 
 <div class="container"> <!-- TODO : increase media max-width -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="tab-blood-pressure-tab" data-toggle="tab" href="#tab-blood-pressure" role="tab" aria-controls="tab-blood-pressure" aria-selected="true">Blood Pressure</a>
+        </li>
         <!-- <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
-        </li>
+        </li> -->
         <li class="nav-item">
             <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link" id="tab-onboarding-tab" data-toggle="tab" href="#tab-onboarding" role="tab" aria-controls="tab-onboarding" aria-selected="false">Onboarding</a>
         </li>
         <li class="nav-item">
@@ -56,9 +62,6 @@
         <li class="nav-item">
             <a class="nav-link" id="tab-cdss-tab" data-toggle="tab" href="#tab-cdss" role="tab" aria-controls="tab-cdss" aria-selected="false">CDSS</a>
         </li> -->
-        <li class="nav-item">
-            <a class="nav-link" id="tab-blood-pressure-tab" data-toggle="tab" href="#tab-blood-pressure" role="tab" aria-controls="tab-blood-pressure" aria-selected="true">Blood Pressure</a>
-        </li>
         <!-- Large gap -->
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
@@ -67,13 +70,13 @@
             <a class="nav-link" id="tab-system-devices-tab" data-toggle="tab" href="#tab-system-devices" role="tab" aria-controls="tab-system-devices" aria-selected="false">System Devices</a>
         </li>
     </ul>
-    <div class="tab-content" id="myTabContent">
-        <!-- <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
+    <div class="tab-content p-4" id="myTabContent">
+        <div class="tab-pane fade show active" id="tab-blood-pressure" role="tabpanel" aria-labelledby="tab-blood-pressure-tab"></div>
+        <!-- <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div> -->
         <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
-        <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
+        <!-- <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
         <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
         <div class="tab-pane fade" id="tab-cdss" role="tabpanel" aria-labelledby="tab-cdss-tab"></div> -->
-        <div class="tab-pane fade" id="tab-blood-pressure" role="tabpanel" aria-labelledby="tab-blood-pressure-tab"></div>
         <div class="tab-pane fade" id="tab-system" role="tabpanel" aria-labelledby="tab-system-tab"></div>
         <div class="tab-pane fade" id="tab-system-devices" role="tabpanel" aria-labelledby="tab-system-devices-tab"></div>
     </div>
@@ -221,14 +224,15 @@
 
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 10);
+        // loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 10);
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure', 10);
 
         // Load the content of the other tabs in the background
-        // loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_cdss_bp.iframe_healthie_provider_tab_cdss") }}', '#tab-cdss');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure');
+        // loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_bp.iframe_healthie_provider_tab_system") }}', '#tab-system');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
 

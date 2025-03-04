@@ -2,24 +2,28 @@
 <!-- Main Content -->
 <div class="">
 
-    <section class="bp_header py-4 flex space-between items-center">
+    <section class="bp_header pb-4 flex space-between items-center">
         <h2 class="text-lg font-bold">
             Blood Pressure Analysis
         </h2>
 
         <div class="relative inline-block text-left">
             <!-- Dropdown Button -->
-            <button id="bp-download-dropdown" class="px-4 py-2 flex gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800">
+            <button id="bp-download-dropdown" class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800">
                 Download
-
                 <i class="fa-solid fa-caret-down"></i>
             </button>
 
             <!-- Dropdown Menu -->
             <div id="bp-download-menu" class="absolute right-0 mt-2 p-4 w-[400px] flex flex-col gap-4 bg-white border border-gray-300 rounded-md shadow-lg hidden">
-                <div class="flex flex-col gap-2">
+                <form action="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
+                    id="bp-download-form"
+                    class="flex flex-col gap-4"
+                    method="POST"
+                    target="_blank"
+                >
                     <div class="w-full text-sm flex flex-col">
-                        <label for="file-name" class="mb-1 text-xs font-bold">
+                        <label for="file-name" class="text-xs font-bold">
                             File name
                         </label>
                         <input
@@ -29,6 +33,10 @@
                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Enter file name"
                         />
+                        <p class="text-xs mt-1 text-gray-500">
+                            <i class="fa-solid fa-circle-info"></i>
+                            Download file name will default to "BP-Report.pdf" if value is blank.
+                        </p>
                     </div>
                     <div class="w-full text-sm flex flex-col">
                         <label for="file-name" class="mb-1 text-xs font-bold">
@@ -36,24 +44,39 @@
                         </label>
                         <input
                             type="text"
-                            id="download-title"
-                            name="download-title"
+                            id="report-title"
+                            name="report-title"
                             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder='"Patient Analysis"'
+                            placeholder='Enter report title'
+                        />
+                        <p class="text-xs mt-1 text-gray-500">
+                            <i class="fa-solid fa-circle-info"></i>
+                            Report title will default to "Blood Pressure Analysis" if value is blank.
+                        </p>
+                    </div>
+                    <div id="hidden-inputs" class="hidden">
+                        <input
+                            type="hidden"
+                            name="analysis_encoded"
+                            id="analysis_encoded"
+                            value="{{ analysis_encoded }}"
+                        />
+                        <input
+                            type="hidden"
+                            name="extremes"
+                            id="extremes_json"
                         />
                     </div>
-                </div>
-                <a
-                    href="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', analysis_json=analysis_json, extremes_json=extremes_json) }}"
-                    target="_blank"
-                    class="flex justify-center gap-2 px-3 py-2 text-sm text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
-                    id="bp-download-button"
-                >
-                    <span class="icon-container">
-                        <i class="fas fa-download" id="download-icon"></i>
-                    </span>
-                    Download Report
-                </a>
+                    <button type="submit"
+                        class="flex justify-center gap-2 px-3 py-2 text-sm text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
+                        id="bp-download-button"
+                    >
+                        <span class="icon-container">
+                            <i class="fas fa-download" id="download-icon"></i>
+                        </span>
+                        Download PDF
+                    </button>
+                </form>
             </div>
         </div>
     </section>
@@ -88,6 +111,16 @@
 
 <!-- Scripts -->
 <script>
+
+    // $(document).ready(function() {
+
+    //     $("#analysis_html").val(analysis_html)
+    //     $("#extremes_json").val(extremes_json)
+
+    // });
+
+    document.getElementById("analysis_encoded").value = "{{ analysis_encoded | safe }}"
+
     // Toggle Dropdown Visibility
     document.getElementById('bp-download-dropdown').addEventListener('click', function() {
         document.getElementById('bp-download-menu').classList.toggle('hidden');
@@ -104,18 +137,22 @@
 
     document.getElementById("bp-download-button").addEventListener("click", function() {
         let downloadIcon = document.getElementById("download-icon");
+        let downloadButton = document.getElementById("bp-download-button");
 
-        // Save original classes
-        let originalClasses = downloadIcon.className;
+        // Save original content
+        let originalIconClasses = downloadIcon.className;
+        let originalText = downloadButton.innerText;
 
-        // Change to a loading spinner
-        downloadIcon.className = "fas fa-spinner fa-spin";
+        // Change to a loading spinner and remove text
+        downloadIcon.className = "fas fa-circle-notch fa-spin";
+        downloadButton.innerHTML = ""; // Remove text
 
         // Simulate a file download delay (e.g., 2 seconds)
         setTimeout(() => {
-            downloadIcon.className = originalClasses; // Restore original icon
+            downloadIcon.className = originalIconClasses; // Restore original icon
+            downloadButton.innerHTML = originalText; // Restore original text
         }, 2000);
-
     });
+
 
 </script>
