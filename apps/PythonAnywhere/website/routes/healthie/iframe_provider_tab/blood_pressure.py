@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, current_app, abo
 import pandas as pd
 import json
 import base64
+import io
 
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
@@ -109,13 +110,15 @@ def iframe_healthie_provider_tab_blood_pressure():
     extremes_json = extremes.to_json()
 
     analysis_encoded = base64.b64encode(styled_analysis_table.to_html(escape=False).encode()).decode()
+    extremes_encoded = base64.b64encode(extremes.to_html().encode()).decode()
 
     return render_template(
         'healthie/iframe_provider_tab/blood_pressure.html',
         analysis_html=analysis_html,
-        # analysis_json=analysis_json,
+        analysis_json=analysis_json,
         extremes_json=extremes_json,
-        analysis_encoded=analysis_encoded
+        # analysis_encoded=analysis_encoded,
+        # extremes_encoded=extremes_encoded
         # measurements_html=measurements_html
     )
 
@@ -137,12 +140,15 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     # Obtain form variables
     file_name = request.form.get("file-name").strip() or "BP-report.pdf"
     report_title = request.form.get("report-title") or "Blood Pressure Analysis"
-    analysis_encoded = request.form.get("analysis_encoded")
-    extremes = request.form.get("extremes")
+    # analysis_encoded = request.form.get("analysis_encoded")
+    # extremes_encoded = request.form.get("extremes_encoded")
+    analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
+    extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
     # Establish connection to BloodPressureAnalysis class
     data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
 
-    bp_pdf = data_reporting_blood_pressure.generate_pdf(analysis_encoded=analysis_encoded, extremes=extremes, report_title=report_title)
+    # bp_pdf = data_reporting_blood_pressure.generate_pdf(analysis_encoded=analysis_encoded, extremes_encoded=extremes_encoded, report_title=report_title)
+    bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
 
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
