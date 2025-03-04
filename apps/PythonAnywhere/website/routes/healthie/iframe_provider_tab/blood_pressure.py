@@ -103,23 +103,21 @@ def iframe_healthie_provider_tab_blood_pressure():
 
     # Prepare html + json variables to send to "Blood Pressure" tab
     analysis_html = rounded_analysis_table.to_html(classes="")
-    # analysis_html = analysis_table_with_inception.to_html(classes="table table-striped text-sm text-center")
+
+    if extremes.empty:
+        extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
+    else:
+        extremes_html = extremes.to_html(classes="")
 
     analysis_json = analysis_table.to_json()
-    # analysis_json = analysis_table_with_inception.to_json()
     extremes_json = extremes.to_json()
-
-    analysis_encoded = base64.b64encode(styled_analysis_table.to_html(escape=False).encode()).decode()
-    extremes_encoded = base64.b64encode(extremes.to_html().encode()).decode()
 
     return render_template(
         'healthie/iframe_provider_tab/blood_pressure.html',
         analysis_html=analysis_html,
+        extremes_html=extremes_html,
         analysis_json=analysis_json,
         extremes_json=extremes_json,
-        # analysis_encoded=analysis_encoded,
-        # extremes_encoded=extremes_encoded
-        # measurements_html=measurements_html
     )
 
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
@@ -130,25 +128,18 @@ def iframe_healthie_provider_tab_download_bp_pdf():
 
     """
 
-    # Convert json variables to dataframes and send to generate_pdf class method
-    # analysis_df = pd.read_json(analysis_json)
-    # extremes_df = pd.read_json(extremes_json)
-
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
     # Obtain form variables
     file_name = request.form.get("file-name").strip() or "BP-report.pdf"
     report_title = request.form.get("report-title") or "Blood Pressure Analysis"
-    # analysis_encoded = request.form.get("analysis_encoded")
-    # extremes_encoded = request.form.get("extremes_encoded")
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
     # Establish connection to BloodPressureAnalysis class
     data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
 
-    # bp_pdf = data_reporting_blood_pressure.generate_pdf(analysis_encoded=analysis_encoded, extremes_encoded=extremes_encoded, report_title=report_title)
     bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
 
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")

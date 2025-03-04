@@ -11,13 +11,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 matplotlib.use('Agg')
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
-
-from bs4 import BeautifulSoup
-
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
@@ -45,7 +38,9 @@ class BloodPressureAnalysis:
             - returns updated analysis dataframe with 3 additional columns; redacted
         9. calculate_extremes()
             - returns extremes dataframe
-        10. generate_pdf()
+        10. style_row()
+            - styles df rows depending on metric and value
+        11. save_to_pdf()
             - returns pdf that combines analysis df and extremes df
 
     """
@@ -780,141 +775,6 @@ class BloodPressureAnalysis:
         return styles
 
 
-    def generate_pdf(self, analysis_encoded, extremes, report_title):
-        """
-
-        Generates a PDF with a formatted analysis table and extremes table using ReportLab.
-
-        """
-
-        # Decoded encoded analysis html
-        analysis_decoded = base64.b64decode(analysis_encoded).decode()
-        soup = BeautifulSoup(analysis_decoded, "html.parser")  # Parse the HTML with BeautifulSoup
-
-        # Extract styles (background colors) from the HTML
-        bg_colors = {}
-        data = []
-
-        style_tag = soup.find("style")
-        css_styles = style_tag.text if style_tag else ""
-        color_map = self.extract_background_colors(css_styles)  # Parse CSS styles
-
-        rows = soup.find_all("tr")
-
-        # print(f"---------------- {analysis_decoded}")
-
-        for row_idx, row in enumerate(rows):
-            row_class = row.get("class", [])  # Extract row class (if any)
-            row_bg_color = None
-
-            # If the row has a class, check if a matching background color exists
-            for cls in row_class:
-                if cls in color_map:
-                    row_bg_color = color_map[cls]  # Use row class color if available
-
-            cells = row.find_all(["th", "td"])
-            row_data = []
-
-            for col_idx, cell in enumerate(cells):
-                text = cell.text.strip()
-                row_data.append(text)
-
-                # Extract cell class if present
-                cell_class = cell.get("class", [])
-                cell_bg_color = None
-
-                # Use cell class background color
-                for cls in cell_class:
-                    if cls in color_map:
-                        cell_bg_color = color_map[cls]
-
-                # Prioritize cell color, then row color
-                bg_color = cell_bg_color or row_bg_color
-
-                if bg_color:
-                    bg_colors[(row_idx, col_idx)] = bg_color
-
-            data.append(row_data)  # Append row text to data
-
-
-
-        # print(f"---------------- {data}")
-        # print(f"---------------- {bg_colors}")
-
-        # Initialize PDF elements
-        pdf_buffer = io.BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-        elements = []
-
-        # Create ReportLab Table
-        table = Table(data)
-
-        # Default styling
-        table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # Header background
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # Header text color
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center align all cells
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold headers
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Header padding
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)  # Add grid lines
-        ])
-
-        # Apply extracted background colors
-        for (row_idx, col_idx), bg_color in bg_colors.items():
-            table_style.add('BACKGROUND', (col_idx, row_idx), (col_idx, row_idx), bg_color)
-
-        table.setStyle(table_style)
-
-        # Ensure report title is wrapped in a Paragraph
-        elements.append(Paragraph(str(report_title), getSampleStyleSheet()['Title']))  # Convert to string
-        elements.append(table)
-
-        # # **2️⃣ Extremes Table with Pagination**
-        # rows_per_page = 25
-        # total_rows = len(extremes)
-        # num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
-
-        # if extremes.empty:
-        #     elements.append(Paragraph("No extreme values found", styles['Normal']))
-        # else:
-        #     for page in range(num_pages):
-        #         start_row = page * rows_per_page
-        #         end_row = min(start_row + rows_per_page, total_rows)
-        #         subset = extremes.iloc[start_row:end_row].values.tolist()
-
-        #         extremes_table = Table([['Date', 'Systolic BP', 'Diastolic BP']] + subset)
-        #         extremes_table.setStyle(TableStyle([
-        #             ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-        #             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        #             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        #             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        #             ('GRID', (0, 0), (-1, -1), 1, colors.black)
-        #         ]))
-
-        #         elements.append(Paragraph(f"Extremes Report (Page {page + 1} of {num_pages})", styles['Heading2']))
-        #         elements.append(extremes_table)
-
-        # **Build the PDF**
-        doc.build(elements)
-        pdf_buffer.seek(0)
-
-        return pdf_buffer
-
-
-    @staticmethod
-    def extract_background_colors(css_text):
-        """Parses CSS text and extracts background colors for table rows."""
-        color_map = {}  # Store class-to-color mappings
-
-        # ✅ Extract CSS rules like `.row1 { background-color: yellow; }`
-        matches = re.findall(r"(\..*?)\s*\{[^}]*background-color:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\([^)]*\));", css_text)
-
-        for class_name, bg_color in matches:
-            clean_class = class_name.strip().replace(".", "")  # Remove leading `.`
-            color_map[clean_class] = colors.HexColor(bg_color)  # Convert for ReportLab
-
-        return color_map  # Returns dictionary mapping class -> color
-
     @staticmethod
     def wrap_text(text, width=16):
         """Manually inserts line breaks to wrap text in table headers."""
@@ -964,18 +824,18 @@ class BloodPressureAnalysis:
                     metric = analysis.index[row - 1] if row > 0 else None
                     value = analysis.iloc[row - 1, col - 1] if row > 0 and col > 0 else None
 
-                    # 🚨 **Fix: Ensure `value` is a valid string before calling `.strip()`**
+                    # Ensure `value` is a valid string before calling `.strip()`**
                     if isinstance(value, str):
                         value = value.strip()
 
-                        # 🚨 **Skip styling if the cell is empty or contains only `+`, `-`, `=`**
+                        # Skip styling if the cell is empty or contains only `+`, `-`, `=`**
                         if value == "" or trend_symbol_pattern.fullmatch(value):
                             continue  # Leave these cells white (default)
 
                         # Convert string-based numbers to numeric values safely
                         value = pd.to_numeric(value.replace('+', '').replace('-', '').replace('/', '').replace('=', ''), errors='coerce')
 
-                    # 🚨 **Fix: Skip `None` values completely (leave them white)**
+                    # *Skip `None` values completely (leave them white)**
                     if value is None or pd.isna(value):
                         continue
 

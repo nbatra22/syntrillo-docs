@@ -1,8 +1,8 @@
 
 <!-- Main Content -->
-<div class="">
+<div class="flex flex-col gap-4">
 
-    <section class="bp_header pb-4 flex space-between items-center">
+    <section class="bp_header flex space-between items-center">
         <h2 class="text-lg font-bold">
             Blood Pressure Analysis
         </h2>
@@ -57,18 +57,6 @@
                     <div id="hidden-inputs" class="hidden">
                         <input
                             type="hidden"
-                            name="analysis_encoded"
-                            id="analysis_encoded"
-                            value="{{ analysis_encoded }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="extremes_encoded"
-                            id="extremes_encoded"
-                            value="{{ extremes_encoded }}"
-                        />
-                        <input
-                            type="hidden"
                             name="analysis_json"
                             id="analysis_json"
                             value="{{ analysis_json }}"
@@ -106,6 +94,23 @@
         </ul>
     </section>
 
+    <section class="extremes-header pt-4 flex space-between items-center">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Extremes
+            </h2>
+            <p class="text-sm text-gray-500">
+                Measurements with SBP below 90 mmHg or above 170 mmHg, as well as DBP above 110 mmHg.
+            </p>
+        </div>
+    </section>
+
+    <section class="w-full mx-auto flex flex-col gap-4">
+
+        {{ extremes_html | safe }}
+
+    </section>
+
 </div>
 
 <!-- Styling -->
@@ -124,15 +129,6 @@
 
 <!-- Scripts -->
 <script>
-
-    // $(document).ready(function() {
-
-    //     $("#analysis_html").val(analysis_html)
-    //     $("#extremes_json").val(extremes_json)
-
-    // });
-
-    document.getElementById("analysis_encoded").value = "{{ analysis_encoded | safe }}"
 
     // Toggle Dropdown Visibility
     document.getElementById('bp-download-dropdown').addEventListener('click', function() {
