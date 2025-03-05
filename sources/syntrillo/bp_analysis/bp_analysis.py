@@ -438,7 +438,7 @@ class BloodPressureAnalysis:
         if prior_timeframe:
             analysis['Since Prior¹'] = {metric: "-" for metric in points.keys()}
 
-        print(f"------------------- {analysis}")
+        # print(f"------------------- {analysis}")
 
         for metric in analysis[current_timeframe]:
 
@@ -449,15 +449,17 @@ class BloodPressureAnalysis:
             # print(f"{metric}: {type(current_value)}")
 
             # Ensure values are valid for comparison
-            valid_prior = prior_value != None and isinstance(prior_value, (int, float))
-            valid_baseline = baseline_value != None and isinstance(baseline_value, (int, float))
+            valid_prior = prior_value is not None and isinstance(prior_value, (int, float))
+            valid_baseline = baseline_value is not None and isinstance(baseline_value, (int, float))
 
             if current_value is not None:
                 prior_unit_change = current_value - prior_value if valid_prior else None
                 prior_percent_change = (prior_unit_change / prior_value * 100) if valid_prior and prior_value != 0 else None
+                valid_prior_change = prior_unit_change is not None and prior_percent_change is not None
 
                 baseline_unit_change = current_value - baseline_value if valid_baseline else None
                 baseline_percent_change = (baseline_unit_change / baseline_value * 100) if valid_baseline and baseline_value != 0 else None
+                valid_baseline_change = baseline_unit_change is not None and baseline_percent_change is not None
 
                 # Default progress symbols
                 prior_progress = ""
@@ -489,41 +491,45 @@ class BloodPressureAnalysis:
 
                 # Handle SBP-SD and DBP-SD
                 elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
-                    if valid_prior and abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                        if prior_unit_change > 0:
-                            prior_delta -= points[metric]
-                            prior_progress = "-"
-                        elif prior_unit_change < 0:
-                            prior_delta += points[metric]
-                            prior_progress = "+"
+                    if valid_prior and valid_prior_change:
+                        if abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                            if prior_unit_change > 0:
+                                prior_delta -= points[metric]
+                                prior_progress = "-"
+                            elif prior_unit_change < 0:
+                                prior_delta += points[metric]
+                                prior_progress = "+"
 
-                    if valid_baseline and abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                        if baseline_unit_change > 0:
-                            baseline_delta -= points[metric]
-                            base_progress = "-"
-                        elif baseline_unit_change < 0:
-                            baseline_delta += points[metric]
-                            base_progress = "+"
+                    if valid_baseline and valid_baseline_change:
+                        if abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                            if baseline_unit_change > 0:
+                                baseline_delta -= points[metric]
+                                base_progress = "-"
+                            elif baseline_unit_change < 0:
+                                baseline_delta += points[metric]
+                                base_progress = "+"
 
                     # print(f"Baseline Delta (after SD): {baseline_delta}")
 
                 # Handle SBP-CV and DBP-CV
                 elif metric in ['SBP CV (%)', 'DBP CV (%)']:
-                    if valid_prior and abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                        if prior_percent_change > 0:
-                            prior_delta -= points[metric]
-                            prior_progress = "-"
-                        elif prior_percent_change < 0:
-                            prior_delta += points[metric]
-                            prior_progress = "+"
+                    if valid_prior and valid_prior_change:
+                        if abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                            if prior_percent_change > 0:
+                                prior_delta -= points[metric]
+                                prior_progress = "-"
+                            elif prior_percent_change < 0:
+                                prior_delta += points[metric]
+                                prior_progress = "+"
 
-                    if valid_baseline and abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                        if baseline_percent_change > 0:
-                            baseline_delta -= points[metric]
-                            base_progress = "-"
-                        elif baseline_percent_change < 0:
-                            baseline_delta += points[metric]
-                            base_progress = "+"
+                    if valid_baseline and valid_baseline_change:
+                        if abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                            if baseline_percent_change > 0:
+                                baseline_delta -= points[metric]
+                                base_progress = "-"
+                            elif baseline_percent_change < 0:
+                                baseline_delta += points[metric]
+                                base_progress = "+"
 
                     # print(f"Baseline Delta (after CV): {baseline_delta}")
 
