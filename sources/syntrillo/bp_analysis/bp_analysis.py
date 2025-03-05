@@ -399,20 +399,29 @@ class BloodPressureAnalysis:
         }
 
         thresholds = {
-            'Avg SBP (mmHg)': 2, 'Avg DBP (mmHg)': 2,
-            'SBP CV (%)': 1.1, 'DBP CV (%)': 1.4,
-            'SBP SD (mmHg)': 1.5, 'DBP SD (mmHg)': 1.3,
-            'Peak SBP² (mmHg)': 170, 'Peak DBP² (mmHg)': 110
+            'Avg SBP (mmHg)': 2,
+            'Avg DBP (mmHg)': 2,
+            'SBP CV (%)': 1.1,
+            'DBP CV (%)': 1.4,
+            'SBP SD (mmHg)': 1.5,
+            'DBP SD (mmHg)': 1.3,
+            'Peak SBP² (mmHg)': 170,
+            'Peak DBP² (mmHg)': 110
         }
 
         boundaries = {
-            'Avg SBP (mmHg)': [0, 130], 'Avg DBP (mmHg)': [0, 80],
-            'SBP CV (%)': [0, 5.5], 'DBP CV (%)': [0, 6],
-            'SBP SD (mmHg)': [0, 7.5], 'DBP SD (mmHg)': [0, 5],
-            'Peak SBP² (mmHg)': [0, 170], 'Peak DBP² (mmHg)': [0, 110]
+            'Avg SBP (mmHg)': [0, 130],
+            'Avg DBP (mmHg)': [0, 80],
+            'SBP CV (%)': [0, 5.5],
+            'DBP CV (%)': [0, 6],
+            'SBP SD (mmHg)': [0, 7.5],
+            'DBP SD (mmHg)': [0, 5],
+            'Peak SBP² (mmHg)': [0, 170],
+            'Peak DBP² (mmHg)': [0, 110]
         }
 
-        delta, baseline_delta = 0, 0
+        prior_delta = 0
+        baseline_delta = 0
 
         # Extract available timeframes
         current_timeframe = next((key for key in timeframed_data if "Current" in key), None)
@@ -429,31 +438,29 @@ class BloodPressureAnalysis:
         if prior_timeframe:
             analysis['Since Prior¹'] = {metric: "-" for metric in points.keys()}
 
+        print(f"------------------- {analysis}")
+
         for metric in analysis[current_timeframe]:
 
             current_value = analysis[current_timeframe][metric]
-            prior_value = analysis.get(prior_timeframe, {}).get(metric, "-")
-            baseline_value = analysis.get(baseline_timeframe, {}).get(metric, "-")
+            prior_value = analysis.get(prior_timeframe, {}).get(metric, None)
+            baseline_value = analysis.get(baseline_timeframe, {}).get(metric, None)
 
             # print(f"{metric}: {type(current_value)}")
 
             # Ensure values are valid for comparison
-            valid_prior = prior_value != "-" and prior_value != None and isinstance(prior_value, (int, float))
-            valid_baseline = baseline_value != "-" and baseline_value != None and isinstance(baseline_value, (int, float))
-
-            # Ensure values are not in green threshold
-            # green_prior = any(val > boundaries[metric][1] for val in [prior_value, current_value])
-            # green_baseline = any(val > boundaries[metric][1] for val in [baseline_value, current_value])
+            valid_prior = prior_value != None and isinstance(prior_value, (int, float))
+            valid_baseline = baseline_value != None and isinstance(baseline_value, (int, float))
 
             if current_value is not None:
-                change = current_value - prior_value if valid_prior else None
-                percent_change = (change / prior_value * 100) if valid_prior and prior_value != 0 else None
+                prior_unit_change = current_value - prior_value if valid_prior else None
+                prior_percent_change = (prior_unit_change / prior_value * 100) if valid_prior and prior_value != 0 else None
 
-                baseline_change = current_value - baseline_value if valid_baseline else None
-                baseline_percent_change = (baseline_change / baseline_value * 100) if valid_baseline and baseline_value != 0 else None
+                baseline_unit_change = current_value - baseline_value if valid_baseline else None
+                baseline_percent_change = (baseline_unit_change / baseline_value * 100) if valid_baseline and baseline_value != 0 else None
 
                 # Default progress symbols
-                curr_progress = ""
+                prior_progress = ""
                 base_progress = ""
 
                 # Skip metrics without thresholds
@@ -463,18 +470,18 @@ class BloodPressureAnalysis:
                 # Handle Avg SBP and DBP
                 if metric in ['Avg SBP (mmHg)', 'Avg DBP (mmHg)']:
                     if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                        if change > 0:
-                            delta -= points[metric]
-                            curr_progress = "--"
-                        elif change < 0:
-                            delta += points[metric]
-                            curr_progress = "++"
+                        if prior_unit_change > 0:
+                            prior_delta -= points[metric]
+                            prior_progress = "--"
+                        elif prior_unit_change < 0:
+                            prior_delta += points[metric]
+                            prior_progress = "++"
 
                     if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                        if baseline_change > 0:
+                        if baseline_unit_change > 0:
                             baseline_delta -= points[metric]
                             base_progress = "--"
-                        elif baseline_change < 0:
+                        elif baseline_unit_change < 0:
                             baseline_delta += points[metric]
                             base_progress = "++"
 
@@ -482,19 +489,19 @@ class BloodPressureAnalysis:
 
                 # Handle SBP-SD and DBP-SD
                 elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
-                    if valid_prior and abs(change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                        if change > 0:
-                            delta -= points[metric]
-                            curr_progress = "-"
-                        elif change < 0:
-                            delta += points[metric]
-                            curr_progress = "+"
+                    if valid_prior and abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if prior_unit_change > 0:
+                            prior_delta -= points[metric]
+                            prior_progress = "-"
+                        elif prior_unit_change < 0:
+                            prior_delta += points[metric]
+                            prior_progress = "+"
 
-                    if valid_baseline and abs(baseline_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                        if baseline_change > 0:
+                    if valid_baseline and abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                        if baseline_unit_change > 0:
                             baseline_delta -= points[metric]
                             base_progress = "-"
-                        elif baseline_change < 0:
+                        elif baseline_unit_change < 0:
                             baseline_delta += points[metric]
                             base_progress = "+"
 
@@ -502,13 +509,13 @@ class BloodPressureAnalysis:
 
                 # Handle SBP-CV and DBP-CV
                 elif metric in ['SBP CV (%)', 'DBP CV (%)']:
-                    if valid_prior and abs(percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                        if percent_change > 0:
-                            delta -= points[metric]
-                            curr_progress = "-"
-                        elif percent_change < 0:
-                            delta += points[metric]
-                            curr_progress = "+"
+                    if valid_prior and abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                        if prior_percent_change > 0:
+                            prior_delta -= points[metric]
+                            prior_progress = "-"
+                        elif prior_percent_change < 0:
+                            prior_delta += points[metric]
+                            prior_progress = "+"
 
                     if valid_baseline and abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                         if baseline_percent_change > 0:
@@ -525,11 +532,11 @@ class BloodPressureAnalysis:
                     high_threshold = thresholds[metric]
                     if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
                         if prior_value < high_threshold < current_value:
-                            delta -= points[metric]
-                            curr_progress = "--"
+                            prior_delta -= points[metric]
+                            prior_progress = "--"
                         elif prior_value > high_threshold >= current_value:
-                            delta += points[metric]
-                            curr_progress = "++"
+                            prior_delta += points[metric]
+                            prior_progress = "++"
 
                     if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                         if baseline_value < high_threshold < current_value:
@@ -546,17 +553,17 @@ class BloodPressureAnalysis:
                     analysis['Since Baseline¹'][metric] = f"{base_progress}"
 
                 if valid_prior:
-                    analysis['Since Prior¹'][metric] = f"{curr_progress}"
+                    analysis['Since Prior¹'][metric] = f"{prior_progress}"
 
         # Overall progress
-        progress = "Improving" if delta > 0 else "Worsening" if delta < 0 else "Same"
-        baseline_progress = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
+        since_prior_status = "Improving" if prior_delta > 0 else "Worsening" if prior_delta < 0 else "Same"
+        since_baseline_status = "Improving" if baseline_delta > 0 else "Worsening" if baseline_delta < 0 else "Same"
 
         if valid_prior:
-            analysis['Since Prior¹']['Progress (pts)'] = f"{progress} ({delta})"
+            analysis['Since Prior¹']['Progress (pts)'] = f"{since_prior_status} ({prior_delta})"
 
         if valid_baseline:
-            analysis['Since Baseline¹']['Progress (pts)'] = f"{baseline_progress} ({baseline_delta})"
+            analysis['Since Baseline¹']['Progress (pts)'] = f"{since_baseline_status} ({baseline_delta})"
 
         # Ensure keys exist in all timeframes
         for tf in [baseline_timeframe, prior_timeframe, current_timeframe]:
