@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import base64
 import io
+from datetime import datetime
 
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
@@ -54,6 +55,29 @@ def iframe_healthie_provider_tab_blood_pressure():
     if not iframe_valid:
         abort(403, description="Access Denied")
 
+
+    healthie_provider_id = request.form.get('healthie_provider_id')
+    healthie_user_id = request.form.get('healthie_user_id')
+    temporary_lookup_code = request.form.get('temporary_lookup_code')
+    patient_not_registered_at_syntrillo_str = request.form.get('patient_not_registered_at_syntrillo')
+
+    return render_template(
+        'healthie/iframe_provider_tab/blood_pressure.html',
+        healthie_provider_id=healthie_provider_id,
+        healthie_user_id=healthie_user_id,
+        temporary_lookup_code=temporary_lookup_code,
+        patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
+    )
+
+@iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/analysis', methods=['POST'])
+def iframe_healthie_provider_tab_blood_pressure_analysis():
+
+    start_date_str = request.form.get("start_date", "").strip() or None
+    end_date_str = request.form.get("end_date", "").strip() or None
+
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d") if start_date_str else None
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d") if end_date_str else None
+
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
@@ -66,8 +90,8 @@ def iframe_healthie_provider_tab_blood_pressure():
 
     # Get all available blood pressure data
     _, log = data_reporting_blood_pressure.get_blood_pressure_dataframe(
-        start_date=None,
-        end_date=None,
+        start_date,
+        end_date,
     )
 
     # Confirm blood pressure data is pulled
@@ -111,18 +135,17 @@ def iframe_healthie_provider_tab_blood_pressure():
     if extremes.empty:
         extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
     else:
-        extremes_html = extremes.to_html(classes="table table-striped")
+        extremes_html = extremes.to_html(classes="table table-striped", index=False)
 
     analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()
 
-    return render_template(
-        'healthie/iframe_provider_tab/blood_pressure.html',
-        analysis_html=analysis_html,
-        extremes_html=extremes_html,
-        analysis_json=analysis_json,
-        extremes_json=extremes_json,
-    )
+    return jsonify({
+        "analysis_html": analysis_html,
+        "extremes_html": extremes_html,
+        "analysis_json": analysis_json,
+        "extremes_json": extremes_json,
+    })
 
 @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
 def iframe_healthie_provider_tab_download_bp_pdf():

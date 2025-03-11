@@ -723,4 +723,3 @@ if __name__ == "__main__":
     # _ = data_generator.generate_watch_device_data(datetime(2021, 1, 1), datetime(2021, 1, 5))
 
     _ = data_generator.generate_pillbox_device_data(datetime(2024, 4, 1), datetime(2024, 5, 1))
-
