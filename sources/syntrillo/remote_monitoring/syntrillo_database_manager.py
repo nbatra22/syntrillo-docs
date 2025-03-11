@@ -28,7 +28,7 @@ class SyntrilloDatabaseManager:
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX, # will retrieve all BMP devices
-        ]
+    ]
 
 
     def __init__(
@@ -660,6 +660,3 @@ if __name__ == '__main__':
 
         print(log)
         print(df)
-
-
-

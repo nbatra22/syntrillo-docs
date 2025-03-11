@@ -1,100 +1,143 @@
-
 <!-- Main Content -->
 <div class="flex flex-col gap-4">
 
-    <section class="bp_header flex space-between items-center">
+    <!-- BPA Header -->
+    <section class="bp-header flex space-between items-center">
         <h2 class="text-lg font-bold">
             Blood Pressure Analysis
         </h2>
 
-        <div class="relative inline-block text-left">
-            <!-- Dropdown Button -->
-            <button id="bp-download-dropdown" class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800">
-                Download
-                <i class="fa-solid fa-caret-down"></i>
-            </button>
+        <div id="bp-header-right" class="">
 
-            <!-- Dropdown Menu -->
-            <div id="bp-download-menu" class="absolute right-0 mt-2 p-4 w-[400px] flex flex-col gap-4 bg-white border border-gray-300 rounded-md shadow-lg hidden">
-                <form action="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
-                    id="bp-download-form"
-                    class="flex flex-col gap-4"
-                    method="POST"
-                    target="_blank"
+            <div id="bp-filter-container" class="bp-dropdown-container">
+                <!-- Dropdown button -->
+                <!-- <button id="bp-dropdown-button"
+                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
+                <button id="bp-filter-toggle" class="bp-dropdown-toggle">
+                    <i class="fa-solid fa-filter"></i>
+                    Filter
+                </button>
+
+                <div id="bp-filter-menu"
+                    class="bp-dropdown-menu"
                 >
-                    <div class="w-full text-sm flex flex-col">
-                        <label for="file-name" class="text-xs font-bold">
-                            File name
-                        </label>
-                        <input
-                            type="text"
-                            id="file-name"
-                            name="file-name"
-                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter file name"
-                        />
-                        <p class="text-xs mt-1 text-gray-500">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Download file name will default to "BP-Report.pdf" if value is blank.
-                        </p>
-                    </div>
-                    <div class="w-full text-sm flex flex-col">
-                        <label for="file-name" class="mb-1 text-xs font-bold">
-                            Title
-                        </label>
-                        <input
-                            type="text"
-                            id="report-title"
-                            name="report-title"
-                            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder='Enter report title'
-                        />
-                        <p class="text-xs mt-1 text-gray-500">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Report title will default to "Blood Pressure Analysis" if value is blank.
-                        </p>
-                    </div>
-                    <div id="hidden-inputs" class="hidden">
-                        <input
-                            type="hidden"
-                            name="analysis_json"
-                            id="analysis_json"
-                            value="{{ analysis_json }}"
-                        />
-                        <input
-                            type="hidden"
-                            name="extremes_json"
-                            id="extremes_json"
-                            value="{{ extremes_json }}"
-                        />
-                    </div>
-                    <button type="submit"
-                        class="flex justify-center gap-2 px-3 py-2 text-sm text-white rounded-md bg-blue-500 hover:bg-blue-600 hover:no-underline active:csale-95"
-                        id="bp-download-button"
-                    >
-                        <span class="icon-container">
-                            <i class="fas fa-download" id="download-icon"></i>
-                        </span>
-                        Download PDF
-                    </button>
-                </form>
+                    <form action=""
+                        id="bp-filter-form" class="flex flex-col gap-4" method="get">
+                        <div id="bp-form-start-date-container" class="bp-form-input-container">
+                            <label for="start-date" class="text-xs font-bold">
+                                Start date
+                            </label>
+                            <input type="date"
+                                id="start-date"
+                                name="start-date"
+                                class="bp-form-input"
+                            />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Start date is defaulted to the first recorded measurement's date.
+                            </p>
+                        </div>
+                        <div id="bp-form-start-date-container" class="bp-form-input-container">
+                            <label for="end-date" class="">
+                                End date
+                            </label>
+                            <input type="date"
+                                id="end-date"
+                                name="end-date"
+                                class="bp-form-input"
+                            />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                End date is defaulted to the latest recorded measurement's date.
+                            </p>
+                        </div>
+                        <div></div>
+                        <button type="submit"
+                            class="bp-form-submit-button"
+                            id="bp-filter-button"
+                        >
+                            Update
+                        </button>
+                    </form>
+                </div>
             </div>
+
+            <div id="bp-dowload-container" class="bp-dropdown-container relative inline-block text-left">
+                <!-- Dropdown Button -->
+                <!-- <button id="bp-dropdown-button"
+                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
+                <button id="bp-download-toggle" class="bp-dropdown-toggle">
+                    <i class="fa-solid fa-file-export"></i>
+                    Download
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="bp-download-menu"
+                    class="bp-dropdown-menu">
+                    <form
+                        action="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
+                        id="bp-download-form" class="" method="POST" target="_blank">
+                        <div id="bp-form-file-name-container" class="bp-form-input-container">
+                            <label for="file-name" class="">
+                                File name
+                            </label>
+                            <input type="text" id="file-name" name="file-name"
+                                class="bp-form-input"
+                                placeholder="Enter file name" />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Download file name will default to "BP-Report.pdf" if value is blank.
+                            </p>
+                        </div>
+                        <div id="bp-form-title-container" class="bp-form-input-container">
+                            <label for="file-name" class="">
+                                Title
+                            </label>
+                            <input type="text" id="report-title" name="report-title"
+                                class="bp-form-input"
+                                placeholder='Enter report title' />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Report title will default to "Blood Pressure Analysis" if value is blank.
+                            </p>
+                        </div>
+                        <div id="hidden-inputs" class="hidden">
+                            <input type="hidden" name="analysis_json" id="analysis_json" value="{{ analysis_json }}" />
+                            <input type="hidden" name="extremes_json" id="extremes_json" value="{{ extremes_json }}" />
+                        </div>
+                        <button type="submit"
+                            class="bp-form-submit-button"
+                            id="bp-download-button">
+                            <span class="icon-container">
+                                <i class="fas fa-download" id="download-icon"></i>
+                            </span>
+                            Download PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+
         </div>
+
     </section>
 
-    <section class="w-full mx-auto flex flex-col gap-4">
+    <!-- BPA Table -->
+    <section id="bp-analysis-container" class="bp-table-container">
 
-        {{ analysis_html | safe }}
+        <div id="bp-analysis-table"></div>
 
-        <ul class="text-sm text-gray-600 pl-4">
-            <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were allocated for the respective metric.</li>
+        <ul class="">
+            <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
+                allocated for the respective metric.</li>
             <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
             <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
-            <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average decrease of 5 mmHg.</li>
+            <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
+                decrease of 5 mmHg.</li>
         </ul>
     </section>
 
-    <section class="extremes-header pt-4 flex space-between items-center">
+    <!-- Extremes Header -->
+    <section id="bp-extremes-container" class="extremes-header">
         <div class="flex flex-col gap-1">
             <h2 class="text-lg font-bold">
                 Extremes
@@ -105,9 +148,10 @@
         </div>
     </section>
 
+    <!-- Extremes Table -->
     <section class="w-full mx-auto flex flex-col gap-4">
 
-        {{ extremes_html | safe }}
+        <div id="bp-extremes-table"></div>
 
     </section>
 
@@ -130,70 +174,186 @@
         font-size: small;
     }
 
-    .bp_header {
+    .bp-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 8px;
     }
 
+    .bp-header h2 {
+        margin: none;
+    }
+
+    #bp-header-right {
+        display: flex;
+        gap: 10px;
+    }
+
     .bp-content {
         padding: 20px
     }
 
-    #bp-download-dropdown {
+    .bp-dropdown-container {
         position: relative;
-        padding: 0.5rem 1rem; /* px-4 py-2 */
+    }
+
+    .bp-dropdown-toggle {
+        width: 100%;
         display: flex;
-        align-items: center; /* items-center */
-        gap: 0.5rem; /* gap-2 */
-        border-radius: 0.375rem; /* rounded-md */
-        transition: background-color 0.2s ease-in-out;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        border: none;
+        background-color: white;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
     }
 
-    #bp-download-dropdown:hover {
-        background-color: #e5e7eb; /* hover:bg-gray-200 */
+    .bp-dropdown-toggle:hover {
+        background-color: #e5e7eb;
+        /* hover:bg-gray-200 */
     }
 
-    #bp-download-dropdown:focus {
-        outline: 2px solid #1e40af; /* focus:outline-blue-800 */
+    .bp-dropdown-toggle:focus {
+        outline: 2px solid #1e40af;
+    }
+
+    /* #bp-downdown-button h3 {
+        color: white;
+        margin: none;
+    } */
+
+    .bp-download-toggle i {
+        display: flex;
+        align-items: center;
+    }
+
+    .bp-dropdown-menu {
+        position: absolute;
+        right: 0;
+        margin-top: 0.5rem;
+        padding: 1rem;
+        width: 400px;
+        flex-direction: column;
+        gap: 1rem;
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    #bp-filter-menu {
+        display: none;
     }
 
     #bp-download-menu {
         display: none;
-        position: absolute;
-        right: 0;
-        margin-top: 0.5rem; /* mt-2 */
-        padding: 1rem; /* p-4 */
-        width: 400px;
+    }
+
+    .bp-dropdown-menu form {
+        display: flex;
         flex-direction: column;
-        gap: 1rem; /* gap-4 */
-        background-color: white;
-        border: 1px solid #d1d5db; /* border-gray-300 */
-        border-radius: 0.375rem; /* rounded-md */
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+        gap: 10px;
     }
 
-    #bp-download-button {
-        display: flex; /* flex */
-        justify-content: center; /* justify-center */
-        gap: 0.5rem; /* gap-2 */
-        padding: 0.5rem 0.75rem; /* px-3 py-2 */
-        font-size: 0.875rem; /* text-sm */
-        color: white; /* text-white */
+    .bp-form-input-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bp-form-input-container label {
+        font-size: smaller;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .bp-form-input {
+        width: 100%; /* w-full */
+        padding: 0.5rem; /* p-2 */
+        border: 1px solid #d1d5db; /* border border-gray-300 */
         border-radius: 0.375rem; /* rounded-md */
-        background-color: #3b82f6; /* bg-blue-500 */
-        text-decoration: none; /* Ensures no underline */
+        outline: none; /* focus:outline-none */
+    }
+
+    .bp-form-input:focus {
+        box-shadow: 0 0 0 2px #3b82f6; /* focus:ring-blue-500 */
+        border-color: #3b82f6; /* focus:border-blue-500 */
+    }
+
+
+    .bp-form-input-container input {
+        width: 100%;
+    }
+
+    .bp-form-input-container p {
+        font-size: x-small;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .bp-form-submit-button {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: white;
+        border-radius: 0.375rem;
+        border: none;
+        background-color: #3b82f6;
+        text-decoration: none;
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
     }
 
-    #bp-download-button:hover {
-        background-color: #2563eb; /* hover:bg-blue-600 */
-        text-decoration: none; /* hover:no-underline */
+    .bp-form-submit-button:hover {
+        background-color: #2563eb;
+        /* hover:bg-blue-600 */
+        text-decoration: none;
+        /* hover:no-underline */
     }
 
-    #bp-download-button:active {
-        transform: scale(0.95); /* active:scale-95 */
+    .bp-form-submit-button:active {
+        transform: scale(0.95);
+        /* active:scale-95 */
+    }
+
+    #bp-filter-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .bp-table-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 2rem; /* Adjust size as needed */
+        height: 2rem;
+        border: 4px solid white; /* Light blue */
+        border-top-color: #3b82f6; /* Solid blue for animation */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    /* Initially hidden */
+    .hidden {
+        display: none;
     }
 
 </style>
@@ -201,30 +361,158 @@
 <!-- Scripts -->
 <script>
 
-    // Toggle Dropdown Visibility
-    // document.getElementById('bp-download-dropdown').addEventListener('click', function() {
-    //     document.getElementById('bp-download-menu').classList.toggle('hidden');
-    // });
-    document.getElementById('bp-download-dropdown').addEventListener('click', function() {
+    function showSpinner(targetElement) {
+
+        targetElement.innerHTML = "";
+
+        // Check if a spinner already exists inside the target
+        let existingSpinner = targetElement.querySelector(".spinner");
+        if (!existingSpinner) {
+            // Create a new spinner
+            let spinner = document.createElement("div");
+            spinner.classList.add("spinner");
+            targetElement.appendChild(spinner);
+        }
+    }
+
+    function hideSpinner(targetElement) {
+        // Find and remove the spinner inside the target element
+        let spinner = targetElement.querySelector(".spinner");
+        if (spinner) {
+            spinner.remove();
+        }
+    }
+
+    function getBloodPressureAnalysis(startDate = "", endDate = "") {
+
+        const filterSubmit = document.getElementById("bp-filter-button");
+        const filterMenu = document.getElementById("bp-filter-menu")
+        const bpAnalysisContent = document.getElementById("bp-analysis-table");
+        const extremesContent = document.getElementById("bp-extremes-table");
+        const hiddenAnalysisInput = document.getElementById("analysis_json");
+        const hiddenExtremesInput = document.getElementById("extremes_json");
+
+        filterSubmit.disabled = true;
+        showSpinner(bpAnalysisContent);
+        showSpinner(extremesContent);
+
+        let formData = new FormData()
+
+        var healthieProviderId = "{{ healthie_provider_id }}";
+        var healthieUserId = "{{ healthie_user_id }}";
+        var temporaryLookupCode = "{{ temporary_lookup_code }}";
+        var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+
+        formData.append('healthie_provider_id', healthieProviderId)
+        formData.append('healthie_user_id', healthieUserId)
+        formData.append('temporary_lookup_code', temporaryLookupCode)
+        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo)
+
+        formData.append("start_date", startDate)
+        formData.append("end_date", endDate)
+
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure_analysis') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            bpAnalysisContent.innerHTML = data.analysis_html;
+            extremesContent.innerHTML = data.extremes_html;
+            hiddenAnalysisInput.value = data.analysis_json;
+            hiddenExtremesInput.value = data.extremes_json;
+        })
+        .catch(error => console.error("Error fetching data:", error))
+        .finally(() => {
+            filterMenu.style.display = 'none';
+            hideSpinner(bpAnalysisContent);
+            hideSpinner(extremesContent);
+            filterSubmit.disabled = false;
+        })
+    }
+
+    // Fetch Blood Pressure data on first render
+    $(document).ready(function(){
+        getBloodPressureAnalysis();
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const startDateInput = document.getElementById("start-date");
+            const endDateInput = document.getElementById("end-date");
+            const submitButton = document.getElementById("bp-filter-button");
+
+            function toggleSubmitButton() {
+                // Enable if either start_date or end_date has a value
+                submitButton.disabled = !(startDateInput.value || endDateInput.value);
+            }
+
+            // Attach event listeners to input fields
+            startDateInput.addEventListener("input", toggleSubmitButton);
+            endDateInput.addEventListener("input", toggleSubmitButton);
+
+            // Run the function initially to set correct state
+            toggleSubmitButton();
+
+        })
+    })
+
+    // Toggle Download Dropdown Visibility
+    document.getElementById('bp-download-toggle').addEventListener('click', function () {
         const dropdownMenu = document.getElementById('bp-download-menu');
+        const filterMenu = document.getElementById('bp-filter-menu')
+
         if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
             dropdownMenu.style.display = 'block';
         } else {
             dropdownMenu.style.display = 'none';
         }
+
+        if (filterMenu.style.display === 'block') {
+            filterMenu.style.display = 'none'
+        }
+
+        event.stopPropagation();
     });
 
+    // Toggle Download Dropdown Visibility
+    document.getElementById('bp-filter-toggle').addEventListener('click', function (event) {
+        const dropdownMenu = document.getElementById('bp-filter-menu');
+        const downloadMenu = document.getElementById('bp-download-menu')
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('bp-download-menu');
-        const button = document.getElementById('bp-download-dropdown');
-        if (!button.contains(event.target) && !dropdown.contains(event.target)) {
-            dropdown.classList.add('hidden');
+        if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
+            dropdownMenu.style.display = 'block';
+        } else {
+            dropdownMenu.style.display = 'none';
+        }
+
+        if (downloadMenu.style.display === 'block') {
+            filterMenu.style.display === 'none'
+        }
+
+        event.stopPropagation();
+    });
+
+    // Close filter dropdown when clicking outside
+    document.addEventListener('click', function (event) {
+        const dropdown = document.getElementById('bp-filter-menu');
+        const toggleButton = document.getElementById('bp-filter-toggle');
+
+        if (dropdown && !dropdown.contains(event.target) && event.target !== toggleButton) {
+            dropdown.style.display = 'none';
         }
     });
 
-    document.getElementById("bp-download-button").addEventListener("click", function() {
+    // Close filter dropdown when clicking outside
+    document.addEventListener('click', function (event) {
+        const dropdown = document.getElementById('bp-download-menu');
+        const toggleButton = document.getElementById('bp-download-toggle');
+
+        if (dropdown && !dropdown.contains(event.target) && event.target !== toggleButton) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Add loading spinner
+    document.getElementById("bp-download-button").addEventListener("click", function () {
         let downloadIcon = document.getElementById("download-icon");
         let downloadButton = document.getElementById("bp-download-button");
 
@@ -243,5 +531,14 @@
         }, 2000);
     });
 
+    // Fetch new data based on filter input values
+    document.getElementById("bp-filter-form").addEventListener("submit", function(event) {
+        event.preventDefault(); // Prevent full page reload
+
+        let startDate = document.getElementById("start-date").value;
+        let endDate = document.getElementById("end-date").value;
+
+        getBloodPressureAnalysis(startDate, endDate);
+    });
 
 </script>

@@ -698,7 +698,11 @@ class BloodPressureAnalysis:
         extremes = df[(df['systolic'] < BLOOD_PRESSURE_LOW) |
                   (df['systolic'] > BLOOD_PRESSURE_HIGH_VALUE1) |
                   (df['diastolic'] > BLOOD_PRESSURE_HIGH_VALUE2)]
-        return extremes[['timestamp_local', 'systolic', 'diastolic']]
+
+        # Convert timestamps
+        extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local']).dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        return extremes[['timestamp_local', 'systolic', 'diastolic']].reset_index(drop=True)
 
 
     @staticmethod
