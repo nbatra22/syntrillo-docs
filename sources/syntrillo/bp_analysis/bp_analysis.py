@@ -372,7 +372,13 @@ class BloodPressureAnalysis:
         analysis_with_progress = self.calculate_progress(analysis=analysis, timeframed_data=timeframes)
         df = pd.DataFrame.from_dict(analysis_with_progress, orient='index').T
 
-        df.loc['Overall'] = df.apply(self.calculate_overall, axis=0)
+        columns_to_update = [
+            col for col in df.columns
+            if not col.startswith("Since")
+        ]
+
+        df.loc['Overall', columns_to_update] = df[columns_to_update].apply(self.calculate_overall, axis=0)
+        df.loc['Overall'] = df.loc['Overall'].fillna("")
 
         # Set class variable
         self.analysis_df = df
@@ -474,18 +480,18 @@ class BloodPressureAnalysis:
                     if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
                         if prior_unit_change > 0:
                             prior_delta -= points[metric]
-                            prior_progress = "--"
+                            prior_progress = "-2"
                         elif prior_unit_change < 0:
                             prior_delta += points[metric]
-                            prior_progress = "++"
+                            prior_progress = "+2"
 
                     if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                         if baseline_unit_change > 0:
                             baseline_delta -= points[metric]
-                            base_progress = "--"
+                            base_progress = "-2"
                         elif baseline_unit_change < 0:
                             baseline_delta += points[metric]
-                            base_progress = "++"
+                            base_progress = "+2"
 
                     # print(f"Baseline Delta (after Avg): {baseline_delta}")
 
@@ -495,19 +501,19 @@ class BloodPressureAnalysis:
                         if abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
                             if prior_unit_change > 0:
                                 prior_delta -= points[metric]
-                                prior_progress = "-"
+                                prior_progress = "-1"
                             elif prior_unit_change < 0:
                                 prior_delta += points[metric]
-                                prior_progress = "+"
+                                prior_progress = "+1"
 
                     if valid_baseline and valid_baseline_change:
                         if abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                             if baseline_unit_change > 0:
                                 baseline_delta -= points[metric]
-                                base_progress = "-"
+                                base_progress = "-1"
                             elif baseline_unit_change < 0:
                                 baseline_delta += points[metric]
-                                base_progress = "+"
+                                base_progress = "+1"
 
                     # print(f"Baseline Delta (after SD): {baseline_delta}")
 
@@ -517,19 +523,19 @@ class BloodPressureAnalysis:
                         if abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
                             if prior_percent_change > 0:
                                 prior_delta -= points[metric]
-                                prior_progress = "-"
+                                prior_progress = "-1"
                             elif prior_percent_change < 0:
                                 prior_delta += points[metric]
-                                prior_progress = "+"
+                                prior_progress = "+1"
 
                     if valid_baseline and valid_baseline_change:
                         if abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                             if baseline_percent_change > 0:
                                 baseline_delta -= points[metric]
-                                base_progress = "-"
+                                base_progress = "-1"
                             elif baseline_percent_change < 0:
                                 baseline_delta += points[metric]
-                                base_progress = "+"
+                                base_progress = "+1"
 
                     # print(f"Baseline Delta (after CV): {baseline_delta}")
 
@@ -539,18 +545,18 @@ class BloodPressureAnalysis:
                     if valid_prior and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
                         if prior_value < high_threshold < current_value:
                             prior_delta -= points[metric]
-                            prior_progress = "--"
+                            prior_progress = "-2"
                         elif prior_value > high_threshold >= current_value:
                             prior_delta += points[metric]
-                            prior_progress = "++"
+                            prior_progress = "+2"
 
                     if valid_baseline and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
                         if baseline_value < high_threshold < current_value:
                             baseline_delta -= points[metric]
-                            base_progress = "--"
+                            base_progress = "-2"
                         elif baseline_value > high_threshold >= current_value:
                             baseline_delta += points[metric]
-                            base_progress = "++"
+                            base_progress = "+2"
 
                 # print(f"Baseline Delta (after Peak): {baseline_delta}")
 
@@ -720,6 +726,21 @@ class BloodPressureAnalysis:
         for val in row:
             color = 'white'
             if pd.notna(val):
+
+                # Convert val to string and check if it contains "+" or "-"
+                if isinstance(val, str) and ("+" in val or "-" in val):
+                    styles.append(f'background-color: {color}; padding: 8px')
+                    continue
+
+                # Colorize 'Overall' row
+                if metric == 'Overall':
+                    if val == 'Good':
+                        color = 'lightgreen'
+                    elif val == 'Okay':
+                        color = 'yellow'
+                    elif val == 'Poor':
+                        color = 'lightcoral'
+
                 # Convert string values to a numeric value
                 try:
                     if isinstance(val, str):
@@ -740,52 +761,52 @@ class BloodPressureAnalysis:
                         elif 130 <= value_num <= 139:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'Avg DBP (mmHg)':
                         if value_num < 80:
                             color = 'lightgreen'
                         elif 80 <= value_num <= 89:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'SBP SD (mmHg)':
                         if value_num < 7.5:
                             color = 'lightgreen'
                         elif value_num < 15:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'DBP SD (mmHg)':
                         if value_num < 5:
                             color = 'lightgreen'
                         elif value_num < 11.5:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'SBP CV (%)':
                         if value_num < 5.5:
                             color = 'lightgreen'
                         elif value_num < 11:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'DBP CV (%)':
                         if value_num < 6:
                             color = 'lightgreen'
                         elif value_num < 13:
                             color = 'yellow'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'Peak SBP² (mmHg)':
                         if value_num < 170:
                             color = 'lightgreen'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
                     elif metric == 'Peak DBP² (mmHg)':
                         if value_num < 110:
                             color = 'lightgreen'
                         else:
-                            color = 'red'
+                            color = 'lightcoral'
             # Append the style for this cell
             styles.append(f'background-color: {color}; padding: 8px')
 
@@ -861,21 +882,21 @@ class BloodPressureAnalysis:
 
                     # Apply color coding for specific metrics
                     if metric == 'Avg SBP (mmHg)':
-                        color = 'lightgreen' if value < 130 else 'yellow' if value <= 139 else 'red'
+                        color = 'lightgreen' if value < 130 else 'yellow' if value <= 139 else 'lightcoral'
                     elif metric == 'Avg DBP (mmHg)':
-                        color = 'lightgreen' if value < 80 else 'yellow' if value <= 89 else 'red'
+                        color = 'lightgreen' if value < 80 else 'yellow' if value <= 89 else 'lightcoral'
                     elif metric == 'SBP SD (mmHg)':
-                        color = 'lightgreen' if value < 7.5 else 'yellow' if value < 15 else 'red'
+                        color = 'lightgreen' if value < 7.5 else 'yellow' if value < 15 else 'lightcoral'
                     elif metric == 'DBP SD (mmHg)':
-                        color = 'lightgreen' if value < 5 else 'yellow' if value < 11.5 else 'red'
+                        color = 'lightgreen' if value < 5 else 'yellow' if value < 11.5 else 'lightcoral'
                     elif metric == 'SBP CV (%)':
-                        color = 'lightgreen' if value < 5.5 else 'yellow' if value < 11 else 'red'
+                        color = 'lightgreen' if value < 5.5 else 'yellow' if value < 11 else 'lightcoral'
                     elif metric == 'DBP CV (%)':
-                        color = 'lightgreen' if value < 6 else 'yellow' if value < 13 else 'red'
+                        color = 'lightgreen' if value < 6 else 'yellow' if value < 13 else 'lightcoral'
                     elif metric == 'Peak SBP² (mmHg)':
-                        color = 'lightgreen' if value < 170 else 'red'
+                        color = 'lightgreen' if value < 170 else 'lightcoral'
                     elif metric == 'Peak DBP² (mmHg)':
-                        color = 'lightgreen' if value < 110 else 'red'
+                        color = 'lightgreen' if value < 110 else 'lightcoral'
 
                     cell.set_facecolor(color)
 
