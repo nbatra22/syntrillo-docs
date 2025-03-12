@@ -129,12 +129,21 @@ class RemoteMonitoringDataSync(Construct):
         self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+        self.function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicTaskSchedulingRemoteMonitoringDataSyncFunctionSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-TaskScheduling-RemoteMonitoringDataSyncFunction-SecurityGroup-Id"
         )
 
     def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
@@ -243,12 +252,21 @@ class HealthieDataIngestor(Construct):
         self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
+        self.function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from HealthieDataIngestorFunction on port 3306"
+        # )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicTaskSchedulingHealthieDataIngestorSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-TaskScheduling-HealthieDataIngestor-SecurityGroup-Id"
         )
 
     def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
@@ -499,7 +517,7 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
-        remote_monitoring_data_sync = RemoteMonitoringDataSync(
+        self.remote_monitoring_data_sync = RemoteMonitoringDataSync(
             self, "RemoteMonitoringDataSyncFunction",
             aws_environment=self.aws_environment,
             network=self.network,
@@ -519,11 +537,11 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         data_sync_workflow = DataSyncWorkflow(
             self, "DataSyncFunction",
-            remote_monitoring_data_sync_function = remote_monitoring_data_sync.remote_monitoring_data_sync_function,
+            remote_monitoring_data_sync_function = self.remote_monitoring_data_sync.remote_monitoring_data_sync_function,
             pii_data_sync_function = pii_data_sync.pii_data_sync_function,
         )
 
-        healthie_data_ingestor = HealthieDataIngestor(
+        self.healthie_data_ingestor = HealthieDataIngestor(
             self, "HealthieDataIngestor",
             aws_environment=self.aws_environment,
             network=self.network,

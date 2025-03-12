@@ -3,6 +3,7 @@ from aws_cdk import (
     Duration,
     RemovalPolicy,
     Fn,
+    CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -132,17 +133,26 @@ class BloodPressureNotificationFunction(Construct):
 
         self.function_security_group = self.function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            self.function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from BloodPressureNotificationFunction on port 3306"
-        )
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from BloodPressureNotificationFunction on port 3306"
+        # )
 
         # self.database.db_from_snapshot_security_group.add_ingress_rule(
         #     self.function_security_group,
         #     ec2.Port.tcp(3306),
         #     description=f"Allow inbound traffic from IFrameGeneratorFunction on port 3306"
         # )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicServersBloodPressureNotificationFunctionSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-Servers-BloodPressureNotificationFunction-SecurityGroup-Id"
+        )        
     
     def grant_read_secrets(self, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
