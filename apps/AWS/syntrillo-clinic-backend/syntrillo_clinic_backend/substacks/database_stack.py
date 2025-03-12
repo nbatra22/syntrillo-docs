@@ -153,17 +153,75 @@ class DatabaseStack(Stack):
         # Add ingress rules from security group for database 
         # ----
 
-        # Allow Bastion Access
+        # Allow Bastion Access OLD
         self.db_from_snapshot_security_group = self.db_from_snapshot.connections.security_groups[0]
 
         self.admin_secret = self.db_from_snapshot.secret
 
-        # Done in the database stack (not the bastion stack) because the bastion security group can be used by the ec2 bastion or cloud shell
-        self.db_from_snapshot_security_group.add_ingress_rule(
-            self.network.bastion_host_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        # # Done in the database stack (not the bastion stack) because the bastion security group can be used by the ec2 bastion or cloud shell
+        # self.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.network.bastion_host_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from Linux Bastion Host on port 3306"
+        # )
+
+        # Allow Bastion Access
+        Bastion_security_group_id = Fn.import_value("SyntrilloClinic-Bastion-SecurityGroup-Id")
+        Bastion_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "BastionImportedSecurityGroup",
+            security_group_id=Bastion_security_group_id
         )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            Bastion_imported_security_group_id,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from Bastion on port 3306"
+        )
+
+         # Allow Remote Monitoring function Access
+        RemoteMonitoringDataSyncFunction_security_group_id = Fn.import_value("SyntrilloClinic-TaskScheduling-RemoteMonitoringDataSyncFunction-SecurityGroup-Id")
+        RemoteMonitoringDataSyncFunction_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "RemoteMonitoringDataSyncFunctionImportedSecurityGroup",
+            security_group_id=RemoteMonitoringDataSyncFunction_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            RemoteMonitoringDataSyncFunction_imported_security_group_id,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        )
+
+
+         # Allow Healthie data ingestor function Access
+        HealthieDataIngestorFunction_security_group_id = Fn.import_value("SyntrilloClinic-TaskScheduling-HealthieDataIngestor-SecurityGroup-Id")
+        HealthieDataIngestorFunction_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "HealthieDataIngestorFunctionImportedSecurityGroup",
+            security_group_id=HealthieDataIngestorFunction_security_group_id
+        )
+
+        self.db_from_snapshot_security_group.add_ingress_rule(
+            HealthieDataIngestorFunction_imported_security_group_id,
+            ec2.Port.tcp(3306),
+            description=f"Allow inbound traffic from HealthieDataIngestorFunction on port 3306"
+        )
+
+        if self.environment_context["environment_name"] == 'staging':
+            # Allow blood pressure notification function Access
+            BloodPressureNotificationFunctionFunction_security_group_id = Fn.import_value("SyntrilloClinic-Servers-BloodPressureNotificationFunction-SecurityGroup-Id")
+            BloodPressureNotificationFunctionFunction_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+                self,
+                "BloodPressureNotificationFunction",
+                security_group_id=BloodPressureNotificationFunctionFunction_security_group_id
+            )
+
+            self.db_from_snapshot_security_group.add_ingress_rule(
+                BloodPressureNotificationFunctionFunction_imported_security_group_id,
+                ec2.Port.tcp(3306),
+                description=f"Allow inbound traffic from BloodPressureNotificationFunction on port 3306"
+            )
 
          # Allow DMS access
         DMS_instance_security_group_id = Fn.import_value("SyntrilloAnalyticsNetworkDMSSecurityGroupId")
@@ -193,6 +251,7 @@ class DatabaseStack(Stack):
             description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
         )
 
+        # Allow iframe generator function access
         iframe_generator_function_security_group_id = Fn.import_value("IframeGeneratorFunctionSecurityGroup")
         iframe_generator_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
             self,
@@ -206,6 +265,7 @@ class DatabaseStack(Stack):
             description=f"Allow inbound traffic from IframeGeneratorFunction on port 3306"
         )
 
+        # Allow pii data sync function access
         pii_data_sync_function_security_group_id = Fn.import_value("PIIDataSyncFunctionSecurityGroup")
         pii_data_sync_function_imported_security_group = ec2.SecurityGroup.from_security_group_id(
             self,

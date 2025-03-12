@@ -141,7 +141,7 @@ class IngestionStack(Stack):
 
         # Import the secret ARN from the other stack
         secret_arn = Fn.import_value("DatabaseDMSUserSecretsArn")
-        secrets_kms_custom_key_arn = Fn.import_value("SecretsCutomKMSKeyArn")
+        secrets_kms_custom_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
 
         # Create IAM role for DMS to access Secrets Manager
         dms_secret_role = iam.Role(self, "DMSSecretRole",

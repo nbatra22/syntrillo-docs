@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    Fn,
     CfnOutput,
     aws_lambda as _lambda,
     aws_s3 as s3,
@@ -52,6 +53,20 @@ class StorageStack(Stack):
             )
         )
 
+        self.efs_access_point_shared_python_modules = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPointSharedPythonModules",
+            file_system=self.efs_file_system,
+            path="/shared-python-modules", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
+            create_acl=efs.Acl(
+                owner_uid="1000",
+                owner_gid="1000",
+                permissions="750"
+            ),
+            posix_user=efs.PosixUser(
+                uid="1000",
+                gid="1000"
+            )
+        )   
+
         self.efs_access_point_chatbots = efs.AccessPoint(self, "SyntrilloClinicEFSAccessPointChatbots",
             file_system=self.efs_file_system,
             path="/chatbots-resources", # !! THIS MUST EXIST ON EFS FOR THE LAMBDA TO WORK
@@ -66,6 +81,53 @@ class StorageStack(Stack):
             )
         )
 
+        # ALLOW BASTION HOST TO ACCESS EFS FILE SYSTEM
+        self.efs_security_group = self.efs_file_system.connections.security_groups[0]
+
+        # Allow Bastion Access
+        Bastion_security_group_id = Fn.import_value("SyntrilloClinic-Bastion-SecurityGroup-Id")
+        Bastion_imported_security_group_id = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "BastionImportedSecurityGroup",
+            security_group_id=Bastion_security_group_id
+        )
+
+        self.efs_security_group.add_ingress_rule(
+            peer=Bastion_imported_security_group_id,
+            connection=ec2.Port.tcp(2049),
+            description="Allow NFS from bastion host"
+        )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        # CfnOutput(self, "SyntrilloClinicStorageEFSAccessPointSharedPythonModulesArn",
+        #     value=self.efs_access_point.access_point_arn,
+        #     export_name="SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn"
+        # )
+
+        CfnOutput(self, "SyntrilloClinicStorageEFSAccessPointSharedPythonModulesArn",
+            value=self.efs_access_point_shared_python_modules.access_point_arn,
+            export_name="SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn"
+        )
+
+        CfnOutput(self, "SyntrilloClinicStorageEFSFileSystemId",
+            value=self.efs_file_system.file_system_id,
+            export_name="SyntrilloClinic-Storage-EFS-FileSystem-Id"
+        )
+
+        CfnOutput(self, "SyntrilloClinicStorageEFSFileSystemSecurityGroupId",
+            value=self.efs_security_group.security_group_id,
+            export_name="SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id"
+        )
+
+        CfnOutput(self, "SyntrilloClinicStorageEFSAccessPointChatbotResourcesArn",
+            value=self.efs_access_point_chatbots.access_point_arn,
+            export_name="SyntrilloClinic-Storage-EFS-AccessPoint-ChatbotResources-Arn"
+        )
+
+        # => TO DELETE LATER
         CfnOutput(self, "EFSAccessPointChatbotsArn",
             value=self.efs_access_point_chatbots.access_point_arn,
             export_name="EFSAccessPointChatbotsArn"
@@ -76,13 +138,4 @@ class StorageStack(Stack):
             "SyntrilloClinicEFSFileStystemId",
             value=self.efs_file_system.file_system_id,
             export_name="SyntrilloClinicEFSFileStystemId"
-        )
-
-        # ALLOW BASTION HOST TO ACCESS EFS FILE SYSTEM
-        self.efs_security_group = self.efs_file_system.connections.security_groups[0]
-
-        self.efs_security_group.add_ingress_rule(
-            peer=self.network.bastion_host_security_group,
-            connection=ec2.Port.tcp(2049),
-            description="Allow NFS from bastion host"
         )

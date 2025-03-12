@@ -186,5 +186,6 @@ class DeploymentPipelinesStack(Stack):
         # Add Deploy Stage with Approval and Deploy actions
         pipeline.add_stage(
             stage_name="Deploy",
-            actions=[approval_action, deploy_action]
+            # actions=[approval_action, deploy_action]
+            actions=[deploy_action]
         )

@@ -83,7 +83,7 @@ class NetworkStack(Stack):
             # )]
         )
 
-        syntrillo_clinic_network_id = Fn.import_value("SyntrilloClinicNetworkId")
+        syntrillo_clinic_network_id = Fn.import_value("SyntrilloClinic-Network-Vpc-Id")
 
         # Create VPC Peering Connection
         peering_connection = ec2.CfnVPCPeeringConnection(
@@ -94,8 +94,8 @@ class NetworkStack(Stack):
 
 
         # Update SyntrilloClinic subnet route tables, with SyntrilloAnalytics vpc cidrblock
-        private_subnet_1_route_table = Fn.import_value("SyntrilloClinicNetworkRouteTable-PrivateSubnet1")
-        private_subnet_2_route_table = Fn.import_value("SyntrilloClinicNetworkRouteTable-PrivateSubnet2")
+        private_subnet_1_route_table = Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id")
+        private_subnet_2_route_table = Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")
 
         private_sunet_1_route = ec2.CfnRoute(
             self,
@@ -114,7 +114,7 @@ class NetworkStack(Stack):
         )
 
         # Update SyntrilloAnalytics subnet route tables, with SyntrilloClinic vpc cidrblock
-        syntrillo_clinic_cidr_block = Fn.import_value("SyntrilloClinicNetworkCidrBlock")
+        syntrillo_clinic_cidr_block = Fn.import_value("SyntrilloClinic-Network-Vpc-CidrBlock")
         for subnet in self.vpc.isolated_subnets:
             ec2.CfnRoute(
                 self,

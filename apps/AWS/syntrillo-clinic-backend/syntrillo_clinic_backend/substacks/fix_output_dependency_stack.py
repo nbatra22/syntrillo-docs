@@ -26,13 +26,38 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 class FixOutputDependencyStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, stack: Construct, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, environment_context: dict, stack: Construct, stack2: Construct, stack3: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.servers = stack
+        self.environment_context = environment_context
+
+        self.task_scheduling = stack
 
         ssm.StringParameter(
             self, "TemporaryFixOutputDependencyParameter",
             parameter_name="/tmp/fix_output_dependency",
-            string_value=self.servers.iframe_generator_function.function_security_group.security_group_id,
+            string_value=self.task_scheduling.remote_monitoring_data_sync.function_security_group.security_group_id,
+        )
+
+        ssm.StringParameter(
+            self, "TemporaryFixOutputDependencyParameter2",
+            parameter_name="/tmp/fix_output_dependency2",
+            string_value=self.task_scheduling.healthie_data_ingestor.function_security_group.security_group_id,
+        )
+
+        self.servers = stack2
+
+        if self.environment_context["environment_name"] == 'staging':
+            ssm.StringParameter(
+                self, "TemporaryFixOutputDependencyParameter3",
+                parameter_name="/tmp/fix_output_dependency3",
+                string_value=self.servers.blood_pressure_notification_function.function_security_group.security_group_id,
+            )
+
+        self.network = stack3
+
+        ssm.StringParameter(
+            self, "TemporaryFixOutputDependencyParameter4",
+            parameter_name="/tmp/fix_output_dependency4",
+            string_value=self.network.bastion_host_security_group.security_group_id,
         )

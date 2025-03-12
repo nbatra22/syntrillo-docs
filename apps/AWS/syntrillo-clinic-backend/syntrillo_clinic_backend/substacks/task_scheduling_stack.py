@@ -3,6 +3,7 @@ from aws_cdk import (
     Duration,
     RemovalPolicy,
     CfnOutput,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -43,6 +44,56 @@ class RemoteMonitoringDataSync(Construct):
         self.storage = storage
         self.secrets = secrets
 
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
+
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+
+        self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
+        self.clinic_storage_efs_access_point_shared_python_modules_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn")
+        self.clinic_storage_efs_file_system_security_group_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id")
+
+        # Import file system endpoint
+
+        file_system_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "ImportedFileSystemSecurityGroup",
+            security_group_id=self.clinic_storage_efs_file_system_security_group_id
+        )
+
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=self.clinic_storage_efs_file_system_id,
+            security_group=file_system_security_group
+        )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        self.clinic_storage_efs_access_point_shared_python_modules = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPoint",
+            access_point_arn=self.clinic_storage_efs_access_point_shared_python_modules_arn,
+            file_system=imported_file_system
+        )
+
+        self.secrets_openai_secrets_secret_arn = ''
+
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
+        # ---------------------------------------------------------------------
+
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
             log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
@@ -53,48 +104,57 @@ class RemoteMonitoringDataSync(Construct):
 
         self.remote_monitoring_data_sync_function = _lambda.Function(self, "RemoteMonitoringDataSyncFunction",
             function_name="RemoteMonitoringDataSyncFunction",
-            vpc = self.network.vpc,
+            vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/remote-monitoring-data-sync-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.storage.efs_access_point,
+                self.clinic_storage_efs_access_point_shared_python_modules,
                 "/mnt/python_modules"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.database_lambda_user_secrets)
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.tenovi_hwi_secrets)
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets.healthie_secrets)
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+        self.function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicTaskSchedulingRemoteMonitoringDataSyncFunctionSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-TaskScheduling-RemoteMonitoringDataSyncFunction-SecurityGroup-Id"
         )
 
-    def grant_read_secrets(self, function, secrets):
+    def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
-            resources=[secrets.secret_arn],
+            resources=[secrets_arn],
         ))
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
-            resources=[secrets.encryption_key.key_arn],
+            resources=[secrets_kms_key_arn],
         ))
 
 
@@ -113,6 +173,50 @@ class HealthieDataIngestor(Construct):
         self.storage = storage
         self.secrets = secrets
 
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+
+        self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
+        self.clinic_storage_efs_access_point_shared_python_modules_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn")
+        self.clinic_storage_efs_file_system_security_group_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id")
+
+        # Import file system endpoint
+
+        file_system_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "ImportedFileSystemSecurityGroup",
+            security_group_id=self.clinic_storage_efs_file_system_security_group_id
+        )
+
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=self.clinic_storage_efs_file_system_id,
+            security_group=file_system_security_group
+        )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        self.clinic_storage_efs_access_point_shared_python_modules = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPoint",
+            access_point_arn=self.clinic_storage_efs_access_point_shared_python_modules_arn,
+            file_system=imported_file_system
+        )
+
+        self.secrets_openai_secrets_secret_arn = ''
+
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
             log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
@@ -123,48 +227,57 @@ class HealthieDataIngestor(Construct):
 
         self.healthie_data_ingestor_function = _lambda.Function(self, "HealthieDataIngestorFunction",
             function_name="HealthieDataIngestorFunction",
-            vpc = self.network.vpc,
+            vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/healthie-data-ingestor-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.storage.efs_access_point,
+                self.clinic_storage_efs_access_point_shared_python_modules,
                 "/mnt/python_modules"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.database_lambda_user_secrets)
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.tenovi_hwi_secrets)
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets.healthie_secrets)
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
+        self.function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
 
-        self.database.db_from_snapshot_security_group.add_ingress_rule(
-            function_security_group,
-            ec2.Port.tcp(3306),
-            description=f"Allow inbound traffic from RemoteMonitoringDataSyncFunction on port 3306"
+        # self.database.db_from_snapshot_security_group.add_ingress_rule(
+        #     self.function_security_group,
+        #     ec2.Port.tcp(3306),
+        #     description=f"Allow inbound traffic from HealthieDataIngestorFunction on port 3306"
+        # )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicTaskSchedulingHealthieDataIngestorSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-TaskScheduling-HealthieDataIngestor-SecurityGroup-Id"
         )
 
-    def grant_read_secrets(self, function, secrets):
+    def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
-            resources=[secrets.secret_arn],
+            resources=[secrets_arn],
         ))
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
-            resources=[secrets.encryption_key.key_arn],
+            resources=[secrets_kms_key_arn],
         ))
 
 class DataSyncWorkflow(Construct):
@@ -269,6 +382,50 @@ class PIIDataSync(Construct):
         self.storage = storage
         self.secrets = secrets
 
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+
+        self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
+        self.clinic_storage_efs_access_point_shared_python_modules_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn")
+        self.clinic_storage_efs_file_system_security_group_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id")
+
+        # Import file system endpoint
+
+        file_system_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "ImportedFileSystemSecurityGroup",
+            security_group_id=self.clinic_storage_efs_file_system_security_group_id
+        )
+
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=self.clinic_storage_efs_file_system_id,
+            security_group=file_system_security_group
+        )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        self.clinic_storage_efs_access_point_shared_python_modules = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPoint",
+            access_point_arn=self.clinic_storage_efs_access_point_shared_python_modules_arn,
+            file_system=imported_file_system
+        )
+
+        self.secrets_openai_secrets_secret_arn = ''
+
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
         self.aws_environment = aws_environment
 
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
@@ -281,21 +438,21 @@ class PIIDataSync(Construct):
 
         self.pii_data_sync_function = _lambda.Function(self, "PIIDataSyncFunction",
             function_name="PIIDataSyncFunction",
-            vpc = self.network.vpc,
+            vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/pii-data-sync-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
-                self.storage.efs_access_point,
+                self.clinic_storage_efs_access_point_shared_python_modules,
                 "/mnt/python_modules"
             ),
             environment={
                 "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
-                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets.database_lambda_user_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets.tenovi_hwi_secrets.secret_arn,
-                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets.healthie_secrets.secret_arn,
+                "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
                 "PII_DATA_BUCKET": f"{self.aws_environment}.syntrillo-analytics.pii-data"
             },
             tracing=_lambda.Tracing.ACTIVE,
@@ -303,9 +460,9 @@ class PIIDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.database_lambda_user_secrets)
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.tenovi_hwi_secrets)
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets.healthie_secrets)
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
         self.function_security_group = self.pii_data_sync_function.connections.security_groups[0]
 
@@ -323,15 +480,15 @@ class PIIDataSync(Construct):
             export_name="PIIDataSyncFunctionRoleArn"
         )
 
-    def grant_read_secrets(self, function, secrets):
+    def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
-            resources=[secrets.secret_arn],
+            resources=[secrets_arn],
         ))
         function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
-            resources=[secrets.encryption_key.key_arn],
+            resources=[secrets_kms_key_arn],
         ))
 
 
@@ -360,7 +517,7 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
-        remote_monitoring_data_sync = RemoteMonitoringDataSync(
+        self.remote_monitoring_data_sync = RemoteMonitoringDataSync(
             self, "RemoteMonitoringDataSyncFunction",
             aws_environment=self.aws_environment,
             network=self.network,
@@ -380,11 +537,11 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         data_sync_workflow = DataSyncWorkflow(
             self, "DataSyncFunction",
-            remote_monitoring_data_sync_function = remote_monitoring_data_sync.remote_monitoring_data_sync_function,
+            remote_monitoring_data_sync_function = self.remote_monitoring_data_sync.remote_monitoring_data_sync_function,
             pii_data_sync_function = pii_data_sync.pii_data_sync_function,
         )
 
-        healthie_data_ingestor = HealthieDataIngestor(
+        self.healthie_data_ingestor = HealthieDataIngestor(
             self, "HealthieDataIngestor",
             aws_environment=self.aws_environment,
             network=self.network,

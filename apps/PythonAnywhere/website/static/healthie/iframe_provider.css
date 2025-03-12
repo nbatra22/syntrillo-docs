@@ -3,7 +3,7 @@
 /* my friend : https://www.w3schools.com/css/tryit.asp */
 
 body {
-    font-family: "Avenir",Helvetica,"Arial",sans-serif; /* Avenir is Heathie's font */
+    /* font-family: "Avenir",Helvetica,"Arial",sans-serif; Avenir is Heathie's font */
     font-size: 16px;
     padding: 5px;
     color: #4f4f4f;
@@ -342,6 +342,3 @@ body.loading {
     left: 50%;
     transform: translateX(-50%);
 }
-
-
-

@@ -46,7 +46,6 @@ class PostManager:
                 self.temporary_lookup_code,
                 purpose=TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME
                 )
-
             # get all pseudonyms
             lookup_manager = LookUpCodesManagement()
             self.pseudonyms = lookup_manager.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
@@ -89,7 +88,3 @@ class PostManager:
             return self.pseudonyms['healthie_user_id']
         else:
             return None
-
-
-
-

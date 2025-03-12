@@ -106,14 +106,14 @@ class SyntrilloClinicBackendStack(Stack):
             lambda_function=self.servers.iframe_generator_function.function
         )
 
-        if self.environment_context["bastion"]["bastion-enabled"]:
-            self.bastion=SyntrilloClinicBastionStack(
-                self, "BastionStack",
-                environment_context=self.environment_context,
-                network=self.network,
-                database=self.database,
-                storage=self.storage,
-            )
+
+        self.bastion=SyntrilloClinicBastionStack(
+            self, "BastionStack",
+            environment_context=self.environment_context,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+        )
 
         backupStack = SyntrilloClinicBackupStack(
             self, "BackupStack",
@@ -127,10 +127,13 @@ class SyntrilloClinicBackendStack(Stack):
                 environment_context=self.environment_context,
             )
 
-        # backupStack = FixOutputDependencyStack(
-        #     self, "FixOutputDependencyStack",
-        #     stack=self.servers,
-        # )
+        backupStack = FixOutputDependencyStack(
+            self, "FixOutputDependencyStack",
+            environment_context=self.environment_context,
+            stack=self.scheduled_tasks,
+            stack2=self.servers,
+            stack3=self.network,
+        )
 
         # self.check_function = SyntrilloClinicBackendCheckFunctionsStack(
         #     self, "SyntrilloClinicBackendCheckFunctionsStack",

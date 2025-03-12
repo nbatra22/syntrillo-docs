@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -30,6 +31,57 @@ class LLMServer(Construct):
         self.network = network
         self.database = database
         self.iframe_generator_function = iframe_generator_function
+
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
+
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+
+        self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
+        self.clinic_storage_efs_access_point_shared_python_modules_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-SharedPythonModules-Arn")
+        self.clinic_storage_efs_file_system_security_group_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-SecurityGroup-Id")
+
+        # Import file system endpoint
+
+        file_system_security_group = ec2.SecurityGroup.from_security_group_id(
+            self,
+            "ImportedFileSystemSecurityGroup",
+            security_group_id=self.clinic_storage_efs_file_system_security_group_id
+        )
+
+        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
+        imported_file_system = efs.FileSystem.from_file_system_attributes(
+            self,
+            "ImportedFileSystem",
+            file_system_id=self.clinic_storage_efs_file_system_id,
+            security_group=file_system_security_group
+        )
+
+        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
+        self.clinic_storage_efs_access_point_shared_python_modules = efs.AccessPoint.from_access_point_attributes(
+            self,
+            "EFSAccessPoint",
+            access_point_arn=self.clinic_storage_efs_access_point_shared_python_modules_arn,
+            file_system=imported_file_system
+        )
+
+        self.secrets_openai_secrets_secret_arn = ''
+
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")],
+            vpc_cidr_block=Fn.import_value("SyntrilloClinic-Network-Vpc-CidrBlock")            
+        )
+
+        # ---------------------------------------------------------------------   
 
         role = iam.Role(self, "EC2SSMRole",
             assumed_by=iam.ServicePrincipal("ec2.amazonaws.com")
@@ -128,7 +180,7 @@ class LLMServer(Construct):
 
         # Create a security group
         self.security_group = ec2.SecurityGroup(self, "UbuntuInstanceSG",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
             description="Security group for LLM Server",
             allow_all_outbound=True
         )
@@ -138,7 +190,7 @@ class LLMServer(Construct):
         ami_id = self.environment_context["llm_server"]["llm-server-ami-id"]
         self.instance_linux_2023 = ec2.Instance(self, "LLMServerInstance2023",
             instance_name="LLMServerInstance2023",
-            vpc = self.network.vpc,
+            vpc = self.vpc,
             instance_type=ec2.InstanceType(instance_size),
             machine_image = ec2.MachineImage.generic_linux({
                 "us-east-1": ami_id,
@@ -173,21 +225,21 @@ class LLMServer(Construct):
         # Create a security group for the VPC Endpoint
         security_group = ec2.SecurityGroup(
             self, "BedrockEndpointSG",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
             description="Security Group for Bedrock VPC Endpoint",
             allow_all_outbound=True
         )
 
         # Allow inbound HTTPS traffic from the VPC
         security_group.add_ingress_rule(
-            ec2.Peer.ipv4(self.network.vpc.vpc_cidr_block),
+            ec2.Peer.ipv4(self.vpc.vpc_cidr_block),
             ec2.Port.tcp(443),
             "Allow HTTPS inbound from VPC"
         )
 
         bedrock_endpoint = ec2.InterfaceVpcEndpoint(
             self, "BedrockVPCEndpoint",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
             service=ec2.InterfaceVpcEndpointService("com.amazonaws.us-east-1.bedrock-runtime"),
             private_dns_enabled=True,
             subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),

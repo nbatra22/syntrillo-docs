@@ -186,7 +186,7 @@ def insert_all_form_templates_to_sql(flattened_templates: list[FormTemplate]) ->
                     module_options
                 )
                 VALUES (
-                    %s, %s, %s, %s, %s
+                    %s, %s, %s, %s, REPLACE(%s, '\n', '|')
                 )
                 ON DUPLICATE KEY UPDATE
                     form_name=VALUES(form_name),
