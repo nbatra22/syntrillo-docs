@@ -48,7 +48,9 @@ class QueryStack(Stack):
             )
         )
 
+        # ---------------------------------------------------------------------
         # TenoviRawMeasurementsTable
+        # ---------------------------------------------------------------------
         columns = [
             glue.CfnTable.ColumnProperty(
                 name="operation",
@@ -124,7 +126,9 @@ class QueryStack(Stack):
             )
         )
 
+        # ---------------------------------------------------------------------
         # PIITable
+        # ---------------------------------------------------------------------
         columns = [
             glue.CfnTable.ColumnProperty(
                 name="syntrillo_internal_key",
@@ -166,6 +170,129 @@ class QueryStack(Stack):
             )
         )
 
+        # ---------------------------------------------------------------------
+        # Healthie Form Template
+        # ---------------------------------------------------------------------
+        columns = [
+            glue.CfnTable.ColumnProperty(
+                name="operation",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="form_id",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="module_id",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="form_name",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="module_label",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="module_options",
+                type="string"
+            ),
+        ]
+
+        # Create the Glue Table
+        csv_table = glue.CfnTable(
+            self, "HealthieFormTemplatesTable",
+            database_name=glue_database.ref,
+            catalog_id=self.account,
+            table_input=glue.CfnTable.TableInputProperty(
+                name="healthie_form_templates",
+                # description="Sample CSV table",
+                table_type="EXTERNAL_TABLE",
+                parameters={
+                    "classification": "csv",
+                    "skip.header.line.count": "0"
+                },
+                storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
+                    columns=columns,
+                    location=f"s3://{self.environment_name}.syntrillo-analytics.raw-data/syntrillo$HealthInformation/healthie_form_templates",
+                    input_format="org.apache.hadoop.mapred.TextInputFormat",
+                    output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+                    serde_info=glue.CfnTable.SerdeInfoProperty(
+                        serialization_library="org.apache.hadoop.hive.serde2.OpenCSVSerde",
+                        parameters={
+                            "separatorChar": ",",
+                            "quoteChar": '"',
+                            "escapeChar": "\\"
+                        }
+                    )
+                )
+            )
+        )
+
+        # ---------------------------------------------------------------------
+        # Healthie Form Template
+        # ---------------------------------------------------------------------
+        columns = [
+            glue.CfnTable.ColumnProperty(
+                name="operation",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="module_id",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="form_id",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="syntrillo_internal_key",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="answer",
+                type="string"
+            ),
+            glue.CfnTable.ColumnProperty(
+                name="created_at",
+                type="string"
+            ),
+        ]
+
+        # Create the Glue Table
+        csv_table = glue.CfnTable(
+            self, "HealthieFormResponsesTable",
+            database_name=glue_database.ref,
+            catalog_id=self.account,
+            table_input=glue.CfnTable.TableInputProperty(
+                name="healthie_form_responses",
+                # description="Sample CSV table",
+                table_type="EXTERNAL_TABLE",
+                parameters={
+                    "classification": "csv",
+                    "skip.header.line.count": "0"
+                },
+                storage_descriptor=glue.CfnTable.StorageDescriptorProperty(
+                    columns=columns,
+                    location=f"s3://{self.environment_name}.syntrillo-analytics.raw-data/syntrillo$HealthInformation/healthie_form_responses",
+                    input_format="org.apache.hadoop.mapred.TextInputFormat",
+                    output_format="org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+                    serde_info=glue.CfnTable.SerdeInfoProperty(
+                        serialization_library="org.apache.hadoop.hive.serde2.OpenCSVSerde",
+                        parameters={
+                            "separatorChar": ",",
+                            "quoteChar": '"',
+                            "escapeChar": "\\"
+                        }
+                    )
+                )
+            )
+        )
+
+        # ---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         # Define the Athena query to create a view
         trailing_three_month_view = (
@@ -178,12 +305,12 @@ class QueryStack(Stack):
 
         # Create a named query in Athena
         athena.CfnNamedQuery(self, "CDKCreateTrailingThreeMonthsView",
-            database="syntrillo_analysis_db",
+            database=glue_database.ref,            
             query_string=trailing_three_month_view,
             name="CDKCreateTrailingThreeMonthsView",
-            work_group="syntrillo_analysis_workgroup"
-        )
-
+            work_group=athena_workgroup.name
+        ).node.add_dependency(athena_workgroup)
+        
         trailing_three_month_view = (
             "CREATE OR REPLACE VIEW trailing_three_intervals_view AS"
             "\nWITH reference_date AS ("
@@ -210,11 +337,11 @@ class QueryStack(Stack):
 
         # Create a named query in Athena
         athena.CfnNamedQuery(self, "CDKCreateTrailingThreeIntervalView",
-            database="syntrillo_analysis_db",
+            database=glue_database.ref,
             query_string=trailing_three_month_view,
             name="CDKCreateTrailingThreeIntervalView",
-            work_group="syntrillo_analysis_workgroup"
-        )
+            work_group=athena_workgroup.name
+        ).node.add_dependency(athena_workgroup)
 
         bp_measurement_count_view = (
             "CREATE OR REPLACE VIEW bp_measurement_count_view AS"
@@ -295,8 +422,8 @@ class QueryStack(Stack):
 
         # Create a named query in Athena
         athena.CfnNamedQuery(self, "CDKCreateBPMeasurementCountView",
-            database="syntrillo_analysis_db",
+            database=glue_database.ref,
             query_string=bp_measurement_count_view,
             name="CDKCreateBPMeasurementCountView",
-            work_group="syntrillo_analysis_workgroup"
-        )
+            work_group=athena_workgroup.name
+        ).node.add_dependency(athena_workgroup)
