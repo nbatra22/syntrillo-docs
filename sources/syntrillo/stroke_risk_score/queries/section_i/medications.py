@@ -5,23 +5,64 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.system.logger import logger
 
 
-def get_medications():
+# flagged_medicines = [
+#     'blood thinner',
+#     "aspirin",
+#     "plavix",
+#     "statin",
+#     "antiplatte",
+#     "hypoglycemic",
+#     "antihypertensive"
+# ]
 
-    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key="3261f346-ef09-4311-8a5f-f36d5d67e58d")
-    db_connection = db_manager.conn
+def get_medications(db_connection):
+    """
+
+    Returns an array of medications
+
+    TO DO:
+        - handle staging vs. prod
+
+    """
+
+    flagged_medicines = {
+        'blood thinner': (False, ""),
+        "aspirin": (False, ""),
+        "plavix": (False, ""),
+        "statin": (False, ""),
+        "antiplatte": (False, ""),
+        "hypoglycemic": (False, ""),
+        "antihypertensive": (False, "")
+    }
 
     try:
         with db_connection.cursor() as cursor:
             query = """
-                SELECT * from healthie_form_templates
+                SELECT answer from healthie_form_responses
                 WHERE form_id = '2155936' AND module_id = '18520987'
             """
 
             cursor.execute(query)
             result = cursor.fetchall()
 
-        logger.info(f"Successfully fetched medications: {result}")
-        return result
+        # logger.info(f"Successfully fetched medications: {result[0][0]}") # answer comes as tuple
+
+        ans = result[0][0]
+
+        split_ans = ans.split('\\\\')
+
+        logger.info(f"split answer: {split_ans}")
+
+        medications = [(med.split('|')[0].strip('\\\r').lower(), med.split('|')[3].strip('\\\r').lower()) for med in split_ans]
+
+        logger.info(f"Medications: {medications}")
+
+        for flagged_medicine in flagged_medicines:
+            for prescription, compliance in medications:
+                if flagged_medicine in prescription:
+                    flagged_medicines[flagged_medicine] = (True, compliance)
+
+        return flagged_medicines
 
     except Exception as e:
         logger.error(f"Error fetching medications: {e}")

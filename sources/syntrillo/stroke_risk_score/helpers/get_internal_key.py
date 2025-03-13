@@ -23,11 +23,11 @@ def get_internal_key():
             cursor.execute(query)
             result = cursor.fetchall()
 
-        logger.info(f"Successfully fetched medications: {result}")
+        logger.info(f"Internal Key: {result}")
         return result
 
     except Exception as e:
-        logger.error(f"Error fetching medications: {e}")
+        logger.error(f"Error retrieving internal key: {e}")
         return None
 
     finally:

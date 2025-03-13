@@ -4,7 +4,7 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
-from syntrillo.stroke_risk_score.queries.section_i import medications
+from syntrillo.stroke_risk_score.queries.section_i.medications import get_medications
 
 class StrokeRiskScore:
     """
@@ -49,7 +49,11 @@ class StrokeRiskScore:
 
     def calculate_section_i(self):
 
-        return
+        db_connection = self.syntrillo_database_manager.conn
+
+        medications = get_medications(db_connection)
+
+        return medications
 
     def calculate_section_ii(self):
 
@@ -81,4 +85,10 @@ class StrokeRiskScore:
 
 
 if __name__ == "__main__":
-    print('Hello')
+    # risk_score = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_risk_score()
+
+    # print(f"Patient Risk Score: {risk_score}")
+
+    medications = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_section_i()
+
+    print(f"Medications: {medications}")
