@@ -51,11 +51,11 @@ def get_medications(db_connection):
 
         split_ans = ans.split('\\\\')
 
-        logger.info(f"split answer: {split_ans}")
+        # logger.info(f"split answer: {split_ans}")
 
         medications = [(med.split('|')[0].strip('\\\r').lower(), med.split('|')[3].strip('\\\r').lower()) for med in split_ans]
 
-        logger.info(f"Medications: {medications}")
+        # logger.info(f"Medications: {medications}")
 
         for flagged_medicine in flagged_medicines:
             for prescription, compliance in medications:
@@ -67,9 +67,6 @@ def get_medications(db_connection):
     except Exception as e:
         logger.error(f"Error fetching medications: {e}")
         return None
-
-    finally:
-        db_connection.close()
 
 
 if __name__ == "__main__":
