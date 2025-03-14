@@ -31,11 +31,17 @@ class NetworkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, environment_context: dict, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)   
 
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
         self.environment_context = environment_context
         self.aws_environment = environment_context["environment_name"]
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
+        # ---------------------------------------------------------------------
+        # Create VPC
+        # ---------------------------------------------------------------------
         # This creates a VPC with one NAT gateways (N.B. Nat gateways are charged)
         # Nat gateway is necessary for lambda functions to communicates outside the vpc
         # In our case lambdas need to call tenovi and healthie for example
@@ -45,7 +51,9 @@ class NetworkStack(Stack):
             nat_gateways=1
         )
 
-        # VPC Flow Logs
+        # ---------------------------------------------------------------------
+        # Enable VPC Flow Logs
+        # ---------------------------------------------------------------------
         self.vpc_flow_logs_log_group = logs.LogGroup(
             self, "VPCFlowLogsLogGroup",
             log_group_name="/aws/vpc/flowlogs",
@@ -57,14 +65,18 @@ class NetworkStack(Stack):
             traffic_type=ec2.FlowLogTrafficType.ALL,
         )
 
-        # Security groups
+        # ---------------------------------------------------------------------
+        # Create Bastion host security group (To delete)
+        # ---------------------------------------------------------------------
         self.bastion_host_security_group = ec2.SecurityGroup(
             self,
             "BastionHostSecurityGroup",
             vpc=self.vpc,
         )
 
+        # ---------------------------------------------------------------------
         # Add S3 Gateway Endpoint
+        # ---------------------------------------------------------------------
         self.vpc.add_gateway_endpoint(
             "S3Endpoint",
             service=ec2.GatewayVpcEndpointAwsService.S3
