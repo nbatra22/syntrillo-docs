@@ -1,4 +1,4 @@
-from risk_score_olivier import StrokeRiskScore
+from syntrillo.stroke_risk_score.olivier.risk_score_olivier import StrokeRiskScore
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from unittest.mock import MagicMock, patch
 from uuid import UUID

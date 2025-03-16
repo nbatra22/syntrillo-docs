@@ -6,7 +6,7 @@ from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
 from syntrillo.system.logger import logger
 
-from syntrillo.stroke_risk_score.queries.section_i.medications_olivier import MedicationsResponse
+from syntrillo.stroke_risk_score.olivier.queries.medications_olivier import MedicationsResponse
 
 class PatientResponses:
     syntrillo_internal_key : uuid.UUID = None
@@ -29,24 +29,24 @@ class PatientResponses:
 
         with db_connection.cursor() as cursor:
             query = f"""
-                SELECT 
-                    t.form_id, 
-                    t.form_name, 
-                    t.module_id, 
-                    t.module_label, 
-                    r.syntrillo_internal_key, 
-                    r.answer  
-                FROM 
-                    healthie_form_templates as t 
-                    JOIN healthie_form_responses as r 
-                        ON t.form_id = r.form_id AND t.module_id = r.module_id 
-                WHERE 
+                SELECT
+                    t.form_id,
+                    t.form_name,
+                    t.module_id,
+                    t.module_label,
+                    r.syntrillo_internal_key,
+                    r.answer
+                FROM
+                    healthie_form_templates as t
+                    JOIN healthie_form_responses as r
+                        ON t.form_id = r.form_id AND t.module_id = r.module_id
+                WHERE
                     r.syntrillo_internal_key = '{self.syntrillo_internal_key}';
             """
 
             cursor.execute(query)
             result = cursor.fetchall()
-        
+
         db_connection.close()
 
         return result
@@ -56,26 +56,51 @@ class PatientResponses:
 
     def medications(self):
         '''
-        We filter a specific response among all the response 
+        We filter a specific response among all the response
         for a specific patient (in this case medication question)
 
         Then we return a dedictated object which can process the response (in this case Medications)
         '''
         medication_form_id_module_id = (
-            self.response_ids["medication_response"]["form_id"], 
+            self.response_ids["medication_response"]["form_id"],
             self.response_ids["medication_response"]["module_id"],
         )
 
         patient_medication_reponses = [
-            response[5] 
-            for response in self.patient_responses 
+            response[5]
+            for response in self.patient_responses
             if (
-                response[0] == medication_form_id_module_id[0] 
+                response[0] == medication_form_id_module_id[0]
                 and response[2] == medication_form_id_module_id[1]
-            ) 
+            )
         ][0]
 
         return MedicationsResponse(patient_medication_reponses)
+
+    def lab_values(self):
+        '''
+        We filter a specific response among all the response
+        for a specific patient (in this case medication question)
+
+        Then we return a dedictated object which can process the response (in this case Medications)
+        '''
+        lab_value_form_id_module_id = (
+            self.response_ids["lab_values_response"][0]["form_id"],
+            self.response_ids["lab_values_response"][0]["module_id"],
+        )
+
+        patient_lab_value_reponses = [
+            response[5]
+            for response in self.patient_responses
+            if (
+                response[0] == lab_value_form_id_module_id[0]
+                and response[2] == lab_value_form_id_module_id[1]
+            )
+        ][0]
+
+        return LabValuesResponse(patient_lab_value_reponses)
+
+
 
 class StrokeRiskScore:
     """
@@ -125,8 +150,32 @@ class StrokeRiskScore:
     def calculate_section_i(self):
 
         # This will be different in PROD and STAGING
+        # '??' indicates no form/module id in Score Mapping
         response_ids={
-            'medication_response': {'form_id': '2155936', 'module_id': '18520987' }
+            'medication_response': {
+                'staging': [
+                    {'form_id': '2155936', 'module_id': '18520987' }
+                ],
+                'prod': []
+            },
+            'lab_values_response': {
+                'staging': [
+                    {'form_id': '1765843', 'module_id': '15159782'}, # LDL
+                    {'form_id': '1765843', 'module_id': '15159786'} # HA1c
+                ],
+                'prod': []
+            },
+            'history_response': {
+                'staging': [
+                    {'form_id': '2155936', 'module_id': '18519144'}, # Smoker
+                    # {'form_id': '1765843', 'module_id': '15159786'}, # Intracranial Atherosclerosis (IA) ??
+                    {'form_id': '2155936', 'module_id': '18518428'}, # Afib
+                    # {'form_id': '2155936', 'module_id': '18518428'}, # OSA ??
+                    {'form_id': '2155936', 'module_id': '18519138'}, # CPAP Prescription
+                    {'form_id': '2155936', 'module_id': '18519139'}, # CPAP Usage
+                ],
+                'prod': []
+            }
             # ...
         }
 
@@ -137,7 +186,7 @@ class StrokeRiskScore:
                 return 6.3
 
         return None
-    
+
     def calculate_section_ii(self):
 
         return 0

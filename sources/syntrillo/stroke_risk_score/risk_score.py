@@ -4,8 +4,8 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
-from syntrillo.stroke_risk_score.queries.section_i.medications import get_medications
-from syntrillo.stroke_risk_score.queries.section_i.lab_values import get_lab_values
+from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
+
 
 class StrokeRiskScore:
     """
@@ -17,11 +17,11 @@ class StrokeRiskScore:
         - Section calculations are a combination of helper functions
         - Helper functions should return a tuple (score [int], reason [string])
 
-
     """
 
     syntrillo_internal_key : uuid.UUID = None
     syntrillo_database_manager : SyntrilloDatabaseManager = None
+    is_staging = True
 
     risk_score = 0
 
@@ -32,9 +32,8 @@ class StrokeRiskScore:
         # Set up PHI database connection for this user
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
-    def calculate_risk_score(self):
 
-        db_connection = self.syntrillo_database_manager.conn
+    def calculate_risk_score(self):
 
         si_score = self.calculate_section_i()
         sii_score = self.calculate_section_ii()
@@ -45,22 +44,31 @@ class StrokeRiskScore:
         svii_score = self.calculate_section_vii()
         sviii_score = self.calculate_section_viii()
 
-        return
+        return si_score    \
+             + sii_score   \
+             + siii_score  \
+             + siv_score   \
+             + sv_score    \
+             + svi_score   \
+             + svii_score  \
+             + sviii_score
 
 
     def calculate_section_i(self):
 
-        db_connection = self.syntrillo_database_manager.conn
+        patient_responses = PatientResponses(self.syntrillo_internal_key, env='staging')
 
-        medications = get_medications(db_connection)
-        lab_values = get_lab_values(db_connection)
+        medications = patient_responses.get_medications()
+        lab_values = patient_responses.get_lab_values()
+        history = patient_responses.get_history()
 
         data = {
             **medications,
             **lab_values,
+            **history
         }
 
-        return data
+        return (6.3, data)
 
     def calculate_section_ii(self):
 
@@ -92,10 +100,14 @@ class StrokeRiskScore:
 
 
 if __name__ == "__main__":
-    # risk_score = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_risk_score()
+    # risk_score = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_risk_score() # no medication data
 
     # print(f"Patient Risk Score: {risk_score}")
 
     section_1 = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_section_i()
+    # section_1 = StrokeRiskScore("99fddf03-9304-4e48-8711-0cc4d825eb94").calculate_section_i()
 
     print(f"Section I data: {section_1}")
+
+
+# {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplatte': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, ''), 'LDL': 2, 'HA1c': 0}
