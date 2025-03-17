@@ -175,6 +175,12 @@
         font-size: large;
     }
 
+    .bp-no-data-error {
+        margin: 0;
+        font-weight: 500;
+        text-align: center;
+    }
+
     section p {
         color: #6b7280;
         font-size: small;
@@ -184,6 +190,10 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 8px;
+    }
+
+    .extremes-header {
         padding: 8px;
     }
 
@@ -348,7 +358,7 @@
     .bp-table-container {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 2rem;
     }
 
     @keyframes spin {
@@ -377,7 +387,6 @@
 <script>
 
     function showSpinner(targetElement) {
-
         targetElement.innerHTML = "";
 
         // Check if a spinner already exists inside the target
@@ -386,6 +395,12 @@
             // Create a new spinner
             let spinner = document.createElement("div");
             spinner.classList.add("spinner");
+
+            // Ensure the target element is a flex container to center the spinner
+            targetElement.style.display = "flex";
+            targetElement.style.justifyContent = "center";
+            targetElement.style.alignItems = "center";
+
             targetElement.appendChild(spinner);
         }
     }
@@ -396,7 +411,13 @@
         if (spinner) {
             spinner.remove();
         }
+
+        // Reset the targetElement styles in case they were changed
+        targetElement.style.display = "";
+        targetElement.style.justifyContent = "";
+        targetElement.style.alignItems = "";
     }
+
 
     function getBloodPressureAnalysis(startDate = "", endDate = "") {
 
@@ -432,10 +453,17 @@
         })
         .then(response => response.json())
         .then(data => {
-            bpAnalysisContent.innerHTML = data.analysis_html;
-            extremesContent.innerHTML = data.extremes_html;
-            hiddenAnalysisInput.value = data.analysis_json;
-            hiddenExtremesInput.value = data.extremes_json;
+            if (data.analysis_html && data.extremes_html && data.analysis_json && data.extremes_json) {
+                bpAnalysisContent.innerHTML = data.analysis_html;
+                extremesContent.innerHTML = data.extremes_html;
+                hiddenAnalysisInput.value = data.analysis_json;
+                hiddenExtremesInput.value = data.extremes_json;
+            }
+
+            if (data.error) {
+                bpAnalysisContent.innerHTML = `<h2 class="bp-no-data-error">${data.error}</h2>`
+                extremesContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
+            }
         })
         .catch(error => console.error("Error fetching data:", error))
         .finally(() => {

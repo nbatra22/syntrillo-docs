@@ -96,11 +96,13 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     # Confirm blood pressure data is pulled
     if log['success'] == False:
-        return jsonify({'html': 'Internal error: Unable to obtain blood pressure dataframe' })
+        return jsonify({'error': f"{log['error']}" })
 
     # Handle patients with no blood pressure measurements
     if _.empty:
-        return jsonify({'html': 'Internal error: Insufficient data. Patient has recorded zero measurements.' })
+        return jsonify({
+            'error': 'Insufficient data. Patient has recorded zero measurements.',
+        })
 
     # Generate analysis + extremes table using BloodPressureAnalysis class methods
     metadata = data_reporting_blood_pressure.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
