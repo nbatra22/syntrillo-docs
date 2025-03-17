@@ -119,7 +119,7 @@ def fetch_all_form_responses_from_healthie() -> dict:
             # Retrieve the current set of responses
             response: dict = run_graphql_query(graphql_query, variables)
             current_page_data = response.get("formAnswerGroups", [])
-            # print(current_page_data)
+
             # Append the newest set of responses to output array
             all_form_responses.extend(current_page_data)
 
