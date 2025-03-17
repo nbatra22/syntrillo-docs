@@ -36,7 +36,7 @@ import uuid
 #         else:
 #             logger.error(f"Failed to sync data for this patient. No entry found in lookup")
 
-#     lookup_codes.close_connection()
+#     lookup_codes.close_connection() 
 
 @tracer.capture_lambda_handler
 @logger.inject_lambda_context(log_event=True)
