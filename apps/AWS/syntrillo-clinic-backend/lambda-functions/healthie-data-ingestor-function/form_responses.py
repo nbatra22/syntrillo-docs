@@ -38,12 +38,19 @@ def fetch_all_form_responses_from_healthie() -> dict:
         query formAnswerGroups(
             $date: String, # e.g "2021-10-29" using type ISO8601DateTime does not work
             $custom_module_form_id: ID, # e.g "11"
+            $page_size: Int, # e.g. "1" or "10" or "100"
+            $should_paginate: Boolean # e.g. "true" or "false"
+            $after: Cursor # e.g "eyJrIjpbIjIwMjUtMDMtMTRU....."
             ) {
             formAnswerGroups(
                 date: $date,
                 custom_module_form_id: $custom_module_form_id,
+                page_size: $page_size,
+                should_paginate: $should_paginate,
+                after: $after
                 ) {
                 name
+                cursor
                 custom_module_form {
                     id
                 }
@@ -67,6 +74,7 @@ def fetch_all_form_responses_from_healthie() -> dict:
     # "formAnswerGroups": [
     #     {
     #         "name": "Telemed - PHQ-9 (v1.0)",
+    #         "cursor": "eyJrIjpbIjIwMjUtMDMtMTRUMTU6NDU6MDAuMDAwMDAwWiIsMzUyOTUyMDksIjM1Mjk1MjA5Il19",
     #         "custom_module_form": {
     #             "id": "1765846"
     #         },
@@ -85,11 +93,47 @@ def fetch_all_form_responses_from_healthie() -> dict:
     #     }
     # ]
     # }
+
+    # Healthie responses can time out ... pagination is required in this case
+    # Healthie PROD servers can hanlde 100 records, not 800+ (500 error)
+    PAGE_SIZE = 100
     logger.info("Fetching form responses from Healthie.")
     try:
-        output: dict = run_graphql_query(graphql_query)
-        logger.info(f"Successfully fetched {len(output)} form responses.")
+        all_form_responses = []
+        cursor = None
+        has_more_pages = True
+        # Continue fetching pages until no more results
+        while has_more_pages:
 
+            if cursor:
+                variables = {
+                    "page_size": PAGE_SIZE,
+                    "should_paginate": True,
+                    "after": cursor
+                }
+            else:
+                variables = {
+                    "page_size": PAGE_SIZE,
+                    "should_paginate": True
+                }
+            # Retrieve the current set of responses
+            response: dict = run_graphql_query(graphql_query, variables)
+            current_page_data = response.get("formAnswerGroups", [])
+
+            # Append the newest set of responses to output array
+            all_form_responses.extend(current_page_data)
+
+
+            if len(current_page_data) == PAGE_SIZE and current_page_data[-1].get("cursor"):
+                cursor = current_page_data[-1]["cursor"]
+                logger.info(f"Fetched {len(current_page_data)} records. Getting next page with cursor.")
+            else:
+                has_more_pages = False
+                logger.info("No more pages to fetch.")
+
+        logger.info(f"Successfully fetched {len(all_form_responses)} form responses.")
+
+        output = {"formAnswerGroups": all_form_responses}
         return output
 
     except Exception as e:
@@ -277,7 +321,7 @@ def insert_form_responses_to_sql(flattened_responses: dict) -> None:
                     answer,
                     created_at
                 )
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s,REPLACE(%s, '\n', '|'), %s)
                 ON DUPLICATE KEY UPDATE
                     answer=VALUES(answer),
                     created_at=VALUES(created_at);
