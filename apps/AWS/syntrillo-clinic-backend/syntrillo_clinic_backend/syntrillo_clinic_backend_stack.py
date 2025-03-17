@@ -127,13 +127,13 @@ class SyntrilloClinicBackendStack(Stack):
                 environment_context=self.environment_context,
             )
 
-        backupStack = FixOutputDependencyStack(
-            self, "FixOutputDependencyStack",
-            environment_context=self.environment_context,
-            stack=self.scheduled_tasks,
-            stack2=self.servers,
-            stack3=self.network,
-        )
+        # backupStack = FixOutputDependencyStack(
+        #     self, "FixOutputDependencyStack",
+        #     environment_context=self.environment_context,
+        #     stack=self.scheduled_tasks,
+        #     stack2=self.servers,
+        #     stack3=self.network,
+        # )
 
         # self.check_function = SyntrilloClinicBackendCheckFunctionsStack(
         #     self, "SyntrilloClinicBackendCheckFunctionsStack",

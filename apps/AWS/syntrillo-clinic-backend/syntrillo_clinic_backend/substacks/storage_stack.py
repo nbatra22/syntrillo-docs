@@ -42,11 +42,20 @@ class StorageStack(Stack):
         removal_policy_value = self.environment_context["storage"]["removal-policy"]
         self.removal_policy = RemovalPolicy[removal_policy_value]
 
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
         # ---------------------------------------------------------------------
         # Create EFS File System
         # ---------------------------------------------------------------------
         self.efs_file_system = efs.FileSystem(self, "SyntrilloClinicEFS",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
             removal_policy=self.removal_policy
         )
 

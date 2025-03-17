@@ -50,7 +50,7 @@ class SyntrilloClinicBastionStack(Stack):
         self.bastion_host_security_group = ec2.SecurityGroup(
             self,
             "BastionHostSecurityGroup",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
         )
 
         if self.environment_context["bastion"]["bastion-enabled"]:
@@ -60,7 +60,7 @@ class SyntrilloClinicBastionStack(Stack):
             # Create the bastion host
             bastion_host = ec2.BastionHostLinux(
                 self, "BastionHost",
-                vpc=self.network.vpc,
+                vpc=self.vpc,
                 instance_type=ec2.InstanceType(bation_host_instance_size),
                 subnet_selection=ec2.SubnetSelection(
                     subnet_type=ec2.SubnetType.PUBLIC,
@@ -70,14 +70,16 @@ class SyntrilloClinicBastionStack(Stack):
             )
 
             # Mount efs file system on the bastion host
-            efs_file_system_id = self.storage.efs_file_system.file_system_id
+            # efs_file_system_id = self.storage.efs_file_system.file_system_id
+
+            clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
 
             user_data = ec2.UserData.for_linux()
             user_data.add_commands(
                 "set -xe",
                 "cd /home/ec2-user", 
                 "mkdir -p efs",
-                f"sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport {efs_file_system_id}.efs.us-east-1.amazonaws.com:/ efs",
+                f"sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport {clinic_storage_efs_file_system_id}.efs.us-east-1.amazonaws.com:/ efs",
                 "chown ec2-user:ec2-user efs",
                 "yum install -y -q mariadb105",
                 "yum install -y -q docker",
@@ -86,8 +88,6 @@ class SyntrilloClinicBastionStack(Stack):
                 "usermod -a -G docker ec2-user",
             )
             bastion_host.instance.add_user_data(user_data.render())
-
-
         
         # ---------------------------------------------------------------------
         # OUTPUTS

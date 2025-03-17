@@ -50,6 +50,15 @@ class DatabaseStack(Stack):
 
         self.snapshot_identifier = self.environment_context["database"]["snapshot-identifier"]
 
+        self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
+            vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),
+            availability_zones=[Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-0"), Fn.import_value("SyntrilloClinic-Network-Vpc-AvailabilityZone-1")],
+            private_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-Id")],
+            public_subnet_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-Id")],
+            private_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PrivateSubnet2-RouteTable-Id")],
+            public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
+        )
+
         # ---------------------------------------------------------------------
         # Create Database
         # ---------------------------------------------------------------------
@@ -89,10 +98,10 @@ class DatabaseStack(Stack):
 
         # Create database from snasphsot
         self.db_from_snapshot = rds.DatabaseInstanceFromSnapshot(self, "MySQLDatabaseFromSnapshot",
-            vpc=self.network.vpc,
+            vpc=self.vpc,
             engine=rds.DatabaseInstanceEngine.mysql(version=rds.MysqlEngineVersion.VER_8_0_35),
             instance_type=ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MICRO),
-            vpc_subnets=ec2.SubnetSelection(subnets=self.network.vpc.private_subnets),
+            vpc_subnets=ec2.SubnetSelection(subnets=self.vpc.private_subnets),
             multi_az=False,
             allocated_storage=20,
             storage_type=rds.StorageType.GP3,
