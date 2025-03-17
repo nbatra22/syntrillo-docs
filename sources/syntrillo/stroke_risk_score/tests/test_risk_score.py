@@ -13,7 +13,7 @@ class TestRiskScore(unittest.TestCase):
 
         risk_score_calculator = StrokeRiskScore(syntrillo_internal_key)
 
-        result = risk_score_calculator.calculate_risk_score()
+        result = risk_score_calculator.calculate_risk_score()[0]
 
         self.assertEqual(6.3, result)
 

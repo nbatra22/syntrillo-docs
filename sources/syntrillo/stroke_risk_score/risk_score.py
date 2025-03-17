@@ -58,17 +58,31 @@ class StrokeRiskScore:
 
         patient_responses = PatientResponses(self.syntrillo_internal_key, env='staging')
 
+        etiology = patient_responses.get_etiology()
         medications = patient_responses.get_medications()
         lab_values = patient_responses.get_lab_values()
         history = patient_responses.get_history()
 
         data = {
+            'etiology': etiology,
             **medications,
             **lab_values,
             **history
         }
 
-        return (6.3, data)
+        score = 0
+
+        if etiology == 'Cardioembolic':
+            if medications['blood thinner'][0] == True:
+                score += 6.3
+            if medications['statin'][0] == True and lab_values['ldl'][0] == True:
+                score += 2.6
+            if medications['blood thinner'][0] == False and medications['aspirin'][0] == False and medications['plavix'][0] == False and medications['statin'][0] == False and medications['antiplate'][0] == False and medications['hypoglycemic'][0] == False and medications['antihypertensive'][0] == False and history['smoker'] == True:
+                score += 1.6
+            else:
+                score += 6.3
+
+        return (score, data)
 
     def calculate_section_ii(self):
 
@@ -104,8 +118,8 @@ if __name__ == "__main__":
 
     # print(f"Patient Risk Score: {risk_score}")
 
-    section_1 = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_section_i()
-    # section_1 = StrokeRiskScore("99fddf03-9304-4e48-8711-0cc4d825eb94").calculate_section_i()
+    # section_1 = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_section_i()
+    section_1 = StrokeRiskScore("99fddf03-9304-4e48-8711-0cc4d825eb94").calculate_section_i()
 
     print(f"Section I data: {section_1}")
 

@@ -14,7 +14,7 @@ class MedicationsResponse:
             "aspirin": (False, ""),
             "plavix": (False, ""),
             "statin": (False, ""),
-            "antiplatte": (False, ""),
+            "antiplate": (False, ""),
             "hypoglycemic": (False, ""),
             "antihypertensive": (False, "")
         }
@@ -44,7 +44,7 @@ class MedicationsResponse:
     def prescriptions_and_compliances(self):
         '''
         Example of output:
-        {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplatte': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, '')}
+        {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplate': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, '')}
         '''
         prescriptions_and_compliances = self.flagged_medicines
 

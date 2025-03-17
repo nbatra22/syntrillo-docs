@@ -177,7 +177,7 @@ class PatientResponses:
             logger.info(f"Error fetching form #{form_id} and module #{module_id}: {e}")
             return None
 
-    def stroke_ethiology(self):
+    def get_etiology(self):
         return 'Cardioembolic'
 
     def get_medications(self):
