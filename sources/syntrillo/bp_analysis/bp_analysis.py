@@ -160,7 +160,7 @@ class BloodPressureAnalysis:
         if bpm_df is None or bpm_df.empty or log['success'] == False:
             overall_log = {
                 'success': False,
-                'error': 'No BPM blood_pressure data found',
+                'error': 'No blood pressure data found.',
                 'log': log,
             }
             return None, overall_log
