@@ -32,12 +32,18 @@ class SecretsStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, environment_context: dict, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
         self.environment_context = environment_context
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
  
         db_host_param = ssm.StringParameter.from_string_parameter_name(self, "ServersStackDatabaseHostParameter", "/syntrillo-clinic/aws/db/host").string_value
-        
+
+        # ---------------------------------------------------------------------
+        # Create Custom KMS Key for all the secrets
+        # ---------------------------------------------------------------------
         custom_kms_key = kms.Key(
             self, "SecretsKmsKey",
             description="Custom KMS key for Secrets",
@@ -46,6 +52,11 @@ class SecretsStack(Stack):
             pending_window=Duration.days(30)
         )
 
+        # ---------------------------------------------------------------------
+        # Create Database Credentials
+        # ---------------------------------------------------------------------
+
+        # Create IFrames & Sync functions access secrets
         self.database_lambda_user_secrets = secretsmanager.Secret(
             self, "DatabaseLambdaUserSecrets",
             generate_secret_string=secretsmanager.SecretStringGenerator(
@@ -61,6 +72,7 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        # Create DMS access secrets
         self.database_dms_user_secrets = secretsmanager.Secret(
             self, "DatabaseDMSUserSecrets",
             generate_secret_string=secretsmanager.SecretStringGenerator(
@@ -78,6 +90,9 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        # ---------------------------------------------------------------------
+        # Create Third party API Keys secrets
+        # ---------------------------------------------------------------------
         self.tenovi_hwi_secrets = secretsmanager.Secret(
             self, "TenoviHWISecrets",
             encryption_key=custom_kms_key
@@ -93,6 +108,9 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        # ---------------------------------------------------------------------
+        # Create certificates & OAuth token secrets
+        # ---------------------------------------------------------------------
         self.database_certificate = secretsmanager.Secret(
             self, "DatabaseCertificate",
             encryption_key=custom_kms_key
@@ -102,6 +120,41 @@ class SecretsStack(Stack):
             self, "GithubOAuthToken",
             encryption_key=custom_kms_key
         )
+
+        # ---------------------------------------------------------------------
+        # OUTPUTS
+        # ---------------------------------------------------------------------
+        CfnOutput(
+            self, "SecretsDatabaseLambdaUserSecretsArn",
+            value=self.database_lambda_user_secrets.secret_arn,
+            export_name="Secrets-Database-LambdaUserSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsTenoviHwiSecretsArn",
+            value=self.tenovi_hwi_secrets.secret_arn,
+            export_name="Secrets-TenoviHwiSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsHealthieSecretsArn",
+            value=self.healthie_secrets.secret_arn,
+            export_name="Secrets-HealthieSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsOpenAiSecretsArn",
+            value=self.openai_secrets.secret_arn,
+            export_name="Secrets-OpenAiSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SecretsCutomKMSKeyArn",
+            value=custom_kms_key.key_arn,
+            export_name="Secrets-SecretsKMSKey-Arn"
+        )
+
+        # ---
 
         CfnOutput(
             self, "DatabaseCertificateSecretArn", 
@@ -115,11 +168,7 @@ class SecretsStack(Stack):
             export_name="DatabaseDMSUserSecretsArn"
         )
 
-        CfnOutput(
-            self, "SecretsCutomKMSKeyArn",
-            value=custom_kms_key.key_arn,
-            export_name="SecretsCutomKMSKeyArn"
-        )
+
 
         CfnOutput(
             self, "GithubOAuthTokenSecretsName", 

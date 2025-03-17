@@ -27,6 +27,8 @@ class DeploymentPipelinesStack(Stack):
         pipeline = codepipeline.Pipeline(
             self, "DeploymentPipeline",
             pipeline_name="DeploymentPipeline",
+            pipeline_type=codepipeline.PipelineType.V2,
+            execution_mode=codepipeline.ExecutionMode.QUEUED,
             artifact_bucket=s3.Bucket(
                 self, "ArtifactBucket",
                 bucket_name="staging.syntrillo-clinic-backend.deployment-pipeline.artifacts", 
@@ -68,73 +70,10 @@ class DeploymentPipelinesStack(Stack):
                     "build": {
                         "commands": [
                             "pwd",
-                            "cd ../../PythonAnywhere/website/static/healthie/documents/",
-                            "mv questionnaire_template_latest.xlsx questionnaire_template_latest.xlsx.tmp",
-                            "ln -s $(cat questionnaire_template_latest.xlsx.tmp) questionnaire_template_latest.xlsx",
-                            "rm questionnaire_template_latest.xlsx.tmp",
-                            "ls -l",
-                            "cd -",
-                            "cd lambda-functions/iframe-generator-function/",
-                            "mv routes routes.tmp",
-                            "mv static static.tmp",
-                            "mv syntrillo syntrillo.tmp",
-                            "mv templates templates.tmp",
-                            "mv api.py api.py.tmp",
-                            "mv flask_app.py flask_app.py.tmp",
-                            "ln -s $(cat routes.tmp) routes",
-                            "ln -s $(cat static.tmp) static",
-                            "ln -s $(cat syntrillo.tmp) syntrillo",
-                            "ln -s $(cat templates.tmp) templates",
-                            "ln -s $(cat api.py.tmp) api.py",
-                            "ln -s $(cat flask_app.py.tmp) flask_app.py",
-                            "rm routes.tmp static.tmp syntrillo.tmp templates.tmp api.py.tmp flask_app.py.tmp",
-                            "ls -l",
-                            "cd -",
-                            "cd lambda-functions/message-endpoint-function/",
-                            "mv routes routes.tmp",
-                            "mv static static.tmp",
-                            "mv syntrillo syntrillo.tmp",
-                            "mv templates templates.tmp",
-                            "mv api.py api.py.tmp",
-                            "ln -s $(cat routes.tmp) routes",
-                            "ln -s $(cat static.tmp) static",
-                            "ln -s $(cat syntrillo.tmp) syntrillo",
-                            "ln -s $(cat templates.tmp) templates",
-                            "ln -s $(cat api.py.tmp) api.py",
-                            "rm routes.tmp static.tmp syntrillo.tmp templates.tmp api.py.tmp",
-                            "ls -l",
-                            "cd -",
-                            "cd lambda-functions/blood-pressure-notification-function/",
-                            "mv syntrillo syntrillo.tmp",
-                            "ln -s $(cat syntrillo.tmp) syntrillo",
-                            "rm syntrillo.tmp",
-                            "ls -l",
-                            "cd -",
-                            "cdk diff --role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role --context 'environment=staging' --require-approval never 2>&1 | tee cdk-diff.txt",
-                            "cat cdk-diff.txt |grep 'AWS::Lambda::Function' | cut -d'/' -f2 | tee functions.txt",
-                            "cat cdk-diff.txt | grep '\[+\] asset\.[0-9a-z]*$' | grep -o 'asset\.[0-9a-z]*$' | tee assets.txt",
-                            "REMOTE_CODE_URL=$(aws lambda get-function --function-name 'IFrameGeneratorFunction' --query 'Code.Location' --output text)",
-                            "echo $REMOTE_CODE_URL",
-                            "curl -L -o remote_code.zip \"$REMOTE_CODE_URL\"",
-                            "unzip -q remote_code.zip -d remote_code",
-                            "ls",
-                            "diff -r remote_code/ cdk.out/$(sed -n '1p' assets.txt)/ || true",
-                            "rm -r remote_code/",
-                            "REMOTE_CODE_URL=$(aws lambda get-function --function-name 'MessageEndpointFunction' --query 'Code.Location' --output text)",
-                            "echo $REMOTE_CODE_URL",
-                            "curl -L -o remote_code.zip \"$REMOTE_CODE_URL\"",
-                            "unzip -q remote_code.zip -d remote_code",
-                            "ls",
-                            "diff -r remote_code/ cdk.out/$(sed -n '2p' assets.txt)/ || true",
-                            "rm -r remote_code/",
-                            "REMOTE_CODE_URL=$(aws lambda get-function --function-name 'BloodPressureNotificationFunction' --query 'Code.Location' --output text)",
-                            "echo $REMOTE_CODE_URL",
-                            "curl -L -o remote_code.zip \"$REMOTE_CODE_URL\"",
-                            "unzip -q remote_code.zip -d remote_code",
-                            "ls",
-                            "diff -r remote_code/ cdk.out/$(sed -n '3p' assets.txt)/ || true",
-                            "rm -r remote_code/",               
-                            "cdk deploy --role-arn arn:aws:iam::021891579520:role/cdk-prodlike-cfn-exec-role --context 'environment=staging' --require-approval never SyntrilloClinicBackendStack/ServersStack" 
+                            "cd utils/deployments",
+                            "./symlinks-recreate.sh",       
+                            "./diff-local-assets-with-remote-functions.sh staging",
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
                         ]
                     }
                 },
@@ -219,10 +158,13 @@ class DeploymentPipelinesStack(Stack):
                     "lambda:GetFunction"
                 ],
                 resources=[
-                    f"arn:aws:lambda:us-east-1:{self.account}:function:IFrameGeneratorFunction",
                     f"arn:aws:lambda:us-east-1:{self.account}:function:MessageEndpointFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:PIIDataSyncFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:RemoteMonitoringDataSyncFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:blood_pressure_notifier_handler",
                     f"arn:aws:lambda:us-east-1:{self.account}:function:BloodPressureNotificationFunction",
-
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:IFrameGeneratorFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:HealthieDataIngestorFunction",
                 ]
             )
         )
@@ -244,5 +186,6 @@ class DeploymentPipelinesStack(Stack):
         # Add Deploy Stage with Approval and Deploy actions
         pipeline.add_stage(
             stage_name="Deploy",
-            actions=[approval_action, deploy_action]
+            # actions=[approval_action, deploy_action]
+            actions=[deploy_action]
         )

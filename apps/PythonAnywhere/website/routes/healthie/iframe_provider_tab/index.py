@@ -61,7 +61,8 @@ def iframe_healthie_provider_tab_index():
         else:
             # healthie_user_id = '-1'
             # healthie_user_id = "1035117" # with onboarding forms
-            healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "1209727" # with syntrillo_internal_key
+            healthie_user_id = "1525423" # Patient AWS Test
             # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
             # healthie_user_id = "dummy456456" # without syntrillo_internal_key
             # healthie_user_id = "1051529" # Omar's "Patient One" with devices
@@ -138,7 +139,8 @@ def iframe_healthie_provider_tab_index():
     # --------------------------------------------------------------------
     # render the template
         return render_template(
-            'healthie/iframe_provider_tab/index.html',
+            'healthie/iframe_provider_tab/x-index.html',
+            # 'healthie/iframe_provider_tab/index.html',
             healthie_provider_id=healthie_provider_id,
             patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
             healthie_user_id=healthie_user_id,
@@ -146,4 +148,3 @@ def iframe_healthie_provider_tab_index():
             milliseconds_delay=milliseconds_delay,
             iframe_log=iframe_log
             )
-

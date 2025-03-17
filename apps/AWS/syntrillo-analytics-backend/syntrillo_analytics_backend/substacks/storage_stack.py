@@ -82,7 +82,7 @@ class StorageStack(Stack):
 
         # PII Bucket
 
-        # Create a KMS key for PII Bucket
+        # # Create a KMS key for PII Bucket
         pii_encryption_key = kms.Key(self, "SyntrilloAnalyticsPIIBucketKey",
             enable_key_rotation=True,
             alias=f"syntrillo-analytics-{self.environment_context['environment-name']}-pii-bucket-key",
@@ -125,13 +125,13 @@ class StorageStack(Stack):
         )
 
         pii_data_sync_function_role_arn=Fn.import_value("PIIDataSyncFunctionRoleArn")
-        pii_data_bucket_role = iam.Role.from_role_arn(
+        pii_data_sync_function_role = iam.Role.from_role_arn(
             self, "PIIDataSyncFunctionRole",
             role_arn=pii_data_sync_function_role_arn
         )
 
-        pii_data_bucket_role.attach_inline_policy(pii_data_bucket_kms_policy)
-        pii_data_bucket_role.attach_inline_policy(pii_data_bucket_access_policy)
+        pii_data_sync_function_role.attach_inline_policy(pii_data_bucket_kms_policy)
+        pii_data_sync_function_role.attach_inline_policy(pii_data_bucket_access_policy)
 
         # Create KMS Access Policy
         pii_data_quicksight_kms_policy = iam.Policy(self, "SyntrilloAnalyticsStorageKMSQuickSightAccessPolicy",

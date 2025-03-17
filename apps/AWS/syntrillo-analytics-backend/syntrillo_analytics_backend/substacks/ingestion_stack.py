@@ -141,7 +141,7 @@ class IngestionStack(Stack):
 
         # Import the secret ARN from the other stack
         secret_arn = Fn.import_value("DatabaseDMSUserSecretsArn")
-        secrets_kms_custom_key_arn = Fn.import_value("SecretsCutomKMSKeyArn")
+        secrets_kms_custom_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
 
         # Create IAM role for DMS to access Secrets Manager
         dms_secret_role = iam.Role(self, "DMSSecretRole",
@@ -221,6 +221,47 @@ class IngestionStack(Stack):
                         "table-name": "tenovi_raw_measurements",
                         "column-name": "data_json"
                     }
+                }
+                ]
+            }
+            ''',
+            replication_task_settings='''
+            {
+                "Logging": {
+                    "EnableLogging": true
+                }
+            }
+            '''
+        )
+
+        dms.CfnReplicationTask(
+            self, "HealthieFormsReplicationTask",
+            replication_instance_arn=dms_instance.ref,
+            migration_type="full-load-and-cdc",
+            source_endpoint_arn=source_endpoint.ref,
+            target_endpoint_arn=target_endpoint.ref,
+            table_mappings='''
+            {
+                "rules": [
+                {
+                    "rule-type": "selection",
+                    "rule-id": "1",
+                    "rule-name": "1",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "healthie_form_templates"
+                    },
+                    "rule-action": "include"
+                },
+                {
+                    "rule-type": "selection",
+                    "rule-id": "2",
+                    "rule-name": "2",
+                    "object-locator": {
+                        "schema-name": "syntrillo$HealthInformation",
+                        "table-name": "healthie_form_responses"
+                    },
+                    "rule-action": "include"
                 }
                 ]
             }

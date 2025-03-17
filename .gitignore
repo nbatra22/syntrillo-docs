@@ -71,3 +71,13 @@ MANIFEST
 
 # .env files
 **.env
+
+# Mac OS
+.DS_Store
+
+# BP Analysis
+
+
+tailwind
+tailwind.exe
+
