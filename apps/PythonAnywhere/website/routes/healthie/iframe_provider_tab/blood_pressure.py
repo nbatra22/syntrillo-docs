@@ -109,7 +109,8 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
     analysis_table = data_reporting_blood_pressure.calculate_analysis() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
-    extremes = data_reporting_blood_pressure.calculate_extremes() # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
+    extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
+
     styled_analysis_table = (
         analysis_table
             .style
@@ -131,13 +132,53 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.2f}" if isinstance(x, float) else x)
 
+    styled_extremes_table = (
+        extremes.style
+            .hide(axis='index')
+            .set_table_styles(
+                [
+                    {"selector": "table", "props": [
+                        ("border-collapse", "collapse"),
+                        ("width", "100% !important"),  # Set table to 100% width
+                        ("table-layout", "fixed")  # Prevents content from shrinking table
+                    ]},
+                    {"selector": "th, td", "props": [
+                                        ("border", "1px solid gray"),
+                                        ("padding", "10px"),
+                                        ("width", "auto"),  # Allow cells to expand naturally
+                                        ("white-space", "normal"),  # Allows text wrapping
+                                        ("word-wrap", "break-word")  # Ensures long text wraps
+                                    ]},
+                    {"selector": "th", "props": [("text-align", "center")]}  # Center header text
+                ]
+            )
+    )
+
+    rounded_extremes_table = styled_extremes_table.format(lambda x: f"{x:.1f}" if isinstance(x, float) else x)
+
     # Prepare html + json variables to send to "Blood Pressure" tab
     analysis_html = rounded_analysis_table.to_html(classes="")
 
     if extremes.empty:
         extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
     else:
-        extremes_html = extremes.to_html(classes="table table-striped", index=False)
+        extremes_html = rounded_extremes_table.to_html(classes="table table-striped")
+        # extremes_html = extremes.to_html(classes='table table-striped',index=False)
+        # extremes_html = f"""
+        #     <style>
+        #         .bp-extremes-table {{
+        #             width: 100% !important;
+        #             table-layout: fixed;
+        #         }}
+        #         .bp-extremes-table th, .bp-extremes-table td {{
+        #             white-space: normal;
+        #             word-wrap: break-word;
+        #         }}
+        #     </style>
+        #     {rounded_extremes_table.to_html(classes="bp-extremes-table")}
+        # """
+
+
 
     analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()

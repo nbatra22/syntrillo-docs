@@ -15,6 +15,7 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
+from syntrillo.system.logger import logger
 
 class BloodPressureAnalysis:
     """
@@ -705,15 +706,30 @@ class BloodPressureAnalysis:
                   (df['systolic'] > BLOOD_PRESSURE_HIGH_VALUE1) |
                   (df['diastolic'] > BLOOD_PRESSURE_HIGH_VALUE2)]
 
+        logger.info(f"*** extremes['timestamp_local'] BEFORE conversion: {extremes['timestamp_local']}")
+
         # Convert timestamps
         # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True).dt.strftime('%Y-%m-%d %H:%M:%S')
+        # extremes['timestamp_local'] = (
+        #     pd.to_datetime(extremes['timestamp_local'])
+        #     .dt.tz_convert('UTC')
+        #     .dt.strftime('%Y-%m-%d %H:%M:%S')
+        # )
+        # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True)
+        # extremes['timestamp_local'] = extremes['timestamp_local'].dt.tz_convert('UTC')
+
+        # Convert to string
         extremes['timestamp_local'] = (
-            pd.to_datetime(extremes['timestamp_local'])
-            .dt.tz_convert('UTC')
-            .dt.strftime('%Y-%m-%d %H:%M:%S')
+            extremes['timestamp_local']
+            .dt.strftime('%-m/%d/%y, %I:%M:%S %p')
+            .apply(lambda x: x.replace(' 0', ' '))
         )
 
-        return extremes[['timestamp_local', 'systolic', 'diastolic']].reset_index(drop=True)
+        logger.info(f"*** extremes['timestamp_local'] AFTER conversion: {extremes['timestamp_local']}")
+
+        extremes.rename(columns={'timestamp_local': 'Timestamp', 'systolic': 'Systolic', 'diastolic': 'Diastolic'}, inplace=True)
+
+        return extremes[['Timestamp', 'Systolic', 'Diastolic']].reset_index(drop=True)[::-1]
 
 
     @staticmethod
