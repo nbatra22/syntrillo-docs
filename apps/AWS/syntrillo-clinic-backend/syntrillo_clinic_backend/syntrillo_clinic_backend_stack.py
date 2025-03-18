@@ -115,14 +115,14 @@ class SyntrilloClinicBackendStack(Stack):
             storage=self.storage,
         )
 
-        backupStack = SyntrilloClinicBackupStack(
+        self.backup = SyntrilloClinicBackupStack(
             self, "BackupStack",
             environment_context=self.environment_context,
             database=self.database,
         )
 
         if self.aws_environment == 'staging':
-            backupStack = DeploymentPipelinesStack(
+            self.pipelines = DeploymentPipelinesStack(
                 self, "DeploymentPipelinesStack",
                 environment_context=self.environment_context,
             )
