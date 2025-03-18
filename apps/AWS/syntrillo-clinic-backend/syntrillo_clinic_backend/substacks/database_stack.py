@@ -236,7 +236,7 @@ class DatabaseStack(Stack):
         # Allow message endpoint access
         add_security_group_ingress_rule(
             self,
-            Fn.import_value("MessageEndpointFunctionSecurityGroup"),
+            Fn.import_value("SyntrilloClinic-Servers-MessageEndpointFunction-SecurityGroup-Id"),
             "MessageEndpointFunctionImportedSecurityGroup",
             "MessageEndpointFunction"
         )
@@ -244,7 +244,7 @@ class DatabaseStack(Stack):
         # Allow iframe generator function access
         add_security_group_ingress_rule(
             self,
-            Fn.import_value("IframeGeneratorFunctionSecurityGroup"),
+            Fn.import_value("SyntrilloClinic-Servers-IFrameGeneratorFunction-SecurityGroup-Id"),
             "IframeGeneratorFunctionImportedSecurityGroup",
             "IframeGeneratorFunction"
         )
@@ -252,7 +252,7 @@ class DatabaseStack(Stack):
         # Allow pii data sync function access
         add_security_group_ingress_rule(
             self,
-            Fn.import_value("PIIDataSyncFunctionSecurityGroup"),
+            Fn.import_value("SyntrilloClinic-TaskScheduling-PIIDataSyncFunction-SecurityGroup-Id"),
             "PIIDataSyncFunctionImportedSecurityGroup",
             "PIIDataSyncFunction"
         )

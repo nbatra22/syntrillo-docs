@@ -60,7 +60,6 @@ class MessageEndpointFunction(Construct):
             security_group_id=self.clinic_storage_efs_file_system_security_group_id
         )
 
-        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
         imported_file_system = efs.FileSystem.from_file_system_attributes(
             self,
             "ImportedFileSystem",
@@ -68,30 +67,12 @@ class MessageEndpointFunction(Construct):
             security_group=file_system_security_group
         )
 
-        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
         self.clinic_storage_efs_access_point_chatbot_resources = efs.AccessPoint.from_access_point_attributes(
             self,
             "EFSAccessPoint",
             access_point_arn=self.clinic_storage_efs_access_point_chatbot_resources_arn,
             file_system=imported_file_system
         )
-
-        # # Import file system endpoint
-        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
-        # imported_file_system = efs.FileSystem.from_file_system_attributes(
-        #     self,
-        #     "ImportedFileSystem",
-        #     file_system_id=efs_file_system_id,
-        #     security_group=file_system_security_group
-        # )
-
-        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
-        # efs_access_point_chatbots = efs.AccessPoint.from_access_point_attributes(
-        #     self,
-        #     "EFSAccessPointChatbots",
-        #     access_point_arn=efs_access_point_chatbots_arn,
-        #     file_system=imported_file_system
-        # )
 
         self.secrets_openai_secrets_secret_arn = Fn.import_value("Secrets-OpenAiSecrets-Arn")
 
@@ -151,19 +132,6 @@ class MessageEndpointFunction(Construct):
 
         self.function_security_group = self.function.connections.security_groups[0]
 
-        # !!! DO NOT USE THE EXAMPLE BELOW OTHERWISE IT'S HARD TO MANAGE EXPORT/IMPORT DELETION BECAUSE OF DEPENDENCIES
-        # self.database.db_from_snapshot_security_group.add_ingress_rule(
-        #     self.function_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from MessageEndpointFunction on port 3306"
-        # )
-
-        # !!! USE EXPLICIT CFN OUTPUT & Fn.import_value in OTHER TEMPLATES (DB TEMPLATES FOR EXAMPLE)
-        CfnOutput(self, "MessageEndpointFunctionSecurityGroup",
-            value=self.function_security_group.security_group_id,
-            export_name="MessageEndpointFunctionSecurityGroup"
-        )
-
         bedrock_access_policy = iam.ManagedPolicy(self, "BedrockAccessPolicy",
             managed_policy_name="BedrockAccessPolicy",
             statements=[
@@ -182,7 +150,16 @@ class MessageEndpointFunction(Construct):
         )
 
         self.function.role.add_managed_policy(bedrock_access_policy)   
-         
+
+        # ---------------------------------------------------------------------
+        # EXPORT VALUES
+        # ---------------------------------------------------------------------
+
+        CfnOutput(self, "SyntrilloClinicServersMessageEndpointFunctionSecurityGroupId",
+            value=self.function_security_group.security_group_id,
+            export_name="SyntrilloClinic-Servers-MessageEndpointFunction-SecurityGroup-Id"
+        )   
+
     def grant_read_secrets(self, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
         self.function.add_to_role_policy(iam.PolicyStatement(

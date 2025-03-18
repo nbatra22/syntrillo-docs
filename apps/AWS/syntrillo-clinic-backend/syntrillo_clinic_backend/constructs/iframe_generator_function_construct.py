@@ -60,7 +60,6 @@ class IFrameGeneratorFunction(Construct):
             security_group_id=self.clinic_storage_efs_file_system_security_group_id
         )
 
-        # efs_file_system_id = Fn.import_value("SyntrilloClinicEFSFileStystemId")
         imported_file_system = efs.FileSystem.from_file_system_attributes(
             self,
             "ImportedFileSystem",
@@ -68,7 +67,6 @@ class IFrameGeneratorFunction(Construct):
             security_group=file_system_security_group
         )
 
-        # efs_access_point_chatbots_arn = Fn.import_value("EFSAccessPointChatbotsArn")
         self.clinic_storage_efs_access_point_shared_python_modules = efs.AccessPoint.from_access_point_attributes(
             self,
             "EFSAccessPoint",
@@ -137,9 +135,9 @@ class IFrameGeneratorFunction(Construct):
         # EXPORT VALUES
         # ---------------------------------------------------------------------
 
-        CfnOutput(self, "IframeGeneratorFunctionSecurityGroup",
+        CfnOutput(self, "SyntrilloClinicServersIFrameGeneratorFunctionSecurityGroupId",
             value=self.function_security_group.security_group_id,
-            export_name="IframeGeneratorFunctionSecurityGroup"
+            export_name="SyntrilloClinic-Servers-IFrameGeneratorFunction-SecurityGroup-Id"
         )
     
     def grant_read_secrets(self, secrets_arn, secrets_kms_key_arn):

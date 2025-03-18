@@ -150,16 +150,3 @@ class StorageStack(Stack):
             value=self.efs_access_point_chatbots.access_point_arn,
             export_name="SyntrilloClinic-Storage-EFS-AccessPoint-ChatbotResources-Arn"
         )
-
-        # => TO DELETE LATER
-        CfnOutput(self, "EFSAccessPointChatbotsArn",
-            value=self.efs_access_point_chatbots.access_point_arn,
-            export_name="EFSAccessPointChatbotsArn"
-        )
-
-        CfnOutput(
-            self,
-            "SyntrilloClinicEFSFileStystemId",
-            value=self.efs_file_system.file_system_id,
-            export_name="SyntrilloClinicEFSFileStystemId"
-        )
