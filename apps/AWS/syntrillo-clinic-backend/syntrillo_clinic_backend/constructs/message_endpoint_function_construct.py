@@ -43,10 +43,10 @@ class MessageEndpointFunction(Construct):
         # INPUTS
         # ---------------------------------------------------------------------
 
-        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("Secrets-Database-LambdaUserSecrets-Arn")
-        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("Secrets-TenoviHwiSecrets-Arn")
-        self.secrets_healthie_secrets_secret_arn = Fn.import_value("Secrets-HealthieSecrets-Arn")
-        self.secrets_secrets_kms_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+        self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Database-LambdaUserSecrets-Arn")
+        self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-TenoviHwiSecrets-Arn")
+        self.secrets_healthie_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-HealthieSecrets-Arn")
+        self.secrets_secrets_kms_key_arn = Fn.import_value("SyntrilloClinic-Secrets-SecretsKMSKey-Arn")
 
         self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
         self.clinic_storage_efs_access_point_chatbot_resources_arn = Fn.import_value("SyntrilloClinic-Storage-EFS-AccessPoint-ChatbotResources-Arn")
@@ -74,7 +74,7 @@ class MessageEndpointFunction(Construct):
             file_system=imported_file_system
         )
 
-        self.secrets_openai_secrets_secret_arn = Fn.import_value("Secrets-OpenAiSecrets-Arn")
+        self.secrets_openai_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-OpenAiSecrets-Arn")
 
         self.vpc = ec2.Vpc.from_vpc_attributes(self, "ImportedVpc",
             vpc_id=Fn.import_value("SyntrilloClinic-Network-Vpc-Id"),

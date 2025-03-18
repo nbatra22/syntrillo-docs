@@ -19,7 +19,7 @@ class DeploymentPipelinesStack(Stack):
         # IMPORT VALUES
         # ---------------------------------------------------------------------
 
-        github_oauth_token_secrets_name = Fn.import_value('GithubOAuthTokenSecretsName')
+        github_oauth_token_secrets_arn = Fn.import_value('SyntrilloClinic-Secrets-DeploymentPipeline-GithubOAuthTokenSecrets-Arn')
         
         # ---------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ class DeploymentPipelinesStack(Stack):
             owner="Syntrillo",
             repo="SyntrilloClinic",
             branch="staging",
-            oauth_token=SecretValue.secrets_manager(github_oauth_token_secrets_name),
+            oauth_token=SecretValue.secrets_manager(github_oauth_token_secrets_arn),
             output=source_output,
         )
 
