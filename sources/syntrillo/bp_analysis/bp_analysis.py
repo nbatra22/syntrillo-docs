@@ -706,7 +706,12 @@ class BloodPressureAnalysis:
                   (df['diastolic'] > BLOOD_PRESSURE_HIGH_VALUE2)]
 
         # Convert timestamps
-        extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True).dt.strftime('%Y-%m-%d %H:%M:%S')
+        extremes['timestamp_local'] = (
+            pd.to_datetime(extremes['timestamp_local'])
+            .dt.tz_convert('UTC')
+            .dt.strftime('%Y-%m-%d %H:%M:%S')
+        )
 
         return extremes[['timestamp_local', 'systolic', 'diastolic']].reset_index(drop=True)
 
