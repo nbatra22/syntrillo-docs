@@ -32,24 +32,24 @@ class SyntrilloAnalyticsBackendStack(Stack):
         print("--------------------------------------")
 
 
-        network_stack = NetworkStack(
+        self.network = NetworkStack(
             self, "NetworkStack", 
             environment_context=self.environment_context,
         )
 
-        storage_stack = StorageStack(
+        self.storage = StorageStack(
             self, "StorageStack", 
             environment_context=self.environment_context,
         )
 
-        ingestion_stack = IngestionStack(
+        self.ingestion = IngestionStack(
             self, "IngestionStack", 
             environment_context=self.environment_context,
-            network = network_stack,
-            storage = storage_stack
+            network = self.network,
+            storage = self.storage
         )
 
-        query_stack = QueryStack(
+        self.query = QueryStack(
             self, "QueryStack", 
             environment_context=self.environment_context,
         )        
