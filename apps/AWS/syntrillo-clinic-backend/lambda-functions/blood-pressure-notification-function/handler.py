@@ -48,7 +48,7 @@ def handler(event, context):
     #     "timezone_offset": -2147483648,
     #     "estimated_timestamp": false,
     #     "filter_params": {}
-    # } 
+    # }
 
     # 1. Extract patient_id and measurement data from event
     patient_id = event.get('patient_id')
