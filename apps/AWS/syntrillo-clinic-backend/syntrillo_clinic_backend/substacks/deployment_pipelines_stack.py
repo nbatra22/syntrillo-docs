@@ -7,6 +7,9 @@ from aws_cdk import (
     SecretValue,
     aws_iam as iam,
     aws_s3 as s3,
+    aws_sns as sns,
+    aws_sns_subscriptions as subscriptions,
+    aws_codestarnotifications as notifications,
     RemovalPolicy
 )
 from constructs import Construct
@@ -188,4 +191,28 @@ class DeploymentPipelinesStack(Stack):
             stage_name="Deploy",
             # actions=[approval_action, deploy_action]
             actions=[deploy_action]
+        )
+
+        # First create an SNS topic
+        notification_topic = sns.Topic(
+            self, "PipelineNotificationTopic",
+            topic_name="pipeline-notification-topic"
+        )
+
+        # Add email subscription to topic
+        notification_topic.add_subscription(
+            subscriptions.EmailSubscription("o.lemaitre@welcloud.io")
+        )
+
+        # Create a notification rule
+        notifications.NotificationRule(
+            self, "PipelineNotificationRule",
+            detail_type=notifications.DetailType.BASIC,
+            events=[
+                "codepipeline-pipeline-pipeline-execution-succeeded",
+                "codepipeline-pipeline-pipeline-execution-failed"
+            ],
+            notification_rule_name="pipeline-notification-rule",
+            source=pipeline,  # Your existing pipeline object
+            targets=[notification_topic]                
         )
