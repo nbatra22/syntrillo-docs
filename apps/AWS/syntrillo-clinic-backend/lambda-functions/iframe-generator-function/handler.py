@@ -7,7 +7,7 @@ import flask_app
 # @logger.inject_lambda_context(log_event=True)
 # def handler(event, context):
 #     base64_content_types = ['image/vnd.microsoft.icon', 'image/x-icon']
-#     return awsgi.response(flask_app.app, event, context, base64_content_types)
+#     return awsgi.response(flask_app.app, event, context, base64_content_types) 
 
 from apig_wsgi import make_lambda_handler
 
