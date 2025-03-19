@@ -709,7 +709,8 @@ class BloodPressureAnalysis:
         logger.info(f"*** extremes['timestamp_local'] BEFORE conversion: {extremes['timestamp_local']}")
 
         # Convert timestamps
-        # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True).dt.strftime('%Y-%m-%d %H:%M:%S')
+        extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=False)
+
         # extremes['timestamp_local'] = (
         #     pd.to_datetime(extremes['timestamp_local'])
         #     .dt.tz_convert('UTC')
