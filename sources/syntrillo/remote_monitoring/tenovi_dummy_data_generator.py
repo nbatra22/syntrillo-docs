@@ -102,11 +102,11 @@ class TenoviDummyDataGenerator:
             self.diastolic_mean = 70
             self.diastolic_var = 5
         elif patient_state_blood_pressure == "hypertensive":
-            self.systolic_min = 140
+            self.systolic_min = 160
             self.systolic_max = 180
             self.systolic_mean = 160
             self.systolic_var = 5
-            self.diastolic_min = 90
+            self.diastolic_min = 100
             self.diastolic_max = 120
             self.diastolic_mean = 100
             self.diastolic_var = 5

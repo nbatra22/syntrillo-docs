@@ -708,23 +708,10 @@ class BloodPressureAnalysis:
 
         logger.info(f"*** extremes['timestamp_local'] BEFORE conversion: {extremes['timestamp_local']}")
 
-        # Convert timestamps
-        extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=False)
+        extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], errors='coerce', utc=True)
+        extremes['timestamp_local'] = extremes['timestamp_local'].dt.tz_convert('America/New_York').dt.strftime('%-m/%d/%y, %I:%M:%S %p')
 
-        # extremes['timestamp_local'] = (
-        #     pd.to_datetime(extremes['timestamp_local'])
-        #     .dt.tz_convert('UTC')
-        #     .dt.strftime('%Y-%m-%d %H:%M:%S')
-        # )
-        # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True)
-        # extremes['timestamp_local'] = extremes['timestamp_local'].dt.tz_convert('UTC')
-
-        # Convert to string
-        extremes['timestamp_local'] = (
-            extremes['timestamp_local']
-            .dt.strftime('%-m/%d/%y, %I:%M:%S %p')
-            .apply(lambda x: x.replace(' 0', ' '))
-        )
+        # extremes['timestamp_local'] = pd.to_datetime(extremes['timestamp_local'], utc=True).dt.strftime('%-m/%d/%y, %I:%M:%S %p')
 
         logger.info(f"*** extremes['timestamp_local'] AFTER conversion: {extremes['timestamp_local']}")
 
