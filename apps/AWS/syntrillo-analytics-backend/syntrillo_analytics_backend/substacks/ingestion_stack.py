@@ -110,7 +110,7 @@ class IngestionStack(Stack):
             vpc_security_group_ids=[dms_instance_security_group]
         )
 
-        database_certificate = Fn.import_value("DatabaseCertificateSecretArn")
+        database_certificate = Fn.import_value("SyntrilloClinic-Secrets-Database-CertificateSecrets-Arn")
 
         # Get the certificate from Secrets Manager
         certificate_secret = secretsmanager.Secret.from_secret_complete_arn(
@@ -140,8 +140,8 @@ class IngestionStack(Stack):
         # )
 
         # Import the secret ARN from the other stack
-        secret_arn = Fn.import_value("DatabaseDMSUserSecretsArn")
-        secrets_kms_custom_key_arn = Fn.import_value("Secrets-SecretsKMSKey-Arn")
+        secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Database-DMSUserSecrets-Arn")
+        secrets_kms_custom_key_arn = Fn.import_value("SyntrilloClinic-Secrets-SecretsKMSKey-Arn")
 
         # Create IAM role for DMS to access Secrets Manager
         dms_secret_role = iam.Role(self, "DMSSecretRole",

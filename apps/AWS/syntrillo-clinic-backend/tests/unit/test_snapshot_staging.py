@@ -51,3 +51,13 @@ def test_snapshot_bastion_stack(snapshot):
     stack = syntrillo_clinic_backend_stack.bastion
     template = assertions.Template.from_stack(stack)
     assert template.to_json() == snapshot
+
+def test_snapshot_backup_stack(snapshot):
+    stack = syntrillo_clinic_backend_stack.backup
+    template = assertions.Template.from_stack(stack)
+    assert template.to_json() == snapshot
+
+def test_snapshot_pipelines_stack(snapshot):
+    stack = syntrillo_clinic_backend_stack.pipelines
+    template = assertions.Template.from_stack(stack)
+    assert template.to_json() == snapshot

@@ -28,13 +28,18 @@ class SyntrilloClinicBackupStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, environment_context: dict, database: Construct, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # ---------------------------------------------------------------------
+        # INPUTS
+        # ---------------------------------------------------------------------
         self.environment_context = environment_context
         self.environment_name = environment_context["environment_name"]
         self.database = database
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
+        # ---------------------------------------------------------------------
         # Create Backup Vault
+        # ---------------------------------------------------------------------
         removal_policy_value = self.environment_context["backup"]["backup-vault-removal-policy"]
         backup_vault = backup.BackupVault(
             self, "BackupVault",
@@ -42,7 +47,9 @@ class SyntrilloClinicBackupStack(Stack):
             removal_policy=RemovalPolicy[removal_policy_value]
         )
 
+        # ---------------------------------------------------------------------
         # Create Backup Plans
+        # ---------------------------------------------------------------------
         if self.environment_context["backup"]["create-rds-backup-plan"]:
             backup_plan = backup.BackupPlan(
                 self, "BackupPlan",

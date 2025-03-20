@@ -124,7 +124,7 @@ class StorageStack(Stack):
             ]
         )
 
-        pii_data_sync_function_role_arn=Fn.import_value("PIIDataSyncFunctionRoleArn")
+        pii_data_sync_function_role_arn=Fn.import_value("SyntrilloClinic-TaskScheduling-PIIDataSyncFunction-Role-Arn")
         pii_data_sync_function_role = iam.Role.from_role_arn(
             self, "PIIDataSyncFunctionRole",
             role_arn=pii_data_sync_function_role_arn

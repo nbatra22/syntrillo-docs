@@ -26,14 +26,12 @@ from constructs import Construct
 # -----------------------------------------------------------------------------
 
 from syntrillo_clinic_backend.constructs.iframe_generator_api_endpoint_construct import IFrameGeneratorApiEndpoint
-
 from syntrillo_clinic_backend.constructs.iframe_generator_api_routes_construct import IFrameGeneratorAPIRoutes
 
-from syntrillo_clinic_backend.constructs.iframe_generator_function_construct import IFrameGeneratorFunction
-from syntrillo_clinic_backend.constructs.llm_server_construct import LLMServer
-
-from syntrillo_clinic_backend.constructs.message_endpoint_function_construct import MessageEndpointFunction
-from syntrillo_clinic_backend.constructs.blood_pressure_notification_function_construct import BloodPressureNotificationFunction
+from syntrillo_clinic_backend.constructs.servers.iframe_generator_function_construct import IFrameGeneratorFunction
+from syntrillo_clinic_backend.constructs.servers.message_endpoint_function_construct import MessageEndpointFunction
+from syntrillo_clinic_backend.constructs.servers.blood_pressure_notification_function_construct import BloodPressureNotificationFunction
+from syntrillo_clinic_backend.constructs.servers.llm_server_construct import LLMServer
 
 # -----------------------------------------------------------------------------
 # STACKS

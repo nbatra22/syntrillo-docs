@@ -66,7 +66,7 @@
     "stacks-termination-protection": true,
     "iframe_generator_function": {
       "log_level": "DEBUG",
-      "provisioned_concurrency_executions": 0,
+      "provisioned_concurrency_executions": 1,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
