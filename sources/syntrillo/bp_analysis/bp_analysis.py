@@ -253,7 +253,7 @@ class BloodPressureAnalysis:
 
         # Include Prior in the middle if at least 6 weeks of data and it has enough measurements
         prior_df = df[(df['timestamp_local'] >= prior_start) & (df['timestamp_local'] < prior_end)]
-        if total_weeks >= 6 and is_valid_timeframe(prior_df):
+        if total_weeks >= 5 and is_valid_timeframe(prior_df):
             timeframes[f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})"] = prior_df
 
         # Always include Current last, but only if it has enough measurements

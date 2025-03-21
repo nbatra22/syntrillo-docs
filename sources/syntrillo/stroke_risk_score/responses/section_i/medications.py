@@ -6,8 +6,11 @@ from syntrillo.system.logger import logger
 
 class MedicationsResponse:
 
-    def __init__(self, medication_reponse):
-        self.medication_reponse = medication_reponse
+    def __init__(self, medication_response, medication_compliance_response):
+        self.medication_response = medication_response
+        self.medication_compliance_response = medication_compliance_response
+
+        print(f"medication compliance: {medication_compliance_response}")
 
         self.flagged_medicines = {
             'blood thinner': (False, ""),
@@ -30,14 +33,14 @@ class MedicationsResponse:
         if self.medication_reponse == None:
             return None
 
-        split_medication_reponse = self.medication_reponse.split('\\\\')
+        split_medication_response = self.medication_response.split('\\\\')
 
         formated_prescriptions_and_compliances = [
             (
                 med.split('|')[0].strip('\\\r').lower(),
                 med.split('|')[3].strip('\\\r').lower()
             )
-            for med in split_medication_reponse
+            for med in split_medication_response
         ]
         return formated_prescriptions_and_compliances
 
