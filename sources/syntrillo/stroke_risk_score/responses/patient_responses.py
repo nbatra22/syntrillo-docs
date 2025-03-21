@@ -121,13 +121,44 @@ class PatientResponses:
         },
     }
 
+    response_label = {
+            'section_i': {
+                'medication': ['meds_statin_plavix_aspirin_anticoagulants'],
+                'lab_values': ['ldl', 'halc'],
+                'history': ['current_smoker', 'afib???', 'cpap_prescribed', 'cpap_regular_usage']
+            },
+            'section_ii': {
+                'tests': ['30_day_cardiac_monitoring'],
+                'history': []
+            },
+            'section_iii': {
+                'hypertension': []
+            },
+            'section_iv': {
+                'exercise_ids': ['vigorous', 'moderate']
+            },
+            'section_v': {
+                'bmi': []
+            },
+            'section_vi': {
+                'heart_rate': []
+            },
+            'section_vii': {
+                'resting_heart_rate': []
+            },
+            'section_vii': {
+                'smoking': []
+            },
+        }
+
+
     def __init__(self, syntrillo_internal_key : uuid.UUID, env) -> None:
         self.syntrillo_internal_key = syntrillo_internal_key
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
         self.env = env
 
 
-    def get_query_response(self, form_id, module_id):
+    def get_query_response(self, module_label):
         '''
         Accepts form_id and module_id and returns unformatted data
         '''
@@ -135,22 +166,27 @@ class PatientResponses:
             db_connection = self.syntrillo_database_manager.conn
 
             with db_connection.cursor() as cursor:
-                # query = f"""
-                #     SELECT
-                #         t.{form_id},
-                #         t.form_name,
-                #         t.{module_id},
-                #         t.module_label,
-                #         r.syntrillo_internal_key,
-                #         r.answer
-                #     FROM
-                #         healthie_form_templates as t
-                #         JOIN healthie_form_responses as r
-                #             ON t.form_id = r.form_id AND t.module_id = r.module_id
-                #     WHERE
-                #         r.syntrillo_internal_key = '{self.syntrillo_internal_key}';
-                # """
-                query = f"""
+                # Get form_id and module_id using module_label
+                ids_query = f"""
+                    SELECT
+                        form_id_{self.env},
+                        module_id_{self.env}
+                    FROM
+                        module_label_look_up
+                    WHERE
+                        module_label = '{module_label}';
+                """
+
+                cursor.execute(ids_query)
+                result = cursor.fetchall()
+
+                print(f"IDS QUERY RESULT: {result}")
+
+                form_id = result[0][0]
+                module_id = result[0][1]
+
+                # Get response using form_id and module_id
+                response_query = f"""
                     SELECT
                         answer,
                         syntrillo_internal_key
@@ -162,7 +198,7 @@ class PatientResponses:
                         AND syntrillo_internal_key = '{self.syntrillo_internal_key}';
                 """
 
-                cursor.execute(query)
+                cursor.execute(response_query)
                 result = cursor.fetchall()
 
             print(f"***** RAW RESPONSE: {result}")
@@ -174,7 +210,8 @@ class PatientResponses:
             return result[0][0]
 
         except Exception as e:
-            logger.info(f"Error fetching form #{form_id} and module #{module_id}: {e}")
+            # logger.info(f"Error fetching form #{form_id} and module #{module_id}: {e}")
+            logger.info(f"Error fetching form {module_label}: {e}")
             return None
 
     def get_etiology(self):
@@ -187,12 +224,13 @@ class PatientResponses:
         - Retrieve formatted dict via MedicationsResponse class
         '''
 
-        form_id = self.response_ids['section_i']["medication_ids"][self.env]['medications']["form_id"]
-        module_id = self.response_ids['section_i']["medication_ids"][self.env]['medications']["module_id"]
+        raw_medication_response = self.get_query_response("meds_statin_plavix_aspirin_anticoagulants")
+        raw_medication_compliance_response = self.get_query_response("medication_adherence_combined")
 
-        raw_response = self.get_query_response(form_id, module_id)
-
-        medication_response = MedicationsResponse(medication_reponse=raw_response).prescriptions_and_compliances()
+        medication_response = MedicationsResponse(
+            medication_reponse=raw_medication_response,
+            medication_compliance_response=raw_medication_compliance_response
+            ).prescriptions_and_compliances()
 
         return medication_response
 
@@ -204,13 +242,9 @@ class PatientResponses:
         - Retrieve formatted dict via LabValuesResponse class
         '''
 
-        ldl_form_id = self.response_ids['section_i']["lab_values_ids"][self.env]['ldl']["form_id"]
-        ldl_module_id = self.response_ids['section_i']["lab_values_ids"][self.env]['ldl']["module_id"]
-        raw_ldl_response = self.get_query_response(ldl_form_id, ldl_module_id)
+        raw_ldl_response = self.get_query_response("ldl")
 
-        ha1c_form_id = self.response_ids['section_i']["lab_values_ids"][self.env]['ha1c']["form_id"]
-        ha1c_module_id = self.response_ids['section_i']["lab_values_ids"][self.env]['ha1c']["module_id"]
-        raw_ha1c_response = self.get_query_response(ha1c_form_id, ha1c_module_id)
+        raw_ha1c_response = self.get_query_response("ha1c")
 
         lab_values_response = LabValuesResponse(ldl_response=raw_ldl_response, ha1c_response=raw_ha1c_response).get_lab_values()
 
@@ -222,35 +256,22 @@ class PatientResponses:
         - Query raw data
         - Retrieve formatted dict via LabValuesResponse class
         """
+        smoker_raw_response = self.get_query_response("current_smoker")
 
-        smoker_form_id = self.response_ids['section_i']["history_ids"][self.env]['smoker']["form_id"]
-        smoker_module_id = self.response_ids['section_i']["history_ids"][self.env]['smoker']["module_id"]
-        smoker_raw_response = self.get_query_response(smoker_form_id, smoker_module_id)
+        # ia_raw_response = self.get_query_response("null")
 
-        # ia_form_id = self.response_ids['section_i']["history_ids"][self.env]['ia']["form_id"]
-        # ia_module_id = self.response_ids['section_i']["history_ids"][self.env]['ia']["module_id"]
-        # ia_raw_response = self.get_query_response(ia_form_id, ia_module_id)
+        # afib_raw_response = self.get_query_response("null")
 
-        afib_form_id = self.response_ids['section_i']["history_ids"][self.env]['afib']["form_id"]
-        afib_module_id = self.response_ids['section_i']["history_ids"][self.env]['afib']["module_id"]
-        afib_raw_response = self.get_query_response(afib_form_id, afib_module_id)
-
-        # osa_form_id = self.response_ids['section_i']["history_ids"][self.env]['osa']["form_id"]
-        # osa_module_id = self.response_ids['section_i']["history_ids"][self.env]['osa']["module_id"]
         # osa_raw_response = self.get_query_response(osa_form_id, osa_module_id)
 
-        cpap_prescription_form_id = self.response_ids['section_i']["history_ids"][self.env]['cpap_prescription']["form_id"]
-        cpap_prescription_module_id = self.response_ids['section_i']["history_ids"][self.env]['cpap_prescription']["module_id"]
-        cpap_prescription_raw_response = self.get_query_response(cpap_prescription_form_id, cpap_prescription_module_id)
+        cpap_prescription_raw_response = self.get_query_response("cpap_prescribed")
 
-        cpap_usage_form_id = self.response_ids['section_i']["history_ids"][self.env]['cpap_usage']["form_id"]
-        cpap_usage_module_id = self.response_ids['section_i']["history_ids"][self.env]['cpap_usage']["module_id"]
-        cpap_usage_raw_response = self.get_query_response(cpap_usage_form_id, cpap_usage_module_id)
+        cpap_usage_raw_response = self.get_query_response("cpap_regular_usage")
 
         history_response = HistoryResponse(
             smoker_response=smoker_raw_response,
             # ia_response=ia_raw_response,
-            afib_response=afib_raw_response,
+            # afib_response=afib_raw_response,
             # osa_response=osa_raw_response,
             cpap_prescription_response=cpap_prescription_raw_response,
             cpap_usage_response=cpap_usage_raw_response
@@ -264,8 +285,8 @@ if __name__ == "__main__":
     medications = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_medications()
     print(f"***** Medication Response: {medications}")
 
-    lab_values = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_lab_values()
-    print(f"***** Lab Value Response: {lab_values}")
+    # lab_values = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_lab_values()
+    # print(f"***** Lab Value Response: {lab_values}")
 
-    history = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_history()
-    print(f"***** History Response: {history}")
+    # history = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_history()
+    # print(f"***** History Response: {history}")

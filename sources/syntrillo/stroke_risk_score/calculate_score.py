@@ -1,5 +1,5 @@
-# Select data from 
-# - healthie_form_templates 
+# Select data from
+# - healthie_form_templates
 # - healthie_form_responses
 
 # Examle requests
@@ -19,7 +19,7 @@ healthie_forms_answers = [
         "module_label": "Blood thinner - Prescribed ?",
         "syntrillo_internal_key": "3261f346-ef09-4311-8a5f-f36d5d67e58d",
         "answer": 'No'
-    }, 
+    },
 ]
 
 # Idea to calculate score directly from the 2 tables (healthie_form_templates, healthie_form_responses)
@@ -30,9 +30,9 @@ def clean_patient_data(data):
     # Cleaning rules have to be defined
     return data
 
-def format_score_input_table(cleaned_patient_data):    
+def format_score_input_table(cleaned_patient_data):
     first_item = cleaned_patient_data[0]
-    
+
     transformed_data = {
         "syntrillo_internal_key": first_item["syntrillo_internal_key"],
         "section_1": [
@@ -43,7 +43,7 @@ def format_score_input_table(cleaned_patient_data):
             }
         ]
     }
-    
+
     return transformed_data
 
 def calculate_score(score_input_table):
@@ -54,7 +54,7 @@ def calculate_score(score_input_table):
 
     # Go through section 2
     # ...
-    
+
     return str(score)
 
 if __name__ == "__main__":
