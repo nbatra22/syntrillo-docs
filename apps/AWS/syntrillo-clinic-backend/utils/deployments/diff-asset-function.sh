@@ -30,3 +30,6 @@ asset_2="/tmp/remote_code"
 echo $asset_1 $asset_2
 
 diff -r $asset_1 $asset_2
+
+rm -r /tmp/remote_code
+rm /tmp/remote_code.zip
