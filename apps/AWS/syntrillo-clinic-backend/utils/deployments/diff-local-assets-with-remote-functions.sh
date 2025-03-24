@@ -7,8 +7,9 @@ if [ "$1" == "" ]; then
 fi
 
 ENVIRONMENT=$1
+shift
 
-./cdk-diff-with-$ENVIRONMENT.sh 2>&1  |tee /tmp/cdk-diff.txt
+./cdk-diff-with-$ENVIRONMENT.sh $@ 2>&1  |tee /tmp/cdk-diff.txt
 
 ./list-functions-from-cdk-diff.sh | tee /tmp/functions.txt
 ./list-assets-from-cdk-diff.sh | tee /tmp/assets.txt
