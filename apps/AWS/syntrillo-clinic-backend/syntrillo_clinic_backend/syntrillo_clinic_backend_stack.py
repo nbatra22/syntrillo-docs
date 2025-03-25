@@ -41,6 +41,7 @@ from syntrillo_clinic_backend.substacks.fix_output_dependency_stack import FixOu
 from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBastionStack
 
 from syntrillo_clinic_backend.substacks.deployment_pipelines_stack import DeploymentPipelinesStack
+from syntrillo_clinic_backend.substacks.backend_notifications_stack import BackendNotificationsStack
 
 import json
 
@@ -124,6 +125,11 @@ class SyntrilloClinicBackendStack(Stack):
         if self.aws_environment == 'staging':
             self.pipelines = DeploymentPipelinesStack(
                 self, "DeploymentPipelinesStack",
+                environment_context=self.environment_context,
+            )
+            
+            self.backend_notification = BackendNotificationsStack(
+                self, "BackendNotificationsStack",
                 environment_context=self.environment_context,
             )
 

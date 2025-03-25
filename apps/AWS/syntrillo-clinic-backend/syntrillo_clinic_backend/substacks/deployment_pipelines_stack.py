@@ -242,85 +242,6 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
-        # # Grant necessary permissions to CodeBuild
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=["ssm:GetParameter"],
-        #         resources=[f"arn:aws:ssm:us-east-1:{self.account}:parameter/cdk-bootstrap/hnb659fds/version"]
-        #     )
-        # )
-
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=[
-        #             "s3:PutObject", 
-        #             "s3:GetObject",
-        #             "s3:DeleteObject",
-        #         ],
-        #         resources=[
-        #             f"arn:aws:s3:::cdk-hnb659fds-assets-{self.account}-us-east-1/*"
-        #         ]
-        #     )
-        # )
-
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=[
-        #             "s3:List*",
-        #             "s3:Get*"
-        #         ],
-        #         resources=[
-        #             f"arn:aws:s3:::cdk-hnb659fds-assets-{self.account}-us-east-1"
-        #         ]
-        #     )
-        # )
-
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=[
-        #             "cloudformation:DescribeStacks",
-        #             "cloudformation:DescribeStackEvents",
-        #             "cloudformation:GetTemplate",
-        #             "cloudformation:DescribeChangeSet",
-        #             "cloudformation:CreateChangeSet",
-        #             "cloudformation:DeleteChangeSet",
-        #             "cloudformation:ExecuteChangeSet",
-        #             "cloudformation:UpdateTerminationProtection"
-        #         ],
-        #         resources=[
-        #             f"arn:aws:cloudformation:us-east-1:{self.account}:stack/SyntrilloClinicBackendStack*"
-        #         ]
-        #     )
-        # )
-
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=[
-        #             "iam:PassRole"
-        #         ],
-        #         resources=[
-        #             f"arn:aws:iam::{self.account}:role/cdk-prodlike-cfn-exec-role"
-        #         ]
-        #     )
-        # )
-
-        # cdk_build_prod.role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         actions=[
-        #             "lambda:GetFunction"
-        #         ],
-        #         resources=[
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:MessageEndpointFunction",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:PIIDataSyncFunction",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:RemoteMonitoringDataSyncFunction",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:blood_pressure_notifier_handler",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:BloodPressureNotificationFunction",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:IFrameGeneratorFunction",
-        #             f"arn:aws:lambda:us-east-1:{self.account}:function:HealthieDataIngestorFunction",
-        #         ]
-        #     )
-        # )
-
         # ---------------------------------------------------------------------
         # Add actions to pipeline
         # ---------------------------------------------------------------------
@@ -343,7 +264,7 @@ class DeploymentPipelinesStack(Stack):
 
         # Create Manual Approval action
         approval_prod_action = pipeline_actions.ManualApprovalAction(
-            action_name="Approve_Deployment_to_Prod",
+            action_name="Approve_Prod_Deployment",
             run_order=1
         )
 
@@ -364,20 +285,25 @@ class DeploymentPipelinesStack(Stack):
         # Create a notification rule
         # ---------------------------------------------------------------------
 
-        # First create an SNS topic
-        notification_topic = sns.Topic(
-            self, "PipelineNotificationTopic",
-            topic_name="pipeline-notification-topic"
-        )
+        # # First create an SNS topic
+        # notification_topic = sns.Topic(
+        #     self, "PipelineNotificationTopic",
+        #     topic_name="pipeline-notification-topic"
+        # )
 
-        dev_mailing_list = ssm.StringParameter.from_string_parameter_attributes(
-            self, "SyntrilloClinicDevMailingList", 
-            parameter_name="/syntrillo-clinic/dev-mailing-list"
-        ).string_value
+        # dev_mailing_list = ssm.StringParameter.from_string_parameter_attributes(
+        #     self, "SyntrilloClinicDevMailingList", 
+        #     parameter_name="/syntrillo-clinic/dev-mailing-list"
+        # ).string_value
 
-        # Add email subscription to topic
-        notification_topic.add_subscription(
-            subscriptions.EmailSubscription(dev_mailing_list)
+        # # Add email subscription to topic
+        # notification_topic.add_subscription(
+        #     subscriptions.EmailSubscription(dev_mailing_list)
+        # )
+
+        notification_topic = sns.Topic.from_topic_arn(
+            self, "BackendNotificationsInputTopic",
+            Fn.import_value("SyntrilloClinic-BackendNotifications-Input-SNSTopic-Arn")
         )
 
         # Create a notification rule
@@ -386,9 +312,11 @@ class DeploymentPipelinesStack(Stack):
             detail_type=notifications.DetailType.BASIC,
             events=[
                 "codepipeline-pipeline-pipeline-execution-succeeded",
-                "codepipeline-pipeline-pipeline-execution-failed"
+                "codepipeline-pipeline-pipeline-execution-failed",
+                "codepipeline-pipeline-stage-execution-succeeded", 
+                "codepipeline-pipeline-stage-execution-failed",
             ],
             notification_rule_name="pipeline-notification-rule",
-            source=pipeline,  # Your existing pipeline object
+            source=pipeline,
             targets=[notification_topic]                
         )
