@@ -72,7 +72,9 @@ class DeploymentPipelinesStack(Stack):
                         "commands": [
                             "cd apps/AWS/syntrillo-clinic-backend",
                             "npm install -g aws-cdk",
-                            "python -m pip install -r requirements.txt"
+                            "python -m pip install -r requirements.txt",
+                            "pip install pytest",
+                            "pip install requests"
                         ]
                     },
                     "build": {
@@ -81,7 +83,8 @@ class DeploymentPipelinesStack(Stack):
                             "cd utils/deployments",
                             "./symlinks-recreate.sh",       
                             "./diff-local-assets-with-remote-functions.sh staging SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
-                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
+                            "pytest ./test_staging.py --junitxml=./test-reports/report.xml"
                         ]
                     }
                 },
@@ -90,7 +93,14 @@ class DeploymentPipelinesStack(Stack):
                         "**/*"
                     ],
                     "enable-symlinks": True
+                },
+                "reports": {
+                    "test_reports": {
+                    "files": ["report.xml"],
+                    "base-directory": "apps/AWS/syntrillo-clinic-backend/utils/deployments/test-reports",
+                    "file-format": "JUNITXML"
                 }
+            }
             }),
             environment=codebuild.BuildEnvironment(
                 privileged=True,
