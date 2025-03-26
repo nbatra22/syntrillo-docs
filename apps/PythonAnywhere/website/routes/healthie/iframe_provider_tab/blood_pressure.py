@@ -18,7 +18,7 @@ from syntrillo.api_healthie.medications import HealthieMedications
 
 from syntrillo.system.iframe_validator import IframeValidator
 
-iframe_healthie_provider_tab_bp_analysis = Blueprint('iframe_healthie_provider_tab_bp_analysis', __name__)
+iframe_healthie_provider_tab_bp_analysis_bp = Blueprint('iframe_healthie_provider_tab_bp_analysis_bp', __name__)
 
 from syntrillo.system.logger import logger
 
@@ -35,7 +35,7 @@ from syntrillo.system.logger import logger
 #         'healthie/iframe_provider_tab/blood_pressure.html',
 #     )
 
-@iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure', methods=['GET','POST'])
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure', methods=['GET','POST'])
 def iframe_healthie_provider_tab_blood_pressure():
     """
 
@@ -69,7 +69,7 @@ def iframe_healthie_provider_tab_blood_pressure():
         patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
     )
 
-@iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/analysis', methods=['POST'])
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/analysis', methods=['POST'])
 def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     start_date_str = request.form.get("start_date", "").strip() or None
@@ -190,7 +190,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
         "extremes_json": extremes_json,
     })
 
-@iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])
 def iframe_healthie_provider_tab_download_bp_pdf():
     """
 

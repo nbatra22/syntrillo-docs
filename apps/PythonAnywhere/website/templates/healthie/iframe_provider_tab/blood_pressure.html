@@ -81,7 +81,7 @@
                 <div id="bp-download-menu"
                     class="bp-dropdown-menu">
                     <form
-                        action="{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
+                        action="{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
                         id="bp-download-form" class="" method="POST" target="_blank">
                         <div id="bp-form-file-name-container" class="bp-form-input-container">
                             <label for="file-name" class="">
@@ -459,7 +459,7 @@
         formData.append("start_date", startDate)
         formData.append("end_date", endDate)
 
-        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis.iframe_healthie_provider_tab_blood_pressure_analysis') }}", {
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_blood_pressure_analysis') }}", {
             method: "POST",
             body: formData
         })

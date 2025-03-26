@@ -82,6 +82,9 @@ class StrokeRiskScore:
             else:
                 score += 6.3
 
+        if etiology == 'Large Vessel':
+            score += 6.3
+
         return (score, data)
 
     def calculate_section_ii(self):

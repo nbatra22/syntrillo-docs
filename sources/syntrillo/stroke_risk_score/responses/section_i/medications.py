@@ -30,7 +30,7 @@ class MedicationsResponse:
         '''
 
         # Handle empty medication_response
-        if self.medication_reponse == None:
+        if self.medication_response == None:
             return None
 
         split_medication_response = self.medication_response.split('\\\\')

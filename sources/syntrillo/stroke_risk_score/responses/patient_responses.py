@@ -2,6 +2,7 @@ import uuid
 from typing import Literal
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 from syntrillo.system.logger import logger
 
@@ -165,6 +166,8 @@ class PatientResponses:
         try:
             db_connection = self.syntrillo_database_manager.conn
 
+            print(f"Patient Internal Key: {self.syntrillo_internal_key}")
+
             with db_connection.cursor() as cursor:
                 # Get form_id and module_id using module_label
                 ids_query = f"""
@@ -228,7 +231,7 @@ class PatientResponses:
         raw_medication_compliance_response = self.get_query_response("medication_adherence_combined")
 
         medication_response = MedicationsResponse(
-            medication_reponse=raw_medication_response,
+            medication_response=raw_medication_response,
             medication_compliance_response=raw_medication_compliance_response
             ).prescriptions_and_compliances()
 
@@ -282,6 +285,13 @@ class PatientResponses:
 
 if __name__ == "__main__":
 
+    # healthie_user_id = "1525423"
+
+    # look_up_codes_management = LookUpCodesManagement()
+    # entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
+    # internal_key = entry['syntrillo_internal_key']
+
+    # medications = PatientResponses(internal_key, env='staging').get_medications()
     medications = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_medications()
     print(f"***** Medication Response: {medications}")
 

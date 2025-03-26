@@ -1,0 +1,123 @@
+<!-- Main Content -->
+<div class="rs-tab-container">
+
+    <div id="rs-left-column" class="rs-column">
+        <section id="rs-risk-score-container" class="rs-section-container">
+            <div id="" class="rs-total-score-container">
+                <h2 id="rs-risk-score-header" class="rs-section-header">
+                    Stroke Risk Score
+                </h2>
+                <h3 id="rs-risk-score-classification" class="rs-section-info">
+                    HIGH RISK
+                </h3>
+            </div>
+            <div id="" class="rs-score-container">
+                <h2 id="rs-risk-score-int" class="rs-total-score">
+                    10.3
+                </h2>
+                <h3 id="" class="rs-max-score">
+                    max 20.6
+                </h3>
+            </div>
+        </section>
+
+        <section id="rs-section-i" class="rs-section-container">
+            <div class="rs-section-i-info-container" class="rs-section-info">
+                <h2 id="rs-section-i-header" class="rs-section-header">
+                    Section I
+                </h2>
+                <h3 id="rs-section-i-info" class="rs-section-info">
+                    Not compliant with treatment for high risk conditions.
+                </h3>
+            </div>
+            <h2 id="rs-section-i-score" class="rs-section-score">
+                6.3
+            </h2>
+        </section>
+    </div>
+
+    <div id="rs-right-column" class="rs-column">
+        <section id="rs-biometric" class="">
+            <h2 id="" class="rs-section-header">
+                Biometric Data
+            </h2>
+        </section>
+
+    </div>
+
+</div>
+
+<!-- Styling -->
+<style>
+    .rs-tab-container {
+        width: 100%;
+        gap: 2rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    }
+
+    .rs-tab-container section {
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+
+    .rs-column {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        width: 100%;
+    }
+
+    #rs-left-column {
+        grid-column: span 2 / span 2;
+    }
+
+    #rs-right-column {
+        grid-column: span 1 / span 1;
+    }
+
+    h2, h3 {
+        margin: 0;
+    }
+
+    .rs-section-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .rs-total-score {
+        font-size: xx-large;
+    }
+
+    .rs-section-score {
+        font-size: x-large;
+    }
+
+    .rs-section-header {
+        padding-bottom: 1rem;
+    }
+
+    .rs-max-score {
+        font-size: small;
+    }
+
+    .rs-score-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+        align-items: end;
+    }
+
+    .rs-section-info {
+        font-size: medium;
+    }
+
+</style>
+
+<!-- Scripts -->
+<script>
+
+</script>
