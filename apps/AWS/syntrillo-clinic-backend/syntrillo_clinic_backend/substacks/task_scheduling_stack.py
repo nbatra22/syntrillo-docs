@@ -120,6 +120,54 @@ class DataSyncWorkflow(Construct):
             targets.SfnStateMachine(self.state_machine)
         )
 
+
+class HealthieDataIngestorWorkFlow(Construct):
+    def __init__(self, scope: Construct, id: str,
+                 lambda_function: _lambda.Function,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        # Create the Lambda task
+        process_task = tasks.LambdaInvoke(
+            self, "FetchHealthieData", 
+            lambda_function=lambda_function,
+            payload=sfn.TaskInput.from_object({
+                "action": "process"
+            })
+        )
+
+        # Create the state machine
+        self.state_machine = sfn.StateMachine(
+            self, "HealthieDataIngestorWorkFlow",
+            state_machine_name="HealthieDataIngestorWorkFlow", 
+            definition_body=sfn.DefinitionBody.from_chainable(process_task),
+            timeout=Duration.minutes(5),
+            tracing_enabled=True
+        )
+
+        # # Create a scheduled event rule
+        # # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
+        # # the lambda is triggered. With cron, you can decide exactly when you start.
+        # # This avoids using database resources during working hours
+        schedule = events.Schedule.cron(
+            minute="0",
+            hour="0/6",
+            month="*",
+            week_day="*",
+            year="*",
+        )
+
+        event_rule = events.Rule(
+            self, "HealthieDataIngestorWorkFlowSyncRule",
+            schedule=schedule,
+            enabled=True,
+        )
+
+        # Add the state machine as a target for the rule
+        event_rule.add_target(
+            targets.SfnStateMachine(self.state_machine)
+        )
+
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -174,4 +222,9 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
             database=self.database,
             storage=self.storage,
             secrets=self.secrets,
+        )
+
+        self.healthie_data_ingestor_worflow = HealthieDataIngestorWorkFlow(
+            self, "HealthieDataIngestorWorkFlow",
+            lambda_function=self.healthie_data_ingestor.healthie_data_ingestor_function
         )
