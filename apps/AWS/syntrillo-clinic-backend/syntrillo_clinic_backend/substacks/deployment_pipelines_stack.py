@@ -5,6 +5,7 @@ from aws_cdk import (
     aws_codepipeline_actions as pipeline_actions,
     aws_codebuild as codebuild,
     SecretValue,
+    aws_ssm as ssm,
     aws_iam as iam,
     aws_s3 as s3,
     aws_sns as sns,
@@ -57,8 +58,12 @@ class DeploymentPipelinesStack(Stack):
             actions=[source_action]
         )
 
+        # ---------------------------------------------------------------------
+        # Create staging build
+        # ---------------------------------------------------------------------
+
         # Create CodeBuild project for CDK deployment
-        cdk_build = codebuild.PipelineProject(
+        cdk_build_staging = codebuild.PipelineProject(
             self, "CDKBuild",
             build_spec=codebuild.BuildSpec.from_object({
                 "version": "0.2",
@@ -67,7 +72,9 @@ class DeploymentPipelinesStack(Stack):
                         "commands": [
                             "cd apps/AWS/syntrillo-clinic-backend",
                             "npm install -g aws-cdk",
-                            "python -m pip install -r requirements.txt"
+                            "python -m pip install -r requirements.txt",
+                            "pip install pytest",
+                            "pip install requests"
                         ]
                     },
                     "build": {
@@ -75,8 +82,9 @@ class DeploymentPipelinesStack(Stack):
                             "pwd",
                             "cd utils/deployments",
                             "./symlinks-recreate.sh",       
-                            "./diff-local-assets-with-remote-functions.sh staging",
-                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
+                            "./diff-local-assets-with-remote-functions.sh staging SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
+                            "pytest ./test_staging.py --junitxml=./test-reports/report.xml"
                         ]
                     }
                 },
@@ -85,7 +93,14 @@ class DeploymentPipelinesStack(Stack):
                         "**/*"
                     ],
                     "enable-symlinks": True
+                },
+                "reports": {
+                    "test_reports": {
+                    "files": ["report.xml"],
+                    "base-directory": "apps/AWS/syntrillo-clinic-backend/utils/deployments/test-reports",
+                    "file-format": "JUNITXML"
                 }
+            }
             }),
             environment=codebuild.BuildEnvironment(
                 privileged=True,
@@ -94,14 +109,14 @@ class DeploymentPipelinesStack(Stack):
         )
 
         # Grant necessary permissions to CodeBuild
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=["ssm:GetParameter"],
                 resources=[f"arn:aws:ssm:us-east-1:{self.account}:parameter/cdk-bootstrap/hnb659fds/version"]
             )
         )
 
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "s3:PutObject", 
@@ -114,7 +129,7 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "s3:List*",
@@ -126,7 +141,7 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "cloudformation:DescribeStacks",
@@ -144,7 +159,7 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "iam:PassRole"
@@ -155,7 +170,7 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
-        cdk_build.role.add_to_policy(
+        cdk_build_staging.role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "lambda:GetFunction"
@@ -172,36 +187,133 @@ class DeploymentPipelinesStack(Stack):
             )
         )
 
+        # ---------------------------------------------------------------------
+        # Create prod build
+        # ---------------------------------------------------------------------
+
+        prod_cross_account_role_arn = f"arn:aws:iam::381491864638:role/SyntrilloClinicProdCodeBuildDeploymentRole"
+
+        # Create CodeBuild project for CDK deployment
+        cdk_build_prod = codebuild.PipelineProject(
+            self, "CDKBuildProd",
+            build_spec=codebuild.BuildSpec.from_object({
+                "version": "0.2",
+                "phases": {
+                    "install": {
+                        "commands": [
+                            "cd apps/AWS/syntrillo-clinic-backend",
+                            "npm install -g aws-cdk",
+                            "python -m pip install -r requirements.txt"
+                        ]
+                    },
+                    "pre_build": {
+                        "commands": [
+                            # Assume the cross-account role for production deployment
+                            "temp_role=$(aws sts assume-role --role-arn $CROSS_ACCOUNT_ROLE_ARN --role-session-name ProductionDeploy)",
+                            "export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)",
+                            "export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)",
+                            "export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)"
+                        ]
+                    },
+                    "build": {
+                        "commands": [
+                            "pwd",
+                            "cd utils/deployments",       
+                            "./diff-local-assets-with-remote-functions.sh prod SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
+                            # "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
+                        ]
+                    }
+                },
+                "artifacts": {
+                    "files": [
+                        "**/*"
+                    ],
+                    "enable-symlinks": True
+                }
+            }),
+            environment=codebuild.BuildEnvironment(
+                privileged=True,
+                build_image=codebuild.LinuxBuildImage.STANDARD_7_0,
+                environment_variables={
+                    "CROSS_ACCOUNT_ROLE_ARN": codebuild.BuildEnvironmentVariable(value=prod_cross_account_role_arn)
+                }
+            ),
+        )
+
+        # Add necessary permissions to your deployment role
+        cdk_build_prod.role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "sts:AssumeRole"
+                ],
+                resources=[
+                    prod_cross_account_role_arn
+                ]
+            )
+        )
+
+        # ---------------------------------------------------------------------
+        # Add actions to pipeline
+        # ---------------------------------------------------------------------
+
         # Create Deploy action
-        deploy_action = pipeline_actions.CodeBuildAction(
-            action_name="CDK_Deploy",
-            project=cdk_build,
+        build_output = codepipeline.Artifact()
+        deploy_to_staging_action = pipeline_actions.CodeBuildAction(
+            action_name="CDK_Deploy_to_Staging",
+            project=cdk_build_staging,
             input=source_output,
-            run_order=2
+            run_order=1,
+            outputs=[build_output]
+        )
+    
+        # Add Deploy Stage with Approval and Deploy actions
+        pipeline.add_stage(
+            stage_name="DeployToStaging",
+            actions=[deploy_to_staging_action]
         )
 
         # Create Manual Approval action
-        approval_action = pipeline_actions.ManualApprovalAction(
-            action_name="Approve_Deployment",
+        approval_prod_action = pipeline_actions.ManualApprovalAction(
+            action_name="Approve_Prod_Deployment",
             run_order=1
         )
 
-        # Add Deploy Stage with Approval and Deploy actions
+        # Create Deploy action
+        deploy_to_prod_action = pipeline_actions.CodeBuildAction(
+            action_name="CDK_Deploy_to_Prod",
+            project=cdk_build_prod,
+            input=build_output,
+            run_order=2
+        )
+
         pipeline.add_stage(
-            stage_name="Deploy",
-            # actions=[approval_action, deploy_action]
-            actions=[deploy_action]
+            stage_name="DeployToProd",
+            actions=[approval_prod_action, deploy_to_prod_action]
         )
 
-        # First create an SNS topic
-        notification_topic = sns.Topic(
-            self, "PipelineNotificationTopic",
-            topic_name="pipeline-notification-topic"
-        )
+        # ---------------------------------------------------------------------
+        # Create a notification rule
+        # ---------------------------------------------------------------------
 
-        # Add email subscription to topic
-        notification_topic.add_subscription(
-            subscriptions.EmailSubscription("o.lemaitre@welcloud.io")
+        # # First create an SNS topic
+        # notification_topic = sns.Topic(
+        #     self, "PipelineNotificationTopic",
+        #     topic_name="pipeline-notification-topic"
+        # )
+
+        # dev_mailing_list = ssm.StringParameter.from_string_parameter_attributes(
+        #     self, "SyntrilloClinicDevMailingList", 
+        #     parameter_name="/syntrillo-clinic/dev-mailing-list"
+        # ).string_value
+
+        # # Add email subscription to topic
+        # notification_topic.add_subscription(
+        #     subscriptions.EmailSubscription(dev_mailing_list)
+        # )
+
+        notification_topic = sns.Topic.from_topic_arn(
+            self, "BackendNotificationsInputTopic",
+            Fn.import_value("SyntrilloClinic-BackendNotifications-Input-SNSTopic-Arn")
         )
 
         # Create a notification rule
@@ -210,9 +322,11 @@ class DeploymentPipelinesStack(Stack):
             detail_type=notifications.DetailType.BASIC,
             events=[
                 "codepipeline-pipeline-pipeline-execution-succeeded",
-                "codepipeline-pipeline-pipeline-execution-failed"
+                "codepipeline-pipeline-pipeline-execution-failed",
+                "codepipeline-pipeline-stage-execution-succeeded", 
+                "codepipeline-pipeline-stage-execution-failed",
             ],
             notification_rule_name="pipeline-notification-rule",
-            source=pipeline,  # Your existing pipeline object
+            source=pipeline,
             targets=[notification_topic]                
         )
