@@ -6,6 +6,7 @@
 # $ uv add pydantic
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 # Define the data model for the Healthie form template
 class FormTemplate(BaseModel):
@@ -22,3 +23,15 @@ class FormResponse(BaseModel):
     syntrillo_internal_key: str
     answer: str
     created_at: datetime
+
+# Define the data model for Healthie medications
+class Medication(BaseModel):
+    id: str
+    name: str
+    active: bool
+    directions: Optional[str] = None
+    dosage: Optional[str] = None
+    code: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    user_id: str
