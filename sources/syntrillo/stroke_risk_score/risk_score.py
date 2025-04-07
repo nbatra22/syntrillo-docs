@@ -3,6 +3,7 @@ import uuid
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
 
@@ -19,55 +20,58 @@ class StrokeRiskScore:
 
     """
 
-    syntrillo_internal_key : uuid.UUID = None
-    syntrillo_database_manager : SyntrilloDatabaseManager = None
+    patient_responses: PatientResponses = None
     is_staging = True
 
     risk_score = 0
 
     def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
 
-        self.syntrillo_internal_key = syntrillo_internal_key
-
-        # Set up PHI database connection for this user
-        self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        self.patient_responses = PatientResponses(syntrillo_internal_key=syntrillo_internal_key, env='staging')
 
 
     def calculate_risk_score(self):
 
-        si_score = self.calculate_section_i()
-        sii_score = self.calculate_section_ii()
-        siii_score = self.calculate_section_iii()
-        siv_score = self.calculate_section_iv()
-        sv_score = self.calculate_section_v()
-        svi_score = self.calculate_section_vi()
-        svii_score = self.calculate_section_vii()
-        sviii_score = self.calculate_section_viii()
+        si_score, si_data = self._section_i()
+        sii_score, sii_data = self._section_ii()
+        siii_score, siii_data = self._section_iii()
+        siv_score, siv_data = self._section_iv()
+        sv_score, sv_data = self._section_v()
+        # svi_score, svi_data = self._section_vi()
+        svii_score, svii_data = self._section_vii()
+        sviii_score, sviii_data = self._section_viii()
 
-        return si_score    \
-             + sii_score   \
-             + siii_score  \
-             + siv_score   \
-             + sv_score    \
-             + svi_score   \
-             + svii_score  \
-             + sviii_score
+        total_score = si_score + sii_score + siii_score + siv_score + sv_score + svii_score + svii_score
+
+        data = {
+            'i': (si_score, si_data),
+            'ii': (sii_score, sii_data),
+            'iii': (siii_score, siii_data),
+            'iv': (siv_score, siv_data),
+            'v': (sv_score, sv_data),
+            # 'vi': (svi_score, svi_data),
+            'vii': (svii_score, svii_data),
+            'viii': (sviii_score, sviii_data),
+        }
+
+        return {
+            'total_score': total_score,
+            'data': data
+        }
 
 
-    def calculate_section_i(self):
+    def _section_i(self):
 
-        patient_responses = PatientResponses(self.syntrillo_internal_key, env='staging')
-
-        etiology = patient_responses.get_etiology()
-        medications = patient_responses.get_medications()
-        lab_values = patient_responses.get_lab_values()
-        history = patient_responses.get_history()
+        etiology = self.patient_responses.get_etiology()
+        medications = self.patient_responses.get_medications()
+        lab_values = self.patient_responses.get_lab_values()
+        history = self.patient_responses.get_history()
 
         data = {
             'etiology': etiology,
-            **medications,
-            **lab_values,
-            **history
+            'medications': medications,
+            'lab_values': lab_values,
+            'history': history
         }
 
         score = 0
@@ -87,44 +91,110 @@ class StrokeRiskScore:
 
         return (score, data)
 
-    def calculate_section_ii(self):
+    def _section_ii(self):
 
-        return
+        data = self.patient_responses.get_tests_orders()
 
-    def calculate_section_iii(self):
+        score = 0
 
-        return
+        return (score, data)
 
-    def calculate_section_iv(self):
+    def _section_iii(self):
 
-        return
+        data = self.patient_responses.get_blood_pressure()
 
-    def calculate_section_v(self):
+        systolic = data['sbp']
+        diastolic = data['dbp']
 
-        return
+        if systolic < 130 and diastolic < 90:
+            score = 0
 
-    def calculate_section_vi(self):
+        if systolic > 130 and systolic < 190:
+            score = (systolic - 130) / 20
+        else:
+            score = 3
 
-        return
+        if diastolic > 80 and diastolic < 90:
+            score = (diastolic - 80) / 3.33
+        else:
+            score = 3
 
-    def calculate_section_vii(self):
+        return (score, data)
 
-        return
 
-    def calculate_section_viii(self):
+    def _section_iv(self):
 
-        return
+        data = self.patient_responses.get_exercise()
+
+        mod_exercise = int(data['mod_exercise'])
+        vig_exercise = int(data['vig_exercise'])
+
+        total_min = mod_exercise + vig_exercise
+
+        if total_min <= 0:
+            score = 0.0
+        elif total_min >= 200:
+            score = 2.0
+        else:
+            score = (total_min / 200) * 2
+
+        return (score, data)
+
+
+    def _section_v(self):
+
+        data = self.patient_responses.get_bmi()
+
+        if data['bmi'] <= 30:
+            score = 0.0
+        elif data['bmi'] >= 60:
+            score = 2.0
+        else:
+            # Linear interpolation between 30 and 60
+            score = (data['bmi'] - 30) / (60 - 30) * 2
+
+        return (score, data)
+
+
+    # def _section_vi(self):
+
+    #     return
+
+
+    def _section_vii(self):
+
+        data = self.patient_responses.get_resting_hr()
+
+        hr = int(data['resting_hr'])
+
+        if hr <= 60:
+            score = 0.0
+        elif hr >= 100:
+            score = 1.0
+        else:
+            score = (hr - 60) / (100 - 60)
+
+        return (score, data)
+
+
+    def _section_viii(self):
+
+        data = self.patient_responses.get_smoking()
+
+        score = 0
+
+        return (score, data)
 
 
 if __name__ == "__main__":
-    # risk_score = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_risk_score() # no medication data
+    healthie_user_id = "1525423"
 
-    # print(f"Patient Risk Score: {risk_score}")
+    look_up_codes_management = LookUpCodesManagement()
+    entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
+    internal_key = entry['syntrillo_internal_key']
 
-    # section_1 = StrokeRiskScore("3261f346-ef09-4311-8a5f-f36d5d67e58d").calculate_section_i()
-    section_1 = StrokeRiskScore("99fddf03-9304-4e48-8711-0cc4d825eb94").calculate_section_i()
-
-    print(f"Section I data: {section_1}")
+    risk_score = StrokeRiskScore(syntrillo_internal_key=internal_key).calculate_risk_score()
+    print(f"Risk Score: {risk_score}")
 
 
 # {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplatte': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, ''), 'LDL': 2, 'HA1c': 0}

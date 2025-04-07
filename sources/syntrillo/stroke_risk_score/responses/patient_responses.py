@@ -6,9 +6,10 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 
 from syntrillo.system.logger import logger
 
-from syntrillo.stroke_risk_score.responses.section_i.medications import MedicationsResponse
-from syntrillo.stroke_risk_score.responses.section_i.lab_values import LabValuesResponse
-from syntrillo.stroke_risk_score.responses.section_i.history import HistoryResponse
+from syntrillo.stroke_risk_score.responses.medications import MedicationParser
+from syntrillo.stroke_risk_score.responses.lab_values import LabValuesResponse
+from syntrillo.stroke_risk_score.responses.history import HistoryResponse
+from syntrillo.stroke_risk_score.responses.test_orders import TestsOrdersResponse
 
 class PatientResponses:
     """
@@ -22,105 +23,14 @@ class PatientResponses:
         4. metric / value
         5. form_id + module_id
 
-    get_query_response() takes in form_id + module_id and returns the raw response.
+    query_response() takes in form_id + module_id and returns the raw response.
 
-    Remaining class methods are subsection-oriented. Each obtain form_id + module_id from response_ids, run get_query_response(), and returns formatted dict.
+    Remaining class methods are subsection-oriented. Each obtain form_id + module_id from response_ids, run query_response(), and returns formatted dict.
 
     """
     syntrillo_internal_key: uuid.UUID = None
     syntrillo_database_manager: SyntrilloDatabaseManager = None
     env: Literal['staging', 'prod'] = 'staging'
-
-    response_ids = {
-        'section_i': {
-            'medication_ids': {
-                'staging': {
-                    'medications': {'form_id': '2155936', 'module_id': '18520987' }
-                },
-                'prod': {}
-            },
-            'lab_values_ids': {
-                'staging': {
-                    'ldl': {'form_id': '1765843', 'module_id': '15159782'},
-                    'ha1c': {'form_id': '1765843', 'module_id': '15159786'}
-                },
-                'prod': {}
-            },
-            'history_ids': {
-                'staging': {
-                    'smoker': {'form_id': '2155936', 'module_id': '18519144'},
-                    # 'ia': {'form_id': '1765843', 'module_id': '15159786'}, # ??
-                    'afib': {'form_id': '2155936', 'module_id': '18518428'},
-                    # 'osa': {'form_id': '2155936', 'module_id': '18518428'}, # ??
-                    'cpap_prescription': {'form_id': '2155936', 'module_id': '18519138'},
-                    'cpap_usage': {'form_id': '2155936', 'module_id': '18519139'},
-                },
-                'prod': {}
-            }
-        },
-        'section_ii': {
-            'tests_ids': {
-                'staging': {
-                    # 'cta_performed': {'form_id': '', 'module_id': ''},
-                    '30_day_cardiac_monitoring': {'form_id': '2155936', 'module_id': '18518423'},
-                    # 'carotid_imaging': {'form_id': '', 'module_id': ''},
-                    # 'last_hemoglobin_a1c': {'form_id': '', 'module_id': ''},
-                },
-                'prod': {
-                    # 'cta_performed': {'form_id': '2290157', 'module_id': '30011905'},
-                    # '30_day_cardiac_monitoring': {'form_id': '2131055', 'module_id': '28020687'},
-                    # 'carotid_imaging': {'form_id': '', 'module_id': ''},
-                    # 'last_hemoglobin_a1c': {'form_id': '', 'module_id': ''},
-                }
-            },
-            'history_ids': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-        'section_iii': {
-            'hypertension_ids': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-        'section_iv': {
-            'exercise_ids': {
-                'staging': {
-                    'vigorous': {'form_id': '2155903', 'module_id': '18516167'},
-                    'moderate': {'form_id': '2155903', 'module_id': '18516168'},
-                },
-                'prod': {
-                    'vigorous': {'form_id': '2174066', 'module_id': '29945718'},
-                    'moderate': {'form_id': '2174066', 'module_id': '29945729'},
-                }
-            }
-        },
-        'section_v': {
-            'bmi': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-        'section_vi': {
-            'heart_rate': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-        'section_vii': {
-            'resting_heart_rate': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-        'section_vii': {
-            'smoking': {
-                'staging': {},
-                'prod': {}
-            }
-        },
-    }
 
     response_label = {
             'section_i': {
@@ -159,7 +69,7 @@ class PatientResponses:
         self.env = env
 
 
-    def get_query_response(self, module_label):
+    def query_response(self, module_label):
         '''
         Accepts form_id and module_id and returns unformatted data
         '''
@@ -204,21 +114,31 @@ class PatientResponses:
                 cursor.execute(response_query)
                 result = cursor.fetchall()
 
-            print(f"***** RAW RESPONSE: {result}")
-            print(f"***** RESPONSE: {type(result[0][0])}")
-            print(f"***** INDEXED RESPONSE: {result[0][0]}")
+            print(f"** 1 ** RAW RESPONSE: {result}")
+            print(f"** 2 ** RESPONSE: {result[0][0]}")
+            print(f"** 3 ** RESPONSE TYPE: {type(result[0][0])}")
+            # print(f"***** INDEXED RESPONSE: {result[0][0]}")
 
-            db_connection.close()
+            # db_connection.close()
 
             return result[0][0]
 
         except Exception as e:
             # logger.info(f"Error fetching form #{form_id} and module #{module_id}: {e}")
-            logger.info(f"Error fetching form {module_label}: {e}")
+            logger.info(f"Error fetching module {module_label}: {e}")
             return None
 
+
+    def close_db_conn(self):
+        db_conn = self.syntrillo_database_manager.conn
+        db_conn.close()
+
+
     def get_etiology(self):
-        return 'Cardioembolic'
+        etiology = self.query_response("stroke_etiology")
+
+        return etiology
+
 
     def get_medications(self):
         '''
@@ -227,15 +147,15 @@ class PatientResponses:
         - Retrieve formatted dict via MedicationsResponse class
         '''
 
-        raw_medication_response = self.get_query_response("meds_statin_plavix_aspirin_anticoagulants")
-        raw_medication_compliance_response = self.get_query_response("medication_adherence_combined")
+        raw_medication_response = self.query_response("meds_statin_plavix_aspirin_anticoagulants")
+        raw_medication_compliance_response = self.query_response("medication_adherence_combined")
 
-        medication_response = MedicationsResponse(
-            medication_response=raw_medication_response,
-            medication_compliance_response=raw_medication_compliance_response
-            ).prescriptions_and_compliances()
+        db_conn = self.syntrillo_database_manager.conn
 
-        return medication_response
+        parser = MedicationParser(prescription_str=raw_medication_response, adherence_html=raw_medication_compliance_response, db_conn=db_conn)
+        meds = parser.get_medications()
+
+        return meds
 
 
     def get_lab_values(self):
@@ -245,9 +165,9 @@ class PatientResponses:
         - Retrieve formatted dict via LabValuesResponse class
         '''
 
-        raw_ldl_response = self.get_query_response("ldl")
+        raw_ldl_response = self.query_response("ldl")
 
-        raw_ha1c_response = self.get_query_response("ha1c")
+        raw_ha1c_response = self.query_response("ha1c")
 
         lab_values_response = LabValuesResponse(ldl_response=raw_ldl_response, ha1c_response=raw_ha1c_response).get_lab_values()
 
@@ -259,22 +179,24 @@ class PatientResponses:
         - Query raw data
         - Retrieve formatted dict via LabValuesResponse class
         """
-        smoker_raw_response = self.get_query_response("current_smoker")
+        history_raw_response = self.query_response("medical_history") # afib, carotid stenosis, diabetes, sleep apnea
 
-        # ia_raw_response = self.get_query_response("null")
+        # ia_raw_response = self.query_response("null")
 
-        # afib_raw_response = self.get_query_response("null")
+        # afib_raw_response = self.query_response("null")
 
-        # osa_raw_response = self.get_query_response(osa_form_id, osa_module_id)
+        # osa_raw_response = self.query_response(osa_form_id, osa_module_id)
 
-        cpap_prescription_raw_response = self.get_query_response("cpap_prescribed")
+        smoker_raw_response = self.query_response("current_smoker")
 
-        cpap_usage_raw_response = self.get_query_response("cpap_regular_usage")
+        cpap_prescription_raw_response = self.query_response("cpap_prescribed")
+
+        cpap_usage_raw_response = self.query_response("cpap_regular_usage")
 
         history_response = HistoryResponse(
+            history_response=history_raw_response,
             smoker_response=smoker_raw_response,
             # ia_response=ia_raw_response,
-            # afib_response=afib_raw_response,
             # osa_response=osa_raw_response,
             cpap_prescription_response=cpap_prescription_raw_response,
             cpap_usage_response=cpap_usage_raw_response
@@ -282,21 +204,103 @@ class PatientResponses:
 
         return history_response
 
+    def get_tests_orders(self):
+
+        cta_performed = self.query_response("cta_performed")
+        cardiac_monitoring_30day = self.query_response("cardiac_monitoring_30day")
+        # cardiac_imaging = self.query_response("cardiac_imaging") # NEEDS STAGING MODULE
+        ha1c_6mo = self.query_response("ha1c_6mo")
+
+        tests_orders = TestsOrdersResponse(cta_performed, cardiac_monitoring_30day, ha1c_6mo).get_tests_orders()
+
+        return tests_orders
+
+    def get_blood_pressure(self):
+        sbp_initial = self.query_response("systolic_bp_initial")
+        dbp_initial = self.query_response("diastolic_bp_initial")
+
+        return {
+            'sbp': int(sbp_initial),
+            'dbp': int(dbp_initial)
+        }
+
+    def get_exercise(self):
+        moderate_exercise = self.query_response("moderate_exercise")
+        vigorous_exercise = self.query_response("vigorous_exercise")
+
+        return {
+            'mod_exercise': moderate_exercise,
+            'vig_exercise': vigorous_exercise
+        }
+
+    def get_bmi(self):
+        height = self.query_response("height_combined")
+        weight = self.query_response("weight")
+
+        bmi = int(weight) / (int(height) ** 2) * 703
+
+        return {
+            'bmi': round(bmi, 1)
+        }
+
+    def get_hrv(self):
+        return {
+            "hrv": "No module available."
+        }
+
+    def get_resting_hr(self):
+        heart_rate = self.query_response("resting_hr_initial")
+
+        return {
+            'resting_hr': heart_rate
+        }
+
+    def get_smoking(self):
+        cigarettes_per_day = self.query_response("cigarettes_per_day_avg")
+
+        return {
+            'packs_per_day': cigarettes_per_day
+        }
 
 if __name__ == "__main__":
 
-    # healthie_user_id = "1525423"
+    healthie_user_id = "1525423"
 
-    # look_up_codes_management = LookUpCodesManagement()
-    # entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
-    # internal_key = entry['syntrillo_internal_key']
+    look_up_codes_management = LookUpCodesManagement()
+    entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
+    internal_key = entry['syntrillo_internal_key']
 
-    # medications = PatientResponses(internal_key, env='staging').get_medications()
-    medications = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_medications()
-    print(f"***** Medication Response: {medications}")
+    responses = PatientResponses(internal_key, env='staging')
+
+    # etiology = responses.get_etiology()
+
+    # medications = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_medications()
+    # medications = responses.get_medications()
+    # print(f"***** Medication Response: {medications}")
 
     # lab_values = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_lab_values()
+    # lab_values = PatientResponses(internal_key, env='staging').get_lab_values()
     # print(f"***** Lab Value Response: {lab_values}")
 
-    # history = PatientResponses("99fddf03-9304-4e48-8711-0cc4d825eb94", env='staging').get_history()
+    # history = PatientResponses(internal_key, env='staging').get_history()
     # print(f"***** History Response: {history}")
+
+    # tests = PatientResponses(internal_key, env='staging').get_tests_orders()
+    # print(f"***** Tests/Orders Response: {tests}")
+
+    # blood_pressure = PatientResponses(internal_key, env='staging').get_blood_pressure()
+    # print(f"Blood Pressure: {blood_pressure}")
+
+    # exercise = responses.get_exercise()
+    # print(f"Blood Pressure: {exercise}")
+
+    # bmi = PatientResponses(internal_key, env='staging').get_bmi()
+    # print(f"BMI: {bmi}")
+
+    # resting_hr = responses.get_resting_hr()
+    # print(f"Resting Heart Rate: {resting_hr}")
+
+    smoking_freq = responses.get_smoking()
+    print(f"Smoking Frequency: {smoking_freq}")
+
+    responses.close_db_conn()

@@ -6,10 +6,15 @@ def get_question_variables(db_connection):
         with db_connection.cursor() as cursor:
             query = f"""
                 SELECT
-                    label
+                    module_label
                 FROM
                     module_label_look_up
+                WHERE
+                    module_id_prod = '32509911'
             """
+            # query = f"""
+            #     SHOW COLUMNS FROM module_label_look_up
+            # """
 
             cursor.execute(query)
             result = cursor.fetchall()
@@ -21,7 +26,7 @@ def get_question_variables(db_connection):
         return result[0][0]
 
     except Exception as e:
-        print(f"Failed to fetch.")
+        print(f"Failed to fetch: {e}")
         return None
 
 if __name__ == "__main__":
