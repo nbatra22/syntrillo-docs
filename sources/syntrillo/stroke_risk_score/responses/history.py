@@ -1,4 +1,6 @@
 from datetime import datetime
+import re
+from typing import Optional
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -14,14 +16,16 @@ class HistoryResponse:
             # afib_response,
             # osa_response,
             smoker_response,
+            smoking_freq_response,
             cpap_prescription_response,
             cpap_usage_response
         ):
         self.history_response = history_response
-        self.smoker_response = smoker_response
         # self.ia_response = ia_response
         # self.afib_response = afib_response
         # self.osa_response = osa_response
+        self.smoker_response = smoker_response
+        self.smoking_freq_response = smoking_freq_response
         self.cpap_prescription_response = cpap_prescription_response
         self.cpap_usage_response = cpap_usage_response
 
@@ -33,6 +37,7 @@ class HistoryResponse:
             # 'icad': False,
             # 'osa': False,
             'smoker': False,
+            'smoking_frequency': 0,
             'cpap_prescription': False,
             'cpap_use': False
         }
@@ -61,6 +66,12 @@ class HistoryResponse:
         if self.smoker_response == 'Yes':
             self.history['smoker'] = True
 
+        # Set smoking frequency
+        if self.smoking_freq_response:
+            self.history['smoking_frequency'] = self._extract_cigarettes_per_day(self.smoking_freq_response)
+        else:
+            self.history['smoking_frequency'] = None
+
         # Set CPAP prescription
         if self.cpap_prescription_response == 'Yes':
             self.history['cpap_prescription'] = True
@@ -68,6 +79,36 @@ class HistoryResponse:
         # Set smoker
         if self.cpap_usage_response == 'Yes':
             self.history['cpap_usage'] = True
+
+    def _extract_cigarettes_per_day(self, text: str) -> Optional[int]:
+
+        # Try to extract number range from (X-Y cigarettes)
+        range_match = re.search(r'\((\d+)[\s\-to]+(\d+)\s+cigarettes?\)', text, re.IGNORECASE)
+        if range_match:
+            low = int(range_match.group(1))
+            high = int(range_match.group(2))
+            return round((low + high) / 2)
+
+        # Keyword-based estimation
+        lower_text = text.lower()
+        if "less than half a pack" in lower_text:
+            return 5
+        elif "half a pack" in lower_text and "a pack" in lower_text:
+            return 15
+        elif "half a pack" in lower_text:
+            return 10
+        elif "a pack" in lower_text or "one pack" in lower_text:
+            return 20
+        elif "more than a pack" in lower_text or "over a pack" in lower_text:
+            return 30
+
+        # Fallback: extract a single number of cigarettes
+        single_match = re.search(r'(\d+)\s+cigarettes?', text, re.IGNORECASE)
+        if single_match:
+            return int(single_match.group(1))
+
+        return None
+
 
     def get_history(self):
         return self.history

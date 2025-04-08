@@ -189,15 +189,18 @@ class PatientResponses:
 
         smoker_raw_response = self.query_response("current_smoker")
 
+        smoking_freq_raw_response = self.query_response("cigarettes_per_day_avg")
+
         cpap_prescription_raw_response = self.query_response("cpap_prescribed")
 
         cpap_usage_raw_response = self.query_response("cpap_regular_usage")
 
         history_response = HistoryResponse(
             history_response=history_raw_response,
-            smoker_response=smoker_raw_response,
             # ia_response=ia_raw_response,
             # osa_response=osa_raw_response,
+            smoker_response=smoker_raw_response,
+            smoking_freq_response=smoking_freq_raw_response,
             cpap_prescription_response=cpap_prescription_raw_response,
             cpap_usage_response=cpap_usage_raw_response
         ).get_history()
@@ -282,8 +285,8 @@ if __name__ == "__main__":
     # lab_values = PatientResponses(internal_key, env='staging').get_lab_values()
     # print(f"***** Lab Value Response: {lab_values}")
 
-    # history = PatientResponses(internal_key, env='staging').get_history()
-    # print(f"***** History Response: {history}")
+    history = PatientResponses(internal_key, env='staging').get_history()
+    print(f"***** History Response: {history}")
 
     # tests = PatientResponses(internal_key, env='staging').get_tests_orders()
     # print(f"***** Tests/Orders Response: {tests}")
@@ -300,7 +303,7 @@ if __name__ == "__main__":
     # resting_hr = responses.get_resting_hr()
     # print(f"Resting Heart Rate: {resting_hr}")
 
-    smoking_freq = responses.get_smoking()
-    print(f"Smoking Frequency: {smoking_freq}")
+    # smoking_freq = responses.get_smoking()
+    # print(f"Smoking Frequency: {smoking_freq}")
 
     responses.close_db_conn()

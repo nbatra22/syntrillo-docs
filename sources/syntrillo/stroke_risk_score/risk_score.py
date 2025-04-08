@@ -6,6 +6,7 @@ from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
+from syntrillo.stroke_risk_score.score_calculator.section_i import SectionOneCalculator
 
 
 class StrokeRiskScore:
@@ -76,18 +77,25 @@ class StrokeRiskScore:
 
         score = 0
 
+        calculator = SectionOneCalculator(data)
+
         if etiology == 'Cardioembolic':
-            if medications['blood thinner'][0] == True:
-                score += 6.3
-            if medications['statin'][0] == True and lab_values['ldl'][0] == True:
-                score += 2.6
-            if medications['blood thinner'][0] == False and medications['aspirin'][0] == False and medications['plavix'][0] == False and medications['statin'][0] == False and medications['antiplate'][0] == False and medications['hypoglycemic'][0] == False and medications['antihypertensive'][0] == False and history['smoker'] == True:
-                score += 1.6
-            else:
-                score += 6.3
+            score = calculator.score_cardioembolic()
 
         if etiology == 'Large Vessel':
-            score += 6.3
+            score = calculator.score_large_vessel()
+
+        if etiology == 'Small Vessel':
+            score = calculator.score_small_vessel()
+
+        if etiology == 'Cryptogenic':
+            score = calculator.score_cryptogenic()
+
+        if etiology == 'Other':
+            score = calculator.score_other()
+
+        if etiology == 'N/A':
+            score = calculator.score_na()
 
         return (score, data)
 
@@ -193,8 +201,11 @@ if __name__ == "__main__":
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
     internal_key = entry['syntrillo_internal_key']
 
-    risk_score = StrokeRiskScore(syntrillo_internal_key=internal_key).calculate_risk_score()
-    print(f"Risk Score: {risk_score}")
+    # risk_score = StrokeRiskScore(syntrillo_internal_key=internal_key).calculate_risk_score()
+    # print(f"Risk Score: {risk_score}")
+
+    section_i = StrokeRiskScore(syntrillo_internal_key=internal_key)._section_i()
+    print(f"Section I: {section_i}")
 
 
 # {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplatte': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, ''), 'LDL': 2, 'HA1c': 0}
