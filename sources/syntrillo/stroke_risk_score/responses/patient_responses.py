@@ -93,7 +93,7 @@ class PatientResponses:
                 cursor.execute(ids_query)
                 result = cursor.fetchall()
 
-                print(f"IDS QUERY RESULT: {result}")
+                print(f"IDS QUERY RESULT: {result} | {module_label}")
 
                 form_id = result[0][0]
                 module_id = result[0][1]

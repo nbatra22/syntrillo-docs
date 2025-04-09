@@ -467,27 +467,27 @@
             method: "POST",
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.analysis_html && data.extremes_html && data.analysis_json && data.extremes_json) {
-                bpAnalysisContent.innerHTML = data.analysis_html;
-                extremesContent.innerHTML = data.extremes_html;
-                hiddenAnalysisInput.value = data.analysis_json;
-                hiddenExtremesInput.value = data.extremes_json;
-            }
+            .then(response => response.json())
+            .then(data => {
+                if (data.analysis_html && data.extremes_html && data.analysis_json && data.extremes_json) {
+                    bpAnalysisContent.innerHTML = data.analysis_html;
+                    extremesContent.innerHTML = data.extremes_html;
+                    hiddenAnalysisInput.value = data.analysis_json;
+                    hiddenExtremesInput.value = data.extremes_json;
+                }
 
-            if (data.error) {
-                bpAnalysisContent.innerHTML = `<h2 class="bp-no-data-error">${data.error}</h2>`
-                extremesContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
-            }
-        })
-        .catch(error => console.error("Error fetching data:", error))
-        .finally(() => {
-            filterMenu.style.display = 'none';
-            hideSpinner(bpAnalysisContent);
-            hideSpinner(extremesContent);
-            filterSubmit.disabled = false;
-        })
+                if (data.error) {
+                    bpAnalysisContent.innerHTML = `<h2 class="bp-no-data-error">${data.error}</h2>`
+                    extremesContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
+                }
+            })
+            .catch(error => console.error("Error fetching data:", error))
+            .finally(() => {
+                filterMenu.style.display = 'none';
+                hideSpinner(bpAnalysisContent);
+                hideSpinner(extremesContent);
+                filterSubmit.disabled = false;
+            })
     }
 
     // Fetch Blood Pressure data on first render

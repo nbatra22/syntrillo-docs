@@ -34,29 +34,31 @@ class StrokeRiskScore:
     def calculate_risk_score(self):
 
         si_score, si_data = self._section_i()
-        sii_score, sii_data = self._section_ii()
+        sii_score, sii_data = self._section_ii(history=si_data['history'])
         siii_score, siii_data = self._section_iii()
         siv_score, siv_data = self._section_iv()
         sv_score, sv_data = self._section_v()
         # svi_score, svi_data = self._section_vi()
         svii_score, svii_data = self._section_vii()
-        sviii_score, sviii_data = self._section_viii()
+        sviii_score, sviii_data = self._section_viii(cigarettes=si_data['history']['smoking_frequency'])
 
-        total_score = si_score + sii_score + siii_score + siv_score + sv_score + svii_score + svii_score
+        total_score = si_score + sii_score + siii_score + siv_score + sv_score + svii_score + sviii_score
 
         data = {
-            'i': (si_score, si_data),
-            'ii': (sii_score, sii_data),
-            'iii': (siii_score, siii_data),
-            'iv': (siv_score, siv_data),
-            'v': (sv_score, sv_data),
-            # 'vi': (svi_score, svi_data),
-            'vii': (svii_score, svii_data),
-            'viii': (sviii_score, sviii_data),
+            'i': {'score': round(float(si_score), 1), **si_data},
+            'ii': {'score': round(float(sii_score), 1), **sii_data},
+            'iii': {'score': round(float(siii_score), 1), **siii_data},
+            'iv': {'score': round(float(siv_score), 1), **siv_data},
+            'v': {'score': round(float(sv_score), 1), **sv_data},
+            # 'vi': {'score': round(float(svi_score), 1), **svi_data},  # uncomment if needed
+            'vii': {'score': round(float(svii_score), 1), **svii_data},
+            'viii': {'score': round(float(sviii_score), 1), **sviii_data},
         }
 
+        self.patient_responses.close_db_conn()
+
         return {
-            'total_score': total_score,
+            'total_score': round(total_score, 1),
             'data': data
         }
 
@@ -99,11 +101,20 @@ class StrokeRiskScore:
 
         return (score, data)
 
-    def _section_ii(self):
+    def _section_ii(self, history):
 
         data = self.patient_responses.get_tests_orders()
 
         score = 0
+
+        if data['cta_performed'] == False or data['cardiac_monitoring_30day'] == False:
+            score = 1.3
+
+        if data['cta_performed'] == False and history['carotid_stenosis'] == True:
+            score = 0.6
+
+        if data['ha1c_6mo'] == False and history['diabetes'] == True:
+            score = 0.2
 
         return (score, data)
 
@@ -185,13 +196,20 @@ class StrokeRiskScore:
         return (score, data)
 
 
-    def _section_viii(self):
-
+    def _section_viii(self, cigarettes):
         data = self.patient_responses.get_smoking()
 
-        score = 0
+        if cigarettes is None or cigarettes <= 0:
+            score = 0.0
+        elif cigarettes >= 20:
+            score = 1.6
+        else:
+            # Linear interpolation: start at 1 cigarette = 0.5, up to 20 = 1.6
+            slope = (1.6 - 0.5) / (20 - 1)  # = 0.0579...
+            score = 0.5 + slope * (cigarettes - 1)
 
         return (score, data)
+
 
 
 if __name__ == "__main__":
@@ -201,11 +219,11 @@ if __name__ == "__main__":
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
     internal_key = entry['syntrillo_internal_key']
 
-    # risk_score = StrokeRiskScore(syntrillo_internal_key=internal_key).calculate_risk_score()
-    # print(f"Risk Score: {risk_score}")
+    risk_score = StrokeRiskScore(syntrillo_internal_key=internal_key).calculate_risk_score()
+    print(f"Risk Score: {risk_score}")
 
-    section_i = StrokeRiskScore(syntrillo_internal_key=internal_key)._section_i()
-    print(f"Section I: {section_i}")
+    # section_i = StrokeRiskScore(syntrillo_internal_key=internal_key)._section_i()
+    # print(f"Section I: {section_i}")
 
 
 # {'blood thinner': (False, ''), 'aspirin': (True, 'chew 1 tablet by mouth daily'), 'plavix': (False, ''), 'statin': (True, 'take 1 tablet by mouth nightly'), 'antiplatte': (False, ''), 'hypoglycemic': (False, ''), 'antihypertensive': (False, ''), 'LDL': 2, 'HA1c': 0}

@@ -7,7 +7,7 @@ class MedicationParser:
         self,
         prescription_str: Optional[str] = None,
         adherence_html: Optional[str] = None,
-        db_conn=None  # Pass your database connection here
+        db_conn=None
     ):
         self.prescription_str = prescription_str
         self.adherence_html = adherence_html
@@ -21,19 +21,25 @@ class MedicationParser:
         if self.adherence_html:
             self._parse_adherence()
 
-    def _load_medication_classifications(self) -> Dict[str, str]:
+    def _load_medication_classifications(self) -> Dict[str, Dict[str, Optional[str]]]:
         """
-        Load medication names and their classification into a dict.
-        Keys are lowercased medication names for matching.
+        Load medication names and their classification/supercategory into a dict.
+        Keys are lowercased medication names.
+        Values are dicts with `classification` and `supercategory`.
         """
-        query = "SELECT medication_name, classification FROM medication_classifications;"
+        query = "SELECT medication_name, classification, supercategory FROM medication_classifications;"
         cursor = self.db_conn.cursor()
         cursor.execute(query)
         rows = cursor.fetchall()
         cursor.close()
 
-        return {med.lower(): classification for med, classification in rows}
-
+        return {
+            med.lower(): {
+                "classification": classification,
+                "supercategory": supercategory
+            }
+            for med, classification, supercategory in rows
+        }
 
     def _clean_name(self, name: str) -> str:
         keywords_to_remove = ["oral", "tablet", "support", "miscellaneous"]
@@ -42,41 +48,48 @@ class MedicationParser:
             cleaned = cleaned.replace(keyword, "")
         return cleaned.strip()
 
-
-    def _match_medication_classification(self, raw_name: str) -> Optional[str]:
+    def _match_medication_classification_and_supercategory(self, raw_name: str) -> Dict[str, Optional[str]]:
         cleaned = self._clean_name(raw_name)
 
-        # Try to match substrings with known medications
-        for med_name, classification in self.medication_lookup.items():
+        for med_name, info in self.medication_lookup.items():
             if med_name in cleaned:
-                return classification
+                return {
+                    "classification": info["classification"],
+                    "supercategory": info["supercategory"]
+                }
 
-        # If no med match, try matching against classification labels
-        for classification in set(self.medication_lookup.values()):
-            if classification in cleaned:
-                return classification
+        # If no med match, try matching classification/supercategory directly
+        all_classifications = {info["classification"] for info in self.medication_lookup.values()}
+        all_supercategories = {info["supercategory"] for info in self.medication_lookup.values()}
 
-        return None
+        for classification in all_classifications:
+            if classification and classification in cleaned:
+                return {"classification": classification, "supercategory": None}
 
+        for supercategory in all_supercategories:
+            if supercategory and supercategory in cleaned:
+                return {"classification": None, "supercategory": supercategory}
+
+        return {"classification": None, "supercategory": None}
 
     def _parse_prescriptions(self):
         blocks = self.prescription_str.split('\\\\')
 
         for block in blocks:
-            parts = re.split(r'\r\|\r\|', block.strip())
+            parts = block.split('\r|\r|')
 
-            if len(parts) >= 4:
+            if len(parts) >= 2:
                 raw_name = parts[0].strip().lower()
-                instructions = parts[3].strip().lower()
-                classification = self._match_medication_classification(raw_name)
+                instructions = parts[1].split('\r|')[1].strip().lower() if len(parts[1].split('\r|')) > 1 else None
+                info = self._match_medication_classification_and_supercategory(raw_name)
 
                 if raw_name:
                     self.medications[raw_name] = {
-                        "classification": classification,
+                        "classification": info["classification"],
+                        "supercategory": info["supercategory"],
                         "instructions": instructions,
                         "compliance": None
                     }
-
 
     def _parse_adherence(self):
         soup = BeautifulSoup(self.adherence_html, "html.parser")
@@ -87,7 +100,7 @@ class MedicationParser:
                 med, compliance = map(str.strip, line.split("-", 1))
                 med = med.lower()
                 compliance = compliance.lower()
-                
+
                 if med == '[medication]':
                     continue
 
@@ -100,9 +113,10 @@ class MedicationParser:
                 if matched_key:
                     self.medications[matched_key]["compliance"] = compliance
                 else:
-                    classification = self.medication_lookup.get(med)
+                    info = self.medication_lookup.get(med)
                     self.medications[med] = {
-                        "classification": classification,
+                        "classification": info["classification"] if info else None,
+                        "supercategory": info["supercategory"] if info else None,
                         "instructions": None,
                         "compliance": compliance
                     }
