@@ -63,7 +63,7 @@ class SectionOneCalculator:
             return 2.6
         if smoker:
             return 1.6
-        return 0
+        return 6.3
 
     def score_large_vessel(self):
         meds = self.medications
@@ -81,7 +81,7 @@ class SectionOneCalculator:
             return 6.3
         if afib:
             return 4.2
-        return 0
+        return 6.3
 
     def score_small_vessel(self):
         meds = self.medications
@@ -105,7 +105,7 @@ class SectionOneCalculator:
             return 6.4
         if afib:
             return 4.2
-        return 0
+        return 6.3
 
     def score_other(self):
         history = self.data.get('history', {})
@@ -116,7 +116,7 @@ class SectionOneCalculator:
             return 2.6 if smoker else 1.6
         if intracranial_atherosclerosis is True:
             return 6.3
-        return 0
+        return 6.3
 
     def score_cryptogenic(self):
         meds = self.medications
@@ -142,7 +142,7 @@ class SectionOneCalculator:
             return 1.1
         if not meds['hypoglycemic'][1] and ha1c is not None and ha1c > 6.5:
             return 1.1
-        return 0
+        return 6.3
 
     def score_na(self):
         meds = self.medications
@@ -158,4 +158,4 @@ class SectionOneCalculator:
             return 1.1
         if not meds['hypoglycemic'][1] and ha1c is not None and ha1c > 6.5:
             return 1.1
-        return 0
+        return 6.3

@@ -11,9 +11,9 @@ class TestsOrdersResponse:
         self.ha1c_6mo = ha1c_6mo
 
         self.tests_orders = {
-            'cta_performed': False, # boolean
-            'cardiac_monitoring_30day': False,
-            'ha1c_6mo': False
+            'cta_performed': None, # boolean
+            'cardiac_monitoring_30day': None,
+            'ha1c_6mo': None
         }
 
     def get_tests_orders(self):
@@ -35,16 +35,25 @@ class TestsOrdersResponse:
             if 'cta' in block.lower():
                 self.tests_orders['cta_performed'] = True
                 break  # optional: stops after first match
+            else:
+                self.tests_orders['cta_performed'] = False
 
 
     def _parse_cardiac_monitoring_30day(self):
 
         if self.cardiac_monitoring_30day == 'Yes':
             self.tests_orders['cardiac_monitoring_30day'] = True
+        elif self.cardiac_monitoring_30day == 'No':
+            self.tests_orders['cardiac_monitoring_30day'] = False
 
     def _parse_ha1c_6mo(self):
+        if self.ha1c_6mo is None:
+            return
+
         ha1c_date = datetime.strptime(self.ha1c_6mo, "%Y-%m-%d")
         six_months_ago = datetime.today() - relativedelta(months=6)
 
         if ha1c_date < six_months_ago:
             self.tests_orders['ha1c_6mo'] = True
+        else:
+            self.tests_orders['ha1c_6mo'] = False

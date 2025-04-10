@@ -104,7 +104,12 @@ class StrokeRiskScore:
 
         max_score = 1.3
 
+        # Check if data or history are missing entirely
         if not data or not history:
+            return (max_score, data)
+
+        # Check if all values in both data and history are None
+        if all(value is None for value in data.values()) and all(value is None for value in history.values()):
             return (max_score, data)
 
         score = 0
@@ -167,7 +172,7 @@ class StrokeRiskScore:
         elif total_min >= 200:
             score = 3.0
         else:
-            score = (total_min / 200) * 3
+            score = 3 - ((total_min / 200) * 3)
 
         return (score, data)
 

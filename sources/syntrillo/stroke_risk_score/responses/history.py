@@ -30,46 +30,58 @@ class HistoryResponse:
         self.cpap_usage_response = cpap_usage_response
 
         self.history = {
-            'carotid_stenosis': False,
-            'afib': False,
-            'diabetes': False,
-            'sleep_apnea': False,
-            # 'icad': False,
-            'intracranial_atherosclerosis': False,
-            'smoker': False,
+            'carotid_stenosis': None,
+            'afib': None,
+            'diabetes': None,
+            'sleep_apnea': None,
+            # 'icad': None,
+            'intracranial_atherosclerosis': None,
+            'smoker': None,
             'smoking_frequency': 0,
-            'cpap_prescription': False,
-            'cpap_use': False
+            'cpap_prescription': None,
+            'cpap_use': None
         }
 
         self._parse_history()
 
     def _parse_history(self):
         # Set history answers
-        if self.history_response:
+        if self.history_response is not None:
             conditions = self.history_response.split('|')
 
             for condition in conditions:
 
                 if 'carotid stenosis' in condition.lower():
                     self.history['carotid_stenosis'] = True
+                else:
+                    self.history['carotid_stenosis'] = False
 
                 if 'atrial fibrillation' in condition.lower():
                     self.history['afib'] = True
+                else:
+                    self.history['afib'] = False
 
                 if 'diabetes' in condition.lower():
                     self.history['diabetes'] = True
+                else:
+                    self.history['diabetes'] = False
 
                 if 'sleep apnea' in condition.lower():
                     self.history['sleep_apnea'] = True
+                else:
+                    self.history['sleep_apnea'] = False
 
         # Set intracranial atherosclerosis
-        if self.ia_response:
+        if self.ia_response == 'Yes':
             self.history['intracranial_atherosclerosis'] = True
+        elif self.ia_response == 'No':
+            self.history['intracranial_atherosclerosis'] = False
 
         # Set smoker
         if self.smoker_response == 'Yes':
             self.history['smoker'] = True
+        elif self.smoker_response == 'No':
+            self.history['smoker'] = False
 
         # Set smoking frequency
         if self.smoking_freq_response:
@@ -80,10 +92,14 @@ class HistoryResponse:
         # Set CPAP prescription
         if self.cpap_prescription_response == 'Yes':
             self.history['cpap_prescription'] = True
+        elif self.cpap_prescription_response == 'No':
+            self.history['cpap_prescription'] = False
 
-        # Set smoker
+        # Set CPAP usage
         if self.cpap_usage_response == 'Yes':
             self.history['cpap_usage'] = True
+        elif self.cpap_usage_response == 'No':
+            self.history['cpap_usage'] = False
 
     def _extract_cigarettes_per_day(self, text: str) -> Optional[int]:
 
