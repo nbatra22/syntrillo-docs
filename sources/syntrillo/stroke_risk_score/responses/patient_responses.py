@@ -181,7 +181,7 @@ class PatientResponses:
         """
         history_raw_response = self.query_response("medical_history") # afib, carotid stenosis, diabetes, sleep apnea
 
-        # ia_raw_response = self.query_response("null")
+        intra_athero_raw_response = self.query_response("intracranial_atherosclerosis")
 
         # afib_raw_response = self.query_response("null")
 
@@ -197,7 +197,7 @@ class PatientResponses:
 
         history_response = HistoryResponse(
             history_response=history_raw_response,
-            # ia_response=ia_raw_response,
+            ia_response=intra_athero_raw_response,
             # osa_response=osa_raw_response,
             smoker_response=smoker_raw_response,
             smoking_freq_response=smoking_freq_raw_response,
@@ -222,9 +222,12 @@ class PatientResponses:
         sbp_initial = self.query_response("systolic_bp_initial")
         dbp_initial = self.query_response("diastolic_bp_initial")
 
+        sbp = int(sbp_initial) if sbp_initial is not None else None
+        dbp = int(dbp_initial) if dbp_initial is not None else None
+
         return {
-            'sbp': int(sbp_initial),
-            'dbp': int(dbp_initial)
+            'sbp': sbp,
+            'dbp': dbp
         }
 
     def get_exercise(self):
@@ -237,14 +240,28 @@ class PatientResponses:
         }
 
     def get_bmi(self):
-        height = self.query_response("height_combined")
-        weight = self.query_response("weight")
+        height_response = self.query_response("height_combined")
+        weight_response = self.query_response("weight")
 
-        bmi = int(weight) / (int(height) ** 2) * 703
+        try:
+            height = int(height_response)
+            weight = int(weight_response)
 
-        return {
-            'bmi': round(bmi, 1)
-        }
+            bmi = weight / (height ** 2) * 703
+
+            return {
+                'bmi': round(bmi, 1),
+                'height': height,
+                'weight': weight
+            }
+
+        except (TypeError, ValueError):
+            # Return None for BMI if inputs are invalid or missing
+            return {
+                'bmi': None,
+                'height': height_response,
+                'weight': weight_response
+            }
 
     def get_hrv(self):
         return {

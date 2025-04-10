@@ -45,14 +45,14 @@
 <div class="container"> <!-- TODO : increase media max-width -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="tab-blood-pressure-tab" data-toggle="tab" href="#tab-blood-pressure" role="tab" aria-controls="tab-blood-pressure" aria-selected="true">Blood Pressure</a>
+            <a class="nav-link active" id="tab-risk-score-tab" data-toggle="tab" href="#tab-risk-score" role="tab" aria-controls="tab-risk-score" aria-selected="true">Risk Score</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-blood-pressure-tab" data-toggle="tab" href="#tab-blood-pressure" role="tab" aria-controls="tab-blood-pressure" aria-selected="false">Blood Pressure</a>
         </li>
         <!-- <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
         </li> -->
-        <li class="nav-item">
-            <a class="nav-link" id="tab-risk-score-tab" data-toggle="tab" href="#tab-risk-score" role="tab" aria-controls="tab-risk-score" aria-selected="false">Risk Score</a>
-        </li>
         <li class="nav-item">
             <a class="nav-link" id="tab-devices-tab" data-toggle="tab" href="#tab-devices" role="tab" aria-controls="tab-devices" aria-selected="false">Devices</a>
         </li>
@@ -74,9 +74,9 @@
         </li>
     </ul>
     <div class="tab-content p-4" id="myTabContent">
-        <div class="tab-pane fade show active" id="tab-blood-pressure" role="tabpanel" aria-labelledby="tab-blood-pressure-tab"></div>
+        <div class="tab-pane fade show active" id="tab-risk-score" role="tabpanel" aria-labelledby="tab-risk-score-tab"></div>
+        <div class="tab-pane fade" id="tab-blood-pressure" role="tabpanel" aria-labelledby="tab-blood-pressure-tab"></div>
         <!-- <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div> -->
-        <div class="tab-pane fade" id="tab-risk-score" role="tabpanel" aria-labelledby="tab-risk-score-tab"></div>
         <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
         <!-- <div class="tab-pane fade" id="tab-onboarding" role="tabpanel" aria-labelledby="tab-onboarding-tab"></div>
         <div class="tab-pane fade" id="tab-care-plan" role="tabpanel" aria-labelledby="tab-care-plan-tab"></div>
@@ -229,10 +229,10 @@
 
         // Load the content of the status tab immediately
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_status_bp.iframe_healthie_provider_tab_status") }}', '#tab-status', 10);
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure', 10);
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score") }}', '#tab-risk-score', 10);
 
         // Load the content of the other tabs in the background
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score") }}', '#tab-risk-score');
+        loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_care_plan_bp.iframe_healthie_provider_tab_care_plan") }}', '#tab-care-plan');

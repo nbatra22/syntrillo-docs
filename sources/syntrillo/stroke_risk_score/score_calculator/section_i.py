@@ -27,7 +27,7 @@ class SectionOneCalculator:
             instructions = info.get('instructions', '')
             compliance_str = info.get('compliance')
 
-            prescribed = bool(instructions and instructions.strip().lower() != "none")
+            prescribed = True
 
             compliant = False
             if isinstance(compliance_str, str):

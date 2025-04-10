@@ -12,7 +12,7 @@ class HistoryResponse:
     def __init__(
             self,
             history_response,
-            # ia_response,
+            ia_response,
             # afib_response,
             # osa_response,
             smoker_response,
@@ -21,7 +21,7 @@ class HistoryResponse:
             cpap_usage_response
         ):
         self.history_response = history_response
-        # self.ia_response = ia_response
+        self.ia_response = ia_response
         # self.afib_response = afib_response
         # self.osa_response = osa_response
         self.smoker_response = smoker_response
@@ -35,7 +35,7 @@ class HistoryResponse:
             'diabetes': False,
             'sleep_apnea': False,
             # 'icad': False,
-            # 'osa': False,
+            'intracranial_atherosclerosis': False,
             'smoker': False,
             'smoking_frequency': 0,
             'cpap_prescription': False,
@@ -46,21 +46,26 @@ class HistoryResponse:
 
     def _parse_history(self):
         # Set history answers
-        conditions = self.history_response.split('|')
+        if self.history_response:
+            conditions = self.history_response.split('|')
 
-        for condition in conditions:
+            for condition in conditions:
 
-            if 'carotid stenosis' in condition.lower():
-                self.history['carotid_stenosis'] = True
+                if 'carotid stenosis' in condition.lower():
+                    self.history['carotid_stenosis'] = True
 
-            if 'atrial fibrillation' in condition.lower():
-                self.history['afib'] = True
+                if 'atrial fibrillation' in condition.lower():
+                    self.history['afib'] = True
 
-            if 'diabetes' in condition.lower():
-                self.history['diabetes'] = True
+                if 'diabetes' in condition.lower():
+                    self.history['diabetes'] = True
 
-            if 'sleep apnea' in condition.lower():
-                self.history['sleep_apnea'] = True
+                if 'sleep apnea' in condition.lower():
+                    self.history['sleep_apnea'] = True
+
+        # Set intracranial atherosclerosis
+        if self.ia_response:
+            self.history['intracranial_atherosclerosis'] = True
 
         # Set smoker
         if self.smoker_response == 'Yes':

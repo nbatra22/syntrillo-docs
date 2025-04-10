@@ -77,33 +77,35 @@ class StrokeRiskScore:
             'history': history
         }
 
-        score = 0
+        max_score = 6.3
+        if not etiology:
+            return (max_score, data)
 
         calculator = SectionOneCalculator(data)
 
-        if etiology == 'Cardioembolic':
-            score = calculator.score_cardioembolic()
+        score_map = {
+            'Cardioembolic': calculator.score_cardioembolic,
+            'Large Vessel': calculator.score_large_vessel,
+            'Small Vessel': calculator.score_small_vessel,
+            'Cryptogenic': calculator.score_cryptogenic,
+            'Other': calculator.score_other,
+            'N/A': calculator.score_na
+        }
 
-        if etiology == 'Large Vessel':
-            score = calculator.score_large_vessel()
-
-        if etiology == 'Small Vessel':
-            score = calculator.score_small_vessel()
-
-        if etiology == 'Cryptogenic':
-            score = calculator.score_cryptogenic()
-
-        if etiology == 'Other':
-            score = calculator.score_other()
-
-        if etiology == 'N/A':
-            score = calculator.score_na()
+        score_func = score_map.get(etiology, lambda: max_score)
+        score = score_func()
 
         return (score, data)
+
 
     def _section_ii(self, history):
 
         data = self.patient_responses.get_tests_orders()
+
+        max_score = 1.3
+
+        if not data or not history:
+            return (max_score, data)
 
         score = 0
 
@@ -125,6 +127,11 @@ class StrokeRiskScore:
         systolic = data['sbp']
         diastolic = data['dbp']
 
+        max_score = 3
+
+        if systolic is None or diastolic is None:
+            return (max_score, data)
+
         if systolic < 130 and diastolic < 90:
             score = 0
 
@@ -145,17 +152,22 @@ class StrokeRiskScore:
 
         data = self.patient_responses.get_exercise()
 
-        mod_exercise = int(data['mod_exercise'])
-        vig_exercise = int(data['vig_exercise'])
+        max_score = 3.0
+
+        try:
+            mod_exercise = int(data.get('mod_exercise', 0))
+            vig_exercise = int(data.get('vig_exercise', 0))
+        except (TypeError, ValueError):
+            return (max_score, data)
 
         total_min = mod_exercise + vig_exercise
 
         if total_min <= 0:
             score = 0.0
         elif total_min >= 200:
-            score = 2.0
+            score = 3.0
         else:
-            score = (total_min / 200) * 2
+            score = (total_min / 200) * 3
 
         return (score, data)
 
@@ -164,15 +176,21 @@ class StrokeRiskScore:
 
         data = self.patient_responses.get_bmi()
 
-        if data['bmi'] <= 30:
+        bmi = data.get('bmi')
+        max_score = 2.0
+
+        if bmi is None:
+            return (max_score, data)
+
+        if bmi <= 30:
             score = 0.0
-        elif data['bmi'] >= 60:
-            score = 2.0
+        elif bmi >= 60:
+            score = max_score
         else:
-            # Linear interpolation between 30 and 60
-            score = (data['bmi'] - 30) / (60 - 30) * 2
+            score = (bmi - 30) / 30 * max_score
 
         return (score, data)
+
 
 
     # def _section_vi(self):
@@ -184,28 +202,38 @@ class StrokeRiskScore:
 
         data = self.patient_responses.get_resting_hr()
 
-        hr = int(data['resting_hr'])
+        max_score = 1.0
+
+        try:
+            hr = int(data.get('resting_hr'))
+        except (TypeError, ValueError):
+            return (max_score, data)
 
         if hr <= 60:
             score = 0.0
         elif hr >= 100:
-            score = 1.0
+            score = max_score
         else:
-            score = (hr - 60) / (100 - 60)
+            score = (hr - 60) / 40 * max_score
 
         return (score, data)
+
 
 
     def _section_viii(self, cigarettes):
         data = self.patient_responses.get_smoking()
 
-        if cigarettes is None or cigarettes <= 0:
+        max_score = 1.6
+
+        if cigarettes is None:
+            return (max_score, data)
+
+        if cigarettes <= 0:
             score = 0.0
         elif cigarettes >= 20:
-            score = 1.6
+            score = max_score
         else:
-            # Linear interpolation: start at 1 cigarette = 0.5, up to 20 = 1.6
-            slope = (1.6 - 0.5) / (20 - 1)  # = 0.0579...
+            slope = (max_score - 0.5) / (20 - 1)
             score = 0.5 + slope * (cigarettes - 1)
 
         return (score, data)
@@ -213,7 +241,8 @@ class StrokeRiskScore:
 
 
 if __name__ == "__main__":
-    healthie_user_id = "1525423"
+    # healthie_user_id = "1525423" # Patient AWS Test
+    healthie_user_id = "2062877" # Patient AWS Test 6 (no data)
 
     look_up_codes_management = LookUpCodesManagement()
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
