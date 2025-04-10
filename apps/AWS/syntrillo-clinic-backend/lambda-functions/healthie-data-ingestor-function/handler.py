@@ -2,11 +2,11 @@
 from typing import Dict, Any
 import json
 
-# third party libraries (things you `pip install`) 
+# third party libraries (things you `pip install`)
 
 # own/local libraries
-from form_responses import process_form_responses
-from form_templates import process_form_templates
+from services.form_responses import FormResponseService
+from services.form_templates import process_form_templates
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 
@@ -29,8 +29,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         # Fetch form templates from Healthie and push data into Amazon RDS
         process_form_templates()
-        # Fetch form responses from Healthie and push data into Amazon RDS
-        process_form_responses()
+
+        # Process form responses and related medications
+        form_service = FormResponseService()
+        form_service.process()
 
         return {
             "statusCode": 200,
@@ -54,4 +56,4 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    handler( {}, None)
+    handler({}, None)

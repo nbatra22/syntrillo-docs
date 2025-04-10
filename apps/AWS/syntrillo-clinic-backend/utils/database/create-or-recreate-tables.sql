@@ -93,3 +93,22 @@ CREATE TABLE IF NOT EXISTS healthie_form_responses (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (module_id, form_id, syntrillo_internal_key)
 );
+
+-- DROP TABLE IF EXISTS module_label_look_up;
+CREATE TABLE IF NOT EXISTS module_label_look_up (
+  module_label VARCHAR(255) NOT NULL,
+  form_id_prod VARCHAR(255) NOT NULL,
+  module_id_prod VARCHAR(255) NOT NULL,
+  form_id_staging VARCHAR(255) NOT NULL,
+  module_id_staging VARCHAR(255) NOT NULL
+);
+
+-- DROP TABLE IF EXISTS patient_medications;
+CREATE TABLE IF NOT EXISTS patient_medications (
+    syntrillo_internal_key VARCHAR(255) NOT NULL,
+    med_name VARCHAR(255) NOT NULL,
+    med_dosage VARCHAR(255),
+    directions VARCHAR(255),
+    compliance VARCHAR(255),
+    PRIMARY KEY (syntrillo_internal_key, med_name)
+);
