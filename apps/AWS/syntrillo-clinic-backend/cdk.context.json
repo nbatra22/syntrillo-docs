@@ -86,7 +86,7 @@
       "reserved_concurrent_executions": 50
     },
     "iframe_generator_api": {
-      "use_waf": false,
+      "use_waf": true,
       "allowed_referer": "https://securestaging.gethealthie.com/",
       "webacl-log-group-removal-policy": "DESTROY",
       "iframes_allowed_api_adresses": [
