@@ -30,13 +30,13 @@ class LabValuesResponse:
 
         if self.ldl_response is not None:
             # ldl_value = (int(self.ldl_response) > 71, int(self.ldl_response))
-            ldl_value = int(self.ldl_response)
+            ldl_value = float(self.ldl_response)
         else:
             ldl_value = None
 
         if self.ha1c_response is not None:
             # ha1c_value = (int(self.ha1c_response) > 71, int(self.ha1c_response))
-            ha1c_value = int(self.ha1c_response)
+            ha1c_value = float(self.ha1c_response)
         else:
             ha1c_value = None
 

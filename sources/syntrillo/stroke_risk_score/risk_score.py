@@ -168,9 +168,9 @@ class StrokeRiskScore:
         total_min = mod_exercise + vig_exercise
 
         if total_min <= 0:
-            score = 0.0
-        elif total_min >= 200:
             score = 3.0
+        elif total_min >= 200:
+            score = 0.0
         else:
             score = 3 - ((total_min / 200) * 3)
 
@@ -226,7 +226,9 @@ class StrokeRiskScore:
 
 
     def _section_viii(self, cigarettes):
-        data = self.patient_responses.get_smoking()
+        data = {
+            'packs_per_day': round(float(cigarettes / 20), 1)
+        }
 
         max_score = 1.6
 
