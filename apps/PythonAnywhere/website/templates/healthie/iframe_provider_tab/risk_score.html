@@ -734,10 +734,11 @@
 <style>
     .rs-tab-container {
         width: 100%;
-        height: 100%;
+        height: 90vh;
         gap: 2rem;
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
+        overflow: hidden;
     }
 
     .rs-tab-container section {
@@ -754,6 +755,8 @@
         flex-direction: column;
         gap: 2rem;
         width: 100%;
+        height: 100%;
+        overflow-y: auto;
     }
 
     #rs-score-column {
@@ -857,7 +860,7 @@
     .rs-section-score-container {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: start;
         align-items: end;
         width: fit-content;
         height: 100%;
