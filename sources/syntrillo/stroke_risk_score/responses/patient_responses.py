@@ -127,7 +127,7 @@ class PatientResponses:
         except Exception as e:
             # logger.info(f"Error fetching form #{form_id} and module #{module_id}: {e}")
             logger.info(f"Error fetching module {module_label}: {e}")
-            return None
+            return (None, None)
 
 
     def close_db_conn(self):
@@ -141,16 +141,13 @@ class PatientResponses:
 
 
     def get_etiology(self):
-        response = self.query_response("stroke_etiology")
+        (etiology, date) = self.query_response("stroke_etiology")
 
-        if not response or len(response) < 2:
+        if etiology is None and date is None:
             return {
                 'value': None,
                 'date': None
             }
-
-        etiology = response[0] or None
-        date = response[1] or None
 
         return {
             'value': etiology,
@@ -175,10 +172,12 @@ class PatientResponses:
         # meds = parser.get_medications()
         grouped_meds = parser.get_grouped_medications()
 
+        date = self.format_datetime(med_date) if med_date is not None else None
+
         # return meds
         return {
             'value': grouped_meds,
-            'date': self.format_datetime(med_date)
+            'date': date
         }
 
 
@@ -195,9 +194,11 @@ class PatientResponses:
 
         lab_values_response = LabValuesResponse(ldl_response=raw_ldl_response, ha1c_response=raw_ha1c_response).get_lab_values()
 
+        date = self.format_datetime(ldl_date) if ldl_date is not None else None
+
         return {
             'value': lab_values_response,
-            'date': self.format_datetime(ldl_date)
+            'date': date
         }
 
     def get_history(self):
@@ -232,10 +233,13 @@ class PatientResponses:
             cpap_usage_response=cpap_usage_raw_response
         ).get_history()
 
+        ia_date_bool = self.format_datetime(ia_date) if ia_date is not None else None
+        history_date_bool = self.format_datetime(history_date) if history_date is not None else None
+
         return {
             'value': history_response,
-            'ia_date': self.format_datetime(ia_date),
-            'history_date': self.format_datetime(history_date)
+            'ia_date': ia_date_bool,
+            'history_date': history_date_bool
         }
 
     def get_tests_orders(self):
@@ -247,36 +251,44 @@ class PatientResponses:
 
         tests_orders = TestsOrdersResponse(cta_performed, cardiac_monitoring_30day, ha1c_6mo).get_tests_orders()
 
+        cta_date = self.format_datetime(cta_perf_date) if cta_perf_date is not None else None
+        cm_date = self.format_datetime(cm30day_date) if cm30day_date is not None else None
+
         return {
             'value': tests_orders,
-            'date': self.format_datetime(date)
+            'cta_date': cta_date,
+            'cm30day_date': cm_date
         }
 
     def get_blood_pressure(self):
-        sbp_initial = self.query_response("systolic_bp_initial")
-        dbp_initial = self.query_response("diastolic_bp_initial")
+        (sbp_initial, sbp_date) = self.query_response("systolic_bp_initial")
+        (dbp_initial, dbp_date) = self.query_response("diastolic_bp_initial")
 
-        (sbp, sbp_date) = int(sbp_initial) if sbp_initial is not None else None
-        (dbp, dbp_date) = int(dbp_initial) if dbp_initial is not None else None
+        sbp = int(sbp_initial) if sbp_initial is not None else None
+        dbp = int(dbp_initial) if dbp_initial is not None else None
+
+        sbp_date_bool = self.format_datetime(sbp_date) if sbp_date is not None else None
 
         return {
             'value': {
                 'sbp': sbp,
                 'dbp': dbp
             },
-            'date': self.format_datetime(sbp_date)
+            'date': sbp_date_bool
         }
 
     def get_exercise(self):
         (moderate_exercise, mod_date) = self.query_response("moderate_exercise")
         (vigorous_exercise, vig_date) = self.query_response("vigorous_exercise")
 
+        date = self.format_datetime(mod_date) if mod_date is not None else None
+
         return {
             'value': {
                 'mod_exercise': moderate_exercise,
                 'vig_exercise': vigorous_exercise
             },
-            'date': self.format_datetime(mod_date)
+            'date': date
         }
 
     def get_bmi(self):
@@ -284,10 +296,15 @@ class PatientResponses:
         (weight_response, weight_date) = self.query_response("weight")
 
         try:
-            height = int(height_response)
-            weight = int(weight_response)
+            height = int(height_response) if height_response is not None else None
+            weight = int(weight_response) if weight_response is not None else None
 
-            bmi = weight / (height ** 2) * 703
+            if height is None and weight is None:
+                bmi = None
+            else:
+                bmi = weight / (height ** 2) * 703
+
+            date = self.format_datetime(height_date) if height_date is not None else None
 
             return {
                 'value': {
@@ -295,7 +312,7 @@ class PatientResponses:
                     'height': height,
                     'weight': weight
                 },
-                'date': self.format_datetime(height_date)
+                'date': date
             }
 
         except (TypeError, ValueError):
@@ -317,9 +334,11 @@ class PatientResponses:
     def get_resting_hr(self):
         (heart_rate, hr_date) = self.query_response("resting_hr_initial")
 
+        date = self.format_datetime(hr_date) if hr_date is not None else None
+
         return {
             'resting_hr': heart_rate,
-            'date': self.format_datetime(hr_date)
+            'date': date
         }
 
     def get_smoking(self):

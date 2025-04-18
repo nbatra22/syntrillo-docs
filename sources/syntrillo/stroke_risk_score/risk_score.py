@@ -100,7 +100,13 @@ class StrokeRiskScore:
 
     def _section_ii(self, history):
 
-        data = self.patient_responses.get_tests_orders()
+        print(f"------- HISTORY --------: {history}")
+
+        response = self.patient_responses.get_tests_orders()
+
+        data = response.get('value')
+
+        print(f"------- DATA --------: {data}")
 
         max_score = 1.3
 
@@ -109,7 +115,7 @@ class StrokeRiskScore:
             return (max_score, data)
 
         # Check if all values in both data and history are None
-        if all(value is None for value in data.get('value').values()) and all(value is None for value in history.values()):
+        if all(value is None for value in data.values()) and all(value is None for value in history.values()):
             return (max_score, data)
 
         score = 0
@@ -123,7 +129,7 @@ class StrokeRiskScore:
         if data['ha1c_6mo'] == False and history['diabetes'] == True:
             score = 0.2
 
-        return (score, data)
+        return (score, response)
 
     def _section_iii(self):
 
@@ -210,7 +216,7 @@ class StrokeRiskScore:
         max_score = 1.0
 
         try:
-            hr = int(data.get('value').get('resting_hr'))
+            hr = int(data.get('resting_hr'))
         except (TypeError, ValueError):
             return (max_score, data)
 
@@ -252,8 +258,9 @@ class StrokeRiskScore:
 
 
 if __name__ == "__main__":
-    healthie_user_id = "1525423" # Patient AWS Test
+    # healthie_user_id = "1525423" # Patient AWS Test
     # healthie_user_id = "2062877" # Patient AWS Test 6 (no data)
+    healthie_user_id = "2315391" # Bob Barker
 
     look_up_codes_management = LookUpCodesManagement()
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)

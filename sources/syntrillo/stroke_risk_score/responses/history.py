@@ -78,9 +78,9 @@ class HistoryResponse:
             self.history['intracranial_atherosclerosis'] = False
 
         # Set smoker
-        if self.smoker_response == 'Yes':
+        if self.smoker_response == 'Yes' or self.smoker_response == 'Former smoker':
             self.history['smoker'] = True
-        elif self.smoker_response == 'No':
+        elif self.smoker_response == 'Never smoked':
             self.history['smoker'] = False
 
         # Set smoking frequency
@@ -99,6 +99,8 @@ class HistoryResponse:
         if self.cpap_usage_response == 'Yes':
             self.history['cpap_usage'] = True
         elif self.cpap_usage_response == 'No':
+            self.history['cpap_usage'] = False
+        elif self.cpap_usage_response == 'Not applicable':
             self.history['cpap_usage'] = False
 
     def _extract_cigarettes_per_day(self, text: str) -> Optional[int]:

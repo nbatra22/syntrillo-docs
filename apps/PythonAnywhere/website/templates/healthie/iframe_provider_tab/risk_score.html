@@ -168,6 +168,87 @@
 
             </section>
 
+            <section id="rs-form-legend" class="">
+                <h3 class="rs-section-header">
+                    Forms
+                </h3>
+
+                <div id="rs-forms-container" class="rs-metrics-container">
+                    <div id="" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Onboarding - Patient Information (v1.1)
+                            </h3>
+                            <h4 id="" class="rs-metric-subtitle">
+
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-form-onboarding" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Enrollment-Patient Information (Site Nurse)(v1.1)
+                            </h3>
+                            <h4 id="" class="rs-metric-subtitle">
+
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-form-enrollment" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Intake-Record Review w/ Patient (Navigator)(v1.3)
+                            </h3>
+                            <h4 id="" class="rs-metric-subtitle">
+
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-form-intake-patient" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 id="" class="rs-metric-title">
+                                Intake-Record Review w/o Patient (Neurology)(v1.1)
+                            </h3>
+                            <h4 id="" class="rs-metric-subtitle">
+
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-form-intake-no-patient" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="rs-legend" class="">
                 <h3 class="rs-section-header">
                     Legend
@@ -192,7 +273,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-active-metric-format" class="rs-metric-container active">
+                    <div id="rs-active-metric-format" class="rs-metric-container legend-active">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Metric included in section score
@@ -448,7 +529,7 @@
                 <div id="rs-i-intracranial-atherosclerosis" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Intracranial Atherosclerosis (stroke cause)
+                            Intracranial Atherosclerosis
                         </h3>
                         <h4 class="rs-metric-subtitle">
                             Intake-Record Review w/o Patient (Neurology)(v1.1)
@@ -466,7 +547,7 @@
                 <div id="rs-i-afib" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Atrial Fibrillation (Afib)
+                            Atrial Fibrillation
                         </h3>
                         <h4 class="rs-metric-subtitle">
                             Intake-Record Review w/ Patient (Navigator)(v1.3)
@@ -484,7 +565,7 @@
                 <div id="rs-i-osa" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Obstructive Sleep Apnea (OSA)
+                            Obstructive Sleep Apnea
                         </h3>
                         <h4 class="rs-metric-subtitle">
                             Intake-Record Review w/ Patient (Navigator)(v1.3)
@@ -918,9 +999,16 @@
         border-radius: 0.25rem;
     }
 
-    .rs-metric-container.active, .rs-metric-container.active * {
+    .rs-metric-container.active, .rs-metric-container.legend-active {
         background-color: #16284a;
+    }
+
+    .rs-metric-container.active h3, .rs-metric-container.legend-active h3 {
         color: #d1d5db !important;
+    }
+
+    .rs-metric-container.active h4, .rs-metric-container.legend-active h4 {
+        color: #9ca3af !important;
     }
 
     .rs-metric-info {
@@ -948,6 +1036,11 @@
         font-size: 16px;
     }
 
+    #rs-forms-container .rs-metric-value {
+        color: #6b7280;
+        font-size: 14px !important;
+    }
+
     .rs-metrics-footer-container {
         text-align: center;
     }
@@ -957,6 +1050,38 @@
         color: #6b7280;
         font-size: 14px;
         font-weight: bold;
+    }
+
+    .toggle-other-meds-btn {
+        background: none;
+        color: #16284a; /* Feel free to change */
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        outline: none;
+        border-radius: 0.25rem;
+    }
+
+    .toggle-other-meds-btn:hover {
+        background-color: #d1d5db;
+    }
+
+    .toggle-other-meds-btn:focus {
+        outline: none;
+    }
+
+    #other-meds-container {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.4s ease;
+    }
+
+    #other-meds-container.open {
+        max-height: 1000px; /* large enough to fit content */
     }
 
     @keyframes spin {
@@ -1062,6 +1187,11 @@
         const metricsContainers = document.getElementsByClassName("rs-metrics-container")
         const sectionToggleContainers = document.getElementsByClassName("rs-section-score-container")
 
+        const formOnboarding = document.getElementById("rs-form-onboarding")
+        const formEnrollment = document.getElementById("rs-form-enrollment")
+        const formIntakeWithPatient = document.getElementById("rs-form-intake-patient")
+        const formIntakeWithoutPatient = document.getElementById("rs-form-intake-no-patient")
+
         showSpinner(totalScore)
 
         const healthieProviderId = "{{ healthie_provider_id }}";
@@ -1114,48 +1244,100 @@
                 sectionVII.innerHTML = vii.score ?? "-";
                 sectionVIII.innerHTML = viii.score ?? "-";
 
-                // Medications
-                if (i.medications && Object.keys(i.medications).length > 0) {
-                    medicationsList.innerHTML = Object.entries(i.medications).map(([name, details]) => {
-                        const rawClassification = details.classification || "";
-                        const rawSupercategory = details.supercategory || "";
+                if (
+                    i.medications &&
+                    i.medications.value &&
+                    Object.keys(i.medications.value).length > 0
+                ) {
+                    let medHTML = "";
+                    let otherMedHTML = "";
 
-                        const classification = rawClassification
-                            ? rawClassification.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-                            : "-";
+                    Object.entries(i.medications.value).forEach(([category, meds]) => {
+                        meds.forEach(details => {
+                            const name = details.name || category;
+                            const isOther = category === "other";
 
-                        const supercategory = rawSupercategory
-                            ? rawSupercategory.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-                            : "";
+                            const rawClassification = details.classification || "";
+                            const rawSupercategory = details.supercategory || "";
 
-                        const subtitle = supercategory ? `${classification} · ${supercategory}` : classification;
+                            const classification = rawClassification
+                                ? rawClassification.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+                                : "-";
 
-                        const compliance = details.compliance ? "C" : "NC";
+                            const supercategory = rawSupercategory
+                                ? rawSupercategory.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+                                : "";
 
-                        return `
-                            <div id="rs-i-medications" class="rs-metric-container">
-                                <div class="rs-metric-info">
-                                    <h3 class="rs-metric-title">
-                                        ${name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
-                                    </h3>
-                                    <h4 class="rs-metric-subtitle">
-                                        ${subtitle}
-                                    </h4>
+                            const subtitle = supercategory ? `${classification} · ${supercategory}` : classification;
+
+                            const compliance = details.compliance !== null
+                                ? (details.compliance ? "C" : "NC")
+                                : "-";
+
+                            const medBlock = `
+                                <div class="rs-metric-container">
+                                    <div class="rs-metric-info">
+                                        <h3 class="rs-metric-title">${name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</h3>
+                                        <h4 class="rs-metric-subtitle">${subtitle}</h4>
+                                    </div>
+                                    <div class="rs-metric-value">
+                                        <h3>${compliance}</h3>
+                                    </div>
                                 </div>
-                                <div class="rs-metric-value">
-                                    <h3>${compliance}</h3>
+                            `;
+
+                            if (isOther) {
+                                otherMedHTML += medBlock;
+                            } else {
+                                medHTML += medBlock;
+                            }
+                        });
+                    });
+
+                    // Add meds and optional toggle
+                    // Inside medicationsList.innerHTML
+                    medicationsList.innerHTML = `
+                        ${medHTML}
+                        ${otherMedHTML
+                            ? `
+                                <button id="toggle-other-meds" class="toggle-other-meds-btn">
+                                    Show more <i id="caret-icon" class="fas fa-caret-down"></i>
+                                </button>
+                                <div id="other-meds-container">
+                                    ${otherMedHTML}
                                 </div>
-                            </div>
-                        `;
-                    }).join("");
+                            ` : ""}
+                    `;
+
+
+                    // Toggle logic
+                    const toggleBtn = document.getElementById("toggle-other-meds");
+                    const otherContainer = document.getElementById("other-meds-container");
+                    const caretIcon = document.getElementById("caret-icon");
+
+                    if (toggleBtn && otherContainer) {
+                        toggleBtn.addEventListener("click", () => {
+                            const isOpen = otherContainer.classList.toggle("open");
+
+                            toggleBtn.firstChild.textContent = isOpen ? "Show less " : "Show more ";
+                            caretIcon.className = isOpen ? "fas fa-caret-up" : "fas fa-caret-down";
+                        });
+                    }
+
                 } else {
                     medicationsList.innerHTML = `<h3 id="rs-no-meds">No medications listed.</h3>`;
                 }
 
-                // Stroke + history
-                const history = i.history;
+                // Form Dates
+                formEnrollment.innerHTML = iii.date !== null ? iii.date : "Incomplete"
+                formOnboarding.innerHTML = v.date !== null ? v.date : "Incomplete"
+                formIntakeWithPatient.innerHTML = i.medications.date !== null ? i.medications.date : "Incomplete"
+                formIntakeWithoutPatient.innerHTML = i.history.ia_date !== null ? i.history.ia_date : "Incomplete"
 
-                strokeEtiology.innerHTML = i.etiology || "-";
+                // Stroke + history
+                const history = i.history.value;
+
+                strokeEtiology.innerHTML = i.etiology.value || "-";
                 intracranialAtherosclerosis.innerHTML = history.intracranial_atherosclerosis == null ? "-" : (history.intracranial_atherosclerosis ? "Yes" : "No");
                 afib.innerHTML = history.afib == null ? "-" : (history.afib ? "Yes" : "No");
                 osa.innerHTML = history.sleep_apnea == null ? "-" : (history.sleep_apnea ? "Yes" : "No");
@@ -1167,22 +1349,22 @@
                 packsPerDay.innerHTML = viii.packs_per_day == null ? "-" : viii.packs_per_day;
 
                 // Labs
-                const labValues = i.lab_values;
+                const labValues = i.lab_values.value;
 
                 ldl.innerHTML = labValues.ldl == null ? "-" : labValues.ldl;
                 ha1c.innerHTML = labValues.ha1c == null ? "-" : labValues.ha1c;
 
                 // Vitals
-                height.innerHTML = v.height == null ? "-" : v.height
-                weight.innerHTML = v.weight == null ? "-" : v.weight
-                bmi.innerHTML = v.bmi == null ? "-" : v.bmi;
-                sbp.innerHTML = iii.sbp == null ? "-" : iii.sbp;
-                dbp.innerHTML = iii.dbp == null ? "-" : iii.dbp;
+                height.innerHTML = v.value.height == null ? "-" : v.value.height
+                weight.innerHTML = v.value.weight == null ? "-" : v.value.weight
+                bmi.innerHTML = v.value.bmi == null ? "-" : v.value.bmi;
+                sbp.innerHTML = iii.value.sbp == null ? "-" : iii.value.sbp;
+                dbp.innerHTML = iii.value.dbp == null ? "-" : iii.value.dbp;
                 restingHR.innerHTML = vii.resting_hr == null ? "-" : vii.resting_hr;
 
                 // Exercise total
-                const mod = parseFloat(iv.mod_exercise);
-                const vig = parseFloat(iv.vig_exercise);
+                const mod = parseFloat(iv.value.mod_exercise);
+                const vig = parseFloat(iv.value.vig_exercise);
                 const isModValid = !isNaN(mod);
                 const isVigValid = !isNaN(vig);
 
@@ -1194,9 +1376,9 @@
                 }
 
                 // Imaging + monitoring
-                ctaPerformed.innerHTML = ii.cta_performed == null ? "-" : (ii.cta_performed ? "Yes" : "No");
-                cardiacMonitoring.innerHTML = ii.cardiac_monitoring_30day == null ? "-" : (ii.cardiac_monitoring_30day ? "Yes" : "No");
-                ha1cImaging.innerHTML = ii.ha1c_6mo == null ? "-" : (ii.ha1c_6mo ? "Yes" : "No");
+                ctaPerformed.innerHTML = ii.value.cta_performed == null ? "-" : (ii.value.cta_performed ? "Yes" : "No");
+                cardiacMonitoring.innerHTML = ii.value.cardiac_monitoring_30day == null ? "-" : (ii.value.cardiac_monitoring_30day ? "Yes" : "No");
+                ha1cImaging.innerHTML = ii.value.ha1c_6mo == null ? "-" : (ii.value.ha1c_6mo ? "Yes" : "No");
             })
             .catch(error => {
                 console.error("Error fetching risk score:", error);
