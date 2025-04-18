@@ -34,13 +34,13 @@ class StrokeRiskScore:
     def calculate_risk_score(self):
 
         si_score, si_data = self._section_i()
-        sii_score, sii_data = self._section_ii(history=si_data['history'])
+        sii_score, sii_data = self._section_ii(history=si_data.get('history').get('value'))
         siii_score, siii_data = self._section_iii()
         siv_score, siv_data = self._section_iv()
         sv_score, sv_data = self._section_v()
         # svi_score, svi_data = self._section_vi()
         svii_score, svii_data = self._section_vii()
-        sviii_score, sviii_data = self._section_viii(cigarettes=si_data['history']['smoking_frequency'])
+        sviii_score, sviii_data = self._section_viii(cigarettes=si_data.get('history').get('value').get('smoking_frequency'))
 
         total_score = si_score + sii_score + siii_score + siv_score + sv_score + svii_score + sviii_score
 
@@ -92,7 +92,7 @@ class StrokeRiskScore:
             'N/A': calculator.score_na
         }
 
-        score_func = score_map.get(etiology, lambda: max_score)
+        score_func = score_map.get(etiology.get('value'), lambda: max_score)
         score = score_func()
 
         return (score, data)
@@ -100,7 +100,13 @@ class StrokeRiskScore:
 
     def _section_ii(self, history):
 
-        data = self.patient_responses.get_tests_orders()
+        print(f"------- HISTORY --------: {history}")
+
+        response = self.patient_responses.get_tests_orders()
+
+        data = response.get('value')
+
+        print(f"------- DATA --------: {data}")
 
         max_score = 1.3
 
@@ -123,14 +129,14 @@ class StrokeRiskScore:
         if data['ha1c_6mo'] == False and history['diabetes'] == True:
             score = 0.2
 
-        return (score, data)
+        return (score, response)
 
     def _section_iii(self):
 
         data = self.patient_responses.get_blood_pressure()
 
-        systolic = data['sbp']
-        diastolic = data['dbp']
+        systolic = data['value']['sbp']
+        diastolic = data['value']['dbp']
 
         max_score = 3
 
@@ -160,8 +166,8 @@ class StrokeRiskScore:
         max_score = 3.0
 
         try:
-            mod_exercise = int(data.get('mod_exercise', 0))
-            vig_exercise = int(data.get('vig_exercise', 0))
+            mod_exercise = int(data['value'].get('mod_exercise', 0))
+            vig_exercise = int(data['value'].get('vig_exercise', 0))
         except (TypeError, ValueError):
             return (max_score, data)
 
@@ -181,7 +187,7 @@ class StrokeRiskScore:
 
         data = self.patient_responses.get_bmi()
 
-        bmi = data.get('bmi')
+        bmi = data.get('value').get('bmi')
         max_score = 2.0
 
         if bmi is None:
@@ -226,14 +232,17 @@ class StrokeRiskScore:
 
 
     def _section_viii(self, cigarettes):
-        data = {
-            'packs_per_day': round(float(cigarettes / 20), 1)
-        }
-
         max_score = 1.6
 
         if cigarettes is None:
+            data = {
+                'packs_per_day': None
+            }
             return (max_score, data)
+
+        data = {
+            'packs_per_day': round(float(cigarettes / 20), 1)
+        }
 
         if cigarettes <= 0:
             score = 0.0
@@ -247,9 +256,11 @@ class StrokeRiskScore:
 
 
 
+
 if __name__ == "__main__":
     # healthie_user_id = "1525423" # Patient AWS Test
-    healthie_user_id = "2062877" # Patient AWS Test 6 (no data)
+    # healthie_user_id = "2062877" # Patient AWS Test 6 (no data)
+    healthie_user_id = "2315391" # Bob Barker
 
     look_up_codes_management = LookUpCodesManagement()
     entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)

@@ -20,39 +20,42 @@ class SectionOneCalculator:
         ]
 
         result = {category: (False, False) for category in categories}
-        meds = self.data.get('medications', {})
+        meds_by_supercat = self.data.get('medications', {}).get('value', {})
 
-        for med_name, info in meds.items():
-            classification = info.get('classification')
-            instructions = info.get('instructions', '')
-            compliance_str = info.get('compliance')
+        for med_list in meds_by_supercat.values():
+            if not isinstance(med_list, list):
+                continue
 
-            prescribed = True
+            for med in med_list:
+                med_name = med.get('name', '')
+                classification = med.get('classification', '')
+                compliance_str = med.get('compliance', '')
 
-            compliant = False
-            if isinstance(compliance_str, str):
-                compliant = 'yes' in compliance_str.lower() or 'compliant' in compliance_str.lower()
+                prescribed = True
+                compliant = False
 
-            # Handle aspirin based on name
-            if isinstance(med_name, str) and 'aspirin' in med_name.lower():
-                result['aspirin'] = (prescribed, compliant)
+                if isinstance(compliance_str, str):
+                    compliant = 'yes' in compliance_str.lower() or 'compliant' in compliance_str.lower()
 
-            # Match classification categories
-            if isinstance(classification, str):
-                classification = classification.lower()
-                for category in categories:
-                    if category == 'aspirin':
-                        continue
-                    if category in classification:
-                        result[category] = (prescribed, compliant)
+                # Aspirin matching by name
+                if 'aspirin' in med_name.lower():
+                    result['aspirin'] = (prescribed, compliant)
+
+                # Classification-based matching
+                if isinstance(classification, str):
+                    for category in categories:
+                        if category == 'aspirin':
+                            continue
+                        if category in classification.lower():
+                            result[category] = (prescribed, compliant)
 
         self.medications = result
 
 
     def score_cardioembolic(self):
         meds = self.medications
-        history = self.data.get('history', {})
-        ldl = self.data.get('lab_values', {}).get('ldl')
+        history = self.data.get('history', {}).get('value')
+        ldl = self.data.get('lab_values', {}).get('value').get('ldl')
         smoker = history.get('smoker')
 
         if not meds['blood_thinner'][0]:
@@ -67,8 +70,8 @@ class SectionOneCalculator:
 
     def score_large_vessel(self):
         meds = self.medications
-        history = self.data.get('history', {})
-        ldl = self.data.get('lab_values', {}).get('ldl')
+        history = self.data.get('history', {}).get('value')
+        ldl = self.data.get('lab_values', {}).get('value').get('ldl')
         afib = history.get('afib')
 
         if not meds['aspirin'][0] and not meds['plavix'][0]:
@@ -85,9 +88,9 @@ class SectionOneCalculator:
 
     def score_small_vessel(self):
         meds = self.medications
-        history = self.data.get('history', {})
-        ldl = self.data.get('lab_values', {}).get('ldl')
-        ha1c = self.data.get('lab_values', {}).get('ha1c')
+        history = self.data.get('history', {}).get('value')
+        ldl = self.data.get('lab_values', {}).get('value').get('ldl')
+        ha1c = self.data.get('lab_values', {}).get('value').get('ha1c')
         smoker = history.get('smoker')
         afib = history.get('afib')
 
@@ -108,7 +111,7 @@ class SectionOneCalculator:
         return 6.3
 
     def score_other(self):
-        history = self.data.get('history', {})
+        history = self.data.get('history', {}).get('value')
         smoker = history.get('smoker')
         intracranial_atherosclerosis = history.get('intracranial_atherosclerosis')
 
@@ -120,9 +123,9 @@ class SectionOneCalculator:
 
     def score_cryptogenic(self):
         meds = self.medications
-        history = self.data.get('history', {})
-        ha1c = self.data.get('lab_values', {}).get('ha1c')
-        ldl = self.data.get('lab_values', {}).get('ldl')
+        history = self.data.get('history', {}).get('value')
+        ha1c = self.data.get('lab_values', {}).get('value').get('ha1c')
+        ldl = self.data.get('lab_values', {}).get('value').get('ldl')
         smoker = history.get('smoker')
         cpap_rx = history.get('cpap_prescription')
         cpap_use = history.get('cpap_usage')
@@ -146,8 +149,8 @@ class SectionOneCalculator:
 
     def score_na(self):
         meds = self.medications
-        history = self.data.get('history', {})
-        ha1c = self.data.get('lab_values', {}).get('ha1c')
+        history = self.data.get('history', {}).get('value')
+        ha1c = self.data.get('lab_values', {}).get('value').get('ha1c')
         osa = history.get('osa')
         cpap_rx = history.get('cpap_prescription')
         cpap_use = history.get('cpap_usage')

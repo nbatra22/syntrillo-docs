@@ -2,6 +2,8 @@ import re
 from typing import Optional, Dict
 from bs4 import BeautifulSoup
 
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+
 class MedicationParser:
     def __init__(
         self,
@@ -12,6 +14,13 @@ class MedicationParser:
         self.prescription_str = prescription_str
         self.adherence_html = adherence_html
         self.medications = {}
+        self.grouped_meds = {
+            'blood_thinner': [],
+            'cholesterol_medication': [],
+            'diabetes_medication': [],
+            'blood_pressure_medication': [],
+            'other': []
+        }
         self.db_conn = db_conn
         self.medication_lookup = self._load_medication_classifications()
 
@@ -58,38 +67,113 @@ class MedicationParser:
                     "supercategory": info["supercategory"]
                 }
 
-        # If no med match, try matching classification/supercategory directly
-        all_classifications = {info["classification"] for info in self.medication_lookup.values()}
+        # Build classification → supercategory map
+        classification_to_supercategory = {
+            info["classification"]: info["supercategory"]
+            for info in self.medication_lookup.values()
+            if info["classification"]
+        }
+
+        all_classifications = classification_to_supercategory.keys()
         all_supercategories = {info["supercategory"] for info in self.medication_lookup.values()}
 
+        # Match by classification
         for classification in all_classifications:
-            if classification and classification in cleaned:
-                return {"classification": classification, "supercategory": None}
+            if classification in cleaned:
+                return {
+                    "classification": classification,
+                    "supercategory": classification_to_supercategory.get(classification)
+                }
 
+        # Match by supercategory
         for supercategory in all_supercategories:
             if supercategory and supercategory in cleaned:
-                return {"classification": None, "supercategory": supercategory}
+                return {
+                    "classification": None,
+                    "supercategory": supercategory
+                }
 
-        return {"classification": None, "supercategory": None}
+        return {
+            "classification": None,
+            "supercategory": None
+        }
+
+
+    # def _parse_prescriptions(self):
+    #     blocks = self.prescription_str.split('\\\\')
+
+    #     for block in blocks:
+    #         parts = block.split('\r|\r|')
+
+    #         if len(parts) >= 2:
+    #             raw_name = parts[0].strip().lower()
+    #             instructions = parts[1].split('\r|')[1].strip().lower() if len(parts[1].split('\r|')) > 1 else None
+    #             info = self._match_medication_classification_and_supercategory(raw_name)
+
+    #             if raw_name:
+    #                 self.medications[raw_name] = {
+    #                     "classification": info["classification"],
+    #                     "supercategory": info["supercategory"],
+    #                     "instructions": instructions,
+    #                     "compliance": None
+    #                 }
 
     def _parse_prescriptions(self):
         blocks = self.prescription_str.split('\\\\')
 
         for block in blocks:
-            parts = block.split('\r|\r|')
+            fields = [field.strip().lower() for field in block.split('\r|') if field.strip()]
+            if not fields:
+                continue
 
-            if len(parts) >= 2:
-                raw_name = parts[0].strip().lower()
-                instructions = parts[1].split('\r|')[1].strip().lower() if len(parts[1].split('\r|')) > 1 else None
-                info = self._match_medication_classification_and_supercategory(raw_name)
+            raw_name = fields[0]
 
-                if raw_name:
-                    self.medications[raw_name] = {
-                        "classification": info["classification"],
-                        "supercategory": info["supercategory"],
-                        "instructions": instructions,
-                        "compliance": None
-                    }
+            # Match instruction line
+            instructions = next((f for f in fields if re.match(r'^(take|chew|spray|apply)', f)), None)
+
+            # Match dosage (e.g., "500 mg", "50 mcg", "5 ml")
+            dosage = next((f for f in fields if re.search(r'\d+\s*(mg|mcg|ml|units|tablet|capsule)', f)), None)
+
+            # Extract route from instruction, fallback to searching fields
+            route_match = re.search(r'by ([a-z ]+)', instructions) if instructions else None
+            route = route_match.group(1).strip() if route_match else None
+
+            # Extract frequency (e.g., "daily", "every 9 hours", "once a week")
+            frequency_match = re.search(r'(daily|weekly|monthly|every \d+ (hours|days)|once a (day|week))', instructions) if instructions else None
+            frequency = frequency_match.group(0) if frequency_match else None
+
+            info = self._match_medication_classification_and_supercategory(raw_name)
+
+            if raw_name:
+                # self.medications[raw_name] = {
+                #     "classification": info.get("classification"),
+                #     "supercategory": info.get("supercategory"),
+                #     "instructions": instructions,
+                #     "dosage": dosage,
+                #     "route": route,
+                #     "frequency": frequency,
+                #     "compliance": None  # Will be filled later
+                # }
+                med_obj = {
+                    "name": raw_name,
+                    "classification": info.get("classification"),
+                    "supercategory": info.get("supercategory"),
+                    "instructions": instructions,
+                    "dosage": dosage,
+                    "route": route,
+                    "frequency": frequency,
+                    "compliance": None  # Will be filled later
+                }
+
+                self.medications[raw_name] = med_obj
+
+                supercat = info.get("supercategory") or "other"
+                if supercat not in self.grouped_meds:
+                    self.grouped_meds[supercat] = []  # fallback for unknown supercats
+
+                self.grouped_meds[supercat].append(med_obj)
+
+
 
     def _parse_adherence(self):
         soup = BeautifulSoup(self.adherence_html, "html.parser")
@@ -123,3 +207,20 @@ class MedicationParser:
 
     def get_medications(self) -> Dict[str, Dict[str, Optional[str]]]:
         return self.medications
+
+    def get_grouped_medications(self) -> Dict[str, list]:
+        return self.grouped_meds
+
+
+
+if __name__ == "__main__":
+    # healthie_user_id = "1525423" # Patient AWS Test
+    # healthie_user_id = "2062877" # Patient AWS Test 6 (no data)
+    healthie_user_id = "2315391" # Bob Barker
+
+    look_up_codes_management = LookUpCodesManagement()
+    entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
+    internal_key = entry['syntrillo_internal_key']
+
+    medications = MedicationParser(syntrillo_internal_key=internal_key)
+    print(f"Medications: {medications}")
