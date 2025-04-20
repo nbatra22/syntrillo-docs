@@ -3,8 +3,8 @@ from datetime import datetime
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
+from syntrillo.api_healthie.utils import HealthieUtils
 
-from healthie_api import run_graphql_query
 from helpers import clean_text
 from models import FormResponse
 
@@ -117,7 +117,7 @@ def fetch_all_form_responses_from_healthie() -> dict:
                     "should_paginate": True
                 }
             # Retrieve the current set of responses
-            response: dict = run_graphql_query(graphql_query, variables)
+            response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
             current_page_data = response.get("formAnswerGroups", [])
 
             # Append the newest set of responses to output array

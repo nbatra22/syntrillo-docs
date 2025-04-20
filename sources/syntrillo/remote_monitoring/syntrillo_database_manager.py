@@ -3,7 +3,7 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple
+from typing import Tuple, List
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
@@ -31,10 +31,7 @@ class SyntrilloDatabaseManager:
     ]
 
 
-    def __init__(
-        self,
-        syntrillo_internal_key: uuid.UUID,
-        ):
+    def __init__(self, syntrillo_internal_key: uuid.UUID):
         """
             For a given patient, manage data located in our Syntrillo PHI database
 
@@ -48,10 +45,7 @@ class SyntrilloDatabaseManager:
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
         self.conn, _ = db_conn.create_connection()
 
-    def get_latest_record_for_tenovi_device(
-        self,
-        device_name: str
-        ) -> Tuple[dict, dict]:
+    def get_latest_record_for_tenovi_device(self, device_name: str) -> Tuple[dict, dict]:
         """
             Get the latest record for a given device.
 
@@ -177,9 +171,7 @@ class SyntrilloDatabaseManager:
 
         """
 
-        log = {
-            "success": True,
-        }
+        log = { "success": True }
 
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -207,11 +199,7 @@ class SyntrilloDatabaseManager:
 
         return report, log
 
-    def get_metric_records_after_local_timestamp(
-        self,
-        timestamp_local: str,
-        metric_name: str
-        ) -> Tuple[dict, dict]:
+    def get_metric_records_after_local_timestamp(self, timestamp_local: str, metric_name: str) -> Tuple[dict, dict]:
         """
             Get all records for a device metric after a given local timestamp.
 
@@ -261,11 +249,7 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
-    def get_daily_stats_metric_records_after_local_timestamp(
-        self,
-        timestamp_local: str,
-        metric_name: str
-        ) -> Tuple[dict, dict]:
+    def get_daily_stats_metric_records_after_local_timestamp(self, timestamp_local: str, metric_name: str) -> Tuple[dict, dict]:
         """
             Get daily stats records for a device metric after a given local timestamp, and one day before the latest data point available.
 
@@ -362,10 +346,7 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
-    def get_first_tenovi_device_data(
-        self,
-        device_name: str
-        ) -> Tuple[dict, dict]:
+    def get_first_tenovi_device_data(self, device_name: str) -> Tuple[dict, dict]:
         """
             Get the first record for a given device, based on ite timestamp_local.
 
@@ -579,10 +560,7 @@ class SyntrilloDatabaseManager:
 
         return df, log
 
-    def delete_records(
-        self,
-        device_name: str = None,
-    ) -> dict:
+    def delete_records(self, device_name: str = None) -> dict:
         """
         delete all records for a given device
 
@@ -619,6 +597,42 @@ class SyntrilloDatabaseManager:
 
         return log
 
+
+    def get_days_with_extreme_bp(self, extreme_systolic_threshold: float, extreme_diastolic_threshold: float) -> List[str]:
+        """
+        Get the days with extreme BP for a patient
+        Args:
+            extreme_systolic_threshold (float): The systolic threshold
+            extreme_diastolic_threshold (float): The diastolic threshold
+        Returns:
+            list[str]: The days with extreme BP
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT date(substr(timestamp_local, 1, 10)) AS adjusted_date
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                        AND metric_name = 'blood_pressure'
+                        AND (value_1 > %s OR value_2 < %s)
+                    ORDER BY adjusted_date DESC
+                """
+                cursor.execute(
+                    query,
+                    (self.syntrillo_internal_key, extreme_systolic_threshold, extreme_diastolic_threshold)
+                )
+                records = cursor.fetchall()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        return records, log
 
 
 if __name__ == '__main__':
