@@ -43,7 +43,7 @@ class TestsOrdersResponse:
 
         if self.cardiac_monitoring_30day == 'Yes':
             self.tests_orders['cardiac_monitoring_30day'] = True
-        elif self.cardiac_monitoring_30day == 'No':
+        elif self.cardiac_monitoring_30day == 'No' or self.cardiac_monitoring_30day == 'Unknown/not sure':
             self.tests_orders['cardiac_monitoring_30day'] = False
 
     def _parse_ha1c_6mo(self):
