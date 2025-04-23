@@ -302,7 +302,7 @@
                         </div>
                         <div class="rs-metric-value-container">
                             <h3 id="" class="rs-metric-value">
-                                "-"
+                                <i class="fa-regular fa-circle-question"></i>
                             </h3>
                             <h4 class="rs-metric-value-unit">
 
@@ -801,6 +801,9 @@
                         <h3 id="rs-ha1c-imaging" class="rs-metric-value">
                             -
                         </h3>
+                        <h4 id="rs-ha1c-imaging-date" class="rs-metric-value-unit">
+                            -
+                        </h4>
                     </div>
                 </div>
 
@@ -1183,6 +1186,7 @@
         const ctaPerformed = document.getElementById("rs-cta-performed");
         const cardiacMonitoring = document.getElementById("rs-cardiac-monitoring");
         const ha1cImaging = document.getElementById("rs-ha1c-imaging");
+        const ha1cImagingDate = document.getElementById("rs-ha1c-imaging-date");
 
         const metricsContainers = document.getElementsByClassName("rs-metrics-container")
         const sectionToggleContainers = document.getElementsByClassName("rs-section-score-container")
@@ -1328,6 +1332,9 @@
                     medicationsList.innerHTML = `<h3 id="rs-no-meds">No medications listed.</h3>`;
                 }
 
+                // Null value icon
+                const nullIcon = '<i class="fa-regular fa-circle-question"></i>'
+
                 // Form Dates
                 formEnrollment.innerHTML = iii.date !== null ? iii.date : "Incomplete"
                 formOnboarding.innerHTML = v.date !== null ? v.date : "Incomplete"
@@ -1337,30 +1344,30 @@
                 // Stroke + history
                 const history = i.history.value;
 
-                strokeEtiology.innerHTML = i.etiology.value || "-";
-                intracranialAtherosclerosis.innerHTML = history.intracranial_atherosclerosis == null ? "-" : (history.intracranial_atherosclerosis ? "Yes" : "No");
-                afib.innerHTML = history.afib == null ? "-" : (history.afib ? "Yes" : "No");
-                osa.innerHTML = history.sleep_apnea == null ? "-" : (history.sleep_apnea ? "Yes" : "No");
-                diabetes.innerHTML = history.diabetes == null ? "-" : (history.diabetes ? "Yes" : "No");
-                carotidStenosis.innerHTML = history.carotid_stenosis == null ? "-" : (history.carotid_stenosis ? "Yes" : "No");
-                cpapPrescription.innerHTML = history.cpap_prescription == null ? "-" : (history.cpap_prescription ? "Yes" : "No");
-                cpapUsage.innerHTML = history.cpap_usage == null ? "-" : (history.cpap_usage ? "Yes" : "No");
-                smoker.innerHTML = history.smoker == null ? "-" : (history.smoker ? "Yes" : "No");
-                packsPerDay.innerHTML = viii.packs_per_day == null ? "-" : viii.packs_per_day;
+                strokeEtiology.innerHTML = i.etiology.value || nullIcon;
+                intracranialAtherosclerosis.innerHTML = history.intracranial_atherosclerosis == null ? nullIcon : (history.intracranial_atherosclerosis ? "Yes" : "No");
+                afib.innerHTML = history.afib == null ? nullIcon : (history.afib ? "Yes" : "No");
+                osa.innerHTML = history.sleep_apnea == null ? nullIcon : (history.sleep_apnea ? "Yes" : "No");
+                diabetes.innerHTML = history.diabetes == null ? nullIcon : (history.diabetes ? "Yes" : "No");
+                carotidStenosis.innerHTML = history.carotid_stenosis == null ? nullIcon : (history.carotid_stenosis ? "Yes" : "No");
+                cpapPrescription.innerHTML = history.cpap_prescription == null ? nullIcon : (history.cpap_prescription ? "Yes" : "No");
+                cpapUsage.innerHTML = history.cpap_usage == null ? nullIcon : (history.cpap_usage ? "Yes" : "No");
+                smoker.innerHTML = history.smoker == null ? nullIcon : (history.smoker ? "Yes" : "No");
+                packsPerDay.innerHTML = viii.packs_per_day == null ? nullIcon : viii.packs_per_day;
 
                 // Labs
                 const labValues = i.lab_values.value;
 
-                ldl.innerHTML = labValues.ldl == null ? "-" : labValues.ldl;
-                ha1c.innerHTML = labValues.ha1c == null ? "-" : labValues.ha1c;
+                ldl.innerHTML = labValues.ldl == null ? nullIcon : labValues.ldl;
+                ha1c.innerHTML = labValues.ha1c == null ? nullIcon : labValues.ha1c;
 
                 // Vitals
-                height.innerHTML = v.value.height == null ? "-" : v.value.height
-                weight.innerHTML = v.value.weight == null ? "-" : v.value.weight
-                bmi.innerHTML = v.value.bmi == null ? "-" : v.value.bmi;
-                sbp.innerHTML = iii.value.sbp == null ? "-" : iii.value.sbp;
-                dbp.innerHTML = iii.value.dbp == null ? "-" : iii.value.dbp;
-                restingHR.innerHTML = vii.resting_hr == null ? "-" : vii.resting_hr;
+                height.innerHTML = v.value.height == null ? nullIcon : v.value.height
+                weight.innerHTML = v.value.weight == null ? nullIcon : v.value.weight
+                bmi.innerHTML = v.value.bmi == null ? nullIcon : v.value.bmi;
+                sbp.innerHTML = iii.value.sbp == null ? nullIcon : iii.value.sbp;
+                dbp.innerHTML = iii.value.dbp == null ? nullIcon : iii.value.dbp;
+                restingHR.innerHTML = vii.resting_hr == null ? nullIcon : vii.resting_hr;
 
                 // Exercise total
                 const mod = parseFloat(iv.value.mod_exercise);
@@ -1372,13 +1379,14 @@
                     const total = (isModValid ? mod : 0) + (isVigValid ? vig : 0);
                     exercise.innerHTML = Math.round(total * 10) / 10;
                 } else {
-                    exercise.innerHTML = "-";
+                    exercise.innerHTML = nullIcon;
                 }
 
                 // Imaging + monitoring
-                ctaPerformed.innerHTML = ii.value.cta_performed == null ? "-" : (ii.value.cta_performed ? "Yes" : "No");
-                cardiacMonitoring.innerHTML = ii.value.cardiac_monitoring_30day == null ? "-" : (ii.value.cardiac_monitoring_30day ? "Yes" : "No");
-                ha1cImaging.innerHTML = ii.value.ha1c_6mo == null ? "-" : (ii.value.ha1c_6mo ? "Yes" : "No");
+                ctaPerformed.innerHTML = ii.value.cta_performed == null ? nullIcon : (ii.value.cta_performed ? "Yes" : "No");
+                cardiacMonitoring.innerHTML = ii.value.cardiac_monitoring_30day == null ? nullIcon : (ii.value.cardiac_monitoring_30day ? "Yes" : "No");
+                ha1cImaging.innerHTML = ii.value.ha1c_6mo == null ? nullIcon : (ii.value.ha1c_6mo ? "Yes" : "No");
+                ha1cImagingDate.innerHTML = ii.ha1c_date == null ? "-" : ii.ha1c_date;
             })
             .catch(error => {
                 console.error("Error fetching risk score:", error);

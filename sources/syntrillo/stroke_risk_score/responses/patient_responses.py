@@ -1,6 +1,6 @@
 import uuid
 from typing import Literal
-import datetime
+from datetime import datetime
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -136,8 +136,8 @@ class PatientResponses:
 
 
     @staticmethod
-    def format_datetime(dt: datetime.datetime) -> str:
-        return dt.strftime('%m/%d/%y')
+    def format_datetime(dt: datetime) -> str:
+        return dt.strftime('%-m/%-d/%y')
 
 
     def get_etiology(self):
@@ -253,11 +253,14 @@ class PatientResponses:
 
         cta_date = self.format_datetime(cta_perf_date) if cta_perf_date is not None else None
         cm_date = self.format_datetime(cm30day_date) if cm30day_date is not None else None
+        ha1c_date = datetime.strptime(ha1c_6mo, "%Y-%m-%d").date() if ha1c_6mo is not None else None
+        ha1c_formatted_date = self.format_datetime(ha1c_date) if ha1c_date is not None else None
 
         return {
             'value': tests_orders,
             'cta_date': cta_date,
-            'cm30day_date': cm_date
+            'cm30day_date': cm_date,
+            'ha1c_date': ha1c_formatted_date
         }
 
     def get_blood_pressure(self):

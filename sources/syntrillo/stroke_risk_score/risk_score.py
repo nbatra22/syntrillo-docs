@@ -34,7 +34,7 @@ class StrokeRiskScore:
     def calculate_risk_score(self):
 
         si_score, si_data = self._section_i()
-        sii_score, sii_data = self._section_ii(history=si_data.get('history').get('value'))
+        sii_score, sii_data = self._section_ii(history=si_data.get('history').get('value'), etiology=si_data.get('etiology').get('value'))
         siii_score, siii_data = self._section_iii()
         siv_score, siv_data = self._section_iv()
         sv_score, sv_data = self._section_v()
@@ -98,7 +98,7 @@ class StrokeRiskScore:
         return (score, data)
 
 
-    def _section_ii(self, history):
+    def _section_ii(self, history, etiology):
 
         print(f"------- HISTORY --------: {history}")
 
@@ -120,14 +120,16 @@ class StrokeRiskScore:
 
         score = 0
 
-        if data['cta_performed'] == False or data['cardiac_monitoring_30day'] == False:
+        if etiology == 'Cryptogenic' and data['cta_performed'] == False or data['cardiac_monitoring_30day'] == False:
             score = 1.3
 
-        if data['cta_performed'] == False and history['carotid_stenosis'] == True:
-            score = 0.6
+        if etiology is None:
+            
+            if data['cta_performed'] == False and history['carotid_stenosis'] == True:
+                score = 0.6
 
-        if data['ha1c_6mo'] == False and history['diabetes'] == True:
-            score = 0.2
+            if data['ha1c_6mo'] == False and history['diabetes'] == True:
+                score = 0.2
 
         return (score, response)
 
