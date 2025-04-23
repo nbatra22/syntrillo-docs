@@ -53,7 +53,7 @@ class TestsOrdersResponse:
         ha1c_date = datetime.strptime(self.ha1c_6mo, "%Y-%m-%d")
         six_months_ago = datetime.today() - relativedelta(months=6)
 
-        if ha1c_date < six_months_ago:
+        if ha1c_date > six_months_ago:
             self.tests_orders['ha1c_6mo'] = True
         else:
             self.tests_orders['ha1c_6mo'] = False
