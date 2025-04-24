@@ -1,7 +1,8 @@
+import base64
+import json
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.data_sync import RemoteMonitoringDataSync
-from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
@@ -21,11 +22,14 @@ from constants import (
     STAGING_MESSENGER,
     PRODUCTION_MESSENGER,
     EXCLUDED_PATIENTS,
-    EXTREME_BP_STREAK_THRESHOLD
+    EXTREME_BP_STREAK_THRESHOLD,
+    PRODUCTION_ENVIRONMENT,
+    STAGING_ENVIRONMENT
 )
-# TODO: uncomment these decorators when ready to deploy
-# @tracer.capture_lambda_handler
-# @logger.inject_lambda_context(log_event=True)
+
+# TODO: comment these decorators when running locally
+@tracer.capture_lambda_handler
+@logger.inject_lambda_context(log_event=True)
 def handler(event, context):
 
     # Steps triggered by Tenovi webhooks:
@@ -68,10 +72,15 @@ def handler(event, context):
     # }
 
     # 1. Extract patient_id and measurement data from Tenovi Webhook event
-    tenovi_patient_id = event.get('patient_id', None)
-    systolic_bp = float(event.get('value_1', None))
-    diastolic_bp = float(event.get('value_2', None))
-    timestamp = event.get('timestamp', None)
+    payload = event
+    # Check if the body is base64 (AWS API Gateway) encoded before decoding
+    if payload.get('body', None) and is_base64(payload.get('body')):
+        payload = decode_payload(payload.get('body', {}))
+
+    tenovi_patient_id = payload.get('patient_id', None)
+    systolic_bp = float(payload.get('value_1', None))
+    diastolic_bp = float(payload.get('value_2', None))
+    timestamp = payload.get('timestamp', None)
 
     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
     formatted_date = dt.strftime("%d %B %Y at %I:%M %p")
@@ -91,7 +100,7 @@ def handler(event, context):
         }
 
     # 3. Sync patient data from Tenovi to Syntrillo and then to Healthie
-    # TODO: Uncomment this code -- sync_patient(syntrillo_internal_key)
+    sync_patient(syntrillo_internal_key)
 
     # 4. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
     systolic_is_extreme = systolic_bp > SYSTOLIC_BP_THRESHOLD if systolic_bp is not None else False
@@ -104,7 +113,7 @@ def handler(event, context):
 
     return {
         'statusCode': 200,
-        'body': 'Hello World!'
+        'body': 'Successfully processed Tenovi Webhook Blood Pressure event'
     }
 
 
@@ -164,12 +173,13 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
         systolic_bp (float): Systolic blood pressure
         diastolic_bp (float): Diastolic blood pressure
         timestamp (str): Timestamp of the blood pressure measurement
+    Returns:
+        None
     """
     # Healthie Chat API Docs: https://docs.gethealthie.com/guides/chat/
     # Healthie Chat Overview: https://help.gethealthie.com/article/82-overview-chatting-with-a-client
 
     # 1. Create a new Healthie Conversation
-
     # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
     patient_name, healthie_user_id = get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
 
@@ -181,30 +191,32 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # The patient name is to be used as the title of the conversation
     alert_title = HEALTHIE_BP_CONVERSATION_NAME + patient_name
 
+    # Check if the environment is production or staging to determine which clinicians to notify
     # Get environment from SSM parameter store to determine which clinicians to notify
-    # TODO: Figure out what the env is for the production and staging environments (PROD or prod etc)
-    # env = get_environment()
-
-    # Currently (April 15, 2025), we want to notify only specific clinicians
-    # Create new conversation for patient and clinicians if it doesn't exist
+    env = get_environment()
+    logger.info(f"Environment: {env}")
+    if env == PRODUCTION_ENVIRONMENT:
+        messenger_id = PRODUCTION_MESSENGER
+        clinicians = PRODUCTION_CLINICIANS
+    elif env == STAGING_ENVIRONMENT:
+        messenger_id = STAGING_MESSENGER
+        clinicians = STAGING_CLINICIANS
+    else:
+        logger.error(f"Invalid environment: {env}")
+        return
 
     # Check if the conversation already exists
-    conversation_id = get_conversation_id(STAGING_MESSENGER, alert_title)
+    conversation_id = get_conversation_id(messenger_id, alert_title)
     if not conversation_id:
         # Create a new conversation
-        conversation_output = make_conversation_query(STAGING_CLINICIANS, STAGING_MESSENGER, alert_title)
+        conversation_output = make_conversation_query(clinicians, messenger_id, alert_title)
         conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
         logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
 
 
     # Add a note (aka a message) to the conversation
-    response = add_note_to_conversation(STAGING_MESSENGER, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
+    response = add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
     logger.info(f"Successfully added note to conversation in Healthie: {response}")
-
-
-    # 3. Send a message to the clinician
-
-    return 'Hello'
 
 
 def get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id: str) -> str:
@@ -373,10 +385,16 @@ def add_note_to_conversation(
     # }
     logger.info("Adding note to conversation in Healthie...")
     try:
-        content = f"Time of measurement: {timestamp} \n Systolic BP: {systolic_bp} \n Diastolic BP: {diastolic_bp}"
+        content = f"<ul><li>Time of measurement: {timestamp}</li> \n<li>Systolic BP: {systolic_bp}</li> \n<li>Diastolic BP: {diastolic_bp}</li></ul>"
+
+        # Check if the patient has been experiencing extreme BP for a streak of days
         number_of_days_extreme_bp_detected = get_number_of_days_extreme_bp_detected(syntrillo_internal_key)
-        if number_of_days_extreme_bp_detected > EXTREME_BP_STREAK_THRESHOLD:
-            content = f"Patient has been experiencing extreme BP for {number_of_days_extreme_bp_detected} days" + "\n" + content
+        # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
+        if number_of_days_extreme_bp_detected == -1:
+            logger.warning(f"Could not retrieve number of days extreme BP detected for {syntrillo_internal_key}")
+        elif number_of_days_extreme_bp_detected >= EXTREME_BP_STREAK_THRESHOLD:
+            content = f"<b>Patient has been experiencing extreme BP for {number_of_days_extreme_bp_detected} days</b>" + "\n" + content
+
         variables = {
             "user_id": messenger_id,
             "content": content,
@@ -404,9 +422,15 @@ def get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key: str) ->
     db_manager = LookUpCodesManagement()
     entry = db_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
     healthie_user_id = entry.get('healthie_user_id', None)
+    if not healthie_user_id:
+        logger.error(f"Healthie user id not found for syntrillo_internal_key: {syntrillo_internal_key}")
+        return
 
     # 2. Use healthie id to get patient name from Healthie API
     patient_name = get_healthie_user_information_by_healthie_user_id(healthie_user_id)
+    if not patient_name:
+        logger.error(f"Patient name not found for syntrillo_internal_key: {syntrillo_internal_key}")
+        return
     return patient_name, healthie_user_id
 
 
@@ -457,6 +481,8 @@ def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> 
 def get_environment() -> str:
     """
     Get the environment from the SSM parameter store
+    Args:
+        None
     Returns:
         str: The environment
     """
@@ -466,7 +492,6 @@ def get_environment() -> str:
     # Get parameter
     response = ssm_client.get_parameter(Name='/syntrillo-clinic/aws/environment')
     env = response['Parameter']['Value']
-    logger.info(f"Environment: {env}")
     return env
 
 
@@ -554,7 +579,7 @@ def get_number_of_days_extreme_bp_detected(syntrillo_internal_key: str) -> int:
 
     if not log.get('success', False) or not records:
         logger.warning(f"Could not retrieve extreme BP days for {syntrillo_internal_key}. Log: {log}")
-        return 0
+        return -1
 
     # Convert list of tuples containing date objects to a set of date objects for efficient lookup
     extreme_bp_dates = {record[0] for record in records}
@@ -574,24 +599,67 @@ def get_number_of_days_extreme_bp_detected(syntrillo_internal_key: str) -> int:
     logger.info(f"Number of consecutive days extreme BP detected for {syntrillo_internal_key}: {consecutive_days}")
     return consecutive_days
 
+def is_base64(body: str) -> bool:
+    """
+    Check if a string is base64 encoded
+
+    Args:
+        s (str): String to check
+    Returns:
+        bool: True if the string is base64 encoded, False otherwise
+    """
+    if not isinstance(body, str):
+        return False
+
+    try:
+        # Check if string has valid base64 characters
+        if not all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for c in body):
+            return False
+
+        # Try to decode
+        decoded = base64.b64decode(body)
+        # Try to parse as JSON to ensure it's a valid payload
+        json.loads(decoded)
+        return True
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return False
+
+def decode_payload(base64_str: str) -> dict:
+    """
+    Decode a Base64 string back to a JSON payload
+    Args:
+        base64_str (str): The Base64 string to decode
+    Returns:
+        dict: The decoded JSON payload
+    """
+    # Decode the Base64 string to bytes
+    json_bytes = base64.b64decode(base64_str)
+
+    # Decode the bytes to a JSON string
+    json_str = json_bytes.decode('utf-8')
+
+    # Parse the JSON string to a dictionary
+    payload = json.loads(json_str)
+
+    return payload
 
 if __name__ == "__main__":
     # handler({}, None)
     # print(get_syntrillo_internal_key_id_from_tenovi_patient_id('472937bf-04b0-4894-a2c2-05983e62c183'))
     # print(get_healthie_user_information_by_healthie_user_id('2315391'))
-    # handler({
-    #   "metric": "pulse",
-    #   "device_name": "Tenovi BPM",
-    #   "hwi_device_id": "12345678-abcd-1234-abcd-1234567890ab",
-    #   "patient_id": "97c2449e-6543-4264-b359-690855969256",
-    #   "hardware_uuid": "1234ABCD5678",
-    #   "sensor_code": "10",
-    #   "value_1": "200.00",
-    #   "value_2": "100.00",
-    #   "created": "2025-01-16T17:34:47.025219Z",
-    #   "timestamp": "2025-01-16T17:34:47.025219Z",
-    #   "timezone_offset": 0,
-    #   "estimated_timestamp": False,
-    #   "filter_params": None
-    # }, None)
-    print(get_number_of_days_extreme_bp_detected('ff8d04c4-9307-4171-888b-447047d5fa36'))
+    handler({
+      "metric": "pulse",
+      "device_name": "Tenovi BPM",
+      "hwi_device_id": "12345678-abcd-1234-abcd-1234567890ab",
+      "patient_id": "eadfb71f-5cf8-4875-bea1-8ed272a03d08",
+      "hardware_uuid": "1234ABCD5678",
+      "sensor_code": "10",
+      "value_1": "222002020.00",
+      "value_2": "100.00",
+      "created": "2025-01-16T17:34:47.025219Z",
+      "timestamp": "2025-01-16T17:34:47.025219Z",
+      "timezone_offset": 0,
+      "estimated_timestamp": False,
+      "filter_params": None
+    }, None)
+    # print(get_number_of_days_extreme_bp_detected('ff8d04c4-9307-4171-888b-447047d5fa36'))
