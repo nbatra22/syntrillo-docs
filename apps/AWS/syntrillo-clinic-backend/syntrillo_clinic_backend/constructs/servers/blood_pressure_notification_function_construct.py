@@ -109,7 +109,12 @@ class BloodPressureNotificationFunction(Construct):
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
-                "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets_openai_secrets_secret_arn
+                "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets_openai_secrets_secret_arn,
+                "AWS_ENVIRONMENT": ssm.StringParameter.from_string_parameter_name(
+                    self,
+                    "SyntrilloClinicAWSEnvironment",
+                    string_parameter_name="/syntrillo-clinic/aws/environment"
+                ).string_value
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=self.environment_context['blood_pressure_notification_function']['memory_size'], 
