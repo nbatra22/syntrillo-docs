@@ -1,19 +1,22 @@
+import os
 import base64
+import uuid
+import boto3
 import json
+from typing import List
+from datetime import datetime, date, timedelta
+
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.data_sync import RemoteMonitoringDataSync
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-from typing import List
 
-from datetime import datetime, date, timedelta
-
-import uuid
-import boto3
 
 from constants import (
+    AVERAGE_SYSTOLIC_BP_DAYS,
+    AVERAGE_SYSTOLIC_BP_THRESHOLD,
     SYSTOLIC_BP_THRESHOLD,
     DIASTOLIC_BP_THRESHOLD,
     HEALTHIE_BP_CONVERSATION_NAME,
@@ -22,14 +25,13 @@ from constants import (
     STAGING_MESSENGER,
     PRODUCTION_MESSENGER,
     EXCLUDED_PATIENTS,
-    EXTREME_BP_STREAK_THRESHOLD,
     PRODUCTION_ENVIRONMENT,
     STAGING_ENVIRONMENT
 )
 
 # TODO: comment these decorators when running locally
-@tracer.capture_lambda_handler
-@logger.inject_lambda_context(log_event=True)
+# @tracer.capture_lambda_handler
+# @logger.inject_lambda_context(log_event=True)
 def handler(event, context):
 
     # Steps triggered by Tenovi webhooks:
@@ -194,7 +196,9 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # Check if the environment is production or staging to determine which clinicians to notify
     # Get environment from SSM parameter store to determine which clinicians to notify
     env = get_environment()
-    logger.info(f"Environment: {env}")
+    if not env:
+        logger.error("Environment not found")
+        return
     if env == PRODUCTION_ENVIRONMENT:
         messenger_id = PRODUCTION_MESSENGER
         clinicians = PRODUCTION_CLINICIANS
@@ -388,12 +392,13 @@ def add_note_to_conversation(
         content = f"<ul><li>Time of measurement: {timestamp}</li> \n<li>Systolic BP: {systolic_bp}</li> \n<li>Diastolic BP: {diastolic_bp}</li></ul>"
 
         # Check if the patient has been experiencing extreme BP for a streak of days
-        number_of_days_extreme_bp_detected = get_number_of_days_extreme_bp_detected(syntrillo_internal_key)
+        average_systolic_bp = get_average_systolic_bp_over_time_period(syntrillo_internal_key)
         # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
-        if number_of_days_extreme_bp_detected == -1:
-            logger.warning(f"Could not retrieve number of days extreme BP detected for {syntrillo_internal_key}")
-        elif number_of_days_extreme_bp_detected >= EXTREME_BP_STREAK_THRESHOLD:
-            content = f"<b>Patient has been experiencing extreme BP for {number_of_days_extreme_bp_detected} days</b>" + "\n" + content
+        if average_systolic_bp == -1:
+            logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}")
+        elif average_systolic_bp >= AVERAGE_SYSTOLIC_BP_THRESHOLD:
+            content = f"<b>PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {average_systolic_bp}</b>" + \
+                "\n" + content
 
         variables = {
             "user_id": messenger_id,
@@ -487,12 +492,14 @@ def get_environment() -> str:
         str: The environment
     """
     # Initialize AWS Systems Manager (SSM) client
-    logger.info("Getting environment from SSM parameter store...")
-    ssm_client = boto3.client('ssm')
-    # Get parameter
-    response = ssm_client.get_parameter(Name='/syntrillo-clinic/aws/environment')
-    env = response['Parameter']['Value']
-    return env
+    logger.info("Retrieving environment variable from AWS...")
+    try:
+        AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
+        logger.info(f"Environment: {AWS_ENVIRONMENT}")
+        return AWS_ENVIRONMENT
+    except Exception as e:
+        logger.error(f"Error retrieving environment variable from AWS: {e}")
+        return None
 
 
 def get_conversation_id(messenger_id: str, alert_title: str) -> str:
@@ -562,42 +569,25 @@ def get_conversation_id(messenger_id: str, alert_title: str) -> str:
         logger.error(f"Error fetching conversation id from Healthie: {e}")
         return None
 
-def get_number_of_days_extreme_bp_detected(syntrillo_internal_key: str) -> int:
+def get_average_systolic_bp_over_time_period(syntrillo_internal_key: str) -> float:
     """
-    Get the number of consecutive days extreme BP has been detected for a patient, starting from today.
+    Get the average systolic BP over a time period for a patient
     Args:
         syntrillo_internal_key (str): The Syntrillo internal key
     Returns:
-        int: The number of days extreme BP has been detected
+        float: The average systolic BP
     """
     # BP API Docs: https://api2.tenovi.com/hwi-redoc/#tag/hwi-patient-measurements
     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key)
-    records, log = db_manager.get_days_with_extreme_bp(
-        extreme_systolic_threshold=SYSTOLIC_BP_THRESHOLD,
-        extreme_diastolic_threshold=DIASTOLIC_BP_THRESHOLD
+    average_systolic_bp, log = db_manager.get_average_systolic_bp_over_time_period(
+        number_of_days=AVERAGE_SYSTOLIC_BP_DAYS
     )
 
-    if not log.get('success', False) or not records:
-        logger.warning(f"Could not retrieve extreme BP days for {syntrillo_internal_key}. Log: {log}")
+    if not log.get('success', False) or not average_systolic_bp:
+        logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}. Log: {log}")
         return -1
 
-    # Convert list of tuples containing date objects to a set of date objects for efficient lookup
-    extreme_bp_dates = {record[0] for record in records}
-
-    today = date.today()
-    consecutive_days = 0
-
-    # Check for consecutive days starting from today and going backwards
-    while True:
-        current_check_date = today - timedelta(days=consecutive_days)
-        if current_check_date in extreme_bp_dates:
-            consecutive_days += 1
-        else:
-            # Stop counting when a day is missing in the sequence
-            break
-
-    logger.info(f"Number of consecutive days extreme BP detected for {syntrillo_internal_key}: {consecutive_days}")
-    return consecutive_days
+    return average_systolic_bp
 
 def is_base64(body: str) -> bool:
     """
@@ -642,24 +632,3 @@ def decode_payload(base64_str: str) -> dict:
     payload = json.loads(json_str)
 
     return payload
-
-if __name__ == "__main__":
-    # handler({}, None)
-    # print(get_syntrillo_internal_key_id_from_tenovi_patient_id('472937bf-04b0-4894-a2c2-05983e62c183'))
-    # print(get_healthie_user_information_by_healthie_user_id('2315391'))
-    handler({
-      "metric": "pulse",
-      "device_name": "Tenovi BPM",
-      "hwi_device_id": "12345678-abcd-1234-abcd-1234567890ab",
-      "patient_id": "eadfb71f-5cf8-4875-bea1-8ed272a03d08",
-      "hardware_uuid": "1234ABCD5678",
-      "sensor_code": "10",
-      "value_1": "222002020.00",
-      "value_2": "100.00",
-      "created": "2025-01-16T17:34:47.025219Z",
-      "timestamp": "2025-01-16T17:34:47.025219Z",
-      "timezone_offset": 0,
-      "estimated_timestamp": False,
-      "filter_params": None
-    }, None)
-    # print(get_number_of_days_extreme_bp_detected('ff8d04c4-9307-4171-888b-447047d5fa36'))
