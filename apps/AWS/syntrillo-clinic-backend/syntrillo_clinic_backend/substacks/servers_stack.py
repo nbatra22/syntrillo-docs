@@ -102,7 +102,7 @@ class ServersStack(Stack):
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
 
 
-        if self.environment_context["environment_name"] == "staging":
+        if self.environment_context["environment_name"] == "staging" or self.environment_context["environment_name"] == "sandbox":
             self.blood_pressure_notification_function = BloodPressureNotificationFunction(
                 self, "BloodPressureNotificationFunction",
                 environment_context=self.environment_context,
