@@ -134,6 +134,7 @@ class BloodPressureNotificationFunction(Construct):
         self.grant_read_secrets(self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.secrets_healthie_ids_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         # self.grant_read_secrets(self.secrets_openai_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
         self.function_security_group = self.function.connections.security_groups[0]
