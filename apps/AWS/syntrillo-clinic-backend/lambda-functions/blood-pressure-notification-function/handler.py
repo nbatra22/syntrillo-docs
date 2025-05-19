@@ -134,15 +134,6 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # Retrieve healthie IDs env variable
     secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
     healthie_ids = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY))
-    excluded_patients = healthie_ids.get(EXCLUDED_PATIENTS_KEY, None)
-
-    # If a specific patient is excluded from notifications, skip the notification
-    if excluded_patients and healthie_user_id in excluded_patients:
-        logger.info(f"Patient {patient_name} is excluded from notifications ...")
-        return
-
-    # The patient name is to be used as the title of the conversation
-    alert_title = HEALTHIE_BP_CONVERSATION_NAME + patient_name
 
     # Check if the environment is production or staging to determine which clinicians to notify
     # Get environment from SSM parameter store to determine which clinicians to notify
@@ -151,8 +142,17 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
         logger.error("Environment variablenot found ...")
         return
 
-    messenger_id = healthie_ids.get(env, {}).get(MESSENGER_KEY, None)
-    clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, None)
+    excluded_patients = healthie_ids.get(env, {}).get(EXCLUDED_PATIENTS_KEY, [])
+    messenger_id = healthie_ids.get(env, {}).get(MESSENGER_KEY, "")
+    clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, [])
+
+    # If a specific patient is excluded from notifications, skip the notification
+    if excluded_patients and healthie_user_id in excluded_patients:
+        logger.info(f"Patient {patient_name} is excluded from notifications ...")
+        return
+
+    # The patient name is to be used as the title of the conversation
+    alert_title = HEALTHIE_BP_CONVERSATION_NAME + patient_name
 
     # Check if the conversation already exists
     conversation_id = get_conversation_id(messenger_id, alert_title)
