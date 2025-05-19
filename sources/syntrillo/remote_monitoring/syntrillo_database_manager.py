@@ -3,7 +3,7 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple
+from typing import Tuple, List, Union
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
@@ -31,10 +31,7 @@ class SyntrilloDatabaseManager:
     ]
 
 
-    def __init__(
-        self,
-        syntrillo_internal_key: uuid.UUID,
-        ):
+    def __init__(self, syntrillo_internal_key: uuid.UUID):
         """
             For a given patient, manage data located in our Syntrillo PHI database
 
@@ -48,10 +45,7 @@ class SyntrilloDatabaseManager:
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
         self.conn, _ = db_conn.create_connection()
 
-    def get_latest_record_for_tenovi_device(
-        self,
-        device_name: str
-        ) -> Tuple[dict, dict]:
+    def get_latest_record_for_tenovi_device(self, device_name: str) -> Tuple[dict, dict]:
         """
             Get the latest record for a given device.
 
@@ -177,9 +171,7 @@ class SyntrilloDatabaseManager:
 
         """
 
-        log = {
-            "success": True,
-        }
+        log = { "success": True }
 
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -207,11 +199,7 @@ class SyntrilloDatabaseManager:
 
         return report, log
 
-    def get_metric_records_after_local_timestamp(
-        self,
-        timestamp_local: str,
-        metric_name: str
-        ) -> Tuple[dict, dict]:
+    def get_metric_records_after_local_timestamp(self, timestamp_local: str, metric_name: str) -> Tuple[dict, dict]:
         """
             Get all records for a device metric after a given local timestamp.
 
@@ -261,11 +249,7 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
-    def get_daily_stats_metric_records_after_local_timestamp(
-        self,
-        timestamp_local: str,
-        metric_name: str
-        ) -> Tuple[dict, dict]:
+    def get_daily_stats_metric_records_after_local_timestamp(self, timestamp_local: str, metric_name: str) -> Tuple[dict, dict]:
         """
             Get daily stats records for a device metric after a given local timestamp, and one day before the latest data point available.
 
@@ -362,10 +346,7 @@ class SyntrilloDatabaseManager:
 
         return records, log
 
-    def get_first_tenovi_device_data(
-        self,
-        device_name: str
-        ) -> Tuple[dict, dict]:
+    def get_first_tenovi_device_data(self, device_name: str) -> Tuple[dict, dict]:
         """
             Get the first record for a given device, based on ite timestamp_local.
 
@@ -579,10 +560,7 @@ class SyntrilloDatabaseManager:
 
         return df, log
 
-    def delete_records(
-        self,
-        device_name: str = None,
-    ) -> dict:
+    def delete_records(self, device_name: str = None) -> dict:
         """
         delete all records for a given device
 
@@ -619,6 +597,116 @@ class SyntrilloDatabaseManager:
 
         return log
 
+
+    def get_days_with_extreme_bp(self, extreme_systolic_threshold: float, extreme_diastolic_threshold: float) -> List[str]:
+        """
+        Get the days with extreme BP for a patient
+        Args:
+            extreme_systolic_threshold (float): The systolic threshold
+            extreme_diastolic_threshold (float): The diastolic threshold
+        Returns:
+            list[str]: The days with extreme BP
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT date(substr(timestamp_local, 1, 10)) AS adjusted_date
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                        AND metric_name = 'blood_pressure'
+                        AND (value_1 > %s OR value_2 < %s)
+                    ORDER BY adjusted_date DESC
+                """
+                cursor.execute(
+                    query,
+                    (self.syntrillo_internal_key, extreme_systolic_threshold, extreme_diastolic_threshold)
+                )
+                records = cursor.fetchall()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        return records, log
+
+
+    def get_average_systolic_bp_over_time_period(self, number_of_days: int) -> Tuple[float, dict]:
+        """
+        Get the average systolic BP over a period if readings exist for every day in that period.
+
+        Checks if there are blood pressure readings for every day in the specified number
+        of days ending today. If so, calculates and returns the average systolic pressure
+        (value_1) across all readings in that period. If any day is missing readings,
+        returns -1.
+
+        Args:
+            number_of_days (int): The number of days to check, ending today (inclusive). Must be >= 1.
+
+        Returns:
+            float: The average systolic BP
+            dict: The log of the request, with "success" key set to True or False
+        """
+        if number_of_days < 1:
+            return -1, {"success": False, "error": "number_of_days must be at least 1"}
+
+        today_date = datetime.now().date()
+        start_date = today_date - timedelta(days=number_of_days - 1)
+
+        try:
+            with self.conn.cursor() as cursor:
+                # Query 1: Get count of distinct days with readings in the period
+                query_days = """
+                    SELECT COUNT(DISTINCT DATE(timestamp_local))
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                        AND metric_name = 'blood_pressure'
+                        AND DATE(timestamp_local) BETWEEN %s AND %s
+                """
+                cursor.execute(query_days, (self.syntrillo_internal_key, start_date, today_date))
+                result_days = cursor.fetchone()
+                distinct_days_count = result_days[0]
+
+                # Check if data exists for every day
+                if distinct_days_count < number_of_days:
+                    log = {"success": True, "message": f"Data missing for {number_of_days - distinct_days_count} day(s) in the period. distinct_days_count: {distinct_days_count}, number_of_days: {number_of_days}"}
+                    return False, log
+
+                # Query 2: Get all systolic readings (value_1) in the period
+                query_readings = """
+                    SELECT AVG(value_1) as tenovi_average_systolic_bp
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                        AND metric_name = 'blood_pressure'
+                        AND DATE(timestamp_local) BETWEEN %s AND %s
+                """
+                cursor.execute(query_readings, (self.syntrillo_internal_key, start_date, today_date))
+                # Convert to float for calculation
+                average_systolic_bp = cursor.fetchone()[0]
+
+                if not average_systolic_bp: # Should not happen if distinct_days_count > 0, but check anyway
+                    log = {"success": True, "message": "No readings found despite distinct days count."}
+                    return False, log # Or perhaps raise an error? Returning False seems safer.
+
+                log = {"success": True}
+                return average_systolic_bp, log
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": f"Database error: {str(e)}"
+            }
+            return -1, log
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": f"Calculation error: {str(e)}"
+            }
+            return -1, log
 
 
 if __name__ == '__main__':

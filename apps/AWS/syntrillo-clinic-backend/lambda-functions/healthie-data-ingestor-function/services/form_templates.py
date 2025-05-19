@@ -1,7 +1,7 @@
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.logger import logger
 
-from healthie_api import run_graphql_query
+from syntrillo.api_healthie.utils import HealthieUtils
 from helpers import clean_text
 from models import FormTemplate
 
@@ -93,7 +93,7 @@ def fetch_all_form_templates_from_healthie() -> dict:
 
     logger.info("Fetching form templates from Healthie")
     try:
-        output: dict = run_graphql_query(graphql_query)
+        output: dict = HealthieUtils.run_graphql_query(graphql_query)
         logger.info(f"Successfully fetched {len(output)} form templates")
 
         return output
