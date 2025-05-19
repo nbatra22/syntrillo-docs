@@ -122,6 +122,14 @@ class SecretsStack(Stack):
         )
 
         # ---------------------------------------------------------------------
+        # Create healthie ids secrets
+        # ---------------------------------------------------------------------
+        self.healthie_ids_secrets = secretsmanager.Secret(
+            self, "HealthieIDsSecrets",
+            encryption_key=custom_kms_key
+        )
+
+        # ---------------------------------------------------------------------
         # OUTPUTS
         # ---------------------------------------------------------------------
         # CfnOutput(
@@ -230,4 +238,10 @@ class SecretsStack(Stack):
             self, "SyntrilloClinicSecretsDeploymentGithubOAuthTokenSecretsArn", 
             value=self.github_oauth_token.secret_arn, 
             export_name="SyntrilloClinic-Secrets-DeploymentPipeline-GithubOAuthTokenSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SyntrilloClinicSecretsFunctionsHealthieIDsSecrets", 
+            value=self.healthie_ids_secrets.secret_arn, 
+            export_name="SyntrilloClinic-Secrets-Functions-HealthieIDsSecrets-Arn"
         )

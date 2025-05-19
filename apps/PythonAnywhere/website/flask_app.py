@@ -39,22 +39,24 @@ if os.path.exists('/home/syntrillo/_this_is_PythonAnywhere_') or os.uname().node
 
 # ----------- provider tab ---------------------
 from routes.healthie.iframe_provider_tab.index import iframe_healthie_provider_tab_index_bp
-from routes.healthie.iframe_provider_tab.status import iframe_healthie_provider_tab_status_bp
+from routes.healthie.iframe_provider_tab.blood_pressure import iframe_healthie_provider_tab_bp_analysis_bp
+from routes.healthie.iframe_provider_tab.risk_score import iframe_healthie_provider_tab_risk_score_bp
 from routes.healthie.iframe_provider_tab.devices import iframe_healthie_provider_tab_devices_bp
+from routes.healthie.iframe_provider_tab.status import iframe_healthie_provider_tab_status_bp
 from routes.healthie.iframe_provider_tab.onboarding import iframe_healthie_provider_tab_onboarding_bp
 from routes.healthie.iframe_provider_tab.care_plan import iframe_healthie_provider_tab_care_plan_bp
 from routes.healthie.iframe_provider_tab.cdss import iframe_healthie_provider_tab_cdss_bp
-from routes.healthie.iframe_provider_tab.blood_pressure import iframe_healthie_provider_tab_bp_analysis
 from routes.healthie.iframe_provider_tab.system import iframe_healthie_provider_tab_system_bp
 from routes.healthie.iframe_provider_tab.system_devices import iframe_healthie_provider_tab_system_devices_bp
 
 app.register_blueprint(iframe_healthie_provider_tab_index_bp)
-app.register_blueprint(iframe_healthie_provider_tab_status_bp)
+app.register_blueprint(iframe_healthie_provider_tab_bp_analysis_bp)
+app.register_blueprint(iframe_healthie_provider_tab_risk_score_bp)
 app.register_blueprint(iframe_healthie_provider_tab_devices_bp)
+app.register_blueprint(iframe_healthie_provider_tab_status_bp)
 app.register_blueprint(iframe_healthie_provider_tab_onboarding_bp)
 app.register_blueprint(iframe_healthie_provider_tab_care_plan_bp)
 app.register_blueprint(iframe_healthie_provider_tab_cdss_bp)
-app.register_blueprint(iframe_healthie_provider_tab_bp_analysis)
 app.register_blueprint(iframe_healthie_provider_tab_system_bp)
 app.register_blueprint(iframe_healthie_provider_tab_system_devices_bp)
 
