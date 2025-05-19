@@ -26,8 +26,8 @@ from constants import (
 )
 
 # TODO: comment these decorators when running locally
-# @tracer.capture_lambda_handler
-# @logger.inject_lambda_context(log_event=True)
+@tracer.capture_lambda_handler
+@logger.inject_lambda_context(log_event=True)
 def handler(event, context):
 
     # Steps triggered by Tenovi webhooks:
@@ -97,9 +97,9 @@ def handler(event, context):
             'body': 'No syntrillo_internal_key found for tenovi_patient_id'
         }
 
-    # 4. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
+    # 3. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
     systolic_is_extreme = systolic_bp > SYSTOLIC_BP_THRESHOLD if systolic_bp is not None else False
-    diastolic_is_extreme = diastolic_bp < DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
+    diastolic_is_extreme = diastolic_bp > DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
 
     if systolic_is_extreme or diastolic_is_extreme:
         # Send chat messagenotification to clinicians when extreme blood pressure is detected
