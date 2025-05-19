@@ -4,9 +4,9 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
 
-from healthie_api import run_graphql_query
 from helpers import clean_text
 from models import FormResponse, Medication
+from syntrillo.api_healthie.utils import HealthieUtils
 
 class FormResponseService:
     def __init__(self):
@@ -131,7 +131,7 @@ class FormResponseService:
                         "should_paginate": True
                     }
                 # Retrieve the current set of responses
-                response: dict = run_graphql_query(graphql_query, variables)
+                response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
                 current_page_data = response.get("formAnswerGroups", [])
 
                 # Append the newest set of responses to output array
@@ -317,7 +317,7 @@ class FormResponseService:
             }
 
             try:
-                response = run_graphql_query(graphql_query, variables)
+                response = HealthieUtils.run_graphql_query(graphql_query, variables)
 
                 if response and "medications" in response:
                     # Convert each medication dict to a Medication model
