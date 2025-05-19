@@ -8,11 +8,10 @@ from datetime import datetime, date, timedelta
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-from syntrillo.remote_monitoring.data_sync import RemoteMonitoringDataSync
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 from constants import (
     AVERAGE_SYSTOLIC_BP_DAYS,
@@ -20,13 +19,10 @@ from constants import (
     SYSTOLIC_BP_THRESHOLD,
     DIASTOLIC_BP_THRESHOLD,
     HEALTHIE_BP_CONVERSATION_NAME,
-    STAGING_CLINICIANS,
-    PRODUCTION_CLINICIANS,
-    STAGING_MESSENGER,
-    PRODUCTION_MESSENGER,
-    EXCLUDED_PATIENTS,
-    PRODUCTION_ENVIRONMENT,
-    STAGING_ENVIRONMENT
+    AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY,
+    EXCLUDED_PATIENTS_KEY,
+    MESSENGER_KEY,
+    CLINICIANS_KEY
 )
 
 # TODO: comment these decorators when running locally
@@ -101,9 +97,6 @@ def handler(event, context):
             'body': 'No syntrillo_internal_key found for tenovi_patient_id'
         }
 
-    # 3. Sync patient data from Tenovi to Syntrillo and then to Healthie
-    sync_patient(syntrillo_internal_key)
-
     # 4. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
     systolic_is_extreme = systolic_bp > SYSTOLIC_BP_THRESHOLD if systolic_bp is not None else False
     diastolic_is_extreme = diastolic_bp < DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
@@ -117,53 +110,6 @@ def handler(event, context):
         'statusCode': 200,
         'body': 'Successfully processed Tenovi Webhook Blood Pressure event'
     }
-
-
-def sync_patient(patient_id: str) -> dict:
-    """
-    Sync patient data from Tenovi to Syntrillo and then to Healthie
-    Adds measurements to database (copy and pasyed from remote-monitoring-data-sync-function handler)
-
-    Args:
-        patient_id (str): Syntrillo internal key
-    Returns:
-        dict: A dictionary containing the success status, error message, and syntrillo_internal_key
-    """
-    if not patient_id:
-        logger.error("No patient ID provided. Patient ID is required to save BP data to MySQL database.")
-        return {
-            'success': False,
-            'error': "Patient ID is required",
-            'syntrillo_internal_key': None
-        }
-
-    try:
-        sync = RemoteMonitoringDataSync(uuid.UUID(patient_id))
-        log: dict = sync.sync_tenovi_to_syntrillo_to_healthie()
-
-        if log.get('success', False):
-            logger.info(f"Successfully synced data for patient {patient_id}")
-            return {
-                'success': True,
-                'syntrillo_internal_key': patient_id,
-                'error': None,
-            }
-        else:
-            error_msg = f"Failed to sync data for patient {patient_id}"
-            logger.error({"error": error_msg, "log": log})
-            return {
-                'success': False,
-                'error': error_msg,
-                'syntrillo_internal_key': patient_id
-            }
-    except Exception as e:
-        error_msg = f"Error syncing data for patient {patient_id}: {str(e)}"
-        logger.error(error_msg)
-        return {
-            'success': False,
-            'error': error_msg,
-            'syntrillo_internal_key': patient_id
-        }
 
 
 def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:
@@ -185,8 +131,13 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
     patient_name, healthie_user_id = get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
 
+    # Retrieve healthie IDs env variable
+    secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+    healthie_ids = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY))
+    excluded_patients = healthie_ids.get(EXCLUDED_PATIENTS_KEY, None)
+
     # If a specific patient is excluded from notifications, skip the notification
-    if healthie_user_id in EXCLUDED_PATIENTS:
+    if excluded_patients and healthie_user_id in excluded_patients:
         logger.info(f"Patient {patient_name} is excluded from notifications ...")
         return
 
@@ -197,17 +148,11 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # Get environment from SSM parameter store to determine which clinicians to notify
     env = get_aws_environment()
     if not env:
-        logger.error("Environment not found")
+        logger.error("Environment variablenot found ...")
         return
-    if env == PRODUCTION_ENVIRONMENT:
-        messenger_id = PRODUCTION_MESSENGER
-        clinicians = PRODUCTION_CLINICIANS
-    elif env == STAGING_ENVIRONMENT:
-        messenger_id = STAGING_MESSENGER
-        clinicians = STAGING_CLINICIANS
-    else:
-        logger.error(f"Invalid environment: {env}")
-        return
+
+    messenger_id = healthie_ids.get(env, {}).get(MESSENGER_KEY, None)
+    clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, None)
 
     # Check if the conversation already exists
     conversation_id = get_conversation_id(messenger_id, alert_title)
