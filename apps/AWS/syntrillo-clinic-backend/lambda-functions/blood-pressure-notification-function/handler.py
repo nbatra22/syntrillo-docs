@@ -195,7 +195,7 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
 
     # Check if the environment is production or staging to determine which clinicians to notify
     # Get environment from SSM parameter store to determine which clinicians to notify
-    env = get_environment()
+    env = get_aws_environment()
     if not env:
         logger.error("Environment not found")
         return
@@ -483,7 +483,7 @@ def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> 
         logger.error(f"Error fetching user information from Healthie: {e}")
 
 
-def get_environment() -> str:
+def get_aws_environment() -> str:
     """
     Get the environment from the SSM parameter store
     Args:
@@ -497,6 +497,23 @@ def get_environment() -> str:
         AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
         logger.info(f"Environment: {AWS_ENVIRONMENT}")
         return AWS_ENVIRONMENT
+    except Exception as e:
+        logger.error(f"Error retrieving environment variable from AWS: {e}")
+        return None
+
+def get_aws_clinician_ids() -> List[str]:
+    """
+    Get the environment from the SSM parameter store
+    Args:
+        None
+    Returns:
+        str: The environment
+    """
+    # Initialize AWS Systems Manager (SSM) client
+    logger.info("Retrieving env specific clinician ids from AWS...")
+    try:
+        AWS_CLINICIAN_IDS = os.environ['CLINICIAN_IDS']
+        return AWS_CLINICIAN_IDS
     except Exception as e:
         logger.error(f"Error retrieving environment variable from AWS: {e}")
         return None
