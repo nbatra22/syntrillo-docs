@@ -190,11 +190,17 @@ def get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id: str)
         with db_connection.cursor() as cursor:
 
             # Query to retrieve syntrillo_internal_key from the user_look_up_codes table using tenovi patient_id
+            # select_query = """
+            #     SELECT
+            #         BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key
+            #     FROM user_look_up_codes
+            #     WHERE BIN_TO_UUID(pseudo_code_for_tenovi_phi_access) = %s;
+            # """
             select_query = """
                 SELECT
                     BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key
                 FROM user_look_up_codes
-                WHERE BIN_TO_UUID(pseudo_code_for_tenovi_phi_access) = %s;
+                WHERE healthie_user_id = %s;
             """
 
             cursor.execute(select_query, (tenovi_patient_id,))
@@ -334,7 +340,8 @@ def add_note_to_conversation(
     # }
     logger.info("Adding note to conversation in Healthie...")
     try:
-        content = f"<ul><li>Time of measurement: {timestamp}</li> \n<li>Systolic BP: {systolic_bp}</li> \n<li>Diastolic BP: {diastolic_bp}</li></ul>"
+        # content = f"<ul><li>Time of measurement: {timestamp}</li> \n<li>Systolic BP: {systolic_bp}</li> \n<li>Diastolic BP: {diastolic_bp}</li></ul>"
+        content = f"<p><span style='text-decoration: underline;'>{timestamp}</span>:</p>\n<ul><li>Systolic BP: {systolic_bp}</li>\n<li>Diastolic BP: {diastolic_bp}</li></ul>"
 
         # Check if the patient has been experiencing extreme BP for a streak of days
         average_systolic_bp = get_average_systolic_bp_over_time_period(syntrillo_internal_key)
