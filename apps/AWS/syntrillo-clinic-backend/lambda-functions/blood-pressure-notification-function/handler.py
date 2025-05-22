@@ -18,7 +18,6 @@ from constants import (
     AVERAGE_SYSTOLIC_BP_THRESHOLD,
     SYSTOLIC_BP_THRESHOLD,
     DIASTOLIC_BP_THRESHOLD,
-    HEALTHIE_BP_CONVERSATION_NAME,
     AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY,
     EXCLUDED_PATIENTS_KEY,
     MESSENGER_KEY,
@@ -29,12 +28,6 @@ from constants import (
 @tracer.capture_lambda_handler
 @logger.inject_lambda_context(log_event=True)
 def handler(event, context):
-
-    # Steps triggered by Tenovi webhooks:
-    # 1. Extract patient_id and measurement data from event
-    # 2. Push these measurements to MySQL database
-    # 3. Validate systolic BP (value_1)
-    # 4. Send notification to clinicians when extreme blood pressure (>170 || <90) is detected
 
     # Event format:
     # {
@@ -53,45 +46,28 @@ def handler(event, context):
     #   "filter_params": null
     # }
 
-    # {
-    #     "metric": "string",
-    #     "device_name": "string",
-    #     "hwi_device_id": "string",
-    #     "patient_id": "string",
-    #     "hardware_uuid": "string",
-    #     "sensor_code": "string",
-    #     "value_1": "string",
-    #     "value_2": "string",
-    #     "created": "2019-08-24T14:16:18Z",
-    #     "timestamp": "2019-08-24T14:15:22Z",
-    #     "timezone_offset": -2147483648,
-    #     "estimated_timestamp": false,
-    #     "filter_params": {}
-    # }
-
-    # 1. Extract patient_id and measurement data from Tenovi Webhook event
     payload = event
     # Check if the body is base64 (AWS API Gateway) encoded before decoding
     if payload.get('body', None) and is_base64(payload.get('body')):
         payload = decode_payload(payload.get('body', {}))
 
-    tenovi_patient_id = payload.get('patient_id', None)
+    # Extract patient_id and measurement data from Tenovi Webhook event
+    patient_id = payload.get('patient_id', None)
     systolic_bp = float(payload.get('value_1', None))
     diastolic_bp = float(payload.get('value_2', None))
     timestamp = payload.get('timestamp', None)
 
     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    formatted_date = dt.strftime("%d %B %Y at %I:%M %p")
+    formatted_date = dt.strftime("%A (%-m/%-d/%y) at %-I:%M %p")
 
-    logger.info(f"Current BP measurement for patient {tenovi_patient_id} – systolic BP: {systolic_bp}, " +
+    logger.info(f"Current BP measurement for patient {patient_id} – systolic BP: {systolic_bp}, " +
                 f"diastolic BP: {diastolic_bp}, timestamp: {formatted_date}")
 
-    # 2. Push these measurements to MySQL database
     # Get syntrillo_internal_key from the user_look_up_codes table using tenovi patient_id
-    syntrillo_internal_key = get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id)
+    syntrillo_internal_key = get_syntrillo_internal_key_id_from_patient_id(patient_id)
 
     if not syntrillo_internal_key:
-        logger.error(f"No syntrillo_internal_key found for tenovi_patient_id: {tenovi_patient_id}")
+        logger.error(f"No syntrillo_internal_key found for tenovi_patient_id: {patient_id}")
         return {
             'statusCode': 400,
             'body': 'No syntrillo_internal_key found for tenovi_patient_id'
@@ -131,7 +107,7 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
     patient_name, healthie_user_id = get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
 
-    # Retrieve healthie IDs env variable
+    # Retrieve healthie IDs env variable to use for conversation query
     secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
     healthie_ids = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY))
 
@@ -152,7 +128,7 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
         return
 
     # The patient name is to be used as the title of the conversation
-    alert_title = HEALTHIE_BP_CONVERSATION_NAME + patient_name
+    alert_title = f"⚠️ {patient_name} - BP Alert"
 
     # Check if the conversation already exists
     conversation_id = get_conversation_id(messenger_id, alert_title)
@@ -168,17 +144,17 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     logger.info(f"Successfully added note to conversation in Healthie: {response}")
 
 
-def get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id: str) -> str:
+def get_syntrillo_internal_key_id_from_patient_id(patient_id: str) -> str:
 
     """
-    Single lookup of syntrillo_internal_key from the user_look_up_codes table using tenovi patient_id.
+    Single lookup of syntrillo_internal_key from the user_look_up_codes table using patient_id.
 
     Args:
-        tenovi_patient_id (int): Tenovi patient ID from the Tenovi Webhook event
+        patient_id (int): Healthie patient ID from the Tenovi Webhook event
     Returns:
-        dict: A dictionary mapping tenovi_patient_id to its corresponding syntrillo_internal_key
+        dict: A dictionary mapping patient_id to its corresponding syntrillo_internal_key
     """
-    if not tenovi_patient_id:
+    if not patient_id:
         return None
 
     try:
@@ -189,13 +165,6 @@ def get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id: str)
         # Create a cursor
         with db_connection.cursor() as cursor:
 
-            # Query to retrieve syntrillo_internal_key from the user_look_up_codes table using tenovi patient_id
-            # select_query = """
-            #     SELECT
-            #         BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key
-            #     FROM user_look_up_codes
-            #     WHERE BIN_TO_UUID(pseudo_code_for_tenovi_phi_access) = %s;
-            # """
             select_query = """
                 SELECT
                     BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key
@@ -203,15 +172,15 @@ def get_syntrillo_internal_key_id_from_tenovi_patient_id(tenovi_patient_id: str)
                 WHERE healthie_user_id = %s;
             """
 
-            cursor.execute(select_query, (tenovi_patient_id,))
+            cursor.execute(select_query, (patient_id,))
             entry = cursor.fetchone()
 
             # Return syntrillo internal key from the user_look_up_codes table
             if entry:
-                logger.info(f"Successfully retrieved syntrillo_internal_key for tenovi_patient_id: {tenovi_patient_id}")
+                logger.info(f"Successfully retrieved syntrillo_internal_key for patient_id: {patient_id}")
                 return entry[0]
             else:
-                logger.error(f"No entry found for tenovi_patient_id: {tenovi_patient_id}")
+                logger.error(f"No entry found for patient_id: {patient_id}")
                 return None
 
     except Exception as e:
@@ -338,13 +307,16 @@ def add_note_to_conversation(
     #         }
     #     }
     # }
+
     logger.info("Adding note to conversation in Healthie...")
+
     try:
-        # content = f"<ul><li>Time of measurement: {timestamp}</li> \n<li>Systolic BP: {systolic_bp}</li> \n<li>Diastolic BP: {diastolic_bp}</li></ul>"
+        # Message format
         content = f"<p><span style='text-decoration: underline;'>{timestamp}</span>:</p>\n<ul><li>Systolic BP: {systolic_bp}</li>\n<li>Diastolic BP: {diastolic_bp}</li></ul>"
 
         # Check if the patient has been experiencing extreme BP for a streak of days
         average_systolic_bp = get_average_systolic_bp_over_time_period(syntrillo_internal_key)
+
         # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
         if average_systolic_bp == -1:
             logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}")
