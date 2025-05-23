@@ -103,6 +103,14 @@
         {
           "ip": "44.195.8.253/32",
           "ip_owner": "healthie-staging"
+        },
+        {
+          "ip": "13.56.235.252/32",
+          "ip_owner": "tenovi-staging"
+        },
+        {
+          "ip": "54.183.255.104/32",
+          "ip_owner": "tenovi-staging"
         }
       ],
       "disable_execute_api_endpoint": false
