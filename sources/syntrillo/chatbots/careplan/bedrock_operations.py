@@ -3,6 +3,8 @@ import json
 import boto3
 import time
 
+from datetime import datetime
+from syntrillo.system.logger import logger
 
 def initialize_bedrock_client():
     return boto3.client(
@@ -30,12 +32,18 @@ def model_invoke(prompt, model):
     for attempt, model_name in enumerate(model_sequence, start=1):
         model_id = model_mapping[model_name]
         try:
+            start_time = datetime.now()
             response = bedrock.invoke_model(
                 body=body,
                 modelId=model_id,
                 accept="application/json",
                 contentType="application/json"
             )
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.info({
+                "message": ">>> Time to invoke model",
+                "duration_seconds": duration
+            }) 
             return json.loads(response.get('body').read())['content'][0]['text']
         except Exception as e:
             print(f"Error invoking model {model_name} on attempt {attempt}: {str(e)}")
@@ -145,7 +153,7 @@ def process_query(query, collection_name, prompt_name, context, model):
     return answer
 
 
-def get_final_answer(query, model):
+def get_final_answer(query, model, convo_wrapper, healthie_user_id, conversation_id):
     query_text_guideline = "This is the patient's information- " +  query + " What American Heart Association recommendations apply to this patient? Please only include recommendations associated with level A and level B evidence"
     query_text_symptoms = "This is the patient's information- " +  query + " What are some things our experts would recommend to the patient based on their main neurological symptoms or issues they are concerned with? Limit to one paragraph or 5 bullet points depending on the response."
     collection_names = ["stroke_prevention", "virtual_care_expert_answers"]
@@ -163,6 +171,21 @@ def get_final_answer(query, model):
         context = "\n\n".join([doc[0].page_content for doc in similar_docs])
         answer = process_query(query, collection_name, prompt_name, context, model)
         answers.append(answer)
+
+        first_line=""
+
+        if prompt_name == "guideline":
+            first_line="GUIDELINES BASED CLINICAL RECOMMENDATIONS"
+        
+        if prompt_name == "symptom":
+            first_line="SYNTRILLO EXPERT SUGGESTIONS FOR PATIENT CONCERNS"
+
+        convo_wrapper.create_note(
+            content=first_line + "\n" + answer,
+            healthie_user_id=healthie_user_id,
+            conversation_id=conversation_id
+        )
+
     final_answer = f"""GUIDELINES BASED CLINICAL RECOMMENDATIONS 
 {answers[0]}
 

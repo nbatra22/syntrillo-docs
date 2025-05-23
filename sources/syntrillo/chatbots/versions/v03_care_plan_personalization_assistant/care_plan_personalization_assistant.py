@@ -90,6 +90,17 @@ class CarePlanPersonalizationVirtualAssistant:
 
         """
 
+        logger.info(f"Endpoint : start send note thinking: {datetime.now()}")
+
+        # send the answer to the Healthie chat
+        self.convo_wrapper.create_note(
+            content="Thinking... Give me a few seconds...",
+            healthie_user_id=self.responder_user_id,
+            conversation_id=last_note['conversation_id']
+        )
+
+        logger.info(f"Endpoint : start final answer: {datetime.now()}")
+
         # the Healthie conversation (list of 'notes') is in self.convo_wrapper
         # notes = self.convo_wrapper.get_all_notes_for_llm()
 
@@ -115,7 +126,7 @@ class CarePlanPersonalizationVirtualAssistant:
         #     "query": last_note["content"],
         #     "model": "claude-3-5-sonnet"}))
         # response = json.loads(llm_response.text)['answer']
-        response = get_final_answer(last_note["content"], model='claude-3-5-sonnet')
+        response = get_final_answer(last_note["content"], model='claude-3-5-sonnet', convo_wrapper=self.convo_wrapper, healthie_user_id=self.responder_user_id, conversation_id=last_note['conversation_id'])
 
         logger.debug({
             "message": "CarePlanPersonalizationVirtualAssistant.generate_responses",
@@ -125,11 +136,11 @@ class CarePlanPersonalizationVirtualAssistant:
         })
 
         # send the answer to the Healthie chat
-        self.convo_wrapper.create_note(
-            content=response,
-            healthie_user_id=self.responder_user_id,
-            conversation_id=last_note['conversation_id']
-        )
+        # self.convo_wrapper.create_note(
+        #     content=response,
+        #     healthie_user_id=self.responder_user_id,
+        #     conversation_id=last_note['conversation_id']
+        # )
 
         return
 

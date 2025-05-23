@@ -153,15 +153,15 @@ class ChatBotConversationWrapper:
             for member in self.conversation['conversation_memberships']:
                 self.members.append(HealthieUser(healthie_user_id=member['user_id']))
 
-            # get all unique creators from all the notes in the conversation
-            #  : useful to know who has already answered, if an AI has already answered, etc.
-            self.creators = []
-            self.creators_ids = []
-            for note in self.conversation['notes']:
-                creator = HealthieUser(healthie_user_id=note['creator']['id'])
-                if creator.healthie_user_id not in self.creators_ids:
-                    self.creators.append(creator)
-                    self.creators_ids.append(creator.healthie_user_id)
+            # # get all unique creators from all the notes in the conversation
+            # #  : useful to know who has already answered, if an AI has already answered, etc.
+            # self.creators = []
+            # self.creators_ids = []
+            # for note in self.conversation['notes']:
+            #     creator = HealthieUser(healthie_user_id=note['creator']['id'])
+            #     if creator.healthie_user_id not in self.creators_ids:
+            #         self.creators.append(creator)
+            #         self.creators_ids.append(creator.healthie_user_id)
 
             # log numbers
             logger.info(
@@ -169,7 +169,7 @@ class ChatBotConversationWrapper:
                     'conversation_id': conversation_id,
                     'number_of_notes': len(self.conversation['notes']),
                     'number_of_members': len(self.members),
-                    'number_of_creators': len(self.creators),
+                    # 'number_of_creators': len(self.creators),
                     'number_of_providers': len(self.providers),
                     'number_of_patients': len(self.patients)
                 }

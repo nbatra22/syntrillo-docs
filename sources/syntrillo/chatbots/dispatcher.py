@@ -8,6 +8,7 @@ import pytz
 
 from syntrillo.chatbots.conversation_wrapper import ChatBotConversationWrapper
 from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.helper_functions.html import remove_html_tags
 
 from syntrillo.system.logger import logger
@@ -67,23 +68,10 @@ class ChatBotsDispatcher:
         #     print("@@@-TEST-CHATBOT-VCN-RESPONSE", response)
         #     return
 
-        # Load the conversation from the note_id
         self.convo_wrapper = ChatBotConversationWrapper()
-        log = self.convo_wrapper.load_conversation_from_note_id(note_id)
 
-        # # ------------------------------
-        # # dispatch the message to the appropriate chatbot, based on time and several variables
-        note_creator = self.convo_wrapper.get_note_creator()
-        # note_content = self.convo_wrapper.get_note_content()
-        # convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
-        convo_include_only_providers = self.convo_wrapper.does_convo_include_only_providers()
-        # conversation_owner = self.convo_wrapper.get_conversation_owner()
-        # patients = self.convo_wrapper.get_patients()
-        is_org_staging = self.healthie_utils.is_org_staging()
-
+        # Find note creator
         note, log = self.convo_wrapper.convo.get_note_by_id(note_id)
-
-        from syntrillo.api_healthie.user import HealthieUser
         note_creator = HealthieUser(healthie_user_id=note['user_id'])
 
         # ------------------------------
@@ -96,6 +84,27 @@ class ChatBotsDispatcher:
 
         if note_creator.does_user_have_tag(v04_AfterHoursVirtualAssistantBedrock.CHATBOT_TAG):
             return
+
+        logger.info(f"Endpoint : start load convo: {datetime.now()}")
+
+        # Load the conversation from the note_id
+        start_time = datetime.now()
+        log = self.convo_wrapper.load_conversation_from_note_id(note_id)
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.info({
+            "message": ">> Time to load conversation",
+            "duration_seconds": duration
+        })
+        
+        # # ------------------------------
+        # # dispatch the message to the appropriate chatbot, based on time and several variables
+        # note_creator = self.convo_wrapper.get_note_creator()
+        # note_content = self.convo_wrapper.get_note_content()
+        # convo_includes_multiple_clients = self.convo_wrapper.does_convo_includes_multiple_clients()
+        convo_include_only_providers = self.convo_wrapper.does_convo_include_only_providers()
+        # conversation_owner = self.convo_wrapper.get_conversation_owner()
+        # patients = self.convo_wrapper.get_patients()
+        is_org_staging = self.healthie_utils.is_org_staging()
 
         # ------------------------------
         # logger
@@ -145,7 +154,7 @@ class ChatBotsDispatcher:
             if note_creator.is_provider():
                 # place holder for direct provider interaction with chatbot
 
-                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers:
+                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers: # and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) 
                     # we have a provider with the AI tag, and the conversation includes only providers
                     # and the last note is not from the AI (to prevent loops, I've been there...)
                     v03_start_care_plan_personalization_assistant = True
@@ -177,7 +186,7 @@ class ChatBotsDispatcher:
             if note_creator.is_provider():
                 # place holder for direct provider interaction with chatbot
 
-                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers :
+                if self.convo_wrapper.does_convo_includes_provider_with_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) and convo_include_only_providers : # and not note_creator.does_user_have_tag(v03_CarePlanPersonalizationVirtualAssistant.CHATBOT_TAG) 
                     # we have a provider with the AI tag, and the conversation includes only providers
                     # and the last note is not from the AI (to prevent loops, I've been there...)
                     v03_start_care_plan_personalization_assistant = True
@@ -203,8 +212,15 @@ class ChatBotsDispatcher:
         #     ahva_chatbot.generate_responses()
 
         if v03_start_care_plan_personalization_assistant:
+            start_time = datetime.now()
             cppa_chatbot = v03_CarePlanPersonalizationVirtualAssistant(convo_wrapper=self.convo_wrapper)
+            logger.info(f"Endpoint : start generate response: {datetime.now()}")
             cppa_chatbot.generate_responses(note)
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.info({
+                "message": ">> Time to generate response",
+                "duration_seconds": duration
+            }) 
 
         if v04_start_after_hours_virtual_assistant_bedrock:
             ahvab_chatbot = v04_AfterHoursVirtualAssistantBedrock(convo_wrapper=self.convo_wrapper)

@@ -69,7 +69,7 @@
       "provisioned_concurrency_executions": 1,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
-      "reserved_concurrent_executions": 50
+      "reserved_concurrent_executions": 10
     },
     "blood_pressure_notification_function": {
       "log_level": "INFO",
@@ -83,7 +83,7 @@
       "provisioned_concurrency_executions": 1,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
-      "reserved_concurrent_executions": 50
+      "reserved_concurrent_executions": 10
     },
     "iframe_generator_api": {
       "use_waf": true,
@@ -146,7 +146,7 @@
     },
     "message_endpoint_function": {
       "log_level": "INFO",
-      "provisioned_concurrency_executions": 1,
+      "provisioned_concurrency_executions": 2,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
