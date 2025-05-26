@@ -255,9 +255,16 @@ class IFrameGeneratorApiEndpoint(Construct):
             for ip_info in self.environment_context["iframe_generator_api"]["iframes_allowed_api_adresses"]
         ))
 
-        webhook_allowed_ip_addresses = sorted(set(
+        healthie_webhook_allowed_ip_addresses = sorted(set(
             ip_info["ip"]
             for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
+            if ip_info["ip_owner"].startswith("healthie-")
+        ))
+
+        tenovi_webhook_allowed_ip_addresses = sorted(set(
+            ip_info["ip"]
+            for ip_info in self.environment_context["iframe_generator_api"]["webhooks_allowed_api_adresses"]
+            if ip_info["ip_owner"].startswith("tenovi-")
         ))
 
         allow_all_invokes_policy_statement = iam.PolicyStatement(
@@ -272,14 +279,26 @@ class IFrameGeneratorApiEndpoint(Construct):
             },
         )
 
-        deny_all_webhook_invokes_policy_statement = iam.PolicyStatement(
+        deny_all_healthie_webhook_invokes_policy_statement = iam.PolicyStatement(
             effect=iam.Effect.DENY,
             principals=[iam.AnyPrincipal()],
             actions=["execute-api:Invoke"],
             resources=["execute-api:/*/*/healthie_endpoint_post"],
             conditions={
                 "NotIpAddress": {
-                    "aws:SourceIp": list(webhook_allowed_ip_addresses),
+                    "aws:SourceIp": list(healthie_webhook_allowed_ip_addresses),
+                }
+            },
+        )
+
+        deny_all_tenovi_webhook_invokes_policy_statement = iam.PolicyStatement(
+            effect=iam.Effect.DENY,
+            principals=[iam.AnyPrincipal()],
+            actions=["execute-api:Invoke"],
+            resources=["execute-api:/*/*/tenovi_endpoint_post"],
+            conditions={
+                "NotIpAddress": {
+                    "aws:SourceIp": list(tenovi_webhook_allowed_ip_addresses),
                 }
             },
         )
@@ -294,5 +313,6 @@ class IFrameGeneratorApiEndpoint(Construct):
         return iam.PolicyDocument(statements=[
                 allow_all_invokes_policy_statement, 
                 allowed_ips_policy_statement,
-                deny_all_webhook_invokes_policy_statement
+                deny_all_healthie_webhook_invokes_policy_statement,
+                deny_all_tenovi_webhook_invokes_policy_statement,
         ])
