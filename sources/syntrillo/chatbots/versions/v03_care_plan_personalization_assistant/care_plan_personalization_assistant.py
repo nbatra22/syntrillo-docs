@@ -94,7 +94,7 @@ class CarePlanPersonalizationVirtualAssistant:
 
         # send the answer to the Healthie chat
         self.convo_wrapper.create_note(
-            content="Thinking... Give me a few seconds...",
+            content="Reviewing guidelines and Syntrillo expert suggestions for this patient...",
             healthie_user_id=self.responder_user_id,
             conversation_id=last_note['conversation_id']
         )

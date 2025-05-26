@@ -28,7 +28,7 @@ healthie_endpoint_bp = Blueprint('healthie_endpoint', __name__)
 # Define the whitelist of allowed IP addresses
 ALLOWED_IPS = ['192.168.0.1', '10.0.0.1', '127.0.0.1',  # local IPs
                '18.206.70.225', '44.195.8.253',         # staging
-               '52.4.158.130', '3.216.152.234',         # production
+               '52.4.158.130', '3.216.152.234', '54.243.233.84', '50.19.211.21',  # production
                ]
 
 @healthie_endpoint_bp.route('/healthie_endpoint_post', methods=['POST'])
