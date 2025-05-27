@@ -83,7 +83,7 @@ class DeploymentPipelinesStack(Stack):
                             "cd utils/deployments",
                             "./symlinks-recreate.sh",       
                             "./diff-local-assets-with-remote-functions.sh staging SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
-                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack --require-approval never",
                             "pytest ./test_staging.py --junitxml=./test-reports/report.xml"
                         ]
                     }
@@ -220,7 +220,7 @@ class DeploymentPipelinesStack(Stack):
                             "pwd",
                             "cd utils/deployments",       
                             "./diff-local-assets-with-remote-functions.sh prod SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
-                            # "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack"
+                            # "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack --require-approval never"
                         ]
                     }
                 },
