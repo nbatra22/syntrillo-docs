@@ -71,6 +71,7 @@ class DeploymentPipelinesStack(Stack):
                     "install": {
                         "commands": [
                             "cd apps/AWS/syntrillo-clinic-backend",
+                            "nvm use 20",
                             "npm install -g aws-cdk",
                             "python -m pip install -r requirements.txt",
                             "pip install pytest",
@@ -202,6 +203,7 @@ class DeploymentPipelinesStack(Stack):
                     "install": {
                         "commands": [
                             "cd apps/AWS/syntrillo-clinic-backend",
+                            "nvm use 20",
                             "npm install -g aws-cdk",
                             "python -m pip install -r requirements.txt"
                         ]
