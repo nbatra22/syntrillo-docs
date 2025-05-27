@@ -158,6 +158,31 @@ class NetworkStack(Stack):
         )
 
         # ---------------------------------------------------------------------
+        # Add Bedrock Interface Endpoint
+        # ---------------------------------------------------------------------
+        security_group = ec2.SecurityGroup(
+            self, "BedrockEndpointSG",
+            vpc=self.vpc,
+            description="Security Group for Bedrock VPC Endpoint",
+            allow_all_outbound=True
+        )
+
+        security_group.add_ingress_rule(
+            ec2.Peer.ipv4(self.vpc.vpc_cidr_block),
+            ec2.Port.tcp(443),
+            "Allow HTTPS inbound from VPC"
+        )
+
+        bedrock_endpoint = ec2.InterfaceVpcEndpoint(
+            self, "BedrockVPCEndpoint",
+            vpc=self.vpc,
+            service=ec2.InterfaceVpcEndpointService("com.amazonaws.us-east-1.bedrock-runtime"),
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),
+            security_groups=[security_group]
+        )
+
+        # ---------------------------------------------------------------------
         # OUTPUTS
         # ---------------------------------------------------------------------
         CfnOutput(self, "SyntrilloClinicNetworkVpcId", value=self.vpc.vpc_id, export_name="SyntrilloClinic-Network-Vpc-Id")
