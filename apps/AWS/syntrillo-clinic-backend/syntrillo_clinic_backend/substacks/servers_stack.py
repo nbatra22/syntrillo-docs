@@ -101,15 +101,13 @@ class ServersStack(Stack):
         self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
 
+        self.blood_pressure_notification_function = BloodPressureNotificationFunction(
+            self, "BloodPressureNotificationFunction",
+            environment_context=self.environment_context,
+            network=self.network,
+            database=self.database,
+            storage=self.storage, 
+            secrets=self.secrets,
+        )
 
-        if self.environment_context["environment_name"] == "staging" or self.environment_context["environment_name"] == "sandbox":
-            self.blood_pressure_notification_function = BloodPressureNotificationFunction(
-                self, "BloodPressureNotificationFunction",
-                environment_context=self.environment_context,
-                network=self.network,
-                database=self.database,
-                storage=self.storage, 
-                secrets=self.secrets,
-            )
-
-            self.iframe_generator_api_routes.create_tenovi_endpoint(self.blood_pressure_notification_function.function_alias)
+        self.iframe_generator_api_routes.create_tenovi_endpoint(self.blood_pressure_notification_function.function_alias)
