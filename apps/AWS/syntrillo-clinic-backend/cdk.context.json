@@ -185,6 +185,14 @@
         {
           "ip": "50.19.211.21/32",
           "ip_owner": "healthie-prod"
+        },
+        {
+          "ip": "0.0.0.1/32",
+          "ip_owner": "tenovi-prod"
+        },
+        {
+          "ip": "0.0.0.1/32",
+          "ip_owner": "tenovi-prod"
         }
       ],
       "disable_execute_api_endpoint": true
