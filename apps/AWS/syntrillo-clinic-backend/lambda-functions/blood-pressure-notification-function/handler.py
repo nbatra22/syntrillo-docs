@@ -56,6 +56,13 @@ def handler(event, context):
     systolic_bp = float(payload.get('value_1', None))
     diastolic_bp = float(payload.get('value_2', None))
     timestamp = payload.get('timestamp', None)
+    metric = payload.get('metric', None)
+
+    if metric and metric is not 'blood_pressure':
+        return {
+            'statusCode': 200,
+            'body': 'Tenovi pulse measurement received'
+        }
 
     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
     formatted_date = dt.strftime("%A (%-m/%-d/%y) at %-I:%M %p")
