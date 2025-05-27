@@ -75,13 +75,13 @@ class ServersStack(Stack):
             secrets=self.secrets,
         )
 
-        self.llm_server = LLMServer(
-            self, "LLMServer",
-            environment_context=self.environment_context,
-            network=self.network,
-            database=self.database,
-            iframe_generator_function=self.iframe_generator_function,
-        )
+        # self.llm_server = LLMServer(
+        #     self, "LLMServer",
+        #     environment_context=self.environment_context,
+        #     network=self.network,
+        #     database=self.database,
+        #     iframe_generator_function=self.iframe_generator_function,
+        # )
 
         self.iframe_generator_api_endpoint = IFrameGeneratorApiEndpoint(
             self, "IFrameGeneratorApiEndpoint",
