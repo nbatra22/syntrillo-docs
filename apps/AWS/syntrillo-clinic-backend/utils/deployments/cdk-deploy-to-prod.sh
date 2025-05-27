@@ -1,5 +1,25 @@
 #!/bin/bash
 
+# ----------------------------------------------------------------------------------
+# Deploy from codebuild
+# ----------------------------------------------------------------------------------
+
+if [ -n "$CODEBUILD_BUILD_ID" ]; then
+  # make sure we are in the directory of this script
+  cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")";
+
+  # go to the root of the CDK app
+  #  : ./apps/AWS/syntrillo-clinic-backend
+  cd ../../
+
+  cdk deploy --context environment='prod' $@ 
+  exit
+fi
+
+# ----------------------------------------------------------------------------------
+# Deploy from desktop
+# ----------------------------------------------------------------------------------
+
 if [ "$1" == "" ]; then
  cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend
  cdk ls --profile syntrillo-clinic-prod-deployment --context environment='prod'
