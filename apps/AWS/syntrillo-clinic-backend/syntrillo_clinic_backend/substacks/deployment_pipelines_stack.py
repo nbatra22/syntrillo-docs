@@ -220,7 +220,7 @@ class DeploymentPipelinesStack(Stack):
                             "pwd",
                             "cd utils/deployments",       
                             "./diff-local-assets-with-remote-functions.sh prod SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack",
-                            # "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack --require-approval never"
+                            "./cdk-deploy-to-staging.sh SyntrilloClinicBackendStack/ServersStack SyntrilloClinicBackendStack/TaskSchedulingStack --require-approval never"
                         ]
                     }
                 },
