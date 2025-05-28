@@ -58,7 +58,7 @@ def handler(event, context):
     timestamp = payload.get('timestamp', None)
     metric = payload.get('metric', None)
 
-    if metric and metric is not 'blood_pressure':
+    if metric and metric != 'blood_pressure':
         return {
             'statusCode': 200,
             'body': 'Tenovi pulse measurement received'
