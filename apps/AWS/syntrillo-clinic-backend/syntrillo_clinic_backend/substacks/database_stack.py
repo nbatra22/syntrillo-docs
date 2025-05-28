@@ -216,14 +216,13 @@ class DatabaseStack(Stack):
             "HealthieDataIngestorFunction"
         )
 
-        if self.environment_context["environment_name"] == 'staging':
-            # Allow blood pressure notification function Access
-            add_security_group_ingress_rule(
-                self,
-                Fn.import_value("SyntrilloClinic-Servers-BloodPressureNotificationFunction-SecurityGroup-Id"),
-                "BloodPressureNotificationFunction",
-                "BloodPressureNotificationFunction"
-            )
+        # Allow blood pressure notification function Access
+        add_security_group_ingress_rule(
+            self,
+            Fn.import_value("SyntrilloClinic-Servers-BloodPressureNotificationFunction-SecurityGroup-Id"),
+            "BloodPressureNotificationFunction",
+            "BloodPressureNotificationFunction"
+        )
 
         # Allow DMS access
         add_security_group_ingress_rule(
