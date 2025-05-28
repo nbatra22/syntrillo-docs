@@ -187,11 +187,11 @@
           "ip_owner": "healthie-prod"
         },
         {
-          "ip": "0.0.0.1/32",
+          "ip": "54.183.255.104/32",
           "ip_owner": "tenovi-prod"
         },
         {
-          "ip": "0.0.0.1/32",
+          "ip": "13.56.235.252/32",
           "ip_owner": "tenovi-prod"
         }
       ],
