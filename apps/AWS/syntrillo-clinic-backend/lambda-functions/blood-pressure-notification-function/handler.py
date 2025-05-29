@@ -59,6 +59,7 @@ def handler(event, context):
     metric = payload.get('metric', None)
 
     if metric and metric != 'blood_pressure':
+        logger.info(f"Pulse measurement received for patient {patient_id}")
         return {
             'statusCode': 200,
             'body': 'Tenovi pulse measurement received'
