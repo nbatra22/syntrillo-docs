@@ -62,6 +62,7 @@ app.register_blueprint(iframe_healthie_provider_tab_system_devices_bp)
 
 # ----------- provider sidebar ---------------------
 from routes.healthie.iframe_provider_sidebar.index import iframe_healthie_provider_sidebar_index_bp
+from routes.healthie.iframe_provider_sidebar.billing import iframe_healthie_provider_sidebar_billing_bp
 from routes.healthie.iframe_provider_sidebar.status import iframe_healthie_provider_sidebar_status_bp
 from routes.healthie.iframe_provider_sidebar.questionnaire import iframe_healthie_provider_sidebar_questionnaire_bp
 from routes.healthie.iframe_provider_sidebar.questionnaire_database import iframe_healthie_provider_sidebar_questionnaire_database_bp
@@ -69,6 +70,7 @@ from routes.healthie.iframe_provider_sidebar.dumps import iframe_healthie_provid
 from routes.healthie.iframe_provider_sidebar.system import iframe_healthie_provider_sidebar_system_bp
 
 app.register_blueprint(iframe_healthie_provider_sidebar_index_bp)
+app.register_blueprint(iframe_healthie_provider_sidebar_billing_bp)
 app.register_blueprint(iframe_healthie_provider_sidebar_status_bp)
 app.register_blueprint(iframe_healthie_provider_sidebar_questionnaire_bp)
 app.register_blueprint(iframe_healthie_provider_sidebar_questionnaire_database_bp)
