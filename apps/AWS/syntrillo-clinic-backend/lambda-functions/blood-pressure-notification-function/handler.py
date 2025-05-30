@@ -5,6 +5,7 @@ import boto3
 import json
 from typing import List
 from datetime import datetime, date, timedelta
+import pytz
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -65,8 +66,13 @@ def handler(event, context):
             'body': 'Tenovi pulse measurement received'
         }
 
-    dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    formatted_date = dt.strftime("%A (%-m/%-d/%y) at %-I:%M %p")
+    # Parse the UTC timestamp and convert to Eastern Time
+    dt_utc = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    eastern = pytz.timezone("US/Eastern")
+    dt_est = dt_utc.astimezone(eastern)
+
+    # Format with EST included
+    formatted_date = dt_est.strftime("%A (%-m/%-d/%y) at %-I:%M %p EST")
 
     logger.info(f"Current BP measurement for patient {patient_id} – systolic BP: {systolic_bp}, " +
                 f"diastolic BP: {diastolic_bp}, timestamp: {formatted_date}")
