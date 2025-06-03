@@ -1,3 +1,1 @@
-# !! THIS SHOULD BE IN A LAMBDA LAYER
-aws-wsgi
-flask
+../requirements.iframes.txt
