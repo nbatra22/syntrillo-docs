@@ -128,10 +128,10 @@ class SyntrilloClinicBackendStack(Stack):
                 environment_context=self.environment_context,
             )
             
-            self.backend_notification = BackendNotificationsStack(
-                self, "BackendNotificationsStack",
-                environment_context=self.environment_context,
-            )
+        self.backend_notification = BackendNotificationsStack(
+            self, "BackendNotificationsStack",
+            environment_context=self.environment_context,
+        )
 
         # backupStack = FixOutputDependencyStack(
         #     self, "FixOutputDependencyStack",
