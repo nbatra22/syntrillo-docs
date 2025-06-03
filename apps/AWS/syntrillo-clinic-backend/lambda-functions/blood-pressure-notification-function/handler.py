@@ -250,6 +250,8 @@ def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_t
         clinician_ids = list(set(clinician_ids))
         clinicians_str = f"{','.join(clinician_ids)}"
 
+        logger.info(f"Clinicians str: {clinicians_str}")
+
         variables = {
             "simple_added_users": clinicians_str,
             "owner_id": messenger_id,
