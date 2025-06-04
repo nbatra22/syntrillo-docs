@@ -142,7 +142,8 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
         return
 
     # The patient name is to be used as the title of the conversation
-    alert_title = f"⚠️ {patient_name} - BP Alert"
+    # alert_title = f"⚠️ {patient_name} - BP Alert"
+    alert_title = f"🔴 {patient_name} - BP Alert"
 
     # Check if the conversation already exists
     conversation_id = get_conversation_id(messenger_id, alert_title)
@@ -250,6 +251,8 @@ def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_t
         clinician_ids = list(set(clinician_ids))
         clinicians_str = f"{','.join(clinician_ids)}"
 
+        logger.info(f"Clinicians str: {clinicians_str}")
+
         variables = {
             "simple_added_users": clinicians_str,
             "owner_id": messenger_id,
@@ -335,8 +338,7 @@ def add_note_to_conversation(
         if average_systolic_bp == -1:
             logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}")
         elif average_systolic_bp >= AVERAGE_SYSTOLIC_BP_THRESHOLD:
-            content = f"<b>PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {average_systolic_bp}</b>" + \
-                "\n" + content
+            content = content + f"<p></p><b>⚠️ PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {round(average_systolic_bp, 1)}</b>"
 
         variables = {
             "user_id": messenger_id,
