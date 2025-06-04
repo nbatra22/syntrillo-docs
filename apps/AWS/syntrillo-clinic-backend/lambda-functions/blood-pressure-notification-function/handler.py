@@ -17,8 +17,8 @@ from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSe
 from constants import (
     AVERAGE_SYSTOLIC_BP_DAYS,
     AVERAGE_SYSTOLIC_BP_THRESHOLD,
-    SYSTOLIC_BP_THRESHOLD,
-    DIASTOLIC_BP_THRESHOLD,
+    SYSTOLIC_BP_HIGH_THRESHOLD,
+    SYSTOLIC_BP_LOW_THRESHOLD,
     AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY,
     EXCLUDED_PATIENTS_KEY,
     MESSENGER_KEY,
@@ -88,17 +88,22 @@ def handler(event, context):
         }
 
     # 3. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
-    systolic_is_extreme = systolic_bp > SYSTOLIC_BP_THRESHOLD if systolic_bp is not None else False
-    diastolic_is_extreme = diastolic_bp > DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
+    systolic_is_extreme = (
+        systolic_bp is not None and
+        (systolic_bp > SYSTOLIC_BP_HIGH_THRESHOLD or systolic_bp < SYSTOLIC_BP_LOW_THRESHOLD)
+    )
+    # diastolic_is_extreme = diastolic_bp > DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
 
-    if systolic_is_extreme or diastolic_is_extreme:
-        # Send chat messagenotification to clinicians when extreme blood pressure is detected
+    if systolic_is_extreme:
+        # Send chat message notification to clinicians when extreme blood pressure is detected
         notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
-
+        body = "Alert sent thru Healthie."
+    else:
+        body = "No alert created."
 
     return {
         'statusCode': 200,
-        'body': 'Successfully processed Tenovi Webhook Blood Pressure event'
+        'body': f'Successfully processed Tenovi Webhook Blood Pressure event. {body}'
     }
 
 
