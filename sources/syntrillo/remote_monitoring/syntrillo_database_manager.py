@@ -3,7 +3,7 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple, List, Union
+from typing import Tuple, List
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
@@ -707,6 +707,39 @@ class SyntrilloDatabaseManager:
                 "error": f"Calculation error: {str(e)}"
             }
             return -1, log
+
+
+    def get_all_patient_bp_data(self, healthie_user_id: int) -> Tuple[list[str], dict]:
+        """
+        Get all BP data for a patient
+        Args:
+            healthie_user_id (int): The Healthie user ID
+        Returns:
+            list[str]: The days with at least one BP measurement
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT date(substr(timestamp_local, 1, 10)) AS adjusted_date
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                        AND metric_name = 'blood_pressure'
+                    ORDER BY adjusted_date DESC
+                """
+                cursor.execute(query, (healthie_user_id))
+                records = cursor.fetchall()
+                log = {
+                    "success": True,
+
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            records = None
+
+        return records, log
 
 
 if __name__ == '__main__':

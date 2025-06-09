@@ -16,6 +16,31 @@ class HealthieUtils():
         Initializes the HealthieAPIUtils instance.
         """
         self.auth = HealthieAuth()
+        self.PAGE_SIZE = 100
+
+    @staticmethod
+    def run_graphql_query(
+        query: str,
+        variables: Optional[dict] = {}
+    ) -> dict:
+        """
+        Runs the given GraphQL query against Healthie's backend
+        Args:
+            query (str): The GraphQL query to run
+            variables (dict): Optional, the variables to pass to the query
+        Returns:
+            dict: The JSON response 'data' from the API.
+        """
+        try:
+            auth = HealthieAuth()
+            # Make the GraphQL query request using the send_query method inherited from HealthieAPI
+            json_response, log_response = auth.send_query(query, variables)
+            logger.info(f"GraphQL log response: {log_response}")
+
+            return json_response
+        except Exception as e:
+            logger.error(f"Error running GraphQL query: {e}")
+            raise e
 
 
     def get_organization_details(self):
@@ -119,6 +144,23 @@ class HealthieUtils():
 
         Returns:
             dict: 'usersCount' and 'users' data containing a list of patients.
+            {
+                "data": {
+                    "usersCount": 27,
+                    "users": [
+                        {
+                            "id": "1525423",
+                            "email": "olemaitre+test-patient@syntrillo.com",
+                            "name": "Patient AWS Test"
+                        },
+                        {
+                            "id": "1966292",
+                            "email": "0603a4d47b9466c732174f3c17d2ae32@gethealthie.com",
+                            "name": "Patient AWS Test 2"
+                        },
+                    ]
+                }
+            }
         """
 
         # Set up the GraphQL query
@@ -223,29 +265,235 @@ class HealthieUtils():
         else:
             return None
 
-    @staticmethod
-    def run_graphql_query(
-        query: str,
-        variables: Optional[dict] = {}
-    ) -> dict:
-        """
-        Runs the given GraphQL query against Healthie's backend
-        Args:
-            query (str): The GraphQL query to run
-            variables (dict): Optional, the variables to pass to the query
-        Returns:
-            dict: The JSON response 'data' from the API.
-        """
-        try:
-            auth = HealthieAuth()
-            # Make the GraphQL query request using the send_query method inherited from HealthieAPI
-            json_response, log_response = auth.send_query(query, variables)
-            logger.info(f"GraphQL log response: {log_response}")
 
-            return json_response
+
+    def fetch_all_form_responses_from_healthie(self) -> dict:
+        """
+        Fetches form responses from Healthie API
+
+        Args:
+            None
+        Returns:
+            dict: The JSON response 'data' from the API
+        """
+
+        # Set up the GraphQL query to list custom module forms
+        graphql_query = '''
+            query formAnswerGroups(
+                $date: String, # e.g "2021-10-29" using type ISO8601DateTime does not work
+                $custom_module_form_id: ID, # e.g "11"
+                $page_size: Int, # e.g. "1" or "10" or "100"
+                $should_paginate: Boolean # e.g. "true" or "false"
+                $after: Cursor # e.g "eyJrIjpbIjIwMjUtMDMtMTRU....."
+                ) {
+                formAnswerGroups(
+                    date: $date,
+                    custom_module_form_id: $custom_module_form_id,
+                    page_size: $page_size,
+                    should_paginate: $should_paginate,
+                    after: $after
+                    ) {
+                    name
+                    cursor
+                    custom_module_form {
+                        id
+                    }
+                    created_at
+                    form_answers {
+                        label
+                        displayed_answer
+                        created_at
+                        user_id
+                        custom_module {
+                            id
+                        }
+                    }
+                }
+            }
+        '''
+
+        # Query output is dict with a single key called "formAnswerGroups"
+        # For example:
+        # {
+        # "formAnswerGroups": [
+        #     {
+        #         "name": "Telemed - PHQ-9 (v1.0)",
+        #         "cursor": "eyJrIjpbIjIwMjUtMDMtMTRUMTU6NDU6MDAuMDAwMDAwWiIsMzUyOTUyMDksIjM1Mjk1MjA5Il19",
+        #         "custom_module_form": {
+        #             "id": "1765846"
+        #         },
+        #         "created_at": "2024-12-25 19:23:06 -0500",
+        #         "form_answers": [
+        #             {
+        #                 "label": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
+        #                 "displayed_answer": null,
+        #                 "created_at": "2024-12-25 19:23:06 -0500",
+        #                 "user_id": "2101747",
+        #                 "custom_module": {
+        #                     "id": "15159807"
+        #                 }
+        #             }
+        #         ]
+        #     }
+        # ]
+        # }
+
+        # Healthie responses can time out ... pagination is required in this case
+        # Healthie PROD servers can hanlde 100 records, not 800+ (500 error)
+
+        logger.info("Fetching form responses from Healthie.")
+        try:
+            all_form_responses = []
+            cursor = None
+            has_more_pages = True
+            # Continue fetching pages until no more results
+            while has_more_pages:
+                variables = {
+                    "page_size": self.PAGE_SIZE,
+                    "should_paginate": True,
+                }
+                if cursor:
+                    variables["after"] = cursor
+
+                # Retrieve the current set of responses
+                response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+                current_page_data = response.get("formAnswerGroups", [])
+
+                # Append the newest set of responses to output array
+                all_form_responses.extend(current_page_data)
+
+
+                if len(current_page_data) == self.PAGE_SIZE and current_page_data[-1].get("cursor"):
+                    cursor = current_page_data[-1]["cursor"]
+                    logger.info(f"Fetched {len(current_page_data)} records. Getting next page with cursor.")
+                else:
+                    has_more_pages = False
+                    logger.info("No more pages to fetch.")
+
+            logger.info(f"Successfully fetched {len(all_form_responses)} form responses.")
+
+            output = {"formAnswerGroups": all_form_responses}
+            return output
+
         except Exception as e:
-            logger.error(f"Error running GraphQL query: {e}")
-            raise e
+            logger.error(f"Error fetching form responses from Healthie: {e}")
+
+
+    def fetch_single_healthie_form_response_by_custom_module_form_id_and_user_id(self, custom_module_form_id: int, user_id: int) -> dict:
+        """
+        Fetches a single form response from Healthie API
+
+        Args:
+            custom_module_form_id (int): The ID of the custom module form to fetch
+            user_id (int): The ID of the user to fetch the form response for
+        Returns:
+            dict: The JSON response 'data' from the API
+        """
+
+        # Set up the GraphQL query to list custom module forms
+        graphql_query = '''
+            query formAnswerGroups(
+                $date: String, # e.g "2021-10-29" using type ISO8601DateTime does not work
+                $custom_module_form_id: ID, # e.g "11"
+                $page_size: Int, # e.g. "1" or "10" or "100"
+                $should_paginate: Boolean # e.g. "true" or "false"
+                $after: Cursor # e.g "eyJrIjpbIjIwMjUtMDMtMTRU....."
+                $user_id: String # e.g "2101747"
+                ) {
+                formAnswerGroups(
+                    date: $date,
+                    custom_module_form_id: $custom_module_form_id,
+                    page_size: $page_size,
+                    should_paginate: $should_paginate,
+                    after: $after,
+                    user_id: $user_id
+                    ) {
+                    name
+                    cursor
+                    custom_module_form {
+                        id
+                    }
+                    created_at
+                    form_answers {
+                        label
+                        displayed_answer
+                        created_at
+                        user_id
+                        custom_module {
+                            id
+                        }
+                    }
+                }
+            }
+        '''
+
+        # Query output is dict with a single key called "formAnswerGroups"
+        # For example:
+        # {
+        # "formAnswerGroups": [
+        #     {
+        #         "name": "Telemed - PHQ-9 (v1.0)",
+        #         "cursor": "eyJrIjpbIjIwMjUtMDMtMTRUMTU6NDU6MDAuMDAwMDAwWiIsMzUyOTUyMDksIjM1Mjk1MjA5Il19",
+        #         "custom_module_form": {
+        #             "id": "1765846"
+        #         },
+        #         "created_at": "2024-12-25 19:23:06 -0500",
+        #         "form_answers": [
+        #             {
+        #                 "label": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
+        #                 "displayed_answer": null,
+        #                 "created_at": "2024-12-25 19:23:06 -0500",
+        #                 "user_id": "2101747",
+        #                 "custom_module": {
+        #                     "id": "15159807"
+        #                 }
+        #             }
+        #         ]
+        #     }
+        # ]
+        # }
+
+        # Healthie responses can time out ... pagination is required in this case
+        # Healthie PROD servers can hanlde 100 records, not 800+ (500 error)
+
+        logger.info("Fetching form responses from Healthie.")
+        try:
+            all_form_responses = []
+            cursor = None
+            has_more_pages = True
+            # Continue fetching pages until no more results
+            while has_more_pages:
+                variables = {
+                    "page_size": self.PAGE_SIZE,
+                    "should_paginate": True,
+                    "custom_module_form_id": custom_module_form_id,
+                    "user_id": user_id
+                }
+                if cursor:
+                    variables["after"] = cursor
+
+                # Retrieve the current set of responses
+                response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+                current_page_data = response.get("formAnswerGroups", [])
+
+                # Append the newest set of responses to output array
+                all_form_responses.extend(current_page_data)
+
+
+                if len(current_page_data) == self.PAGE_SIZE and current_page_data[-1].get("cursor"):
+                    cursor = current_page_data[-1]["cursor"]
+                    logger.info(f"Fetched {len(current_page_data)} records. Getting next page with cursor.")
+                else:
+                    has_more_pages = False
+                    logger.info("No more pages to fetch.")
+
+            logger.info(f"Successfully fetched {len(all_form_responses)} form responses.")
+
+            output = {"formAnswerGroups": all_form_responses}
+            return output
+
+        except Exception as e:
+            logger.error(f"Error fetching form responses from Healthie: {e}")
 
 
 if __name__ == "__main__":
