@@ -635,7 +635,7 @@ class SyntrilloDatabaseManager:
         return records, log
 
 
-    def get_average_systolic_bp_over_time_period(self, number_of_days: int) -> Tuple[float, dict]:
+    def get_average_systolic_bp_over_time_period(self, number_of_days: int) -> Tuple[float, int, dict]:
         """
         Get the average systolic BP over a period if readings exist for every day in that period.
 
@@ -648,11 +648,10 @@ class SyntrilloDatabaseManager:
             number_of_days (int): The number of days to check, ending today (inclusive). Must be >= 1.
 
         Returns:
-            float: The average systolic BP
-            dict: The log of the request, with "success" key set to True or False
+            Tuple[float, int, dict]: The average systolic BP, total number of measurements, and log
         """
         if number_of_days < 1:
-            return -1, {"success": False, "error": "number_of_days must be at least 1"}
+            return -1, 0, {"success": False, "error": "number_of_days must be at least 1"}
 
         today_date = datetime.now().date()
         start_date = today_date - timedelta(days=number_of_days - 1)
@@ -674,39 +673,42 @@ class SyntrilloDatabaseManager:
                 # Check if data exists for every day
                 if distinct_days_count < number_of_days:
                     log = {"success": True, "message": f"Data missing for {number_of_days - distinct_days_count} day(s) in the period. distinct_days_count: {distinct_days_count}, number_of_days: {number_of_days}"}
-                    return False, log
+                    return -1, 0, log
 
-                # Query 2: Get all systolic readings (value_1) in the period
+                # Query 2: Get average systolic BP and total measurement count
                 query_readings = """
-                    SELECT AVG(value_1) as tenovi_average_systolic_bp
+                    SELECT
+                        AVG(value_1) as tenovi_average_systolic_bp,
+                        COUNT(*) as total_measurements
                     FROM tenovi_raw_measurements
                     WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
                         AND metric_name = 'blood_pressure'
                         AND DATE(timestamp_local) BETWEEN %s AND %s
                 """
                 cursor.execute(query_readings, (self.syntrillo_internal_key, start_date, today_date))
-                # Convert to float for calculation
-                average_systolic_bp = cursor.fetchone()[0]
+                result = cursor.fetchone()
+                average_systolic_bp = result[0]
+                total_measurements = result[1]
 
                 if not average_systolic_bp: # Should not happen if distinct_days_count > 0, but check anyway
                     log = {"success": True, "message": "No readings found despite distinct days count."}
-                    return False, log # Or perhaps raise an error? Returning False seems safer.
+                    return -1, 0, log
 
                 log = {"success": True}
-                return average_systolic_bp, log
+                return average_systolic_bp, total_measurements, log
 
         except pymysql.MySQLError as e:
             log = {
                 "success": False,
                 "error": f"Database error: {str(e)}"
             }
-            return -1, log
+            return -1, 0, log
         except Exception as e:
             log = {
                 "success": False,
                 "error": f"Calculation error: {str(e)}"
             }
-            return -1, log
+            return -1, 0, log
 
 
 if __name__ == '__main__':
