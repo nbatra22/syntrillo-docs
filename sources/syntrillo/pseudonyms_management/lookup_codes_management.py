@@ -118,15 +118,13 @@ class LookUpCodesManagement:
             add_log_entry(event='CREATE_ENTRY_ERROR', json_data=str(healthie_user_id), comment=str(e))
             return None
 
-    def retrieve_entry_by_healthie_user_id(self, healthie_user_id: str):
+    def retrieve_entry_by_healthie_user_id(self, healthie_user_id: str) -> dict:
         """
         Retrieve an entry from the user_look_up_codes table using the healthie_user_id.
-
         Note: values returned as UUID : uuid.UUID(entry[x])
 
         Args:
             healthie_user_id (str): The ID of the healthie user.
-
         Returns:
             dict: A dictionary with syntrillo_internal_key (uuid) and pseudo_code_for_tenovi_phi_access (uuid), or None if no entry is found.
 
@@ -218,6 +216,26 @@ class LookUpCodesManagement:
         else:
             add_log_entry(event='RETRIEVE_ENTRY_BY_PSEUDO_CODE_FAILED', json_data=str(pseudo_code_for_tenovi_phi_access), comment="No entry found.")
             return None
+
+
+    def retrieve_healthie_id_to_syntrillo_internal_key_mapping(self) -> dict:
+        """
+        Retrieve a mapping of healthie_user_id to syntrillo_internal_key.
+        Args:
+            None
+        Returns:
+            healthie_to_syntrillo_internal_key_mapping (dict): a user lookup mapping
+        """
+        select_query = """
+            SELECT healthie_user_id, BIN_TO_UUID(syntrillo_internal_key)
+                FROM user_look_up_codes
+                WHERE healthie_user_id IS NOT NULL;
+        """
+        self.cursor.execute(select_query)
+        entries = self.cursor.fetchall()
+        healthie_to_syntrillo_internal_key_mapping = {entry[0]: entry[1] for entry in entries}
+
+        return healthie_to_syntrillo_internal_key_mapping
 
     def close_connection(self):
         """

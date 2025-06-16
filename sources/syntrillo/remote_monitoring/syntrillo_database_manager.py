@@ -3,13 +3,14 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple, List, Union
+from typing import Tuple, List
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.api_tenovi.device_types import DeviceTypes
+from syntrillo.system.logger import logger
 
 
 class SyntrilloDatabaseManager:
@@ -709,6 +710,44 @@ class SyntrilloDatabaseManager:
                 "error": f"Calculation error: {str(e)}"
             }
             return -1, 0, log
+
+
+    def get_all_patient_bp_data_by_syntrillo_internal_key(self, syntrillo_internal_key: str) -> Tuple[list[str], dict]:
+        """
+        Get all BP data for a patient
+        Args:
+            syntrillo_internal_key (str): The Syntrillo internal key
+        Returns:
+            list[str]: The days with at least one BP measurement
+        """
+        logger.info(f"Getting BP data for patient with syntrillo_internal_key {syntrillo_internal_key}")
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT substr(timestamp_local, 1, 10) AS adjusted_date
+                        FROM tenovi_raw_measurements
+                        WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                            AND metric_name = 'blood_pressure'
+                        ORDER BY adjusted_date DESC
+                """
+                cursor.execute(query, (syntrillo_internal_key))
+                records = cursor.fetchall()
+                all_dates_response = []
+                for record in records:
+                    all_dates_response.extend(record)
+
+                log = {"success": True }
+                logger.info(f"BP data for patient with syntrillo_internal_key {syntrillo_internal_key} retrieved successfully")
+
+        except pymysql.MySQLError as e:
+            logger.error(f"ERROR: error getting BP data for patient with syntrillo_internal_key.")
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            all_dates_response = None
+
+        return all_dates_response, log
 
 
 if __name__ == '__main__':

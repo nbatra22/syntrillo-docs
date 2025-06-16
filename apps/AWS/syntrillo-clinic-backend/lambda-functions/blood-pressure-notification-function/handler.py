@@ -13,6 +13,7 @@ from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.aws_helpers.env_utils import get_aws_environment
 
 from constants import (
     AVERAGE_SYSTOLIC_BP_DAYS,
@@ -427,24 +428,6 @@ def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> 
     except Exception as e:
         logger.error(f"Error fetching user information from Healthie: {e}")
 
-
-def get_aws_environment() -> str:
-    """
-    Get the environment from the SSM parameter store
-    Args:
-        None
-    Returns:
-        str: The environment
-    """
-    # Initialize AWS Systems Manager (SSM) client
-    logger.info("Retrieving environment variable from AWS...")
-    try:
-        AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
-        logger.info(f"Environment: {AWS_ENVIRONMENT}")
-        return AWS_ENVIRONMENT
-    except Exception as e:
-        logger.error(f"Error retrieving environment variable from AWS: {e}")
-        return None
 
 def get_aws_clinician_ids() -> List[str]:
     """

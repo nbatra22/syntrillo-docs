@@ -35,7 +35,10 @@
 <div class="container"> <!-- mt-1 -->
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="true">Status</a>
+            <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-billing" role="tab" aria-controls="tab-billing" aria-selected="true">Billing</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tab-status-tab" data-toggle="tab" href="#tab-status" role="tab" aria-controls="tab-status" aria-selected="false">Status</a>
         </li>
         {% if is_local %}
         <li class="nav-item">
@@ -54,7 +57,8 @@
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
+        <div class="tab-pane fade show active" id="tab-billing" role="tabpanel" aria-labelledby="tab-billing-tab"></div>
+        <div class="tab-pane fade" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div>
         {% if is_local %}
         <div class="tab-pane fade" id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-questionnaire-tab"></div>
         {% endif %}
@@ -149,7 +153,8 @@
         });
 
         // Load the content of the status tab immediately
-        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status', 10);
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_sidebar_billing") }}', '#tab-billing', 10);
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status');
 
         // Load the content of the other tabs in the background
         {% if is_local %}
@@ -166,4 +171,3 @@
 
 </body>
 </html>
-

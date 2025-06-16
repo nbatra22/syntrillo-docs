@@ -112,3 +112,23 @@ CREATE TABLE IF NOT EXISTS patient_medications (
     compliance VARCHAR(255),
     PRIMARY KEY (syntrillo_internal_key, med_name)
 );
+
+CREATE TABLE IF NOT EXISTS billing_records (
+    service_line_id VARCHAR(255) NOT NULL,
+    claim_id VARCHAR(255) NOT NULL,
+    encounter_id VARCHAR(255) NOT NULL,
+    claim_status VARCHAR(255) NOT NULL,
+    syntrillo_internal_key VARCHAR(255) NOT NULL,
+    cpt_code VARCHAR(255),
+    date_of_service_start VARCHAR(255) NOT NULL,
+    date_of_service_end VARCHAR(255),
+    PRIMARY KEY (service_line_id)
+);
+
+CREATE TABLE IF NOT EXISTS billing_eligibility (
+    syntrillo_internal_key VARCHAR(255) NOT NULL,
+    cpt_code VARCHAR(15),
+    bp_device_training_status BOOLEAN DEFAULT FALSE,
+    eligible_to_bill BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (syntrillo_internal_key)
+)
