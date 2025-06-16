@@ -57,12 +57,29 @@ def iframe_healthie_provider_billing_get_bp_data():
         List of BP objs
     """
     billing_manager = BillingManager()
-    all_patient_data = billing_manager.get_all_patient_data()
+    all_patient_overiew_data = billing_manager.get_all_patient_eligibility_data()
+
+    # {
+    #   "all_patient_overiew_data":
+        #   [
+        #     "user_name": "John Doe",
+        #     "healthie_user_id": 1234567890,
+        #     "bp_device_training_status": True,
+        #     "eligible_to_bill": True
+        #   ],
+        #   [
+        #     "user_name": "John Doe",
+        #     "healthie_user_id": 1234567890,
+        #     "bp_device_training_status": True,
+        #     "eligible_to_bill": True
+        #   ],
+    # }
+
 
     '''
     Example output:
     {
-        "all_patient_data": [
+        "all_patient_overiew_data": [
             {
                 "id": 1234567890,
                 "name": "John Doe",
@@ -85,7 +102,7 @@ def iframe_healthie_provider_billing_get_bp_data():
     '''
 
     return jsonify({
-        "all_patient_data": all_patient_data
+        "all_patient_overiew_data": all_patient_overiew_data
     })
 
 

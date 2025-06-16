@@ -212,7 +212,7 @@ class HealthieUtils():
         }
 
         # Send the GraphQL query using the inherited send_query method
-        response, log = self.auth.send_query(query, variables)
+        response, _ = self.auth.send_query(query, variables)
 
         return response
 
@@ -379,12 +379,12 @@ class HealthieUtils():
             logger.error(f"Error fetching form responses from Healthie: {e}")
 
 
-    def fetch_single_healthie_form_response_by_custom_module_form_id_and_user_id(self, custom_module_form_id: int, user_id: int) -> dict:
+    def fetch_single_healthie_form_response_by_form_name_and_user_id(self, form_name: str, user_id: int) -> dict:
         """
         Fetches a single form response from Healthie API
 
         Args:
-            custom_module_form_id (int): The ID of the custom module form to fetch
+            form_name (str): The name of the form to fetch
             user_id (int): The ID of the user to fetch the form response for
         Returns:
             dict: The JSON response 'data' from the API
@@ -393,19 +393,11 @@ class HealthieUtils():
         # Set up the GraphQL query to list custom module forms
         graphql_query = '''
             query formAnswerGroups(
-                $date: String, # e.g "2021-10-29" using type ISO8601DateTime does not work
-                $custom_module_form_id: ID, # e.g "11"
-                $page_size: Int, # e.g. "1" or "10" or "100"
-                $should_paginate: Boolean # e.g. "true" or "false"
-                $after: Cursor # e.g "eyJrIjpbIjIwMjUtMDMtMTRU....."
+                $name: String, # e.g "Device Training Note"
                 $user_id: String # e.g "2101747"
                 ) {
                 formAnswerGroups(
-                    date: $date,
-                    custom_module_form_id: $custom_module_form_id,
-                    page_size: $page_size,
-                    should_paginate: $should_paginate,
-                    after: $after,
+                    name: $name,
                     user_id: $user_id
                     ) {
                     name
@@ -429,71 +421,70 @@ class HealthieUtils():
 
         # Query output is dict with a single key called "formAnswerGroups"
         # For example:
-        # {
-        # "formAnswerGroups": [
-        #     {
-        #         "name": "Telemed - PHQ-9 (v1.0)",
-        #         "cursor": "eyJrIjpbIjIwMjUtMDMtMTRUMTU6NDU6MDAuMDAwMDAwWiIsMzUyOTUyMDksIjM1Mjk1MjA5Il19",
-        #         "custom_module_form": {
-        #             "id": "1765846"
-        #         },
-        #         "created_at": "2024-12-25 19:23:06 -0500",
-        #         "form_answers": [
+        #  {
+        #         "formAnswerGroups": [
         #             {
-        #                 "label": "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
-        #                 "displayed_answer": null,
-        #                 "created_at": "2024-12-25 19:23:06 -0500",
-        #                 "user_id": "2101747",
-        #                 "custom_module": {
-        #                     "id": "15159807"
-        #                 }
+        #                 "name": "AC - Device Training Note",
+        #                 "cursor": "eyJrIjpbIjIwMjUtMDYtMTRUMTU6NDE6MDAuMDAwMDAwWiIsOTY1NzMwLCI5NjU3MzAiXX0=",
+        #                 "custom_module_form": {
+        #                     "id": "2181011"
+        #                 },
+        #                 "created_at": "2025-06-14 11:41:00 -0400",
+        #                 "form_answers": [
+        #                     {
+        #                         "label": "Name",
+        #                         "displayed_answer": "AWS Test, Patient",
+        #                         "created_at": "2025-06-14 11:41:04 -0400",
+        #                         "user_id": "1525423",
+        #                         "custom_module": {
+        #                             "id": "18754209"
+        #                         }
+        #                     },
+        #                     {
+        #                         "label": "Date",
+        #                         "displayed_answer": "",
+        #                         "created_at": "2025-06-14 11:41:04 -0400",
+        #                         "user_id": "1525423",
+        #                         "custom_module": {
+        #                             "id": "18754207"
+        #                         }
+        #                     },
+        #                     {
+        #                         "label": "",
+        #                         "displayed_answer": "<p dir=\"ltr\">Reason for Service: Initial setup of remote patient monitoring (RPM) for hypertension management.</p>\n<p dir=\"ltr\">Documentation:</p>\n<ol>\n<li dir=\"ltr\" aria-level=\"1\">\n<p dir=\"ltr\" role=\"presentation\">Device Setup: <strong>UPDATE AS NEEDED</strong></p>\n</li>\n<ul>\n<li dir=\"ltr\" aria-level=\"2\">\n<p dir=\"ltr\" role=\"presentation\">A Bluetooth-enabled blood pressure monitor was configured for data transmission. Device is both FDA-approved and HIPAA-compliant.</p>\n</li>\n<li dir=\"ltr\" aria-level=\"2\">\n<p dir=\"ltr\" role=\"presentation\">Device settings were personalized for the patient to ensure compatibility with RPM software.</p>\n</li>\n</ul>\n<li dir=\"ltr\" aria-level=\"1\">\n<p dir=\"ltr\" role=\"presentation\">Patient Education: <strong>UPDATE AS NEEDED</strong></p>\n</li>\n<ul>\n<li dir=\"ltr\" aria-level=\"2\">\n<p dir=\"ltr\" role=\"presentation\">The patient was instructed on device use, including taking blood pressure readings, and troubleshooting common issues.</p>\n</li>\n<li dir=\"ltr\" aria-level=\"2\">\n<p dir=\"ltr\" role=\"presentation\">The patient demonstrated proficiency in using the devices and accessing RPM data on their mobile app.</p>\n</li>\n</ul>\n<li dir=\"ltr\" aria-level=\"1\">\n<p dir=\"ltr\" role=\"presentation\">Consent: <strong>UPDATE AS NEEDED</strong></p>\n</li>\n<ul>\n<li dir=\"ltr\" aria-level=\"2\">\n<p dir=\"ltr\" role=\"presentation\">The patient provided informed consent for RPM services. Consent was documented in the medical record.</p>\n</li>\n</ul>\n</ol>\n<p dir=\"ltr\">Supervising Provider:<strong> [Physician/QHCP Name]</strong></p>\n<p dir=\"ltr\">Clinical Staff:<strong> [Name of Staff Performing Setup, if applicable]</strong></p>",
+        #                         "created_at": "2025-06-14 11:41:04 -0400",
+        #                         "user_id": "1525423",
+        #                         "custom_module": {
+        #                             "id": "18754208"
+        #                         }
+        #                     }
+        #                 ]
         #             }
         #         ]
         #     }
-        # ]
         # }
 
         # Healthie responses can time out ... pagination is required in this case
         # Healthie PROD servers can hanlde 100 records, not 800+ (500 error)
 
-        logger.info("Fetching form responses from Healthie.")
+        logger.info("Fetching Device Training Note form response from Healthie.")
         try:
-            all_form_responses = []
-            cursor = None
-            has_more_pages = True
             # Continue fetching pages until no more results
-            while has_more_pages:
-                variables = {
-                    "page_size": self.PAGE_SIZE,
-                    "should_paginate": True,
-                    "custom_module_form_id": custom_module_form_id,
-                    "user_id": user_id
-                }
-                if cursor:
-                    variables["after"] = cursor
+            variables = {
+                "name": form_name,
+                "user_id": user_id
+            }
 
-                # Retrieve the current set of responses
-                response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
-                current_page_data = response.get("formAnswerGroups", [])
+            # Retrieve the current set of responses
+            response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+            current_page_data = response.get("formAnswerGroups", [])
 
-                # Append the newest set of responses to output array
-                all_form_responses.extend(current_page_data)
+            logger.info(f"Successfully fetched Device Training Note form response from Healthie.")
 
-
-                if len(current_page_data) == self.PAGE_SIZE and current_page_data[-1].get("cursor"):
-                    cursor = current_page_data[-1]["cursor"]
-                    logger.info(f"Fetched {len(current_page_data)} records. Getting next page with cursor.")
-                else:
-                    has_more_pages = False
-                    logger.info("No more pages to fetch.")
-
-            logger.info(f"Successfully fetched {len(all_form_responses)} form responses.")
-
-            output = {"formAnswerGroups": all_form_responses}
-            return output
+            return current_page_data
 
         except Exception as e:
-            logger.error(f"Error fetching form responses from Healthie: {e}")
+            logger.error(f"Error fetching Device Training Note form response from Healthie: {e}")
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 # Path: ./sources/syntrillo/api_healthie/user.py
 import json
 
-from typing import Tuple
-
 from syntrillo.api_healthie.auth import HealthieAuth
+from syntrillo.system.logger import logger
+from syntrillo.api_healthie.utils import HealthieUtils
 
 class HealthieUser:
     """
@@ -313,6 +313,49 @@ class HealthieUser:
         if not hasattr(self, '_provider_information'):
             self._get_provider_information()
         return self._provider_information
+
+    def get_healthie_user_information_by_healthie_user_id(self) -> str:
+        """
+        Get patient name from the healthie user id using the Healthie API
+        Args:
+            None
+        Returns:
+            str: The patient name
+        """
+        graphql_query = '''
+            query getUser($id: ID) {
+                user(id: $id) {
+                id
+                first_name
+                last_name
+                }
+            }
+        '''
+        # Query output is dict with a single key called "data"
+        # For example:
+        # {
+        #     "data": {
+        #         "user": {
+        #             "id": "2315391",
+        #             "first_name": "Bob",
+        #             "last_name": "Barker",
+        #         }
+        #     }
+        # }
+        logger.info("Adding note to conversation in Healthie...")
+        try:
+            variables = {
+                "id": self.healthie_user_id
+            }
+            output: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+            logger.info(f"Successfully retrieved user information from Healthie")
+
+            first_name = output.get('user', {}).get('first_name', '')
+            last_name = output.get('user', {}).get('last_name', '')
+            return first_name + " " + last_name
+
+        except Exception as e:
+            logger.error(f"Error fetching user information from Healthie: {e}")
 
 if __name__ == '__main__':
 

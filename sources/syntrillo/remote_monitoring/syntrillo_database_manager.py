@@ -10,6 +10,7 @@ import pandas as pd
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.api_tenovi.device_types import DeviceTypes
+from syntrillo.system.logger import logger
 
 
 class SyntrilloDatabaseManager:
@@ -709,37 +710,42 @@ class SyntrilloDatabaseManager:
             return -1, log
 
 
-    def get_all_patient_bp_data(self, healthie_user_id: int) -> Tuple[list[str], dict]:
+    def get_all_patient_bp_data_by_syntrillo_internal_key(self, syntrillo_internal_key: str) -> Tuple[list[str], dict]:
         """
         Get all BP data for a patient
         Args:
-            healthie_user_id (int): The Healthie user ID
+            syntrillo_internal_key (str): The Syntrillo internal key
         Returns:
             list[str]: The days with at least one BP measurement
         """
+        logger.info(f"Getting BP data for patient with syntrillo_internal_key {syntrillo_internal_key}")
         try:
             with self.conn.cursor() as cursor:
                 query = """
-                    SELECT DISTINCT date(substr(timestamp_local, 1, 10)) AS adjusted_date
-                    FROM tenovi_raw_measurements
-                    WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
-                        AND metric_name = 'blood_pressure'
-                    ORDER BY adjusted_date DESC
+                    SELECT DISTINCT substr(timestamp_local, 1, 10) AS adjusted_date
+                        FROM tenovi_raw_measurements
+                        WHERE syntrillo_internal_key = UUID_TO_BIN(%s)
+                            AND metric_name = 'blood_pressure'
+                        ORDER BY adjusted_date DESC
                 """
-                cursor.execute(query, (healthie_user_id))
+                cursor.execute(query, (syntrillo_internal_key))
                 records = cursor.fetchall()
-                log = {
-                    "success": True,
+                all_dates_response = []
+                for record in records:
+                    all_dates_response.extend(record)
 
-                }
+                log = {"success": True }
+                logger.info(f"BP data for patient with syntrillo_internal_key {syntrillo_internal_key} retrieved successfully")
+
         except pymysql.MySQLError as e:
+            logger.error(f"ERROR: error getting BP data for patient with syntrillo_internal_key.")
             log = {
                 "success": False,
                 "error": str(e)
             }
-            records = None
+            all_dates_response = None
 
-        return records, log
+        return all_dates_response, log
 
 
 if __name__ == '__main__':
