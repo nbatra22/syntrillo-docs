@@ -494,25 +494,27 @@
         })
             .then(response => response.json())
             .then(data => {
-                if (data.analysis_html && data.extremes_html && data.distribution_html && data.analysis_json && data.extremes_json) {
+                if (data.analysis_html && data.extremes_html
+                    // && data.distribution_html
+                    && data.analysis_json && data.extremes_json) {
                     bpAnalysisContent.innerHTML = data.analysis_html;
                     extremesContent.innerHTML = data.extremes_html;
                     hiddenAnalysisInput.value = data.analysis_json;
                     hiddenExtremesInput.value = data.extremes_json;
 
-                    distributionContent.innerHTML = data.distribution_html
+                    // distributionContent.innerHTML = data.distribution_html
 
-                    distributionContent.getElementsByClassName("svg-container").style = "postion: relative; width: 100%; height: 700px"
+                    // distributionContent.getElementsByClassName("svg-container").style = "postion: relative; width: 100%; height: 700px"
 
-                    distributionContent.querySelectorAll("script").forEach(oldScript => {
-                        const newScript = document.createElement("script");
-                        if (oldScript.src) {
-                            newScript.src = oldScript.src;
-                        } else {
-                            newScript.textContent = oldScript.textContent;
-                        }
-                        document.body.appendChild(newScript);
-                    });
+                    // distributionContent.querySelectorAll("script").forEach(oldScript => {
+                    //     const newScript = document.createElement("script");
+                    //     if (oldScript.src) {
+                    //         newScript.src = oldScript.src;
+                    //     } else {
+                    //         newScript.textContent = oldScript.textContent;
+                    //     }
+                    //     document.body.appendChild(newScript);
+                    // });
 
                 }
 

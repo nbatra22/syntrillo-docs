@@ -183,14 +183,14 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
     analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()
 
-    distribution_html = data_reporting_blood_pressure.get_time_distribution_graph()
+    # distribution_html = data_reporting_blood_pressure.get_time_distribution_graph()
 
     return jsonify({
         "analysis_html": analysis_html,
         "extremes_html": extremes_html,
         "analysis_json": analysis_json,
         "extremes_json": extremes_json,
-        "distribution_html": distribution_html
+        # "distribution_html": distribution_html
     })
 
 @iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/download', methods=['GET','POST'])

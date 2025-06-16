@@ -337,11 +337,11 @@ def add_note_to_conversation(
         content = f"<p><span style='text-decoration: underline;'>{timestamp}</span>:</p>\n<ul><li>Systolic BP: {systolic_bp}</li>\n<li>Diastolic BP: {diastolic_bp}</li></ul>"
 
         # Check if the patient has been experiencing extreme BP for a streak of days
-        average_systolic_bp, total_measurements = get_average_systolic_bp_over_time_period(syntrillo_internal_key)
+        average_systolic_bp, total_measurements, log = get_average_systolic_bp_over_time_period(syntrillo_internal_key)
 
         # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
         if average_systolic_bp == -1:
-            logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}")
+            logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}. Log: {log}")
         elif average_systolic_bp >= AVERAGE_SYSTOLIC_BP_THRESHOLD:
             content = content + f"<p></p><b>⚠️ PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {round(average_systolic_bp, 1)} (BASED ON {total_measurements} MEASUREMENTS)</b>"
 
@@ -531,13 +531,13 @@ def get_conversation_id(messenger_id: str, alert_title: str) -> str:
         logger.error(f"Error fetching conversation id from Healthie: {e}")
         return None
 
-def get_average_systolic_bp_over_time_period(syntrillo_internal_key: str) -> Tuple[float, int]:
+def get_average_systolic_bp_over_time_period(syntrillo_internal_key: str) -> Tuple[float, int, dict]:
     """
     Get the average systolic BP over a time period for a patient
     Args:
         syntrillo_internal_key (str): The Syntrillo internal key
     Returns:
-        Tuple[float, int]: The average systolic BP and total number of measurements
+        Tuple[float, int, dict]: The average systolic BP, total number of measurements, and log
     """
     # BP API Docs: https://api2.tenovi.com/hwi-redoc/#tag/hwi-patient-measurements
     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key)
@@ -547,9 +547,9 @@ def get_average_systolic_bp_over_time_period(syntrillo_internal_key: str) -> Tup
 
     if not log.get('success', False) or not average_systolic_bp:
         logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}. Log: {log}")
-        return -1, 0
+        return -1, 0, log
 
-    return average_systolic_bp, total_measurements
+    return average_systolic_bp, total_measurements, log
 
 def is_base64(body: str) -> bool:
     """
