@@ -32,6 +32,7 @@ from constructs import Construct
 from syntrillo_clinic_backend.constructs.tasks.remote_monitoring_datasync_function_construct import RemoteMonitoringDataSync
 from syntrillo_clinic_backend.constructs.tasks.pii_datasync_function_construct import PIIDataSync
 from syntrillo_clinic_backend.constructs.tasks.healthie_data_ingestor_function_construct import HealthieDataIngestor
+from syntrillo_clinic_backend.constructs.tasks.candid_billing_ingestor_function_construct import CandidBillingIngestor
 
 class DataSyncWorkflow(Construct):
     def __init__(self, scope: Construct, id: str,
@@ -168,6 +169,53 @@ class HealthieDataIngestorWorkFlow(Construct):
             targets.SfnStateMachine(self.state_machine)
         )
 
+class CandidBillingIngestorWorkFlow(Construct):
+    def __init__(self, scope: Construct, id: str,
+                 lambda_function: _lambda.Function,
+                 **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        # Create the Lambda task
+        process_task = tasks.LambdaInvoke(
+            self, "FetchCandidBilling", 
+            lambda_function=lambda_function,
+            payload=sfn.TaskInput.from_object({
+                "action": "process"
+            })
+        )
+
+        # Create the state machine
+        self.state_machine = sfn.StateMachine(
+            self, "CandidBillingIngestorWorkFlow",
+            state_machine_name="CandidBillingIngestorWorkFlow", 
+            definition_body=sfn.DefinitionBody.from_chainable(process_task),
+            timeout=Duration.minutes(5),
+            tracing_enabled=True
+        )
+
+        # # Create a scheduled event rule
+        # # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
+        # # the lambda is triggered. With cron, you can decide exactly when you start.
+        # # This avoids using database resources during working hours
+        schedule = events.Schedule.cron(
+            minute="0",
+            hour="0/6",
+            month="*",
+            week_day="*",
+            year="*",
+        )
+
+        event_rule = events.Rule(
+            self, "CandidBillingIngestorWorkFlowSyncRule",
+            schedule=schedule,
+            enabled=True,
+        )
+
+        # Add the state machine as a target for the rule
+        event_rule.add_target(
+            targets.SfnStateMachine(self.state_machine)
+        )
+
 # -----------------------------------------------------------------------------
 # STACKS
 # -----------------------------------------------------------------------------
@@ -227,4 +275,18 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
         self.healthie_data_ingestor_worflow = HealthieDataIngestorWorkFlow(
             self, "HealthieDataIngestorWorkFlow",
             lambda_function=self.healthie_data_ingestor.healthie_data_ingestor_function
+        )
+
+        self.candid_billing_ingestor = CandidBillingIngestor(
+            self, "CandidBillingIngestor",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+        )
+
+        self.candid_billing_ingestor_worflow = CandidBillingIngestorWorkFlow(
+            self, "CandidBillingIngestorWorkFlow",
+            lambda_function=self.candid_billing_ingestor.candid_billing_ingestor_function
         )
