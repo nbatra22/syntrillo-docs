@@ -98,7 +98,7 @@ class CandidBillingIngestor(Construct):
             runtime=_lambda.Runtime.PYTHON_3_10,
             code=_lambda.Code.from_asset("lambda-functions/candid-billing-ingestor-function", 
                 exclude=['.env', '__pycache__'],
-                follow_symlinks=True),
+                follow_symlinks=_lambda.SymlinkFollowMode.ALWAYS),            
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.clinic_storage_efs_access_point_shared_python_modules,
