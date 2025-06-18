@@ -46,6 +46,7 @@ class BloodPressureNotificationFunction(Construct):
         self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Database-LambdaUserSecrets-Arn")
         self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-TenoviHwiSecrets-Arn")
         self.secrets_healthie_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-HealthieSecrets-Arn")
+        self.secrets_candid_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-CandidSecrets-Arn")
         self.secrets_secrets_kms_key_arn = Fn.import_value("SyntrilloClinic-Secrets-SecretsKMSKey-Arn")
         self.secrets_healthie_ids_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Functions-HealthieIDsSecrets-Arn")
 
@@ -112,6 +113,7 @@ class BloodPressureNotificationFunction(Construct):
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets_openai_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN": self.secrets_healthie_ids_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_CANDID_SECRET_ARN": self.secrets_candid_secrets_secret_arn,
                 "AWS_ENVIRONMENT": ssm.StringParameter.from_string_parameter_name(
                     self,
                     "SyntrilloClinicAWSEnvironment",
@@ -135,6 +137,7 @@ class BloodPressureNotificationFunction(Construct):
         self.grant_read_secrets(self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.secrets_healthie_ids_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.secrets_candid_secrets_secret_arn, self.secrets_candid_secrets_secret_arn)
         # self.grant_read_secrets(self.secrets_openai_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
         self.function_security_group = self.function.connections.security_groups[0]
