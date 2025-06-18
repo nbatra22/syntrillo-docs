@@ -4,7 +4,7 @@ from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.aws_helpers.env_utils import get_aws_environment
 
-# TODO: comment these decorators when running locally 
+# TODO: comment these decorators when running locally
 @tracer.capture_lambda_handler
 @logger.inject_lambda_context(log_event=True)
 def handler(event, context):
