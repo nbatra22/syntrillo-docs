@@ -199,7 +199,7 @@ class FormResponseService:
             if not temp_responses:
                 return []
 
-                        # Get user mappings for all users at once
+            # Get user mappings for all users at once
             if self.unique_user_ids:
                 self.user_mapping = self._batch_retrieve_user_mapping(list(self.unique_user_ids))
 

@@ -24,6 +24,7 @@ class LocalEnvironmentAndSecrets:
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
+    AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN'
 
     # ------------------------------
     # array of available secret codes
@@ -67,6 +68,7 @@ class LocalEnvironmentAndSecrets:
         load_healthie_secrets: bool = False,
         load_tenovi_hwi_secrets: bool = False,
         load_openai_secrets: bool = False,
+        load_candid_secrets: bool = False,
         ) -> None:
         """
         Initializes the GetLocalSecrets class.
@@ -91,7 +93,8 @@ class LocalEnvironmentAndSecrets:
             if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None:
+            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None \
+            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN) != None:
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -120,6 +123,9 @@ class LocalEnvironmentAndSecrets:
 
                 if load_openai_secrets:
                     self._openai_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN))
+
+                if load_candid_secrets:
+                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN))
 
         except Exception as e:
             # Handle exceptions related to the initialization of the class
@@ -259,6 +265,7 @@ if __name__ == '__main__':
         load_healthie_secrets=True,
         load_tenovi_hwi_secrets=True,
         load_openai_secrets=True,
+        load_candid_secrets=True,
         )
 
     # get the secrets
@@ -274,6 +281,9 @@ if __name__ == '__main__':
     aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
+
+    candid_client_id = secrets.get_secret_value('candid', 'client_id')
+    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
 
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
@@ -316,7 +326,7 @@ class LocalEnvironmentAndSecretsNoCache:
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
-
+    AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN'
     # ------------------------------
     # array of available secret codes
     # first is local in .env, second is in aws secrets managers
@@ -359,6 +369,7 @@ class LocalEnvironmentAndSecretsNoCache:
         load_healthie_secrets: bool = False,
         load_tenovi_hwi_secrets: bool = False,
         load_openai_secrets: bool = False,
+        load_candid_secrets: bool = False,
         ) -> None:
         """
         Initializes the GetLocalSecrets class.
@@ -383,7 +394,8 @@ class LocalEnvironmentAndSecretsNoCache:
             if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None:
+            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None \
+            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN) != None:
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -413,12 +425,15 @@ class LocalEnvironmentAndSecretsNoCache:
                 if load_openai_secrets:
                     self._openai_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN))
 
+                if load_candid_secrets:
+                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN))
+
         except Exception as e:
             # Handle exceptions related to the initialization of the class
             raise Exception(f"Error initializing GetLocalSecrets: {e}")
 
 
-    
+
     @staticmethod
     def get_secrets(secret_arn : str) -> dict:
         max_retries = 5
@@ -434,7 +449,7 @@ class LocalEnvironmentAndSecretsNoCache:
                     # Handle exceptions related to the HTTP request
                     # if "an unexpected error occurred while executing request" in the response text => check lammbda permissions to read in secrets manager
                     raise Exception(f"Error fetching secret [{get_secret_value_response.text}]: {e}")
-                
+
                 import time
                 time.sleep(wait_time)
                 wait_time *= 1  # Exponential backoff
@@ -560,6 +575,7 @@ if __name__ == '__main__':
         load_healthie_secrets=True,
         load_tenovi_hwi_secrets=True,
         load_openai_secrets=True,
+        load_candid_secrets=True,
         )
 
     # get the secrets
@@ -575,6 +591,9 @@ if __name__ == '__main__':
     aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
+
+    candid_client_id = secrets.get_secret_value('candid', 'client_id')
+    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
 
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
