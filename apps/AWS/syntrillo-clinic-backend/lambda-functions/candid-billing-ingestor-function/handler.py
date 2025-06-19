@@ -4,19 +4,12 @@ from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.aws_helpers.env_utils import get_aws_environment
 
-# TODO: comment these decorators when running locally
-@tracer.capture_lambda_handler
-@logger.inject_lambda_context(log_event=True)
+@tracer.capture_lambda_handler # TODO: comment out decorator when running locally
+@logger.inject_lambda_context(log_event=True) # TODO: comment out decorator when running locally
 def handler(event, context):
     try:
-        # General set up and retrieval of environment and secrets
-        env = get_aws_environment()
-        if not env:
-            logger.error("Environment variablenot found ...")
-            return
-
         # Sync Candid Billing Data
-        candid_manager = CandidHealthManager(env)
+        candid_manager = CandidHealthManager()
         candid_manager.sync_candid_billing_data()
 
         # Sync Billing Eligibility Data
@@ -34,4 +27,3 @@ def handler(event, context):
             'statusCode': 500,
             'body': 'Error in Candid Billing Ingestor lambda function.'
         }
-
