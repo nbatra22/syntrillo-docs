@@ -4,6 +4,8 @@ import uuid
 import pymysql
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.databases_management.logs import add_log_entry
+from syntrillo.system.logger import logger
+
 
 class LookUpCodesManagement:
     """
@@ -220,22 +222,29 @@ class LookUpCodesManagement:
 
     def retrieve_healthie_id_to_syntrillo_internal_key_mapping(self) -> dict:
         """
-        Retrieve a mapping of healthie_user_id to syntrillo_internal_key.
+        Retrieves a mapping of healthie_user_id -> syntrillo_internal_key
+
         Args:
             None
         Returns:
             healthie_to_syntrillo_internal_key_mapping (dict): a user lookup mapping
+        Raises:
+            e (Exception): General exception when retrieving user mapping from AWS RDS DB
         """
-        select_query = """
-            SELECT healthie_user_id, BIN_TO_UUID(syntrillo_internal_key)
-                FROM user_look_up_codes
-                WHERE healthie_user_id IS NOT NULL;
-        """
-        self.cursor.execute(select_query)
-        entries = self.cursor.fetchall()
-        healthie_to_syntrillo_internal_key_mapping = {entry[0]: entry[1] for entry in entries}
+        try:
+            select_query = """
+                SELECT healthie_user_id, BIN_TO_UUID(syntrillo_internal_key)
+                    FROM user_look_up_codes
+                    WHERE healthie_user_id IS NOT NULL;
+            """
+            self.cursor.execute(select_query)
+            entries = self.cursor.fetchall()
+            healthie_to_syntrillo_internal_key_mapping = {entry[0]: entry[1] for entry in entries}
 
-        return healthie_to_syntrillo_internal_key_mapping
+            return healthie_to_syntrillo_internal_key_mapping
+        except Exception as e:
+            logger.error("Error while retrieving healthie_user_id to syntrillo_internal_key from AWS RDS DB")
+            raise e
 
     def close_connection(self):
         """
