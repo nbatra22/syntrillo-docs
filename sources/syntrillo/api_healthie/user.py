@@ -8,7 +8,6 @@ from syntrillo.api_healthie.utils import HealthieUtils
 class HealthieUser:
     """
     Get information about a Healthie user. Could be a patient or a provider.
-
     """
 
     log = {

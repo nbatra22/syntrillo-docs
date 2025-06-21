@@ -27,6 +27,7 @@ class BillingManager:
     def sync_billing_eligibility_data(self) -> None:
         """
         Retrieve billing eligibility data from Healthie and insert into internal AWS RDS DB
+
         Args:
             None
         Returns:
@@ -61,7 +62,7 @@ class BillingManager:
                 bp_data, _ = self.db_manager.get_all_patient_bp_data_by_syntrillo_internal_key(syntrillo_internal_key)
 
                 # Get billing information for the patient
-                billing_information = self.candid_manager.get_patient_bp_billing_data(syntrillo_internal_key)
+                billing_information = self.candid_manager.get_patient_billing_data(syntrillo_internal_key)
 
                 # Check if the patient is eligible for billing
                 eligible_for_billing = self.is_patient_eligible_for_billing(bp_data, bp_device_training_status, billing_information)
@@ -85,7 +86,10 @@ class BillingManager:
 
     def get_all_patient_eligibility_data(self) -> list[dict]:
         """
-        Get all patient eligibility data
+        Gets all patient eligibility data from AWS RDS billing_eligibility table
+
+        Args:
+            None
         Returns:
             list[dict]: List of patient data
         """
@@ -115,15 +119,17 @@ class BillingManager:
         return all_patient_data
 
 
-    def get_single_patient_billing_data(self, syntrillo_internal_key: str) -> dict:
+    def get_single_patient_billing_and_bp_dates_data(self, syntrillo_internal_key: str) -> dict:
         """
-        Get single patient billing data
+        Retrieves a single patient's bp date data from AWS RDS tenovi_raw_measurements table
+        and the patient's
+
         Args:
             syntrillo_internal_key (str): De-identified internal key id for querying AWS DB
         Returns:
-            single_patient_info (dict):
+            single_patient_info (dict): The dates of at least one BP measurement taken
         """
-        patient_billing_data = self.candid_manager.get_patient_bp_billing_data(syntrillo_internal_key)
+        patient_billing_data = self.candid_manager.get_patient_billing_data(syntrillo_internal_key)
         patient_bp_data, _ = self.db_manager.get_all_patient_bp_data_by_syntrillo_internal_key(syntrillo_internal_key)
 
         single_patient_info = {
@@ -285,6 +291,6 @@ class BillingManager:
 if __name__ == "__main__":
     billing_manager = BillingManager()
     # data = billing_manager.get_all_patient_eligibility_data()
-    data = billing_manager.get_single_patient_billing_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
+    data = billing_manager.get_single_patient_billing_and_bp_dates_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
     print(json.dumps(data, indent=4))
     # print(data)

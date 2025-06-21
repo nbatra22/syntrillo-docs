@@ -130,6 +130,14 @@ class SecretsStack(Stack):
         )
 
         # ---------------------------------------------------------------------
+        # Create Candid secrets
+        # ---------------------------------------------------------------------
+        self.candid_secrets = secretsmanager.Secret(
+            self, "CandidSecrets",
+            encryption_key=custom_kms_key
+        )
+
+        # ---------------------------------------------------------------------
         # OUTPUTS
         # ---------------------------------------------------------------------
         # CfnOutput(
@@ -176,6 +184,7 @@ class SecretsStack(Stack):
             value=self.database_lambda_user_secrets.secret_arn,
             export_name="SyntrilloClinic-Secrets-Database-LambdaUserSecrets-Arn"
         )
+
         CfnOutput(
             self, "SyntrilloClinicSecretsTenoviHwiSecretsArn",
             value=self.tenovi_hwi_secrets.secret_arn,
@@ -192,6 +201,12 @@ class SecretsStack(Stack):
             self, "SyntrilloClinicSecretsOpenAiSecretsArn",
             value=self.openai_secrets.secret_arn,
             export_name="SyntrilloClinic-Secrets-OpenAiSecrets-Arn"
+        )
+
+        CfnOutput(
+            self, "SyntrilloClinicSecretsCandidSecretsArn", 
+            value=self.candid_secrets.secret_arn, 
+            export_name="SyntrilloClinic-Secrets-CandidSecrets-Arn"
         )
 
         CfnOutput(
@@ -245,3 +260,4 @@ class SecretsStack(Stack):
             value=self.healthie_ids_secrets.secret_arn, 
             export_name="SyntrilloClinic-Secrets-Functions-HealthieIDsSecrets-Arn"
         )
+

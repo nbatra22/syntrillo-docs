@@ -120,12 +120,6 @@ class HealthieDataIngestor(Construct):
 
         self.function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
 
-        # self.database.db_from_snapshot_security_group.add_ingress_rule(
-        #     self.function_security_group,
-        #     ec2.Port.tcp(3306),
-        #     description=f"Allow inbound traffic from HealthieDataIngestorFunction on port 3306"
-        # )
-
         # ---------------------------------------------------------------------
         # OUTPUTS
         # ---------------------------------------------------------------------

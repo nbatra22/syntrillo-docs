@@ -714,11 +714,12 @@ class SyntrilloDatabaseManager:
 
     def get_all_patient_bp_data_by_syntrillo_internal_key(self, syntrillo_internal_key: str) -> Tuple[list[str], dict]:
         """
-        Get all BP data for a patient
+        Retrieves all dates which have at least one BP measurement for a given patient.
+
         Args:
             syntrillo_internal_key (str): The Syntrillo internal key
         Returns:
-            list[str]: The days with at least one BP measurement
+            list[str]: The dates with at least one BP measurement
         """
         logger.info(f"Getting BP data for patient with syntrillo_internal_key {syntrillo_internal_key}")
         try:

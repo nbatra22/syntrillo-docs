@@ -24,7 +24,7 @@ class LocalEnvironmentAndSecrets:
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
-    AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN'
+    AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
 
     # ------------------------------
     # array of available secret codes
@@ -46,6 +46,12 @@ class LocalEnvironmentAndSecrets:
             'user'          : ( 'AWS_DATABASE_CONFIG_USER',        'username' ),
             'password'      : ( 'AWS_DATABASE_CONFIG_PASSWORD',    'password' ),
             'local_port'    : ( 'AWS_DATABASE_CONFIG_LOCAL_PORT',  None ),
+        },
+        'candid' : {
+            'client_id'       : ( 'CANDID_CLIENT_ID',        'client_id'       ),
+            'client_secret'   : ( 'CANDID_CLIENT_SECRET',    'client_secret'   ),
+            'candid_api'      : ( 'CANDID_API',              'candid_api'      ),
+            'pre_encounter'   : ( 'CANDID_PRE_ENCOUNTER',    'pre_encounter'   ),
         },
     }
 
@@ -94,7 +100,7 @@ class LocalEnvironmentAndSecrets:
             or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
             or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN) != None:
+            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN) != None:
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -125,7 +131,7 @@ class LocalEnvironmentAndSecrets:
                     self._openai_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN))
 
                 if load_candid_secrets:
-                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN))
+                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN))
 
         except Exception as e:
             # Handle exceptions related to the initialization of the class
@@ -266,7 +272,7 @@ if __name__ == '__main__':
         load_tenovi_hwi_secrets=True,
         load_openai_secrets=True,
         load_candid_secrets=True,
-        )
+    )
 
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
@@ -284,6 +290,8 @@ if __name__ == '__main__':
 
     candid_client_id = secrets.get_secret_value('candid', 'client_id')
     candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
+    candid_api = secrets.get_secret_value('candid', 'candid_api')
+    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
 
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")
@@ -326,7 +334,7 @@ class LocalEnvironmentAndSecretsNoCache:
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
-    AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN'
+    AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
     # ------------------------------
     # array of available secret codes
     # first is local in .env, second is in aws secrets managers
@@ -426,7 +434,7 @@ class LocalEnvironmentAndSecretsNoCache:
                     self._openai_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN))
 
                 if load_candid_secrets:
-                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN))
+                    self._candid_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN))
 
         except Exception as e:
             # Handle exceptions related to the initialization of the class
@@ -594,6 +602,8 @@ if __name__ == '__main__':
 
     candid_client_id = secrets.get_secret_value('candid', 'client_id')
     candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
+    candid_api = secrets.get_secret_value('candid', 'candid_api')
+    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
 
     print("\n\nsecrets:")
     print(f"healthie_api_key : {healthie_api_key}")

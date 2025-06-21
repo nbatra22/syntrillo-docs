@@ -1,39 +1,42 @@
-import os
 from candid.client import CandidApiClient
-from candid.environment import CandidApiClientEnvironment
 from syntrillo.billing.models import Claim
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.logger import logger
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
-from syntrillo.billing.constants import (
-    AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN_KEY,
-    CANDID_CREDENTIALS_KEY,
-    CLIENT_ID_KEY,
-    CLIENT_SECRET_KEY,
-    CPT_CODE
-)
+from syntrillo.billing.constants import CPT_CODE
+
+
+class CandidApiClientEnvironment:
+    """
+    Candid Health's Environment class which was copy and pasted from their library
+    Library URL: https://github.com/candidhealth/candid-python/blob/master/src/candid/environment.py
+    """
+    def __init__(self, *, candid_api: str, pre_encounter: str):
+        self.candid_api = candid_api
+        self.pre_encounter = pre_encounter
 
 
 class CandidHealthManager:
     """
     This class is used to manage the candid health of the patients
     """
-    def __init__(self, env: str = None, response_limit: int = 100):
-        # # Load Candid Credentials
+    def __init__(self, response_limit: int = 100):
+
+        # Load Candid Credentials
         secrets = LocalEnvironmentAndSecrets(load_candid_secrets=True)
-        candid_secrets = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN_KEY))
-        candid_credentials: dict = candid_secrets.get(env, {}).get(CANDID_CREDENTIALS_KEY, {})
 
-        # # Set up the environment for the candid client
-        environment = CandidApiClientEnvironment.STAGING if env == "staging" else CandidApiClientEnvironment.PRODUCTION
+        # Retrieve necessary secerts from AWS Secrets Manger
+        client_id = secrets.get_secret_value('candid', 'client_id')
+        client_secret = secrets.get_secret_value('candid', 'client_secret')
+        candid_api = secrets.get_secret_value('candid', 'candid_api')
+        pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
 
-        # # Set up the candid client
-        self.client = CandidApiClient(
-            environment=environment,
-            client_id=candid_credentials.get(CLIENT_ID_KEY),
-            client_secret=candid_credentials.get(CLIENT_SECRET_KEY)
-        )
+        # Set required environment variable for the Candid client
+        environment = CandidApiClientEnvironment(candid_api=candid_api, pre_encounter=pre_encounter)
+
+        # # Set up the candid client to make api calls (without having to retrieve new credential tokens every _ minutes)
+        self.client = CandidApiClient(environment=environment, client_id=client_id, client_secret=client_secret)
 
         self.db_manager = SyntrilloDatabaseManager(syntrillo_internal_key="NOT_USED")
         self.lookup_codes_manager = LookUpCodesManagement()
@@ -44,8 +47,14 @@ class CandidHealthManager:
     def sync_candid_billing_data(self):
         """
         1. Retrieves all the billing info from Candid's apis
-        2. Takes the billing info and inserts/updates into Syntrillo's AWS RDS
+        2. Takes the billing info and inserts/updates Syntrillo's AWS RDS table "billing_records"
+
+        Args:
+            None
+        Returns:
+            None
         """
+
         try:
             all_enounter_data = self.retrieve_all_patients_billing_info()
             self.insert_claims_to_sql(all_enounter_data)
@@ -58,7 +67,10 @@ class CandidHealthManager:
     def retrieve_all_patients_billing_info(self) -> list[Claim]:
         """
         API: https://docs.joincandidhealth.com/api-reference/encounters/v-4/get-all
-        Get all patients billing data
+        Gets all patients billing data
+
+        Args:
+            None
         Returns:
             all_claims_data (list[Claim]): List of all claims
         Raises:
@@ -191,13 +203,14 @@ class CandidHealthManager:
             raise e
 
 
-    def get_patient_bp_billing_data(self, syntrillo_internal_key: str) -> list[dict]:
+    def get_patient_billing_data(self, syntrillo_internal_key: str) -> list[dict]:
         """
-        Retrieves single blood pressure related billing record for a single patient
+        Retrieves single patient's billing data from AWS RDS billing_records table
+
         Args:
             syntrillo_internal_key (str): syntrillo internal key
         Returns:
-            bp_billing_records (list[dict]): list of blood pressure related billing records
+            billing_records (list[dict]): list of billing records
         Raises:
             Exception: any type of exception while getting the billing data
         """
@@ -218,14 +231,14 @@ class CandidHealthManager:
                 cursor.execute(sql_query, (syntrillo_internal_key, self.cpt_bp_code))
                 results = cursor.fetchall()
 
-                bp_billing_records = []
+                billing_records = []
                 for res in results:
-                    bp_billing_records.append({
+                    billing_records.append({
                         "status": res[0],
                         "date_of_service": res[1]
                     })
                 logger.info(f"Billing data for patient with syntrillo_internal_key {syntrillo_internal_key} retrieved successfully")
-                return bp_billing_records
+                return billing_records
 
         except Exception as e:
             logger.exception = {
