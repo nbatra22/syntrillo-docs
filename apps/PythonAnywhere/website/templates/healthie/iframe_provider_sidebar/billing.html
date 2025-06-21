@@ -1,20 +1,239 @@
 <!-- Main Content -->
-<div class="b-container">
-    <h1 id="" class="b-header">
-        Billing Dashboard
-    </h1>
-
-    <div class="">
-
+<div class="b-main-container">
+    <div class="b-header-container">
+        <div class="b-header-subcontainer">
+            <h1 class="b-header">Billing Dashboard</h1>
+            <p class="b-subheader">Select a patient to view their measurement history and billing information.</p>
+        </div>
     </div>
+
+    <div class="b-table-container">
+        <div id="b-table-header" class="b-table-row">
+            <h3 class="b-table-id">ID</h3>
+            <h3 class="b-table-name">Name</h3>
+            <h3 class="b-table-eligibility">Eligibility</h3>
+            <h3 class="b-table-device-training">Device Training</h3>
+        </div>
+
+        <div class="b-table-content">
+
+            <div class="b-table-row patient-row" onclick="openModal('Patient 1', 'ID: 123456')">
+                <h3 class="b-table-id">123456</h3>
+                <h3 class="b-table-name">Patient 1</h3>
+                <h3 class="b-table-eligibility"><i class="fa-solid fa-check"></i></h3>
+                <h3 class="b-table-device-training"><i class="fa-solid fa-check"></i></h3>
+            </div>
+
+            <div class="b-table-row patient-row" onclick="openModal('Patient 2', 'ID: 123457')">
+                <h3 class="b-table-id">123457</h3>
+                <h3 class="b-table-name">Patient 2</h3>
+                <h3 class="b-table-eligibility"><i class="fa-solid fa-xmark"></i></h3>
+                <h3 class="b-table-device-training"><i class="fa-solid fa-xmark"></i></h3>
+            </div>
+
+            <div class="b-table-row patient-row" onclick="openModal('Patient 3', 'ID: 123458')">
+                <h3 class="b-table-id">123458</h3>
+                <h3 class="b-table-name">Patient 3</h3>
+                <h3 class="b-table-eligibility"><i class="fa-solid fa-xmark"></i></h3>
+                <h3 class="b-table-device-training"><i class="fa-solid fa-check"></i></h3>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="b-modal" class="b-modal-overlay hidden">
+        <div class="b-modal-container">
+            <div class="b-modal-header">
+                <div id="" class="b-modal-title-container">
+                    <h2 id="b-modal-title">Modal Title</h2>
+                    <p id="b-modal-subtitle">This is a simple centered modal.</p>
+                </div>
+                <button onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="b-modal-content">
+
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Styling -->
 <style>
+    h1,
+    h2,
+    h3 {
+        margin: 0;
+    }
 
+    .b-main-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .b-main-container h1 {
+        font-weight: bold;
+        font-size: larger;
+    }
+
+    .b-main-container p {
+        color: #6b7280;
+        font-size: small;
+        margin: 0;
+    }
+
+    .b-header-container {
+        padding-top: 1rem;
+    }
+
+    .b-header-subcontainer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .b-table-row {
+        display: grid;
+        grid-template-columns: 1fr 3fr 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem 0;
+        align-items: center;
+        border-radius: 0.375rem;
+        text-align: center;
+    }
+
+    .b-table-row .b-table-name {
+        text-align: left;
+    }
+
+    #b-table-header {
+        border-bottom: 2px solid black;
+        border-radius: 0;
+    }
+
+    #b-table-header h3 {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .b-table-container {
+        margin-top: 1rem;
+    }
+
+    .b-table-content .b-table-row:hover {
+        cursor: pointer;
+        background-color: #e5e7eb;
+    }
+
+    .b-table-content {
+        padding: 0.5rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .fa-check {
+        color: green
+    }
+
+    .fa-x {
+        color: red;
+    }
+
+    .patient-row .fa-xmark {
+        color: red;
+    }
+
+    .b-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .b-modal-container {
+        background-color: white;
+        border-radius: 8px;
+        min-width: 60%;
+        max-width: 90%;
+        min-height: 50%;
+        max-height: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .b-modal-header {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid lightgray;
+        gap: 2rem;
+    }
+
+    .b-modal-title-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: start;
+    }
+
+    .b-modal-content {
+        padding: 1rem;
+        min-height: 6rem;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .b-modal-header button {
+        padding: 0.375rem 0.75rem;
+        border: none;
+        border-radius: 9999px;
+        cursor: pointer;
+        background-color: white;
+    }
+
+    .b-modal-header button:hover {
+        color: red;
+        background-color: #e5e7eb;
+    }
 </style>
 
 <!-- Scripts -->
-<scripts>
+<script>
+    function openModal(title = "Default Title", subheader = "Default subheader") {
+        document.getElementById("b-modal-title").textContent = title;
+        document.getElementById("b-modal-subtitle").textContent = subheader;
+        document.getElementById("b-modal").classList.remove("hidden");
+    }
 
-</scripts>
+    function closeModal() {
+        document.getElementById("b-modal").classList.add("hidden");
+    }
+
+    function getBillingData() {
+        fetch("{{ url_for('iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_billing_get_bp_data') }}")
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    getBillingData();
+</script>
