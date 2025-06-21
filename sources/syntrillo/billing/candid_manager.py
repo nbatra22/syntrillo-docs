@@ -26,6 +26,8 @@ class CandidHealthManager:
         # Load Candid Credentials
         secrets = LocalEnvironmentAndSecrets(load_candid_secrets=True)
 
+        logger.info(f"is local: {secrets.is_local()}; is staging: {secrets.is_staging()}; is production: {secrets.is_production()}; is lambda: {secrets.is_lambda()}; is pythonanywhere: {secrets.is_pythonanywhere()}")
+
         # Retrieve necessary secerts from AWS Secrets Manger
         client_id = secrets.get_secret_value('candid', 'client_id')
         client_secret = secrets.get_secret_value('candid', 'client_secret')
