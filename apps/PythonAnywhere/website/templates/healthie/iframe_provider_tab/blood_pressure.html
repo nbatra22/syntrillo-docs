@@ -140,7 +140,7 @@
     </section>
 
     <!-- Time Distribution Header -->
-    <section id="bp-time-distribution-header" class="extremes-header">
+    <!-- <section id="bp-time-distribution-header" class="extremes-header">
         <div class="flex flex-col gap-1">
             <h2 class="text-lg font-bold">
                 Time Distribution
@@ -149,12 +149,12 @@
                 Distribution of systolic and diastolic measurements across different hours of the day.
             </p>
         </div>
-    </section>
+    </section> -->
 
     <!-- Time Distribution Graph -->
-    <section id="bp-time-distribution-graph" class="bp-table-container">
+    <!-- <section id="bp-time-distribution-graph" class="bp-table-container">
         <div id="bp-time-distribution-plot"></div>
-    </section>
+    </section> -->
 
 
 </div>
@@ -464,14 +464,14 @@
         const filterMenu = document.getElementById("bp-filter-menu")
         const bpAnalysisContent = document.getElementById("bp-analysis-table");
         const extremesContent = document.getElementById("bp-extremes-table");
-        const distributionContent = document.getElementById("bp-time-distribution-plot");
+        // const distributionContent = document.getElementById("bp-time-distribution-plot");
         const hiddenAnalysisInput = document.getElementById("analysis_json");
         const hiddenExtremesInput = document.getElementById("extremes_json");
 
         filterSubmit.disabled = true;
         showSpinner(bpAnalysisContent);
         showSpinner(extremesContent);
-        showSpinner(distributionContent);
+        // showSpinner(distributionContent);
 
         let formData = new FormData()
 
@@ -521,7 +521,7 @@
                 if (data.error) {
                     bpAnalysisContent.innerHTML = `<h2 class="bp-no-data-error">${data.error}</h2>`
                     extremesContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
-                    distributionContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
+                    // distributionContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
                 }
             })
             .catch(error => console.error("Error fetching data:", error))
@@ -529,7 +529,7 @@
                 filterMenu.style.display = 'none';
                 hideSpinner(bpAnalysisContent);
                 hideSpinner(extremesContent);
-                hideSpinner(distributionContent);
+                // hideSpinner(distributionContent);
                 filterSubmit.disabled = false;
             })
     }

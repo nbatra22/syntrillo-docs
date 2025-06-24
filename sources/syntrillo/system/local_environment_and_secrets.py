@@ -3,6 +3,7 @@ import os
 import json
 import requests
 from dotenv import load_dotenv
+from syntrillo.system.logger import logger
 
 class LocalEnvironmentAndSecrets:
     """

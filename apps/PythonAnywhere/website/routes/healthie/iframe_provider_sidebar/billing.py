@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify, abort
 
 # python.analysis.extraPaths added into .vscode/settings.json
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.billing.billing_manager import BillingManager
 
@@ -50,14 +51,14 @@ def iframe_healthie_provider_sidebar_billing():
 # ========================= ENDPOINTS ==========================
 
 # Retrieval patient specific blood pressure measurements
-@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_billing/bp_data', methods=['GET'])
-def iframe_healthie_provider_billing_get_bp_data():
+@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_billing/all_patients_data', methods=['GET'])
+def iframe_healthie_provider_billing_get_all_patient_data():
     """
     Returns:
         List of BP objs
     """
     billing_manager = BillingManager()
-    all_patient_overiew_data = billing_manager.get_all_patient_eligibility_data()
+    all_patient_overview_data = billing_manager.get_all_patient_eligibility_data()
 
     # {
     #   "all_patient_overiew_data":
@@ -102,7 +103,29 @@ def iframe_healthie_provider_billing_get_bp_data():
     '''
 
     return jsonify({
-        "all_patient_overiew_data": all_patient_overiew_data
+        "all_patient_overview_data": all_patient_overview_data
     })
 
+@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_billing/single_patient_data', methods=['GET'])
+def iframe_healthie_provider_billing_get_single_patient_data():
 
+    healthie_user_id = request.args.get('healthie_user_id')  # From URL query params
+
+    if not healthie_user_id:
+        return jsonify({'error': 'Healthie user ID is required'})
+
+    look_up_codes_management = LookUpCodesManagement()
+    entry = look_up_codes_management.retrieve_entry_by_healthie_user_id(healthie_user_id)
+
+    if entry is not None:
+        syntrillo_internal_key = entry['syntrillo_internal_key']
+    else:
+        return jsonify({
+            'error': 'Error retrieving internal key.'
+        })
+
+    billing_manager = BillingManager()
+
+    data = billing_manager.get_single_patient_billing_and_bp_dates_data(syntrillo_internal_key)
+
+    return jsonify(data)

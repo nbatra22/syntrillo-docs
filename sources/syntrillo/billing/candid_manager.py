@@ -1,3 +1,5 @@
+import os
+
 from candid.client import CandidApiClient
 from syntrillo.billing.models import Claim
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -29,6 +31,7 @@ class CandidHealthManager:
         logger.info(f"is local: {secrets.is_local()}; is staging: {secrets.is_staging()}; is production: {secrets.is_production()}; is lambda: {secrets.is_lambda()}; is pythonanywhere: {secrets.is_pythonanywhere()}")
 
         # Retrieve necessary secerts from AWS Secrets Manger
+        # client_id = secrets.get_secrets(os.getenv('AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'))
         client_id = secrets.get_secret_value('candid', 'client_id')
         client_secret = secrets.get_secret_value('candid', 'client_secret')
         candid_api = secrets.get_secret_value('candid', 'candid_api')
