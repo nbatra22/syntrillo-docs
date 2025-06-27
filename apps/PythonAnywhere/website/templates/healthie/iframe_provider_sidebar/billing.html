@@ -115,8 +115,8 @@
     .b-modal-container {
         background-color: white;
         border-radius: 8px;
-        min-width: 60%;
-        max-width: 90%;
+        min-width: 700px;
+        /* max-width: 10rem; */
         min-height: fit-content;
         max-height: 90%;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
@@ -143,7 +143,7 @@
 
     .b-modal-content {
         padding: 2rem;
-        min-height: 6rem;
+        /* min-height: 6rem; */
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -173,12 +173,18 @@
         align-items: start;
         gap: 2rem;
         height: 100%;
-        min-height: 8rem;
+        /* min-height: 8rem; */
         width: 100%;
     }
 
     .b-modal-info-container {
         width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #b-modal-loading-div {
+        height: 100%;
     }
 
     #b-modal-last-billing-date-container {
@@ -189,7 +195,9 @@
     }
 
     #b-modal-calendar-container {
-        min-width: 50%;
+        /* min-width: 50%; */
+        display: flex;
+        justify-content: center;
     }
 
     .loading-container {
@@ -222,6 +230,83 @@
         /* Solid blue for animation */
         border-radius: 50%;
         animation: spin 1s linear infinite;
+    }
+
+    .fp-day-completed {
+        background-color: #4ade80 !important;
+        /* green-400 */
+        color: black !important;
+        border-radius: 50% !important;
+    }
+
+    .fp-day-pending {
+        background-color: #facc15 !important;
+        /* yellow-400 */
+        color: black !important;
+        border-radius: 50% !important;
+    }
+
+    .fp-day-unbilled {
+        background-color: #f87171 !important;
+        /* red-400 */
+        color: white !important;
+        border-radius: 50% !important;
+    }
+
+    .b-modal-key {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .green-key {
+        color: #4ade80;
+    }
+
+    .yellow-key {
+        color: #facc15;
+    }
+
+    .red-key {
+        color: #f87171;
+    }
+
+    .b-billing-history-list {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        max-height: 275px;
+        overflow: scroll;
+    }
+
+    .b-billing-history-list li {
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        background: #f9fafb;
+        margin-bottom: 0.25rem;
+        font-size: 0.97em;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .b-billing-history-list li strong {
+        margin-left: 0.5em;
+        font-weight: 500;
+    }
+
+    .b-billing-history-header {
+        font-size: 1.08em;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        margin-top: 0.5rem;
+        text-align: left;
+        color: #374151;
     }
 </style>
 
@@ -265,14 +350,14 @@
             </div>
             <div id="b-modal-content-container" class="b-modal-content">
                 <div id="b-modal-loading-div" class=""></div>
-                <div class="b-modal-main-container">
+                <div id="b-modal-main-container" class="b-modal-main-container hidden">
                     <div id="b-modal-calendar-container"></div>
-                    <div class="b-modal-info-container">
-                        <div id="b-modal-last-billing-date-container"></div>
-                        <div id="b-modal-billable-dates-container"></div>
-                    </div>
+                    <div id="b-modal-info-container" class="b-modal-info-container"></div>
                 </div>
-                <p><i class="fa-solid fa-circle-info"></i> Non-highlighted (gray) dates indicate no measurement was recorded on those days.</p>
+                <div id="" class="b-modal-key">
+                    <p><i class="fa-solid fa-circle-info"></i> Non-highlighted (gray) dates indicate no measurement was recorded on those days.</p>
+                    <p><i class="fa-solid fa-circle red-key"></i> = Unbilled, <i class="fa-solid fa-circle yellow-key"></i> = Pending, <i class="fa-solid fa-circle green-key"></i> = Completed</p>
+                </div>
             </div>
         </div>
     </div>
@@ -289,6 +374,7 @@
         fetch("{{ url_for('iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_billing_get_all_patient_data') }}")
             .then(response => response.json())
             .then(data => {
+                console.log(data)
                 allPatientData = data['all_patient_overview_data'];
                 renderPatientTable(allPatientData);
             })
@@ -307,16 +393,30 @@
             });
     };
 
-    function renderCalendar(dates) {
-        // Clear the container
+    function renderCalendar(dates, statuses) {
         const container = document.getElementById('b-modal-calendar-container');
         container.innerHTML = '<input id="calendar-input" type="text" style="display:none;">';
 
-        // Initialize flatpickr
+        const measurements = new Set(dates)
+
         flatpickr("#calendar-input", {
             inline: true,
             enable: dates,
-            appendTo: container
+            appendTo: container,
+
+            onDayCreate: function (dObj, dStr, fp, dayElem) {
+                const dateStr = dayElem.dateObj.toISOString().slice(0, 10);
+
+                if (measurements.has(dateStr)) {
+                    if (statuses.completed.has(dateStr)) {
+                        dayElem.classList.add("fp-day-completed");
+                    } else if (statuses.pending.has(dateStr)) {
+                        dayElem.classList.add("fp-day-pending");
+                    } else if (statuses.unbilled.has(dateStr)) {
+                        dayElem.classList.add("fp-day-unbilled");
+                    }
+                }
+            }
         });
     };
 
@@ -329,6 +429,37 @@
             .replace(/\b\w/g, char => char.toUpperCase());
     };
 
+    // Helper to format date as M/D/YY (no leading zeroes)
+    function formatShortDate(isoDate) {
+        if (!isoDate) return 'Unknown';
+        const d = new Date(isoDate);
+        if (isNaN(d)) return isoDate;
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const y = d.getFullYear() % 100;
+        return `${m}/${day}/${y}`;
+    }
+
+    function renderBillingHistoryTable(history) {
+        const container = document.getElementById('b-modal-info-container');
+        if (!container) return;
+
+        if (!Array.isArray(history) || history.length === 0) {
+            container.innerHTML = '<p>No billing history available.</p>';
+            return;
+        }
+
+        let html = '<p class="b-billing-history-header">Billing History (date of service, status):</p><ul class="b-billing-history-list">';
+        for (const entry of history) {
+            const status = entry.status ? formatStatus(entry.status) : 'Unknown';
+            const date = entry.date_of_service ? formatShortDate(entry.date_of_service) : 'Unknown';
+            html += `<li><span>${date}</span><strong>${status}</strong></li>`;
+        }
+        html += '</ul>';
+
+        container.innerHTML = html;
+    }
+
     function openModal(name, healthie_user_id) {
         document.getElementById("b-modal-title").textContent = name;
         document.getElementById("b-modal-subtitle").textContent = healthie_user_id;
@@ -336,10 +467,10 @@
 
         let loadingDiv = document.getElementById("b-modal-loading-div")
         let calendarContainer = document.getElementById("b-modal-calendar-container")
-        let lastBillingDateContainer = document.getElementById("b-modal-last-billing-date-container")
+        let infoContainer = document.getElementById("b-modal-info-container")
 
         calendarContainer.innerHTML = ""
-        lastBillingDateContainer.innerHTML = ""
+        infoContainer.innerHTML = ""
 
         showSpinner(loadingDiv)
 
@@ -350,22 +481,26 @@
             hideSpinner(loadingDiv)
             loadingDiv.classList.add("hidden")
 
-            renderCalendar(data.patient_bp_data);
+            document.getElementById("b-modal-main-container").classList.remove("hidden")
 
-            // --- Last billing date rendering ---
-            if (Array.isArray(data.patient_billing_data) && data.patient_billing_data.length > 0) {
-                // Sort by date_of_service descending
-                let sorted = data.patient_billing_data.slice().sort((a, b) => new Date(b.date_of_service) - new Date(a.date_of_service));
-                let mostRecent = sorted[0];
-                let formattedStatus = formatStatus(mostRecent.status)
-                lastBillingDateContainer.innerHTML = `<p>Last billed: <strong>${mostRecent.date_of_service}</strong></p><p>Status: <strong>${formattedStatus}</strong></p>`;
-            } else {
-                lastBillingDateContainer.innerHTML = `<p>No billing data available.</p>`;
-            }
+            // const measurements = new Set(data.patient_bp_data)
+
+            const statuses = {
+                completed: new Set(data.status_map.completed),
+                pending: new Set(data.status_map.pending),
+                unbilled: new Set(data.status_map.unbilled)
+            };
+
+            renderCalendar(data.patient_bp_data, statuses);
+
+            let sorted = data.patient_billing_data.slice().sort((a, b) => new Date(b.date_of_service) - new Date(a.date_of_service));
+
+            renderBillingHistoryTable(sorted);
         });
     };
 
     function closeModal() {
+        document.getElementById("b-modal-main-container").classList.add("hidden")
         document.getElementById("b-modal").classList.add("hidden");
     }
 
@@ -412,13 +547,13 @@
                         <h3 class="b-table-name">${patient.patient_name}</h3>
                         <h3 class="b-table-eligibility">
                             ${patient.eligible_to_bill
-                                ? '<i class="fa-solid fa-check"></i>'
-                                : '<i class="fa-solid fa-xmark"></i>'}
+                        ? '<i class="fa-solid fa-check"></i>'
+                        : '<i class="fa-solid fa-xmark"></i>'}
                         </h3>
                         <h3 class="b-table-device-training">
                             ${patient.bp_device_training_status
-                                ? '<i class="fa-solid fa-check"></i>'
-                                : '<i class="fa-solid fa-xmark"></i>'}
+                        ? '<i class="fa-solid fa-check"></i>'
+                        : '<i class="fa-solid fa-xmark"></i>'}
                         </h3>
                     </div>
                 `;

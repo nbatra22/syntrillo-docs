@@ -5,7 +5,7 @@ from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloData
 from syntrillo.billing.candid_manager import CandidHealthManager
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
-from datetime import timedelta
+from datetime import datetime, timedelta
 from syntrillo.billing.constants import CPT_CODE, DEVICE_TRAINING_FORM_NAME
 from syntrillo.api_healthie.user import HealthieUser
 import uuid
@@ -131,13 +131,74 @@ class BillingManager:
         """
         patient_billing_data = self.candid_manager.get_patient_billing_data(syntrillo_internal_key)
         patient_bp_data, _ = self.db_manager.get_all_patient_bp_data_by_syntrillo_internal_key(syntrillo_internal_key)
+        status_map = self._categorize_dates_by_status(patient_billing_data, patient_bp_data)
 
         single_patient_info = {
             "patient_billing_data": patient_billing_data,
-            "patient_bp_data": patient_bp_data
+            "patient_bp_data": patient_bp_data,
+            "status_map": status_map
         }
 
         return single_patient_info
+
+    @staticmethod
+    def _categorize_dates_by_status(patient_billing_data, patient_bp_data):
+        # Umbrella status mapping
+        status_map = {
+            "paid": "completed",
+            "finalized_paid": "completed",
+            "finalized_denied": "completed",
+            "not_billable": "completed",
+
+            "era_received": "pending",
+            "biller_received": "pending",
+            "coded": "pending",
+            "submitted_to_payer": "pending",
+            "held_by_customer": "pending",
+            "era_requires_review": "pending",
+
+            "rejected": "unbilled",
+            "denied": "unbilled",
+            "paid_incorrectly": "unbilled",
+            "waiting_for_provider": "unbilled",
+            "missing_information": "unbilled",
+        }
+
+        # Initialize output with sets for each umbrella status
+        result = {
+            "completed": set(),
+            "pending": set(),
+            "unbilled": set()
+        }
+
+        for entry in patient_billing_data:
+            status = entry.get("status")
+            dos_str = entry.get("date_of_service")
+
+            if status not in status_map or not dos_str:
+                continue  # skip if missing/unknown
+
+            umbrella = status_map[status]
+            try:
+                dos = datetime.strptime(dos_str, "%Y-%m-%d")
+            except ValueError:
+                continue  # skip bad date formats
+
+            # Add 30 days starting from the DOS
+            for i in range(30):
+                day = dos + timedelta(days=i)
+                result[umbrella].add(day.strftime("%Y-%m-%d"))
+
+        for date in patient_bp_data:
+            if (
+                date not in result['completed']
+                and date not in result["pending"]
+            ):
+                result['unbilled'].add(date)
+
+        response = {k: list(v) for k, v in result.items()}
+
+        return response
 
 
     def retrieve_patient_eligibility_data(self) -> dict:
