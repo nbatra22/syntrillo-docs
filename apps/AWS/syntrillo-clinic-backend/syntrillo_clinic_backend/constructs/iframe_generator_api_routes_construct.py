@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Duration,
     RemovalPolicy,
+    Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
@@ -17,6 +18,8 @@ from aws_cdk import (
     aws_efs as efs,
     aws_events as events,
     aws_secretsmanager as secretsmanager,
+    aws_apigateway as apigateway,
+    aws_cognito as cognito,
 )
 from constructs import Construct
 
@@ -27,6 +30,21 @@ class IFrameGeneratorAPIRoutes(Construct):
         self.environment_context = environment_context
 
         self.rest_api = api_endpoint.rest_api
+
+        # # Cognito User Pool Authorizer
+        # self.user_pool_id = Fn.import_value("SyntrilloClinic-Authentication-UserPool-Id")
+
+        # user_pool = cognito.UserPool.from_user_pool_id(
+        #     self, "ImportedUserPool", 
+        #     user_pool_id=self.user_pool_id
+        # )
+
+        # self.cognito_authorizer = apigateway.CognitoUserPoolsAuthorizer(
+        #     self, "SyntrilloClinicCognitoAuthorizer",
+        #     cognito_user_pools=[user_pool],
+        #     authorizer_name="SyntrilloClinicCognitoUserPoolAuthorizer",
+        #     identity_source="method.request.header.Authorization"
+        # )
 
     def create_root_resources(self, iframe_generator_function: _lambda.Function):
         self.rest_api.root.add_method(
@@ -124,4 +142,6 @@ class IFrameGeneratorAPIRoutes(Construct):
         healthie_iframe_provider_side_bar_proxy_resources.add_method(
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
+            # authorizer=self.cognito_authorizer,
+            # authorization_type=apigateway.AuthorizationType.COGNITO
         )

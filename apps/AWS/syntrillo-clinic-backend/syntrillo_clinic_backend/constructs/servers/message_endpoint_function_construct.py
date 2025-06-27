@@ -23,6 +23,8 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+import time
+
 class MessageEndpointFunction(Construct):
     def __init__(self, scope: Construct, id: str,
                  environment_context: dict,
@@ -115,7 +117,8 @@ class MessageEndpointFunction(Construct):
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=self.environment_context['message_endpoint_function']['memory_size'], 
             timeout=Duration.seconds(self.environment_context['message_endpoint_function']['lambda_time_out_seconds']),
-            reserved_concurrent_executions=self.environment_context['message_endpoint_function']['reserved_concurrent_executions']
+            reserved_concurrent_executions=self.environment_context['message_endpoint_function']['reserved_concurrent_executions'],
+            description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
         self.function_alias = _lambda.Alias(
