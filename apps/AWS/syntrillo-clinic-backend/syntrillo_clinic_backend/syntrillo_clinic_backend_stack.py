@@ -42,6 +42,7 @@ from syntrillo_clinic_backend.substacks.bastion_stack import SyntrilloClinicBast
 
 from syntrillo_clinic_backend.substacks.deployment_pipelines_stack import DeploymentPipelinesStack
 from syntrillo_clinic_backend.substacks.backend_notifications_stack import BackendNotificationsStack
+from syntrillo_clinic_backend.substacks.authentication_stack import AuthenticationStack
 
 import json
 
@@ -130,6 +131,11 @@ class SyntrilloClinicBackendStack(Stack):
             
         self.backend_notification = BackendNotificationsStack(
             self, "BackendNotificationsStack",
+            environment_context=self.environment_context,
+        )
+
+        self.authentication = AuthenticationStack(
+            self, "AuthenticationStack",
             environment_context=self.environment_context,
         )
 

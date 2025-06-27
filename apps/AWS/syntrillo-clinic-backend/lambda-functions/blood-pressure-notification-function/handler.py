@@ -13,7 +13,6 @@ from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
-from syntrillo.aws_helpers.env_utils import get_aws_environment
 
 from constants import (
     AVERAGE_SYSTOLIC_BP_DAYS,
@@ -577,3 +576,24 @@ def decode_payload(base64_str: str) -> dict:
     payload = json.loads(json_str)
 
     return payload
+
+def get_aws_environment() -> str:
+    """
+    Get the environment from the SSM parameter store
+    Args:
+        None
+    Returns:
+        str: The AWS environment
+    Raises:
+        e (Exception): General exception from retrieving the AWS environment variable
+    """
+    # Initialize AWS Systems Manager (SSM) client
+    logger.info("Retrieving environment variable from AWS...")
+    try:
+        AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
+        logger.info(f"Successfully retrieved AWS env. Environment: {AWS_ENVIRONMENT}")
+        return AWS_ENVIRONMENT
+
+    except Exception as e:
+        logger.error(f"Error retrieving environment variable from AWS: {e}")
+        raise e

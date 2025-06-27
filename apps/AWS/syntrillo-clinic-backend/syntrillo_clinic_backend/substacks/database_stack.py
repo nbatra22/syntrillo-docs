@@ -255,3 +255,11 @@ class DatabaseStack(Stack):
             "PIIDataSyncFunctionImportedSecurityGroup",
             "PIIDataSyncFunction"
         )
+
+        # Allow candid billing ingestor function access
+        add_security_group_ingress_rule(
+            self,
+            Fn.import_value("SyntrilloClinic-TaskScheduling-CandidBillingIngestor-SecurityGroup-Id"),
+            "CandidBillingIngestorFunctionImportedSecurityGroup",
+            "CandidBillingIngestorFunction"
+        )
