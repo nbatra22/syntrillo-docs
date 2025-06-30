@@ -51,7 +51,7 @@ def iframe_healthie_provider_sidebar_billing():
 # ========================= ENDPOINTS ==========================
 
 # Retrieval patient specific blood pressure measurements
-@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_billing/all_patients_data', methods=['GET'])
+@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_sidebar/all_patients_data', methods=['GET'])
 def iframe_healthie_provider_billing_get_all_patient_data():
     """
     Returns:
