@@ -106,7 +106,7 @@ def iframe_healthie_provider_billing_get_all_patient_data():
         "all_patient_overview_data": all_patient_overview_data
     })
 
-@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_billing/single_patient_data', methods=['GET', 'POST'])
+@iframe_healthie_provider_sidebar_billing_bp.route('/healthie/iframe_provider_sidebar/single_patient_data', methods=['GET', 'POST'])
 def iframe_healthie_provider_billing_get_single_patient_data():
 
     healthie_user_id = request.args.get('healthie_user_id')  # From URL query params
