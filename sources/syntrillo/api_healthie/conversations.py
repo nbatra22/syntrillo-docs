@@ -1,10 +1,14 @@
 # Path: ./sources/syntrillo/api_healthie/conversations.py
 import json
+import os
 
 from typing import Tuple
 
+from syntrillo.system.logger import logger
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.user import HealthieUser
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 
 class HealthieConversations:
@@ -322,6 +326,132 @@ class HealthieConversations:
 
         return response, log
 
+    def notify_clinicians(self, syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:
+        """
+        Notify clinicians when extreme blood pressure is detected
+
+        Args:
+            syntrillo_internal_key (str): Syntrillo internal key
+            systolic_bp (float): Systolic blood pressure
+            diastolic_bp (float): Diastolic blood pressure
+            timestamp (str): Timestamp of the blood pressure measurement
+        Returns:
+            None
+        """
+        # Healthie Chat API Docs: https://docs.gethealthie.com/guides/chat/
+        # Healthie Chat Overview: https://help.gethealthie.com/article/82-overview-chatting-with-a-client
+
+        # 1. Create a new Healthie Conversation
+        # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
+        patient_name, healthie_user_id = self.get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
+
+        # Retrieve healthie IDs env variable to use for conversation query
+        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+        healthie_ids = secrets.get_secrets(os.getenv("AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN"))
+
+        # Check if the environment is production or staging to determine which clinicians to notify
+        # Get environment from SSM parameter store to determine which clinicians to notify
+        env = get_aws_environment()
+        if not env:
+            logger.error("Environment variablenot found ...")
+            return
+
+        excluded_patients = healthie_ids.get(env, {}).get("EXCLUDED_PATIENTS", [])
+        messenger_id = healthie_ids.get(env, {}).get("MESSENGER", "")
+        clinicians = healthie_ids.get(env, {}).get("CLINICIANS", [])
+
+        # If a specific patient is excluded from notifications, skip the notification
+        if excluded_patients and healthie_user_id in excluded_patients:
+            logger.info(f"Patient {patient_name} is excluded from notifications ...")
+            return
+
+        # The patient name is to be used as the title of the conversation
+        # alert_title = f"⚠️ {patient_name} - BP Alert"
+        alert_title = f"🔴 {patient_name} - BP Alert"
+
+        # Check if the conversation already exists
+        conversation_id = get_conversation_id(messenger_id, alert_title)
+        if not conversation_id:
+            # Create a new conversation
+            conversation_output = make_conversation_query(clinicians, messenger_id, alert_title)
+            conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
+            logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
+
+
+        # Add a note (aka a message) to the conversation
+        response = add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
+        logger.info(f"Successfully added note to conversation in Healthie: {response}")
+
+
+    def get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key: str) -> tuple[str, str]:
+        """
+        Get patient name from the syntrillo_internal_key using the user_look_up_codes table
+        Args:
+            syntrillo_internal_key (str): The Syntrillo internal key
+        Returns:
+            tuple[str, str]: A tuple containing the patient name and healthie user id
+        """
+
+        # 1. Use syntrillo id to get healthie id
+        db_manager = LookUpCodesManagement()
+        entry = db_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+        healthie_user_id = entry.get('healthie_user_id', None)
+        if not healthie_user_id:
+            logger.error(f"Healthie user id not found for syntrillo_internal_key: {syntrillo_internal_key}")
+            return
+
+        # 2. Use healthie id to get patient name from Healthie API
+        patient_name = get_healthie_user_information_by_healthie_user_id(healthie_user_id)
+        if not patient_name:
+            logger.error(f"Patient name not found for syntrillo_internal_key: {syntrillo_internal_key}")
+            return
+        return patient_name, healthie_user_id
+
+
+    def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> str:
+        """
+        Get patient name from the healthie user id using the Healthie API
+        Args:
+            healthie_user_id (str): The ID of the healthie user
+        Returns:
+            str: The patient name
+        """
+        graphql_query = '''
+            query getUser($id: ID) {
+                user(id: $id) {
+                id
+                first_name
+                last_name
+                }
+            }
+        '''
+        # Query output is dict with a single key called "data"
+        # For example:
+        # {
+        #     "data": {
+        #         "user": {
+        #             "id": "2315391",
+        #             "first_name": "Bob",
+        #             "last_name": "Barker",
+        #         }
+        #     }
+        # }
+        logger.info("Adding note to conversation in Healthie...")
+        try:
+            variables = {
+                "id": healthie_user_id
+            }
+            output: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+            logger.info(f"Successfully retrieved user information from Healthie")
+
+            first_name = output.get('user', {}).get('first_name', '')
+            last_name = output.get('user', {}).get('last_name', '')
+            return first_name + " " + last_name
+
+        except Exception as e:
+            logger.error(f"Error fetching user information from Healthie: {e}")
+
+
 
 
 if __name__ == '__main__':
@@ -337,7 +467,3 @@ if __name__ == '__main__':
     response, log = hc.create_conversation(owner_id=owner_id, members_ids=members_ids, name=name)
     print(json.dumps(response, indent=2))
     print(json.dumps(log, indent=2))
-
-
-
-
