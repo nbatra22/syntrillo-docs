@@ -57,12 +57,12 @@ class LoginFunction(Construct):
             #description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
-        # self.function_alias = _lambda.Alias(
-        #     self, "LambdaAlias",
-        #     alias_name="provisionned-concurrency",
-        #     version=self.function.current_version,
-        #     provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
-        # )
+        self.function_alias = _lambda.Alias(
+            self, "LambdaAlias",
+            alias_name="provisionned-concurrency",
+            version=self.function.current_version,
+            provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
+        )
 
 
         # ---------------------------------------------------------------------

@@ -118,4 +118,4 @@ class ServersStack(Stack):
             environment_context=self.environment_context,
         )
 
-        self.iframe_generator_api_routes.create_login_resources(self.login_function.function)
+        self.iframe_generator_api_routes.create_login_resources(self.login_function.function_alias)
