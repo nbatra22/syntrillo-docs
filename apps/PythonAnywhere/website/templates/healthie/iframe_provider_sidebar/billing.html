@@ -369,10 +369,14 @@
 
 <script>
     let allPatientData = [];
+    let authToken = localStorage.getItem('authToken')
 
     function getBillingData() {
         fetch("{{ url_for('iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_billing_get_all_patient_data') }}", {
-            method: "POST"
+            method: "POST",
+            headers: {
+                'Authorization': 'Bearer ' + authToken
+            }
         })
             .then(response => response.json())
             .then(data => {
@@ -387,7 +391,12 @@
 
     function getPatientData(healthie_user_id) {
         const url = "{{ url_for('iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_billing_get_single_patient_data') }}" + "?healthie_user_id=" + encodeURIComponent(healthie_user_id);
-        return fetch(url, { method: "POST" })
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                'Authorization': 'Bearer ' + authToken
+            }
+        })
             .then(response => response.json())
             .catch(error => {
                 console.error('Error:', error);
