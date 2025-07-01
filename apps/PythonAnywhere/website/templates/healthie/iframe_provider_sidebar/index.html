@@ -42,7 +42,41 @@
 </head>
 <body>
 
-<div class="container"> <!-- mt-1 -->
+<!-- LOGIN FORM START  -->
+<div id="login-form">
+    <h2>Login</h2>
+    <input type="email" id="username" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="login()">Login</button>
+    <button onclick="showForgotPassword()">Forgot Password?</button>
+    <div id="login-message"></div>
+</div>
+
+<div id="forgot-password-form" style="display:none;">
+    <h2>Forgot Password</h2>
+    <input type="email" id="forgot-email" placeholder="Email" required>
+    <button onclick="forgotPassword()">Send Reset Code</button>
+    <button onclick="showLogin()">Back to Login</button>
+    <div id="forgot-message"></div>
+</div>
+
+<div id="reset-password-form" style="display:none;">
+    <h2>Reset Password</h2>
+    <input type="text" id="reset-code" placeholder="Verification Code" required>
+    <input type="password" id="new-password" placeholder="New Password" required>
+    <button onclick="resetPassword()">Reset Password</button>
+    <button onclick="showLogin()">Back to Login</button>
+    <div id="reset-message"></div>
+</div>
+
+<!-- <div id="protected-content" style="display:none;">
+    <h2>Protected Page</h2>
+    <div id="user-info"></div>
+    <button onclick="logout()">Logout</button>
+</div> -->
+<!-- LOGIN FORM END -->
+
+<div class="container" id="provider-sidebar" style="display: none;"> <!-- mt-1 -->    
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
             <a class="nav-link active" id="tab-status-tab" data-toggle="tab" href="#tab-billing" role="tab" aria-controls="tab-billing" aria-selected="true">Billing</a>
@@ -64,6 +98,11 @@
         <!-- Large gap -->
         <li class="nav-item ml-auto">
             <a class="nav-link" id="tab-system-tab" data-toggle="tab" href="#tab-system" role="tab" aria-controls="tab-system" aria-selected="false">System</a>
+        </li>
+        <li class="nav-item">
+            <button class="btn btn-outline-danger btn-sm ml-2" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </li>
     </ul>
     <div class="tab-content p-4" id="myTabContent">
@@ -108,6 +147,160 @@
 <!-- Flatpickr -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+<!-- LOGIN SCRIPT START  -->
+<script>
+const API_URL = 'https://api.staging.syntrillo-clinic-backend.com';
+let authToken = localStorage.getItem('authToken');
+
+// Check if user is already logged in
+if (authToken) {
+    showIframeProviderSideBar();
+}
+
+async function login() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            document.getElementById('login-message').innerHTML = '<p style="color:green;">Login successful!</p>';
+            showIframeProviderSideBar();
+        } else {
+            document.getElementById('login-message').innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+    } catch (error) {
+        document.getElementById('login-message').innerHTML = '<p style="color:red;">Login failed</p>';
+    }
+}
+
+async function showIframeProviderSideBar() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('provider-sidebar').style.display = 'block';
+    load_all_tabs()
+}
+
+// async function checkProtectedPage() {
+//     try {
+//         const response = await fetch(`${API_URL}/healthie/iframe_provider_sidebar/billing`, {
+//             method: 'POST',
+//             headers: {
+//                 'Authorization': `Bearer ${authToken}`
+//             }
+//         });
+        
+//         const data = await response.json();
+        
+//         if (response.ok) {
+//             document.getElementById('login-form').style.display = 'none';
+//             document.getElementById('protected-content').style.display = 'block';
+//             document.getElementById('user-info').innerHTML = `<p>Welcome, ${data.user_data.username}!</p>`;
+//         } else {
+//             logout();
+//         }
+//     } catch (error) {
+//         logout();
+//     }
+// }
+
+function logout() {
+    localStorage.removeItem('authToken');
+    authToken = null;
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('provider-sidebar').style.display = 'none';
+    document.getElementById('login-message').innerHTML = '';
+}
+
+function showLogin() {
+    document.getElementById('login-form').style.display = 'block';
+    document.getElementById('forgot-password-form').style.display = 'none';
+    document.getElementById('reset-password-form').style.display = 'none';
+    document.getElementById('protected-content').style.display = 'none';
+}
+
+function showForgotPassword() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('forgot-password-form').style.display = 'block';
+    document.getElementById('reset-password-form').style.display = 'none';
+}
+
+async function forgotPassword() {
+    const email = document.getElementById('forgot-email').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: email })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('forgot-message').innerHTML = '<p style="color:green;">Reset code sent to your email!</p>';
+            setTimeout(() => {
+                document.getElementById('forgot-password-form').style.display = 'none';
+                document.getElementById('reset-password-form').style.display = 'block';
+            }, 2000);
+        } else {
+            document.getElementById('forgot-message').innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+    } catch (error) {
+        document.getElementById('forgot-message').innerHTML = '<p style="color:red;">Failed to send reset code</p>';
+    }
+}
+
+async function resetPassword() {
+    const email = document.getElementById('forgot-email').value;
+    const code = document.getElementById('reset-code').value;
+    const newPassword = document.getElementById('new-password').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                username: email,
+                code: code,
+                new_password: newPassword
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('reset-message').innerHTML = '<p style="color:green;">Password reset successful! Please login.</p>';
+            setTimeout(() => {
+                showLogin();
+                document.getElementById('reset-message').innerHTML = '';
+                document.getElementById('forgot-message').innerHTML = '';
+            }, 2000);
+        } else {
+            document.getElementById('reset-message').innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+    } catch (error) {
+        document.getElementById('reset-message').innerHTML = '<p style="color:red;">Failed to reset password</p>';
+    }
+}
+
+</script>
+<!-- LOGIN SCRIP END  -->
+
 <script>
 
     // Global function to format ISO date to US date format (MMM DD, YYYY)
@@ -121,6 +314,8 @@
     //   : POST prefered over GET to avoid caching sensitive data in the URL
     function loadTabContent(url, target, milliseconds_delay = {{ milliseconds_delay }}, retryCount = 0, maxRetries = 3) {
 
+        let authToken = localStorage.getItem('authToken');
+
         $(target).html("<h3>Loading content. Please wait...</h3>");
 
         // Variables passed from Flask
@@ -131,6 +326,9 @@
             $.ajax({
                 type: 'POST',
                 url: url,
+                headers: {
+                    'Authorization': 'Bearer ' + authToken
+                },
                 data: {
                     healthie_provider_id: healthieProviderId,
                 },
@@ -154,6 +352,30 @@
                 }
             });
         }, milliseconds_delay); // some delay needed to prevent a server error on VSCode Live Server
+    }
+
+    function load_all_tabs() {
+        // Delegate the click event to the parent container for collapsible sections
+        $(document).on('click', '.collapsible', function() {
+            var icon = $(this).find("i");
+            icon.toggleClass("fa-chevron-right fa-chevron-down");
+            $(this).next(".collapsible-content").toggleClass("show");
+        });
+
+        // Load the content of the status tab immediately
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_sidebar_billing") }}', '#tab-billing', 10);
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_status_bp.iframe_healthie_provider_sidebar_status") }}', '#tab-status');
+
+        // Load the content of the other tabs in the background
+        {% if is_local %}
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_bp.iframe_healthie_provider_sidebar_questionnaire") }}', '#tab-questionnaire');
+        {% endif %}
+
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_questionnaire_database_bp.iframe_healthie_provider_sidebar_questionnaire_database") }}', '#tab-questionnaire-database');
+
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_dumps_bp.iframe_healthie_provider_sidebar_dumps") }}', '#tab-dumps');
+
+        loadTabContent('{{ url_for("iframe_healthie_provider_sidebar_system_bp.iframe_healthie_provider_sidebar_system") }}', '#tab-system');
     }
 
     $(document).ready(function(){

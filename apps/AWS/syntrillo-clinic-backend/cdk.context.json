@@ -23,6 +23,13 @@
       "memory_size": 384,
       "reserved_concurrent_executions": 50
     },
+    "login_function": {
+      "log_level": "DEBUG",
+      "provisioned_concurrency_executions": 0,
+      "lambda_time_out_seconds": 30,
+      "memory_size": 128,
+      "reserved_concurrent_executions": 2
+    },
     "iframe_generator_api": {
       "use_waf": false,
       "allowed_referer": "all",
@@ -84,6 +91,13 @@
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 10
+    },
+    "login_function": {
+      "log_level": "DEBUG",
+      "provisioned_concurrency_executions": 0,
+      "lambda_time_out_seconds": 30,
+      "memory_size": 128,
+      "reserved_concurrent_executions": 2
     },
     "iframe_generator_api": {
       "use_waf": true,
@@ -158,6 +172,13 @@
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
+    },
+    "login_function": {
+      "log_level": "DEBUG",
+      "provisioned_concurrency_executions": 0,
+      "lambda_time_out_seconds": 30,
+      "memory_size": 128,
+      "reserved_concurrent_executions": 2
     },
     "iframe_generator_api": {
       "use_waf": true,

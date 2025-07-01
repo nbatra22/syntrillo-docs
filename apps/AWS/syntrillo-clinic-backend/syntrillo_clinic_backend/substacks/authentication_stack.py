@@ -47,3 +47,4 @@ class AuthenticationStack(Stack):
         )
 
         CfnOutput(self, "SyntrilloClinicAuthenticationUserPoolId", value=user_pool.user_pool_id, export_name="SyntrilloClinic-Authentication-UserPool-Id")
+        CfnOutput(self, "SyntrilloClinicAuthenticationUserPoolClientId", value=user_pool_client.user_pool_client_id, export_name="SyntrilloClinic-Authentication-UserPoolClient-Id")

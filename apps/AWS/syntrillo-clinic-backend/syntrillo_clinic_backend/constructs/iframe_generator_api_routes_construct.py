@@ -31,20 +31,20 @@ class IFrameGeneratorAPIRoutes(Construct):
 
         self.rest_api = api_endpoint.rest_api
 
-        # # Cognito User Pool Authorizer
-        # self.user_pool_id = Fn.import_value("SyntrilloClinic-Authentication-UserPool-Id")
+        # Cognito User Pool Authorizer
+        self.user_pool_id = Fn.import_value("SyntrilloClinic-Authentication-UserPool-Id")
 
-        # user_pool = cognito.UserPool.from_user_pool_id(
-        #     self, "ImportedUserPool", 
-        #     user_pool_id=self.user_pool_id
-        # )
+        user_pool = cognito.UserPool.from_user_pool_id(
+            self, "ImportedUserPool", 
+            user_pool_id=self.user_pool_id
+        )
 
-        # self.cognito_authorizer = apigateway.CognitoUserPoolsAuthorizer(
-        #     self, "SyntrilloClinicCognitoAuthorizer",
-        #     cognito_user_pools=[user_pool],
-        #     authorizer_name="SyntrilloClinicCognitoUserPoolAuthorizer",
-        #     identity_source="method.request.header.Authorization"
-        # )
+        self.cognito_authorizer = apigateway.CognitoUserPoolsAuthorizer(
+            self, "SyntrilloClinicCognitoAuthorizer",
+            cognito_user_pools=[user_pool],
+            authorizer_name="SyntrilloClinicCognitoUserPoolAuthorizer",
+            identity_source="method.request.header.Authorization"
+        )
 
     def create_root_resources(self, iframe_generator_function: _lambda.Function):
         self.rest_api.root.add_method(
@@ -88,6 +88,33 @@ class IFrameGeneratorAPIRoutes(Construct):
                 "GET",
                 apigw.LambdaIntegration(iframe_generator_function),
             )
+
+    def create_login_resources(self, login_function: _lambda.Function):
+        
+        # /auth
+        auth = self.rest_api.root.add_resource("auth")
+
+        # /auth/login
+        login = auth.add_resource("login")
+        login.add_method(
+            "POST",
+            apigw.LambdaIntegration(login_function),
+        )
+
+        # /auth/forgot-password
+        forgot_password = auth.add_resource("forgot-password")
+        forgot_password.add_method(
+            "POST",
+            apigw.LambdaIntegration(login_function),
+        )
+
+        # /auth/reset-password
+        reset_password = auth.add_resource("reset-password")
+        reset_password.add_method(
+            "POST",
+            apigw.LambdaIntegration(login_function),
+        )
+
 
     def create_healthie_endpoint(self, message_endpoint_function: _lambda.Function):
            
@@ -142,6 +169,6 @@ class IFrameGeneratorAPIRoutes(Construct):
         healthie_iframe_provider_side_bar_proxy_resources.add_method(
             "POST",
             apigw.LambdaIntegration(iframe_generator_function),
-            # authorizer=self.cognito_authorizer,
-            # authorization_type=apigateway.AuthorizationType.COGNITO
+            authorizer=self.cognito_authorizer,
+            authorization_type=apigateway.AuthorizationType.COGNITO
         )
