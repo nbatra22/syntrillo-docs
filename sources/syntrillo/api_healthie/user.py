@@ -341,7 +341,7 @@ class HealthieUser:
         #         }
         #     }
         # }
-        logger.info("Adding note to conversation in Healthie...")
+        logger.info("Retreiving healthie user information for a given healthie user...")
         try:
             variables = {
                 "id": self.healthie_user_id

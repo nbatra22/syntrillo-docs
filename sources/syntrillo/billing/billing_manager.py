@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from syntrillo.billing.constants import CPT_CODE, DEVICE_TRAINING_FORM_NAME
 from syntrillo.api_healthie.user import HealthieUser
 import uuid
-import json
+import concurrent.futures
 
 
 class BillingManager:
@@ -92,31 +92,47 @@ class BillingManager:
             None
         Returns:
             list[dict]: List of patient data
+        Raises:
+            e (Exception): General exception when retrieving patient eligibility data from AWS RDS billing_eligibility table.
         """
-        all_patient_eligibility_data = self.retrieve_patient_eligibility_data()
+        try:
+            all_patient_eligibility_data = self.retrieve_patient_eligibility_data()
+            all_patient_data = []
 
-        all_patient_data = []
+            # Handle case of no data retrieved from billing_eligibility table
+            if not all_patient_eligibility_data:
+                return all_patient_data
 
-        for patient_eligibility_data in all_patient_eligibility_data:
+            # Batch lookup all syntrillo_internal_keys to healthie_user_ids
+            syntrillo_internal_keys = [uuid.UUID(patient['syntrillo_internal_key']) for patient in all_patient_eligibility_data]
+            healthie_mapping = self.lookup_codes_manager.batch_retrieve_healthie_mapping(syntrillo_internal_keys) # maps syntrillo_internal_id -> healthie_id
 
-            healthie_user_id = self.lookup_codes_manager.retrieve_entry_by_internal_key(uuid.UUID(patient_eligibility_data['syntrillo_internal_key'])).get('healthie_user_id', None)
-            if not healthie_user_id:
-                logger.warning(f"Patient {patient_eligibility_data} does not have a healthie user id")
-                continue
+            # Batch fetch patient names from Healthie API
+            healthie_user_ids = list(healthie_mapping.values())
+            patient_names_mapping = self._batch_fetch_patient_names(healthie_user_ids)
 
-            patient_name = HealthieUser(healthie_user_id).get_healthie_user_information_by_healthie_user_id()
-            healthie_user_id = healthie_user_id
-            bp_device_training_status = patient_eligibility_data['bp_device_training_status']
-            eligible_to_bill = patient_eligibility_data['eligible_to_bill']
+            for patient_eligibility_data in all_patient_eligibility_data:
 
-            all_patient_data.append({
-                "patient_name": patient_name,
-                "healthie_user_id": healthie_user_id,
-                "bp_device_training_status": bp_device_training_status,
-                "eligible_to_bill": eligible_to_bill
-            })
+                syntrillo_key = patient_eligibility_data['syntrillo_internal_key']
+                healthie_user_id = healthie_mapping.get(syntrillo_key)
 
-        return all_patient_data
+                if not healthie_user_id:
+                    logger.warning(f"Patient {patient_eligibility_data} does not have a healthie user id")
+                    continue
+
+                patient_name = patient_names_mapping.get(healthie_user_id, f"Unknown Patient {healthie_user_id}")
+
+                all_patient_data.append({
+                    "patient_name": patient_name,
+                    "healthie_user_id": healthie_user_id,
+                    "bp_device_training_status": patient_eligibility_data['bp_device_training_status'],
+                    "eligible_to_bill": patient_eligibility_data['eligible_to_bill']
+                })
+
+                return all_patient_data
+        except Exception as e:
+            logger.error(f"Error while getting all patient eligibility data: {e}")
+            raise e
 
 
     def get_single_patient_billing_and_bp_dates_data(self, syntrillo_internal_key: str) -> dict:
@@ -201,7 +217,17 @@ class BillingManager:
         return response
 
 
-    def retrieve_patient_eligibility_data(self) -> dict:
+    def retrieve_patient_eligibility_data(self) -> list[dict]:
+        """
+        Retrieves all patient eligibility data from AWS RDS billing_eligibility table
+
+        Args:
+            None
+        Returns:
+            list[dict]: List of patient eligibility data.
+        Raises:
+            e (Exception): General exception when retrieving patient eligibility data from AWS RDS billing_eligibility table.
+        """
         logger.info(f"Retrieving all patient eligibility data ...")
         db_connection = self.db_manager.conn
 
@@ -225,8 +251,8 @@ class BillingManager:
                 return all_patient_billing_eligibility
 
         except Exception as e:
-            logger.error(f"Error while retrieving patient eligibility data: {e}")
-            return []
+            logger.error(f"Error while retrieving patient eligibility data...")
+            raise e
 
 
 
@@ -349,9 +375,89 @@ class BillingManager:
             raise e
 
 
-if __name__ == "__main__":
-    billing_manager = BillingManager()
-    # data = billing_manager.get_all_patient_eligibility_data()
-    data = billing_manager.get_single_patient_billing_and_bp_dates_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
-    print(json.dumps(data, indent=4))
-    # print(data)
+
+
+    def _batch_fetch_patient_names(self, healthie_user_ids: list[str]) -> dict:
+        """
+        Batch fetch patient names from Healthie API using a single GraphQL query
+
+        Args:
+            healthie_user_ids (list[str]): List of healthie user IDs.
+        Returns:
+            dict: Mapping of healthie_user_id to patient name.
+        Raises:
+            e (Exception): General exception when fetching patient names from Healthie API.
+        """
+        # Input validation
+        if not healthie_user_ids:
+            return {}
+
+        # Split into chunks if too many IDs (GraphQL queries have limits)
+        # More info on Healthie API limits: https://docs.gethealthie.com/guides/api-concepts/rate-limits/
+        chunk_size = 100
+
+        all_patient_names = {}
+
+        for i in range(0, len(healthie_user_ids), chunk_size):
+            chunk = healthie_user_ids[i:i + chunk_size]
+            chunk_names = self._fetch_patient_names_chunk(chunk)
+            all_patient_names.update(chunk_names)
+
+        return all_patient_names
+
+    def _fetch_patient_names_chunk(self, healthie_user_ids: list[str]) -> dict:
+        """
+        Fetch patient names for a chunk of healthie_user_ids
+        """
+        try:
+            # Create a GraphQL query that fetches multiple users at once
+            # Note: This approach depends on Healthie API capabilities
+            # Alternative: Use concurrent requests if single-user queries are the only option
+
+            patient_names = {}
+
+            def fetch_single_patient_name(healthie_user_id):
+                try:
+                    user = HealthieUser(healthie_user_id)
+                    name = user.get_healthie_user_information_by_healthie_user_id()
+                    return healthie_user_id, name
+                except Exception as e:
+                    logger.warning(f"Failed to fetch name for user {healthie_user_id}: {e}")
+                    return healthie_user_id, f"Patient {healthie_user_id}"
+
+            # Use ThreadPoolExecutor for concurrent API calls
+            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                future_to_id = {
+                    executor.submit(fetch_single_patient_name, user_id): user_id
+                    for user_id in healthie_user_ids
+                }
+
+                for future in concurrent.futures.as_completed(future_to_id):
+                    try:
+                        user_id, name = future.result(timeout=30)
+                        patient_names[user_id] = name
+                    except Exception as e:
+                        user_id = future_to_id[future]
+                        logger.warning(f"Failed to fetch name for user {user_id}: {e}")
+                        patient_names[user_id] = f"Patient {user_id}"
+
+            return patient_names
+
+        except Exception as e:
+            logger.error(f"Error in batch fetch patient names: {e}")
+            return {user_id: f"Patient {user_id}" for user_id in healthie_user_ids}
+
+
+# if __name__ == "__main__":
+#     billing_manager = BillingManager()
+#     start_time = time.perf_counter()
+#     data = billing_manager.get_all_patient_eligibility_data()
+#     end_time = time.perf_counter()
+#     # data = billing_manager.get_single_patient_billing_and_bp_dates_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
+#     # print(json.dumps(data, indent=4))
+#     print("\n <======================================================================>")
+#     print(f"Function took {end_time - start_time:.4f} seconds")
+#     print(f"Processed {len(data)} patients")
+#     if len(data) > 0:
+#         print(f"Average time per patient: {(end_time - start_time)/len(data):.4f} seconds")
+#     # print(data)

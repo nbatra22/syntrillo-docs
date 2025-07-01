@@ -246,6 +246,49 @@ class LookUpCodesManagement:
             logger.error("Error while retrieving healthie_user_id to syntrillo_internal_key from AWS RDS DB")
             raise e
 
+
+    def batch_retrieve_healthie_mapping(self, syntrillo_keys: list[uuid.UUID]) -> dict:
+        """
+        Batch retrieve healthie_user_ids for multiple syntrillo_internal_keys
+
+        Args:
+            syntrillo_keys (list[uuid.UUID]): List of syntrillo_internal_keys.
+        Returns:
+            dict: Mapping of syntrillo_internal_key to healthie_user_id.
+        Raises:
+            e (Exception): General exception when retrieving healthie_user_ids for multiple syntrillo_internal_keys.
+        """
+        if not syntrillo_keys:
+            return {}
+
+        try:
+            with self.conn.cursor() as cursor:
+                # Create placeholders for the IN clause
+                placeholders = ', '.join(['UUID_TO_BIN(%s)'] * len(syntrillo_keys))
+
+                select_query = f"""
+                    SELECT
+                        BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key,
+                        healthie_user_id
+                    FROM user_look_up_codes
+                    WHERE syntrillo_internal_key IN ({placeholders})
+                """
+
+                cursor.execute(select_query, syntrillo_keys)
+                entries = cursor.fetchall()
+
+                # Create mapping from syntrillo_internal_key to healthie_user_id
+                mapping = {}
+                for entry in entries:
+                    mapping[entry[0]] = entry[1]
+
+                logger.info(f"Retrieved {len(mapping)} healthie mappings out of {len(syntrillo_keys)} requested")
+                return mapping
+
+        except Exception as e:
+            logger.error(f"Error in batch retrieve healthie mapping: {e}")
+            return {}
+
     def close_connection(self):
         """
         Close the database connection and stop the SSH tunnel if applicable.
