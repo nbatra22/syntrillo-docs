@@ -129,7 +129,7 @@ class BillingManager:
                     "eligible_to_bill": patient_eligibility_data['eligible_to_bill']
                 })
 
-                return all_patient_data
+            return all_patient_data
         except Exception as e:
             logger.error(f"Error while getting all patient eligibility data: {e}")
             raise e
@@ -448,16 +448,19 @@ class BillingManager:
             return {user_id: f"Patient {user_id}" for user_id in healthie_user_ids}
 
 
-# if __name__ == "__main__":
-#     billing_manager = BillingManager()
-#     start_time = time.perf_counter()
-#     data = billing_manager.get_all_patient_eligibility_data()
-#     end_time = time.perf_counter()
-#     # data = billing_manager.get_single_patient_billing_and_bp_dates_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
-#     # print(json.dumps(data, indent=4))
-#     print("\n <======================================================================>")
-#     print(f"Function took {end_time - start_time:.4f} seconds")
-#     print(f"Processed {len(data)} patients")
-#     if len(data) > 0:
-#         print(f"Average time per patient: {(end_time - start_time)/len(data):.4f} seconds")
-#     # print(data)
+if __name__ == "__main__":
+    import json
+    import time
+
+    billing_manager = BillingManager()
+    start_time = time.perf_counter()
+    data = billing_manager.get_all_patient_eligibility_data()
+    end_time = time.perf_counter()
+    # data = billing_manager.get_single_patient_billing_and_bp_dates_data("125c56e8-5e93-4211-a287-f1fcfee11da3")
+    print(json.dumps(data, indent=4))
+    print("\n======================================================================")
+    print(f"Function took {end_time - start_time:.4f} seconds")
+    print(f"Processed {len(data)} patients")
+    if len(data) > 0:
+        print(f"Average time per patient: {(end_time - start_time)/len(data):.4f} seconds")
+    # print(data)
