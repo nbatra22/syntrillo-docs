@@ -6,6 +6,7 @@ import json
 from typing import List, Tuple
 from datetime import datetime, date, timedelta
 import pytz
+import pandas as pd
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
@@ -25,7 +26,7 @@ from constants import (
     CLINICIANS_KEY
 )
 
-class BloodPressureAlerts:
+class BloodPressureAlertManager:
     """
     Handles blood pressure alert system.
     """
@@ -94,6 +95,45 @@ class BloodPressureAlerts:
         }
 
     def handle_2week_measurement(self, event):
+        payload = event
+
+        db_manager = SyntrilloDatabaseManager()
+
+        internal_keys, log = db_manager.get_all_internal_keys()
+
+        if internal_keys is None:
+            logger.error(f"Error retrieving Syntrillo internal keys: {log.error}")
+
+        for key in internal_keys:
+            logger.info(f"Analyzing BP data for {key}...")
+
+            end_date = datetime.now()
+            start_date = end_date - timedelta(weeks=4)
+            mid_date = end_date - timedelta(weeks=2)
+
+            db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=key)
+
+            df, log = db_manager.get_tenovi_device_metric_data(
+                metric_name='blood_pressure',
+                start_date=start_date,
+                end_date=end_date
+            )
+
+            if df is not None and not df.empty:
+                # Ensure the date column is datetime
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+                # First two weeks: start_date <= timestamp < mid_date
+                df_first = df[(df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)]
+                # Last two weeks: mid_date <= timestamp <= end_date
+                df_last = df[(df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)]
+
+                avg_first = df_first['value_1'].mean() if not df_first.empty else None
+                avg_last = df_last['value_1'].mean() if not df_last.empty else None
+
+                # You can now use avg_first and avg_last as needed
+                print(f"{key}: First 2 weeks avg = {avg_first}, Last 2 weeks avg = {avg_last}")
+
         return
 
     def notify_clinicians(self, syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:

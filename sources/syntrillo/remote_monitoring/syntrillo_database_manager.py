@@ -750,6 +750,34 @@ class SyntrilloDatabaseManager:
 
         return all_dates_response, log
 
+    def get_all_internal_keys(self):
+
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT syntrillo_internal_key
+                    FROM tenovi_raw_measurements;
+                """
+
+                cursor.execute(query)
+                raw_keys = cursor.fetchall()
+                internal_keys = []
+                for key in raw_keys:
+                    internal_keys.extend(key)
+
+                log = {"success": True }
+                logger.info(f"Successfully retrieved Syntrillo internal keys!")
+
+        except pymysql.MySQLError as e:
+            logger.error(f"Error retrieving syntrillo_internal_key's.")
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            internal_keys = None
+
+        return internal_keys, log
+
 
 if __name__ == '__main__':
 
