@@ -182,7 +182,7 @@ def handle_reset_password(event):
         elif error_code == 'InvalidPasswordException':
             return {
                 'statusCode': 400,
-                'body': json.dumps({'error': 'Password does not meet requirements'})
+                'body': json.dumps({'error': 'Password does not meet requirements. Password must be at least 8 characters long and contain uppercase letters, lowercase letters, numbers and special characters.'})
             }
         else:
             return {
