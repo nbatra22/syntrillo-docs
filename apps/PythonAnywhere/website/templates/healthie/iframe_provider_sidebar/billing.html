@@ -369,7 +369,7 @@
 
 <script>
     let allPatientData = [];
-    let authToken = localStorage.getItem('authToken')
+    // let authToken = localStorage.getItem('authToken')
 
     function getBillingData() {
         fetch("{{ url_for('iframe_healthie_provider_sidebar_billing_bp.iframe_healthie_provider_billing_get_all_patient_data') }}", {
