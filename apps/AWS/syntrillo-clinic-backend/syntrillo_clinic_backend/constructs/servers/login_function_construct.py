@@ -46,7 +46,7 @@ class LoginFunction(Construct):
             function_name="LoginFunction",
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/login-function", exclude=['.env', '__pycache__']),
+            code=_lambda.Code.from_asset("lambda-functions/servers/login-function", exclude=['.env', '__pycache__']),
             environment={
                 "CLIENT_ID": self.user_pool_client_id,
             },
