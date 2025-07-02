@@ -35,5 +35,6 @@ create_symlinks "../../lambda-functions/tasks/remote-monitoring-data-sync-functi
 create_symlinks "../../lambda-functions/tasks/healthie-data-ingestor-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/pii-data-sync-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/candid-billing-ingestor-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/blood-pressure-analysis-function/" "syntrillo"
 
 create_symlinks "../../../../PythonAnywhere/website/static/healthie/documents/" "questionnaire_template_latest.xlsx"
