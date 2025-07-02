@@ -30,7 +30,7 @@ create_symlinks() {
 
 create_symlinks "../../lambda-functions/servers/iframe-generator-function/" "routes static syntrillo templates api.py flask_app.py"
 create_symlinks "../../lambda-functions/servers/message-endpoint-function/" "routes static syntrillo templates api.py"
-create_symlinks "../../lambda-functions/blood-pressure-notification-function/" "syntrillo"
+create_symlinks "../../lambda-functions/servers/blood-pressure-notification-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/remote-monitoring-data-sync-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/healthie-data-ingestor-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/pii-data-sync-function/" "syntrillo"
