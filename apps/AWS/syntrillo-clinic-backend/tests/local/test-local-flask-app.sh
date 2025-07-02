@@ -1,4 +1,4 @@
-# cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/lambda-functions/iframe-generator-function
+# cd ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/lambda-functions/servers/iframe-generator-function
 # python3 handler.py
 
 cd /home/olivier/SyntrilloClinic/apps/PythonAnywhere/website
