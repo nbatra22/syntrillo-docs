@@ -118,7 +118,7 @@ class MessageEndpointFunction(Construct):
             memory_size=self.environment_context['message_endpoint_function']['memory_size'], 
             timeout=Duration.seconds(self.environment_context['message_endpoint_function']['lambda_time_out_seconds']),
             reserved_concurrent_executions=self.environment_context['message_endpoint_function']['reserved_concurrent_executions'],
-            description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            # description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
         self.function_alias = _lambda.Alias(
