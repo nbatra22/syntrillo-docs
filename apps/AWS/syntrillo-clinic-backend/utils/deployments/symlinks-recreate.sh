@@ -28,12 +28,13 @@ create_symlinks() {
     cd -
 }
 
-create_symlinks "../../lambda-functions/iframe-generator-function/" "routes static syntrillo templates api.py flask_app.py"
-create_symlinks "../../lambda-functions/message-endpoint-function/" "routes static syntrillo templates api.py"
-create_symlinks "../../lambda-functions/blood-pressure-notification-function/" "syntrillo"
-create_symlinks "../../lambda-functions/remote-monitoring-data-sync-function/" "syntrillo"
-create_symlinks "../../lambda-functions/healthie-data-ingestor-function/" "syntrillo"
-create_symlinks "../../lambda-functions/pii-data-sync-function/" "syntrillo"
-create_symlinks "../../lambda-functions/candid-billing-ingestor-function/" "syntrillo"
+create_symlinks "../../lambda-functions/servers/iframe-generator-function/" "routes static syntrillo templates api.py flask_app.py"
+create_symlinks "../../lambda-functions/servers/message-endpoint-function/" "routes static syntrillo templates api.py"
+create_symlinks "../../lambda-functions/servers/blood-pressure-notification-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/remote-monitoring-data-sync-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/healthie-data-ingestor-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/pii-data-sync-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/candid-billing-ingestor-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/blood-pressure-analysis-function/" "syntrillo"
 
 create_symlinks "../../../../PythonAnywhere/website/static/healthie/documents/" "questionnaire_template_latest.xlsx"

@@ -31,6 +31,7 @@ from syntrillo_clinic_backend.constructs.iframe_generator_api_routes_construct i
 from syntrillo_clinic_backend.constructs.servers.iframe_generator_function_construct import IFrameGeneratorFunction
 from syntrillo_clinic_backend.constructs.servers.message_endpoint_function_construct import MessageEndpointFunction
 from syntrillo_clinic_backend.constructs.servers.blood_pressure_notification_function_construct import BloodPressureNotificationFunction
+from syntrillo_clinic_backend.constructs.servers.login_function_construct import LoginFunction
 from syntrillo_clinic_backend.constructs.servers.llm_server_construct import LLMServer
 
 # -----------------------------------------------------------------------------
@@ -111,3 +112,10 @@ class ServersStack(Stack):
         )
 
         self.iframe_generator_api_routes.create_tenovi_endpoint(self.blood_pressure_notification_function.function_alias)
+
+        self.login_function = LoginFunction(
+            self, "LoginFunction",
+            environment_context=self.environment_context,
+        )
+
+        self.iframe_generator_api_routes.create_login_resources(self.login_function.function_alias)

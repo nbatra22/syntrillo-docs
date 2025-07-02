@@ -3,6 +3,7 @@ from aws_cdk import (
     Duration,
     RemovalPolicy,
     CfnOutput,
+    SymlinkFollowMode,
     Fn,
     aws_lambda as _lambda,
     aws_s3 as s3,
@@ -18,16 +19,17 @@ from aws_cdk import (
     aws_backup as backup,
     aws_efs as efs,
     aws_events as events,
+    aws_events_targets as targets,
     aws_secretsmanager as secretsmanager,
     aws_iam as iam,
+    aws_stepfunctions as sfn,
+    aws_stepfunctions_tasks as tasks,
 )
 from constructs import Construct
 
-import time
-
-class IFrameGeneratorFunction(Construct):
-    def __init__(self, scope: Construct, id: str,
-                 environment_context: dict,
+class BloodPressureAnalysis(Construct):
+    def __init__(self, scope: Construct, id: str, 
+                 aws_environment: str, 
                  network: Construct, 
                  database: Construct,
                  storage: Construct,
@@ -35,15 +37,10 @@ class IFrameGeneratorFunction(Construct):
                  **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        self.environment_context = environment_context
         self.network = network
         self.database = database
         self.storage = storage
         self.secrets = secrets
-
-        # ---------------------------------------------------------------------
-        # INPUTS
-        # ---------------------------------------------------------------------
 
         self.secrets_database_lambda_user_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Database-LambdaUserSecrets-Arn")
         self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-TenoviHwiSecrets-Arn")
@@ -88,71 +85,60 @@ class IFrameGeneratorFunction(Construct):
             public_subnet_route_table_ids=[Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet1-RouteTable-Id"), Fn.import_value("SyntrilloClinic-Network-Vpc-PublicSubnet2-RouteTable-Id")]
         )
 
-        # ---------------------------------------------------------------------      
-
         params_and_secrets = _lambda.ParamsAndSecretsLayerVersion.from_version(_lambda.ParamsAndSecretsVersions.V1_0_103,
             cache_size=500,
-            log_level=_lambda.ParamsAndSecretsLogLevel.NONE
+            log_level=_lambda.ParamsAndSecretsLogLevel.DEBUG
         )
 
-        self.function = _lambda.Function(self, "IFrameGeneratorFunction",
-            function_name="IFrameGeneratorFunction",
+        # -----------------------------------------------------------------------
+        # Remote monitoring Lambdas
+
+        self.blood_pressure_analysis_function = _lambda.Function(self, "BloodPressureAnalysisFunction",
+            function_name="BloodPressureAnalysisFunction",
             vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/servers/iframe-generator-function", exclude=['.env', '__pycache__']),
-            params_and_secrets=params_and_secrets,
+            code=_lambda.Code.from_asset("lambda-functions/tasks/blood-pressure-analysis-function", exclude=['.env', '__pycache__']),
+            params_and_secrets=params_and_secrets,           
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.clinic_storage_efs_access_point_shared_python_modules,
                 "/mnt/python_modules"
             ),
             environment={
-                "POWERTOOLS_LOG_LEVEL": self.environment_context['iframe_generator_function']['log_level'],
+                "POWERTOOLS_LOG_LEVEL": "DEBUG",
                 "PYTHONPATH": "/mnt/python_modules",
                 "AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN": self.secrets_database_lambda_user_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_CANDID_SECRET_ARN": self.secrets_candid_secrets_secret_arn,
-                "AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN": self.secrets_openai_secrets_secret_arn
             },
             tracing=_lambda.Tracing.ACTIVE,
-            memory_size=self.environment_context['iframe_generator_function']['memory_size'], 
-            timeout=Duration.seconds(self.environment_context['iframe_generator_function']['lambda_time_out_seconds']),
-            reserved_concurrent_executions=self.environment_context['iframe_generator_function']['reserved_concurrent_executions'],
-            # description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            memory_size=512,
+            timeout=Duration.seconds(600),
         )
 
-        self.function_alias = _lambda.Alias(
-            self, "LambdaAlias",
-            alias_name="provisionned-concurrency",
-            version=self.function.current_version,
-            provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
-        )
-
-        self.grant_read_secrets(self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.secrets_candid_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        # self.grant_read_secrets(self.secrets_openai_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-
-        self.function_security_group = self.function.connections.security_groups[0]
+        self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_candid_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.function_security_group = self.blood_pressure_analysis_function.connections.security_groups[0]
 
         # ---------------------------------------------------------------------
-        # EXPORT VALUES
+        # OUTPUTS
         # ---------------------------------------------------------------------
 
-        CfnOutput(self, "SyntrilloClinicServersIFrameGeneratorFunctionSecurityGroupId",
+        CfnOutput(self, "SyntrilloClinicTaskSchedulingBloodPressureAnalysisSecurityGroupId",
             value=self.function_security_group.security_group_id,
-            export_name="SyntrilloClinic-Servers-IFrameGeneratorFunction-SecurityGroup-Id"
+            export_name="SyntrilloClinic-TaskScheduling-BloodPressureAnalysis-SecurityGroup-Id"
         )
-    
-    def grant_read_secrets(self, secrets_arn, secrets_kms_key_arn):
+
+    def grant_read_secrets(self, function, secrets_arn, secrets_kms_key_arn):
         # Must be used instead of grant_read to avoid circular dependency (n.b.: No real explanation why it creates a circular dependency)
-        self.function.add_to_role_policy(iam.PolicyStatement(
+        function.add_to_role_policy(iam.PolicyStatement(
             actions=["secretsmanager:DescribeSecret", "secretsmanager:GetSecretValue"],
             resources=[secrets_arn],
         ))
-        self.function.add_to_role_policy(iam.PolicyStatement(
+        function.add_to_role_policy(iam.PolicyStatement(
             actions=["kms:Decrypt"],
             resources=[secrets_kms_key_arn],
         ))

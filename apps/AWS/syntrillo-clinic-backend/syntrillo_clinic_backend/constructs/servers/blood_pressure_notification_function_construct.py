@@ -100,7 +100,7 @@ class BloodPressureNotificationFunction(Construct):
             vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/blood-pressure-notification-function", exclude=['.env', '__pycache__']),
+            code=_lambda.Code.from_asset("lambda-functions/servers/blood-pressure-notification-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.clinic_storage_efs_access_point_shared_python_modules,
@@ -124,7 +124,7 @@ class BloodPressureNotificationFunction(Construct):
             memory_size=self.environment_context['blood_pressure_notification_function']['memory_size'], 
             timeout=Duration.seconds(self.environment_context['blood_pressure_notification_function']['lambda_time_out_seconds']),
             reserved_concurrent_executions=self.environment_context['blood_pressure_notification_function']['reserved_concurrent_executions'],
-            description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            # description=f"Generated at {time.strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
         self.function_alias = _lambda.Alias(
