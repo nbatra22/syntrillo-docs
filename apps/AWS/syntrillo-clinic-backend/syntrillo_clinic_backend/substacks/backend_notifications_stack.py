@@ -95,7 +95,7 @@ class BackendNotificationsStack(Stack):
                 function_name="PipelineNotificationFunction",
                 runtime=_lambda.Runtime.PYTHON_3_9,
                 handler="handler.handler",
-                code=_lambda.Code.from_asset("lambda-functions/pipeline-notification-function"),
+                code=_lambda.Code.from_asset("lambda-functions/helpers/pipeline-notification-function"),
                 timeout=Duration.seconds(30),
                 environment={
                     "SNS_TOPIC_ARN": self.notification_topic.topic_arn
