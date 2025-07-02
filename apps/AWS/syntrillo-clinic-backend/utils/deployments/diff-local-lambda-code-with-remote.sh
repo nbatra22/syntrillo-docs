@@ -87,7 +87,7 @@ exit
 # unzip -q remote_code.zip -d remote_code
 
 # # Compare the remote code with the local code
-# diff -r remote_code/ ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/lambda-functions/remote-monitoring-data-sync-function/ --exclude "*.pyc" --exclude "__init__.py" --exclude "__pycache__" 
+# diff -r remote_code/ ~/SyntrilloClinic/apps/AWS/syntrillo-clinic-backend/lambda-functions/tasks/remote-monitoring-data-sync-function/ --exclude "*.pyc" --exclude "__init__.py" --exclude "__pycache__" 
 
 # # Clean up
 # rm -rf remote_code.zip remote_code
