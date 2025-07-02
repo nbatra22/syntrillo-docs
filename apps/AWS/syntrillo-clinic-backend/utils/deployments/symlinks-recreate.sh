@@ -33,7 +33,7 @@ create_symlinks "../../lambda-functions/message-endpoint-function/" "routes stat
 create_symlinks "../../lambda-functions/blood-pressure-notification-function/" "syntrillo"
 create_symlinks "../../lambda-functions/remote-monitoring-data-sync-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/healthie-data-ingestor-function/" "syntrillo"
-create_symlinks "../../lambda-functions/pii-data-sync-function/" "syntrillo"
+create_symlinks "../../lambda-functions/tasks/pii-data-sync-function/" "syntrillo"
 create_symlinks "../../lambda-functions/tasks/candid-billing-ingestor-function/" "syntrillo"
 
 create_symlinks "../../../../PythonAnywhere/website/static/healthie/documents/" "questionnaire_template_latest.xlsx"

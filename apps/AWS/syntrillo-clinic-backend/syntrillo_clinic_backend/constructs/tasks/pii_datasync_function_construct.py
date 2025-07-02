@@ -98,7 +98,7 @@ class PIIDataSync(Construct):
             vpc = self.vpc,
             handler="handler.handler",
             runtime=_lambda.Runtime.PYTHON_3_10,
-            code=_lambda.Code.from_asset("lambda-functions/pii-data-sync-function", exclude=['.env', '__pycache__']),
+            code=_lambda.Code.from_asset("lambda-functions/tasks/pii-data-sync-function", exclude=['.env', '__pycache__']),
             params_and_secrets=params_and_secrets,
             filesystem =_lambda.FileSystem.from_efs_access_point(
                 self.clinic_storage_efs_access_point_shared_python_modules,
