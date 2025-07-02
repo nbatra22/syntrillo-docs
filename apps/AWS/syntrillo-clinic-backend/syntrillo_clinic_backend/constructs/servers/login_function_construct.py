@@ -61,7 +61,7 @@ class LoginFunction(Construct):
             self, "LambdaAlias",
             alias_name="provisionned-concurrency",
             version=self.function.current_version,
-            provisioned_concurrent_executions=self.environment_context['iframe_generator_function']['provisioned_concurrency_executions']
+            provisioned_concurrent_executions=self.environment_context['login_function']['provisioned_concurrency_executions']
         )
 
 
