@@ -386,13 +386,13 @@ class HealthieUser:
         # }
         try:
             variables = {
-                "id": healthie_user_id
+                "id": self.healthie_user_id
             }
-            output: dict = self.auth.run_graphql_query(graphql_query, variables)
-            logger.info(f"Successfully retrieved user information from Healthie")
+            output: dict = self.auth.send_query(graphql_query, variables)
+            logger.info(f"Successfully retrieved user information from Healthie: {output}")
 
-            first_name = output.get('user', {}).get('first_name', '')
-            last_name = output.get('user', {}).get('last_name', '')
+            first_name = output[0].get('user', {}).get('first_name', '')
+            last_name = output[0].get('user', {}).get('last_name', '')
             return first_name + " " + last_name
 
         except Exception as e:

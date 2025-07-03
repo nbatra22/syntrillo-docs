@@ -153,6 +153,7 @@ class BloodPressureAlertManager:
                 return True
 
             if avg_last > avg_first:
+                logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_last}) than prior ({avg_first}). Sending notification...")
                 content = f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK PERIOD.</b></p>\n<ul><li>Current: {df_last}</li>\n<li>Prior: {df_first}</li></ul>"
                 return self.notify_clinicians(content)
 
@@ -187,7 +188,7 @@ class BloodPressureAlertManager:
         # Get environment from SSM parameter store to determine which clinicians to notify
         env = self.get_aws_environment()
         if not env:
-            logger.error("Environment variablenot found ...")
+            logger.error("Environment variable not found ...")
             return
 
         excluded_patients = healthie_ids.get(env, {}).get(EXCLUDED_PATIENTS_KEY, [])
