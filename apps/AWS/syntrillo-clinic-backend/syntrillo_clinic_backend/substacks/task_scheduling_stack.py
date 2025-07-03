@@ -366,20 +366,20 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
         )
 
 
-        if self.aws_environment == "staging":        
-            self.candid_billing_ingestor = CandidBillingIngestor(
-                self, "CandidBillingIngestor",
-                aws_environment=self.aws_environment,
-                network=self.network,
-                database=self.database,
-                storage=self.storage,
-                secrets=self.secrets,
-            )
+       
+        self.candid_billing_ingestor = CandidBillingIngestor(
+            self, "CandidBillingIngestor",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+        )
 
-            self.candid_billing_ingestor_worflow = CandidBillingIngestorWorkFlow(
-                self, "CandidBillingIngestorWorkFlow",
-                lambda_function=self.candid_billing_ingestor.candid_billing_ingestor_function
-            )
+        self.candid_billing_ingestor_worflow = CandidBillingIngestorWorkFlow(
+            self, "CandidBillingIngestorWorkFlow",
+            lambda_function=self.candid_billing_ingestor.candid_billing_ingestor_function
+        )
 
         if self.aws_environment == "staging":        
             self.blood_pressure_analysis = BloodPressureAnalysis(
