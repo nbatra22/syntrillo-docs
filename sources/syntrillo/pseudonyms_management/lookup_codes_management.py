@@ -325,4 +325,3 @@ if __name__ == "__main__":
 
     # Close the database connection
     lookup_manager.close_connection()
-

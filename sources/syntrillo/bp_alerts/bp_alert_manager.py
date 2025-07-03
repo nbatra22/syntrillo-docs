@@ -9,11 +9,14 @@ import pytz
 import pandas as pd
 
 from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.conversations import HealthieConversations
+from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
 from constants import (
     AVERAGE_SYSTOLIC_BP_DAYS,
@@ -31,8 +34,13 @@ class BloodPressureAlertManager:
     Handles blood pressure alert system.
     """
 
-    def ___init__(self):
-        self.nothing = ""
+    def __init__(self, syntrillo_internal_key: str):
+        lookup_manager = LookUpCodesManagement()
+        entry = lookup_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+
+        self.syntrillo_internal_key = syntrillo_internal_key
+        self.healthie_user_id = entry['healthie_user_id']
+
 
     def handle_single_measurement(self, event):
         payload = event
@@ -84,7 +92,7 @@ class BloodPressureAlertManager:
 
         if systolic_is_extreme:
             # Send chat message notification to clinicians when extreme blood pressure is detected
-            self.notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
+            # self.notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
             body = "Alert sent thru Healthie."
         else:
             body = "No alert created."
@@ -94,49 +102,64 @@ class BloodPressureAlertManager:
             'body': f'Successfully processed Tenovi Webhook Blood Pressure event. {body}'
         }
 
-    def handle_2week_measurement(self, event):
-        payload = event
+    def handle_2week_measurement(self):
 
-        db_manager = SyntrilloDatabaseManager()
+        logger.info(f"Analyzing BP data for patient {self.syntrillo_internal_key}...")
 
-        internal_keys, log = db_manager.get_all_internal_keys()
+        end_date = datetime.now(pytz.UTC)
+        start_date = end_date - timedelta(weeks=4)
+        mid_date = end_date - timedelta(weeks=2)
 
-        if internal_keys is None:
-            logger.error(f"Error retrieving Syntrillo internal keys: {log.error}")
+        db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
-        for key in internal_keys:
-            logger.info(f"Analyzing BP data for {key}...")
+        df, log = db_manager.get_tenovi_device_metric_data(
+            metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+            start_date=start_date,
+            end_date=end_date
+        )
 
-            end_date = datetime.now()
-            start_date = end_date - timedelta(weeks=4)
-            mid_date = end_date - timedelta(weeks=2)
+        # print(f"---- DATAFRAME -----: {df['value_1']}")
 
-            db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=key)
+        if df is not None and not df.empty:
+            # Convert timestamp_local to datetime if not already
+            df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
 
-            df, log = db_manager.get_tenovi_device_metric_data(
-                metric_name='blood_pressure',
-                start_date=start_date,
-                end_date=end_date
-            )
+            # Convert to UTC (assumes timestamp_local is timezone-aware or local time)
+            if df['timestamp_local'].dt.tz is None:
+                # If naive, localize to the correct local timezone first, e.g., 'America/New_York'
+                df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
+            # Convert to UTC
+            df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
 
-            if df is not None and not df.empty:
-                # Ensure the date column is datetime
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
+            # Now rename the column
+            df = df.rename(columns={'timestamp_local': 'timestamp'})
 
-                # First two weeks: start_date <= timestamp < mid_date
-                df_first = df[(df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)]
-                # Last two weeks: mid_date <= timestamp <= end_date
-                df_last = df[(df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)]
+            # Ensure the date column is datetime
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-                avg_first = df_first['value_1'].mean() if not df_first.empty else None
-                avg_last = df_last['value_1'].mean() if not df_last.empty else None
+            # Convert systolic ('value_1') values to numbers
+            df['value_1'] = pd.to_numeric(df['value_1'], errors='coerce')
 
-                # You can now use avg_first and avg_last as needed
-                print(f"{key}: First 2 weeks avg = {avg_first}, Last 2 weeks avg = {avg_last}")
+            # First two weeks: start_date <= timestamp < mid_date
+            df_first = df[(df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)]
+            # Last two weeks: mid_date <= timestamp <= end_date
+            df_last = df[(df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)]
+
+            avg_first = round(df_first['value_1'].mean(), 1) if not df_first.empty and len(df_first) > 3 else None
+            avg_last = round(df_last['value_1'].mean(), 1) if not df_last.empty and len(df_last) > 3 else None
+
+            if avg_first is None or avg_last is None:
+                logger.info(f"Insufficient data for patient {self.syntrillo_internal_key}: prior ({len(df_first)}); current ({len(df_last)})")
+                return True
+
+            if avg_last > avg_first:
+                content = f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK PERIOD.</b></p>\n<ul><li>Current: {df_last}</li>\n<li>Prior: {df_first}</li></ul>"
+                return self.notify_clinicians(content)
 
         return
 
-    def notify_clinicians(self, syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:
+    # def notify_clinicians(self, syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:
+    def notify_clinicians(self, content: str) -> None:
         """
         Notify clinicians when extreme blood pressure is detected
 
@@ -153,7 +176,8 @@ class BloodPressureAlertManager:
 
         # 1. Create a new Healthie Conversation
         # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
-        patient_name, healthie_user_id = self.get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
+        user_manager = HealthieUser(self.healthie_user_id)
+        patient_name = user_manager.get_name_by_healthie_user_id()
 
         # Retrieve healthie IDs env variable to use for conversation query
         secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
@@ -171,7 +195,7 @@ class BloodPressureAlertManager:
         clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, [])
 
         # If a specific patient is excluded from notifications, skip the notification
-        if excluded_patients and healthie_user_id in excluded_patients:
+        if excluded_patients and self.healthie_user_id in excluded_patients:
             logger.info(f"Patient {patient_name} is excluded from notifications ...")
             return
 
@@ -179,65 +203,24 @@ class BloodPressureAlertManager:
         # alert_title = f"⚠️ {patient_name} - BP Alert"
         alert_title = f"🔴 {patient_name} - BP Alert"
 
+        conversation_manager = HealthieConversations()
+
+        conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
+
         # Check if the conversation already exists
-        conversation_id = self.get_conversation_id(messenger_id, alert_title)
+        # conversation_id = self.get_conversation_id(messenger_id, alert_title)
+
         if not conversation_id:
             # Create a new conversation
             conversation_output = self.make_conversation_query(clinicians, messenger_id, alert_title)
             conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
             logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
 
-
         # Add a note (aka a message) to the conversation
-        response = self.add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
-        logger.info(f"Successfully added note to conversation in Healthie: {response}")
+        # response = self.add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
 
-
-    def get_syntrillo_internal_key_id_from_patient_id(patient_id: str) -> str:
-
-        """
-        Single lookup of syntrillo_internal_key from the user_look_up_codes table using patient_id.
-
-        Args:
-            patient_id (int): Healthie patient ID from the Tenovi Webhook event
-        Returns:
-            dict: A dictionary mapping patient_id to its corresponding syntrillo_internal_key
-        """
-        if not patient_id:
-            return None
-
-        try:
-            # Initialize the database manager specifically for the user_look_up_codes table
-            db_manager = LookUpCodesManagement()
-            db_connection = db_manager.conn
-
-            # Create a cursor
-            with db_connection.cursor() as cursor:
-
-                select_query = """
-                    SELECT
-                        BIN_TO_UUID(syntrillo_internal_key) as syntrillo_internal_key
-                    FROM user_look_up_codes
-                    WHERE healthie_user_id = %s;
-                """
-
-                cursor.execute(select_query, (patient_id,))
-                entry = cursor.fetchone()
-
-                # Return syntrillo internal key from the user_look_up_codes table
-                if entry:
-                    logger.info(f"Successfully retrieved syntrillo_internal_key for patient_id: {patient_id}")
-                    return entry[0]
-                else:
-                    logger.error(f"No entry found for patient_id: {patient_id}")
-                    return None
-
-        except Exception as e:
-            logger.error(f"Error retrieving syntrillo_internal_key from database: {e}")
-            return None
-
-        finally:
-            db_connection.close()
+        message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
+        logger.info(f"Successfully added note to conversation in Healthie: {message}")
 
 
     def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
@@ -300,163 +283,6 @@ class BloodPressureAlertManager:
         except Exception as e:
             logger.error(f"Error creating conversation in Healthie: {e}")
 
-    def add_note_to_conversation(
-            self,
-            messenger_id: str,
-            conversation_id: str,
-            systolic_bp: float,
-            diastolic_bp: float,
-            timestamp: str,
-            syntrillo_internal_key: str
-    ) -> None:
-        """
-        Add a note to the conversation
-        Args:
-            messenger_id (str): The ID of the messenger
-            conversation_id (str): The ID of the conversation
-            systolic_bp (float): The systolic blood pressure
-            diastolic_bp (float): The diastolic blood pressure
-            timestamp (str): The timestamp of the blood pressure measurement
-            syntrillo_internal_key (str): The Syntrillo internal key
-        Returns:
-            None
-        """
-        graphql_query = '''
-            mutation createNote(
-                $user_id: String
-                $content: String
-                $conversation_id: String
-                ) {
-                createNote(
-                    input: {
-                    user_id: $user_id
-                    content: $content # Content of the note
-                    conversation_id: $conversation_id
-                    }
-                ) {
-                    note {
-                    id
-                    content
-                    user_id
-                    }
-                    messages {
-                    field
-                    message
-                    }
-                }
-            }
-        '''
-        # Query output is dict with a single key called "data"
-        # For example:
-        # {
-        # "data": {
-        #     "createNote": {
-        #         "note": {
-        #             "id": "364306", -- note id
-        #             "content": "Try this", -- note content
-        #                 "user_id": "1558940" -- user id
-        #             }
-        #         }
-        #     }
-        # }
-
-        logger.info("Adding note to conversation in Healthie...")
-
-        try:
-            # Message format
-            content = f"<p><span style='text-decoration: underline;'>{timestamp}</span>:</p>\n<ul><li>Systolic BP: {systolic_bp}</li>\n<li>Diastolic BP: {diastolic_bp}</li></ul>"
-
-            # Check if the patient has been experiencing extreme BP for a streak of days
-            average_systolic_bp, total_measurements, log = self.get_average_systolic_bp_over_time_period(syntrillo_internal_key)
-
-            # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
-            if average_systolic_bp == -1:
-                logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}. Log: {log}")
-            elif average_systolic_bp >= AVERAGE_SYSTOLIC_BP_THRESHOLD:
-                content = content + f"<p></p><b>⚠️ PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {round(average_systolic_bp, 1)} (BASED ON {total_measurements} MEASUREMENTS)</b>"
-
-            variables = {
-                "user_id": messenger_id,
-                "content": content,
-                "conversation_id": conversation_id
-            }
-            output: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
-            logger.info(f"Successfully created note in Healthie")
-
-            return output
-
-        except Exception as e:
-            logger.error(f"Error adding note to conversation in Healthie: {e}")
-
-
-    def get_patient_name_from_syntrillo_internal_key(self, syntrillo_internal_key: str) -> tuple[str, str]:
-        """
-        Get patient name from the syntrillo_internal_key using the user_look_up_codes table
-        Args:
-            syntrillo_internal_key (str): The Syntrillo internal key
-        Returns:
-            tuple[str, str]: A tuple containing the patient name and healthie user id
-        """
-
-        # 1. Use syntrillo id to get healthie id
-        db_manager = LookUpCodesManagement()
-        entry = db_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
-        healthie_user_id = entry.get('healthie_user_id', None)
-        if not healthie_user_id:
-            logger.error(f"Healthie user id not found for syntrillo_internal_key: {syntrillo_internal_key}")
-            return
-
-        # 2. Use healthie id to get patient name from Healthie API
-        patient_name = self.get_healthie_user_information_by_healthie_user_id(healthie_user_id)
-        if not patient_name:
-            logger.error(f"Patient name not found for syntrillo_internal_key: {syntrillo_internal_key}")
-            return
-        return patient_name, healthie_user_id
-
-
-    def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> str:
-        """
-        Get patient name from the healthie user id using the Healthie API
-        Args:
-            healthie_user_id (str): The ID of the healthie user
-        Returns:
-            str: The patient name
-        """
-        graphql_query = '''
-            query getUser($id: ID) {
-                user(id: $id) {
-                id
-                first_name
-                last_name
-                }
-            }
-        '''
-        # Query output is dict with a single key called "data"
-        # For example:
-        # {
-        #     "data": {
-        #         "user": {
-        #             "id": "2315391",
-        #             "first_name": "Bob",
-        #             "last_name": "Barker",
-        #         }
-        #     }
-        # }
-        logger.info("Adding note to conversation in Healthie...")
-        try:
-            variables = {
-                "id": healthie_user_id
-            }
-            output: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
-            logger.info(f"Successfully retrieved user information from Healthie")
-
-            first_name = output.get('user', {}).get('first_name', '')
-            last_name = output.get('user', {}).get('last_name', '')
-            return first_name + " " + last_name
-
-        except Exception as e:
-            logger.error(f"Error fetching user information from Healthie: {e}")
-
 
     def get_aws_clinician_ids() -> List[str]:
         """
@@ -476,154 +302,20 @@ class BloodPressureAlertManager:
             return None
 
 
-    def get_conversation_id(messenger_id: str, alert_title: str) -> str:
-        """
-        Get the conversation id from the Healthie API
-        Args:
-            messenger_id (str): The ID of the messenger
-            alert_title (str): The title of the alert
-        Returns:
-            str: The conversation id
-        """
-        graphql_query = '''
-            query conversationMemberships(
-            $keywords: String
-            $provider_id: ID
-            ) {
-            conversationMembershipsCount(
-                keywords: $keywords
-                provider_id: $provider_id
+if __name__ == '__main__':
 
-            )
-            conversationMemberships(
-                keywords: $keywords
-                provider_id: $provider_id
-            ) {
-                id
-                display_name
-                convo {
-                id
-                conversation_memberships_count
-                }
-            }
-        }
-        '''
-        '''
-        Example output:
-        {
-            "data": {
-                "conversationMembershipsCount": 1,
-                "conversationMemberships": [
-                    {
-                        "id": "15583438",
-                        "display_name": "Multiple_users_01",
-                        "archived": false,
-                        "viewed": true,
-                        "convo": {
-                            "id": "2776123",
-                            "conversation_memberships_count": 3
-                        }
-                    }
-                ]
-            }
-        }
-        '''
-        try:
-            variables = {
-                "keywords": alert_title,
-                "provider_id": messenger_id
-            }
-            output: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
-            logger.info(f"Successfully retrieved conversation memberships from Healthie")
+    # patient_id = '1525423' # Patient AWS Test
+    patient_id = '2315391' # Bob Barker
 
-            conversation_id = output.get('conversationMemberships', {})[0].get('convo', {}).get('id', None)
-            return conversation_id
+    lookup_manager = LookUpCodesManagement()
 
-        except Exception as e:
-            logger.error(f"Error fetching conversation id from Healthie: {e}")
-            return None
+    entry = lookup_manager.retrieve_entry_by_healthie_user_id(patient_id)
+    key = entry['syntrillo_internal_key']
 
-    def get_average_systolic_bp_over_time_period(syntrillo_internal_key: str) -> Tuple[float, int, dict]:
-        """
-        Get the average systolic BP over a time period for a patient
-        Args:
-            syntrillo_internal_key (str): The Syntrillo internal key
-        Returns:
-            Tuple[float, int, dict]: The average systolic BP, total number of measurements, and log
-        """
-        # BP API Docs: https://api2.tenovi.com/hwi-redoc/#tag/hwi-patient-measurements
-        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key)
-        average_systolic_bp, total_measurements, log = db_manager.get_average_systolic_bp_over_time_period(
-            number_of_days=AVERAGE_SYSTOLIC_BP_DAYS
-        )
+    print(f"**** {key}")
 
-        if not log.get('success', False) or not average_systolic_bp:
-            logger.warning(f"Could not retrieve average systolic BP over time period for {syntrillo_internal_key}. Log: {log}")
-            return -1, 0, log
+    alert_manager = BloodPressureAlertManager(key)
 
-        return average_systolic_bp, total_measurements, log
+    two_week_response = alert_manager.handle_2week_measurement()
 
-    def is_base64(body: str) -> bool:
-        """
-        Check if a string is base64 encoded
-
-        Args:
-            s (str): String to check
-        Returns:
-            bool: True if the string is base64 encoded, False otherwise
-        """
-        if not isinstance(body, str):
-            return False
-
-        try:
-            # Check if string has valid base64 characters
-            if not all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" for c in body):
-                return False
-
-            # Try to decode
-            decoded = base64.b64decode(body)
-            # Try to parse as JSON to ensure it's a valid payload
-            json.loads(decoded)
-            return True
-        except (ValueError, TypeError, json.JSONDecodeError):
-            return False
-
-    def decode_payload(base64_str: str) -> dict:
-        """
-        Decode a Base64 string back to a JSON payload
-        Args:
-            base64_str (str): The Base64 string to decode
-        Returns:
-            dict: The decoded JSON payload
-        """
-        # Decode the Base64 string to bytes
-        json_bytes = base64.b64decode(base64_str)
-
-        # Decode the bytes to a JSON string
-        json_str = json_bytes.decode('utf-8')
-
-        # Parse the JSON string to a dictionary
-        payload = json.loads(json_str)
-
-        return payload
-
-    def get_aws_environment() -> str:
-        """
-        Get the environment from the SSM parameter store
-        Args:
-            None
-        Returns:
-            str: The AWS environment
-        Raises:
-            e (Exception): General exception from retrieving the AWS environment variable
-        """
-        # Initialize AWS Systems Manager (SSM) client
-        logger.info("Retrieving environment variable from AWS...")
-        try:
-            AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
-            logger.info(f"Successfully retrieved AWS env. Environment: {AWS_ENVIRONMENT}")
-            return AWS_ENVIRONMENT
-
-        except Exception as e:
-            logger.error(f"Error retrieving environment variable from AWS: {e}")
-            raise e
+    print(f"----- {two_week_response}")

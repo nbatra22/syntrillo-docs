@@ -356,6 +356,51 @@ class HealthieUser:
         except Exception as e:
             logger.error(f"Error fetching user information from Healthie: {e}")
 
+    def get_name_by_healthie_user_id(self) -> str:
+        """
+        Get patient name from the healthie user id using the Healthie API
+        Args:
+            healthie_user_id (str): The ID of the healthie user
+        Returns:
+            str: The patient name
+        """
+        graphql_query = '''
+            query getUser($id: ID) {
+                user(id: $id) {
+                id
+                first_name
+                last_name
+                }
+            }
+        '''
+        # Query output is dict with a single key called "data"
+        # For example:
+        # {
+        #     "data": {
+        #         "user": {
+        #             "id": "2315391",
+        #             "first_name": "Bob",
+        #             "last_name": "Barker",
+        #         }
+        #     }
+        # }
+        try:
+            variables = {
+                "id": healthie_user_id
+            }
+            output: dict = self.auth.run_graphql_query(graphql_query, variables)
+            logger.info(f"Successfully retrieved user information from Healthie")
+
+            first_name = output.get('user', {}).get('first_name', '')
+            last_name = output.get('user', {}).get('last_name', '')
+            return first_name + " " + last_name
+
+        except Exception as e:
+            logger.error(f"Error fetching user information from Healthie: {e}")
+
+
+
+
 if __name__ == '__main__':
 
     # Example usage
@@ -371,7 +416,6 @@ if __name__ == '__main__':
         info = user.get_patient_information()
         print(json.dumps(info, indent=4, default=str))
 
-
     if user.is_provider():
         info = user.get_provider_information()
         print(json.dumps(info, indent=4, default=str))
@@ -380,4 +424,3 @@ if __name__ == '__main__':
     tags = user.get_user_tags()
     print('user tags')
     print(json.dumps(tags, indent=4, default=str))
-
