@@ -6,13 +6,10 @@ import io
 from datetime import datetime
 
 from .post_management import PostManager
-from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
-from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
-from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
+
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
-from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
-from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
+from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
 
 from syntrillo.api_healthie.medications import HealthieMedications
 
@@ -163,22 +160,6 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
         extremes_html = "<h1 class='w-full text-center py-20'>No extreme measurement values recorded.</h1>"
     else:
         extremes_html = rounded_extremes_table.to_html(classes="table table-striped")
-        # extremes_html = extremes.to_html(classes='table table-striped',index=False)
-        # extremes_html = f"""
-        #     <style>
-        #         .bp-extremes-table {{
-        #             width: 100% !important;
-        #             table-layout: fixed;
-        #         }}
-        #         .bp-extremes-table th, .bp-extremes-table td {{
-        #             white-space: normal;
-        #             word-wrap: break-word;
-        #         }}
-        #     </style>
-        #     {rounded_extremes_table.to_html(classes="bp-extremes-table")}
-        # """
-
-
 
     analysis_json = analysis_table.to_json()
     extremes_json = extremes.to_json()
@@ -216,3 +197,19 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
 
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
+
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/metrics', methods=['GET','POST'])
+def iframe_healthie_provider_tab_download_bp_pdf():
+
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # Deal with patients not registered at Syntrillo
+    if post_manager.patient_not_registered_at_syntrillo:
+        return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
+
+    # Establish connection to PatientResponses class
+    patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
+
+    exercise = patient_responses.get_exercise()
+    bmi = patient_responses.get_bmi()

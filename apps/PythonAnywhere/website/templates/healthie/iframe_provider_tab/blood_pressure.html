@@ -1,174 +1,13 @@
-<!-- Main Content -->
-<div class="flex flex-col gap-4">
-
-    <!-- BPA Header -->
-    <section class="bp-header flex space-between items-center">
-        <h2 class="text-lg font-bold">
-            Blood Pressure Analysis
-        </h2>
-
-        <div id="bp-header-right" class="">
-
-            <div id="bp-filter-container" class="bp-dropdown-container">
-                <!-- Dropdown button -->
-                <!-- <button id="bp-dropdown-button"
-                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
-                <button id="bp-filter-toggle" class="bp-dropdown-toggle">
-                    <i class="fa-solid fa-filter"></i>
-                    Filter
-                </button>
-
-                <div id="bp-filter-menu" class="bp-dropdown-menu">
-                    <form action="" id="bp-filter-form" class="flex flex-col gap-4" method="get">
-                        <div id="bp-form-start-date-container" class="bp-form-input-container">
-                            <label for="start-date" class="text-xs font-bold">
-                                Start date
-                            </label>
-                            <input type="date" id="start-date" name="start-date" class="bp-form-input" />
-                            <p class="">
-                                <i class="fa-solid fa-circle-info"></i>
-                                Start date is defaulted to the first recorded measurement's date.
-                            </p>
-                        </div>
-                        <div id="bp-form-start-date-container" class="bp-form-input-container">
-                            <label for="end-date" class="">
-                                End date
-                            </label>
-                            <input type="date" id="end-date" name="end-date" class="bp-form-input" />
-                            <p class="">
-                                <i class="fa-solid fa-circle-info"></i>
-                                End date is defaulted to the latest recorded measurement's date.
-                            </p>
-                        </div>
-                        <div></div>
-                        <button type="submit" class="bp-form-submit-button" id="bp-filter-button">
-                            Update
-                        </button>
-                        <button class="bp-form-submit-button" id="bp-filter-reset">
-                            Reset
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div id="bp-dowload-container" class="bp-dropdown-container relative inline-block text-left">
-                <!-- Dropdown Button -->
-                <!-- <button id="bp-dropdown-button"
-                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
-                <button id="bp-download-toggle" class="bp-dropdown-toggle">
-                    <i class="fa-solid fa-download"></i>
-                    Download
-                </button>
-
-                <!-- Dropdown Menu -->
-                <div id="bp-download-menu" class="bp-dropdown-menu">
-                    <form
-                        action="{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
-                        id="bp-download-form" class="" method="POST" target="_blank">
-                        <div id="bp-form-file-name-container" class="bp-form-input-container">
-                            <label for="file-name" class="">
-                                File name
-                            </label>
-                            <input type="text" id="file-name" name="file-name" class="bp-form-input"
-                                placeholder="Enter file name" />
-                            <p class="">
-                                <i class="fa-solid fa-circle-info"></i>
-                                Download file name will default to "BP-Report.pdf" if value is blank.
-                            </p>
-                        </div>
-                        <div id="bp-form-title-container" class="bp-form-input-container">
-                            <label for="file-name" class="">
-                                Title
-                            </label>
-                            <input type="text" id="report-title" name="report-title" class="bp-form-input"
-                                placeholder='Enter report title' />
-                            <p class="">
-                                <i class="fa-solid fa-circle-info"></i>
-                                Report title will default to "Blood Pressure Analysis" if value is blank.
-                            </p>
-                        </div>
-                        <div id="hidden-inputs" class="hidden">
-                            <input type="hidden" name="analysis_json" id="analysis_json" value="{{ analysis_json }}" />
-                            <input type="hidden" name="extremes_json" id="extremes_json" value="{{ extremes_json }}" />
-                        </div>
-                        <button type="submit" class="bp-form-submit-button" id="bp-download-button">
-                            <span class="icon-container">
-                                <i class="fas fa-download" id="download-icon"></i>
-                            </span>
-                            Download PDF
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- BPA Table -->
-    <section id="bp-analysis-container" class="bp-table-container">
-
-        <div id="bp-analysis-table"></div>
-
-        <ul class="bp-analysis-footnote">
-            <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
-                allocated for the respective metric.</li>
-            <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
-            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
-            <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
-                decrease of 5 mmHg.</li>
-        </ul>
-    </section>
-
-    <!-- Extremes Header -->
-    <section id="bp-extremes-container" class="extremes-header">
-        <div class="flex flex-col gap-1">
-            <h2 class="text-lg font-bold">
-                Extremes
-            </h2>
-            <p class="text-sm text-gray-500">
-                Measurements with SBP below 90 mmHg or above 170 mmHg, as well as DBP above 110 mmHg.
-            </p>
-        </div>
-    </section>
-
-    <!-- Extremes Table -->
-    <section id="bp-extremes-container" class="bp-table-container">
-
-        <div id="bp-extremes-table"></div>
-
-    </section>
-
-    <!-- Time Distribution Header -->
-    <!-- <section id="bp-time-distribution-header" class="extremes-header">
-        <div class="flex flex-col gap-1">
-            <h2 class="text-lg font-bold">
-                Time Distribution
-            </h2>
-            <p class="text-sm text-gray-500">
-                Distribution of systolic and diastolic measurements across different hours of the day.
-            </p>
-        </div>
-    </section> -->
-
-    <!-- Time Distribution Graph -->
-    <!-- <section id="bp-time-distribution-graph" class="bp-table-container">
-        <div id="bp-time-distribution-plot"></div>
-    </section> -->
-
-
-</div>
-
 <!-- Styling -->
 <style>
     section {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding: 1rem 0;
     }
 
     section h2 {
         font-weight: bold;
         font-size: large;
+        margin: 0;
     }
 
     .bp-no-data-error {
@@ -193,9 +32,9 @@
         padding: 8px;
     }
 
-    .extremes-header {
+    /* .extremes-header {
         padding: 8px;
-    }
+    } */
 
     .bp-header h2 {
         margin: none;
@@ -373,7 +212,7 @@
         width: 100%;
     }
 
-    #bp-time-distribution-plot > div {
+    #bp-time-distribution-plot>div {
         width: 100%;
         height: auto;
     }
@@ -420,7 +259,222 @@
     .hidden {
         display: none;
     }
+
+    .bp-biometric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+    .bp-biometric-table th {
+        text-align: center;
+        padding: 10px;
+        border: 1px solid gray;
+    }
+    .bp-biometric-table td {
+        text-align: center;
+        padding: 8px;
+        border: 1px solid gray;
+        width: 50%;
+    }
+
 </style>
+
+<!-- Main Content -->
+<div class="flex flex-col gap-4">
+
+    <!-- BPA Header -->
+    <section class="bp-header flex space-between items-center">
+        <h2 class="text-lg font-bold">
+            Blood Pressure Analysis
+        </h2>
+
+        <div id="bp-header-right" class="">
+
+            <div id="bp-filter-container" class="bp-dropdown-container">
+                <!-- Dropdown button -->
+                <!-- <button id="bp-dropdown-button"
+                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
+                <button id="bp-filter-toggle" class="bp-dropdown-toggle">
+                    <i class="fa-solid fa-filter"></i>
+                    Filter
+                </button>
+
+                <div id="bp-filter-menu" class="bp-dropdown-menu">
+                    <form action="" id="bp-filter-form" class="flex flex-col gap-4" method="get">
+                        <div id="bp-form-start-date-container" class="bp-form-input-container">
+                            <label for="start-date" class="text-xs font-bold">
+                                Start date
+                            </label>
+                            <input type="date" id="start-date" name="start-date" class="bp-form-input" />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Start date is defaulted to the first recorded measurement's date.
+                            </p>
+                        </div>
+                        <div id="bp-form-start-date-container" class="bp-form-input-container">
+                            <label for="end-date" class="">
+                                End date
+                            </label>
+                            <input type="date" id="end-date" name="end-date" class="bp-form-input" />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                End date is defaulted to the latest recorded measurement's date.
+                            </p>
+                        </div>
+                        <div></div>
+                        <button type="submit" class="bp-form-submit-button" id="bp-filter-button">
+                            Update
+                        </button>
+                        <button class="bp-form-submit-button" id="bp-filter-reset">
+                            Reset
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="bp-dowload-container" class="bp-dropdown-container relative inline-block text-left">
+                <!-- Dropdown Button -->
+                <!-- <button id="bp-dropdown-button"
+                    class="px-4 py-2 flex items-center gap-2 rounded-md hover:bg-gray-200 focus:outline-blue-800"> -->
+                <button id="bp-download-toggle" class="bp-dropdown-toggle">
+                    <i class="fa-solid fa-download"></i>
+                    Download
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="bp-download-menu" class="bp-dropdown-menu">
+                    <form
+                        action="{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_download_bp_pdf', ) }}"
+                        id="bp-download-form" class="" method="POST" target="_blank">
+                        <div id="bp-form-file-name-container" class="bp-form-input-container">
+                            <label for="file-name" class="">
+                                File name
+                            </label>
+                            <input type="text" id="file-name" name="file-name" class="bp-form-input"
+                                placeholder="Enter file name" />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Download file name will default to "BP-Report.pdf" if value is blank.
+                            </p>
+                        </div>
+                        <div id="bp-form-title-container" class="bp-form-input-container">
+                            <label for="file-name" class="">
+                                Title
+                            </label>
+                            <input type="text" id="report-title" name="report-title" class="bp-form-input"
+                                placeholder='Enter report title' />
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Report title will default to "Blood Pressure Analysis" if value is blank.
+                            </p>
+                        </div>
+                        <div id="hidden-inputs" class="hidden">
+                            <input type="hidden" name="analysis_json" id="analysis_json" value="{{ analysis_json }}" />
+                            <input type="hidden" name="extremes_json" id="extremes_json" value="{{ extremes_json }}" />
+                        </div>
+                        <button type="submit" class="bp-form-submit-button" id="bp-download-button">
+                            <span class="icon-container">
+                                <i class="fas fa-download" id="download-icon"></i>
+                            </span>
+                            Download PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- BPA Table -->
+    <section id="bp-analysis-container" class="bp-table-container">
+
+        <div id="bp-analysis-table"></div>
+
+        <ul class="bp-analysis-footnote">
+            <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
+                allocated for the respective metric.</li>
+            <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
+            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
+            <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
+                decrease of 5 mmHg.</li>
+        </ul>
+    </section>
+
+    <!-- Biometrics Header -->
+    <section id="bp-biometrics-header" class="biometrics-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Biometrics
+            </h2>
+            <p class="text-sm text-gray-500">
+                Metrics below are retrieved from forms.
+            </p>
+        </div>
+    </section>
+
+    <!-- Biometrics Infographic as Table -->
+    <section id="bp-biometrics-section" class="bp-table-container">
+        <table id="bp-biometrics-table" class="bp-biometric-table">
+            <tbody>
+                <tr>
+                    <td><strong>Physical activity level</strong></td>
+                    <td id="bp-biometric-activity-value"></td>
+                </tr>
+                <tr>
+                    <td><strong>Heart rate</strong></td>
+                    <td id="bp-biometric-hr-value"></td>
+                </tr>
+                <tr>
+                    <td><strong>Body mass index (BMI)</strong></td>
+                    <td id="bp-biometric-bmi-value"></td>
+                </tr>
+                <tr>
+                    <td><strong>Sodium consumer status</strong></td>
+                    <td id="bp-biometric-sodium-value"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Extremes Header -->
+    <section id="bp-extremes-container" class="extremes-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Extremes
+            </h2>
+            <p class="text-sm text-gray-500">
+                Measurements with SBP below 90 mmHg or above 170 mmHg, as well as DBP above 110 mmHg.
+            </p>
+        </div>
+    </section>
+
+    <!-- Extremes Table -->
+    <section id="bp-extremes-container" class="bp-table-container">
+
+        <div id="bp-extremes-table"></div>
+
+    </section>
+
+    <!-- Time Distribution Header -->
+    <!-- <section id="bp-time-distribution-header" class="extremes-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Time Distribution
+            </h2>
+            <p class="text-sm text-gray-500">
+                Distribution of systolic and diastolic measurements across different hours of the day.
+            </p>
+        </div>
+    </section> -->
+
+    <!-- Time Distribution Graph -->
+    <!-- <section id="bp-time-distribution-graph" class="bp-table-container">
+        <div id="bp-time-distribution-plot"></div>
+    </section> -->
+
+
+</div>
 
 <!-- Scripts -->
 <script>
@@ -457,6 +511,10 @@
         targetElement.style.alignItems = "";
     }
 
+    var healthieProviderId = "{{ healthie_provider_id }}";
+    var healthieUserId = "{{ healthie_user_id }}";
+    var temporaryLookupCode = "{{ temporary_lookup_code }}";
+    var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     function getBloodPressureAnalysis(startDate = "", endDate = "") {
 
@@ -474,11 +532,6 @@
         // showSpinner(distributionContent);
 
         let formData = new FormData()
-
-        var healthieProviderId = "{{ healthie_provider_id }}";
-        var healthieUserId = "{{ healthie_user_id }}";
-        var temporaryLookupCode = "{{ temporary_lookup_code }}";
-        var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
         formData.append('healthie_provider_id', healthieProviderId)
         formData.append('healthie_user_id', healthieUserId)

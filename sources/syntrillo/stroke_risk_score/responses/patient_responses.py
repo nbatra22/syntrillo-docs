@@ -302,7 +302,7 @@ class PatientResponses:
             height = int(height_response) if height_response is not None else None
             weight = int(weight_response) if weight_response is not None else None
 
-            if height is None and weight is None:
+            if height is None or weight is None:
                 bmi = None
             else:
                 bmi = weight / (height ** 2) * 703
