@@ -23,6 +23,7 @@ class LocalEnvironmentAndSecrets:
     # AWS env variables with ARNs (so that they are not hard coded below)
     AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN = 'AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN'
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
+    AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
     AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
@@ -34,6 +35,8 @@ class LocalEnvironmentAndSecrets:
         'healthie' : {
             'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization'  ),
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
+        },
+        'healthie_ids' : {
             'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
             'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
@@ -76,6 +79,7 @@ class LocalEnvironmentAndSecrets:
         self,
         load_aws_database_secrets: bool = False,
         load_healthie_secrets: bool = False,
+        load_healthie_ids_secrets: bool = False,
         load_tenovi_hwi_secrets: bool = False,
         load_openai_secrets: bool = False,
         load_candid_secrets: bool = False,
@@ -94,17 +98,20 @@ class LocalEnvironmentAndSecrets:
         # names below have to match the ones in the SECRET_CODES
         self._aws_database_secrets = None
         self._healthie_secrets = None
+        self._healthie_ids_secrets = None
         self._tenovi_hwi_secrets = None
         self._openai_secrets = None
 
         try:
             # ------------------------------
             # determine the environment where the code is running
-            if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN) != None:
+            if (os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN) != None
+            ):
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -127,6 +134,9 @@ class LocalEnvironmentAndSecrets:
 
                 if load_healthie_secrets:
                     self._healthie_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN))
+
+                if load_healthie_ids_secrets:
+                    self._healthie_ids_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN))
 
                 if load_tenovi_hwi_secrets:
                     self._tenovi_hwi_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN))
@@ -185,7 +195,6 @@ class LocalEnvironmentAndSecrets:
         # get the secret code
         try:
             secret_code = self.SECRET_CODES[group][variable]
-            logger.info(f"Secret code: {secret_code}")
         except KeyError as e:
             # raise an exception if the secret is not found
             raise Exception(f"Secret not found : {group}, {variable} : {e}")
@@ -238,14 +247,6 @@ class LocalEnvironmentAndSecrets:
         return self.get_secret_value('openai', 'api_key')
 
     # ------------------------------
-    # Are we in a production environment
-    def is_production(self):
-        return self.get_healthie_organization() == 'production'
-
-    # Are we in a staging environment
-    def is_staging(self):
-        return self.get_healthie_organization() == 'staging'
-
     # Are we in a local environment
     def is_local(self):
         return self._is_local
@@ -274,18 +275,13 @@ if __name__ == '__main__':
     secrets = LocalEnvironmentAndSecrets(
         load_aws_database_secrets=True,
         load_healthie_secrets=True,
+        load_healthie_ids_secrets=True,
         load_tenovi_hwi_secrets=True,
         load_openai_secrets=True,
         load_candid_secrets=True,
     )
 
     # get the secrets
-    healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
-    healthie_organization = secrets.get_secret_value('healthie', 'organization')
-    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
-
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
 
@@ -296,14 +292,7 @@ if __name__ == '__main__':
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
 
-    candid_client_id = secrets.get_secret_value('candid', 'client_id')
-    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
-    candid_api = secrets.get_secret_value('candid', 'candid_api')
-    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
-
     print("\n\nsecrets:")
-    print(f"healthie_api_key : {healthie_api_key}")
-    print(f"healthie_organization : {healthie_organization}")
 
     print(f"tenovi_api_key : {tenovi_api_key}")
     print(f"tenovi_client_domain : {tenovi_client_domain}")
@@ -340,6 +329,7 @@ class LocalEnvironmentAndSecretsNoCache:
     # AWS env variables with ARNs (so that they are not hard coded below)
     AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN = 'AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN'
     AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN'
+    AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN = 'AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN'
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
     AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
@@ -350,6 +340,8 @@ class LocalEnvironmentAndSecretsNoCache:
         'healthie' : {
             'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization'  ),
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
+        },
+        'healthie_ids' : {
             'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
             'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
@@ -386,6 +378,7 @@ class LocalEnvironmentAndSecretsNoCache:
         self,
         load_aws_database_secrets: bool = False,
         load_healthie_secrets: bool = False,
+        load_healthie_ids_secrets: bool = False,
         load_tenovi_hwi_secrets: bool = False,
         load_openai_secrets: bool = False,
         load_candid_secrets: bool = False,
@@ -404,17 +397,20 @@ class LocalEnvironmentAndSecretsNoCache:
         # names below have to match the ones in the SECRET_CODES
         self._aws_database_secrets = None
         self._healthie_secrets = None
+        self._healthie_ids_secrets = None
         self._tenovi_hwi_secrets = None
         self._openai_secrets = None
 
         try:
             # ------------------------------
             # determine the environment where the code is running
-            if os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None \
-            or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_CREDENTIALS_SECRET_ARN) != None:
+            if (os.getenv(self.AWS_SECRETS_MANAGER_DATABASE_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN) != None
+                or os.getenv(self.AWS_SECRETS_MANAGER_CANDID_SECRET_ARN) != None
+            ):
                 # If this test passes, it means we are in the lambda function
                 self._is_lambda = True
             elif os.path.exists(self._PYTHON_ANYWHERE_ID_PATH):
@@ -437,6 +433,9 @@ class LocalEnvironmentAndSecretsNoCache:
 
                 if load_healthie_secrets:
                     self._healthie_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN))
+
+                if load_healthie_ids_secrets:
+                    self._healthie_ids_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN))
 
                 if load_tenovi_hwi_secrets:
                     self._tenovi_hwi_secrets=self.get_secrets(os.getenv(self.AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN))
@@ -556,14 +555,6 @@ class LocalEnvironmentAndSecretsNoCache:
         return self.get_secret_value('openai', 'api_key')
 
     # ------------------------------
-    # Are we in a production environment
-    def is_production(self):
-        return self.get_healthie_organization() == 'production'
-
-    # Are we in a staging environment
-    def is_staging(self):
-        return self.get_healthie_organization() == 'staging'
-
     # Are we in a local environment
     def is_local(self):
         return self._is_local
@@ -592,18 +583,13 @@ if __name__ == '__main__':
     secrets = LocalEnvironmentAndSecrets(
         load_aws_database_secrets=True,
         load_healthie_secrets=True,
+        load_healthie_ids_secrets=True,
         load_tenovi_hwi_secrets=True,
         load_openai_secrets=True,
         load_candid_secrets=True,
         )
 
     # get the secrets
-    healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
-    healthie_organization = secrets.get_secret_value('healthie', 'organization')
-    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
-
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
 
@@ -614,14 +600,7 @@ if __name__ == '__main__':
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
 
-    candid_client_id = secrets.get_secret_value('candid', 'client_id')
-    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
-    candid_api = secrets.get_secret_value('candid', 'candid_api')
-    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
-
     print("\n\nsecrets:")
-    print(f"healthie_api_key : {healthie_api_key}")
-    print(f"healthie_organization : {healthie_organization}")
 
     print(f"tenovi_api_key : {tenovi_api_key}")
     print(f"tenovi_client_domain : {tenovi_client_domain}")

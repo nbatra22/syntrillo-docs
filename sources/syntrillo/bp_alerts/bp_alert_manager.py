@@ -191,11 +191,11 @@ class BloodPressureAlertManager:
             patient_name = user_manager.get_name_by_healthie_user_id()
 
             # Retrieve healthie IDs env variable to use for conversation query
-            secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+            secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
 
-            excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-            messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-            clinicians = secrets.get_secret_value('healthie', 'clinicians')
+            excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+            messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+            clinicians = secrets.get_secret_value('healthie_ids', 'clinicians')
 
             # If a specific patient is excluded from notifications, skip the notification
             if excluded_patients and self.healthie_user_id in excluded_patients:

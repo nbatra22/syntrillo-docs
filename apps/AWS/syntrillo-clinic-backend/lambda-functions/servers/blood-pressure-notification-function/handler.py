@@ -120,11 +120,11 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     patient_name, healthie_user_id = get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
 
     # Retrieve healthie IDs env variable to use for conversation query
-    secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+    secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
 
-    excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-    messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-    clinicians = secrets.get_secret_value('healthie', 'clinicians')
+    excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+    messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+    clinicians = secrets.get_secret_value('healthie_ids', 'clinicians')
 
     # If a specific patient is excluded from notifications, skip the notification
     if excluded_patients and healthie_user_id in excluded_patients:
