@@ -1,10 +1,6 @@
-import os
-import base64
-import uuid
-import boto3
-import json
-from typing import List, Tuple
-from datetime import datetime, date, timedelta
+
+from typing import List
+from datetime import datetime, timedelta
 import pytz
 import pandas as pd
 
@@ -13,20 +9,13 @@ from syntrillo.api_healthie.conversations import HealthieConversations
 from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
-from syntrillo.system.tracer import tracer
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 
-from constants import (
-    AVERAGE_SYSTOLIC_BP_DAYS,
-    AVERAGE_SYSTOLIC_BP_THRESHOLD,
+from syntrillo.bp_alerts.constants import (
     SYSTOLIC_BP_HIGH_THRESHOLD,
     SYSTOLIC_BP_LOW_THRESHOLD,
-    AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY,
-    EXCLUDED_PATIENTS_KEY,
-    MESSENGER_KEY,
-    CLINICIANS_KEY
 )
 
 class BloodPressureAlertManager:
@@ -92,7 +81,7 @@ class BloodPressureAlertManager:
 
         if systolic_is_extreme:
             # Send chat message notification to clinicians when extreme blood pressure is detected
-            # self.notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
+            self.notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
             body = "Alert sent thru Healthie."
         else:
             body = "No alert created."
@@ -102,137 +91,160 @@ class BloodPressureAlertManager:
             'body': f'Successfully processed Tenovi Webhook Blood Pressure event. {body}'
         }
 
-    def handle_2week_measurement(self):
+    def handle_two_week_measurement(self) -> None:
+        """
+        Analyze specific patient's BP data over the last 4 weeks (2 weeks prior and 2 weeks after)
+        and determine if to notify clinicians.
 
+        Args:
+            None
+        Returns:
+            None
+        Raises:
+            e (Exception): General exception from retrieving the BP data from the database
+        """
         logger.info(f"Analyzing BP data for patient {self.syntrillo_internal_key}...")
 
-        end_date = datetime.now(pytz.UTC)
-        start_date = end_date - timedelta(weeks=4)
-        mid_date = end_date - timedelta(weeks=2)
+        try:
+            end_date = datetime.now(pytz.UTC)
+            start_date = end_date - timedelta(weeks=4)
+            mid_date = end_date - timedelta(weeks=2)
 
-        db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+            db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
-        df, log = db_manager.get_tenovi_device_metric_data(
-            metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
-            start_date=start_date,
-            end_date=end_date
-        )
+            df, log = db_manager.get_tenovi_device_metric_data(
+                metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+                start_date=start_date,
+                end_date=end_date
+            )
 
-        # print(f"---- DATAFRAME -----: {df['value_1']}")
+            if df is not None and not df.empty:
+                # Convert timestamp_local to datetime if not already
+                df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
 
-        if df is not None and not df.empty:
-            # Convert timestamp_local to datetime if not already
-            df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
+                # Convert to UTC (assumes timestamp_local is timezone-aware or local time)
+                if df['timestamp_local'].dt.tz is None:
+                    # If naive, localize to the correct local timezone first, e.g., 'America/New_York'
+                    df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
 
-            # Convert to UTC (assumes timestamp_local is timezone-aware or local time)
-            if df['timestamp_local'].dt.tz is None:
-                # If naive, localize to the correct local timezone first, e.g., 'America/New_York'
-                df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
-            # Convert to UTC
-            df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
+                # Convert to UTC
+                df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
 
-            # Now rename the column
-            df = df.rename(columns={'timestamp_local': 'timestamp'})
+                # Now rename the column
+                df = df.rename(columns={'timestamp_local': 'timestamp'})
 
-            # Ensure the date column is datetime
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
+                # Ensure the date column is datetime
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-            # Convert systolic ('value_1') values to numbers
-            df['value_1'] = pd.to_numeric(df['value_1'], errors='coerce')
+                # Convert systolic ('value_1') values to numbers
+                df['value_1'] = pd.to_numeric(df['value_1'], errors='coerce')
 
-            # First two weeks: start_date <= timestamp < mid_date
-            df_first = df[(df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)]
-            # Last two weeks: mid_date <= timestamp <= end_date
-            df_last = df[(df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)]
+                # Prior 2-week period: start_date <= timestamp < mid_date
+                prior_period_condition = (df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)
+                df_prior = df[prior_period_condition]
 
-            avg_first = round(df_first['value_1'].mean(), 1) if not df_first.empty and len(df_first) > 3 else None
-            avg_last = round(df_last['value_1'].mean(), 1) if not df_last.empty and len(df_last) > 3 else None
+                # Current 2-week period: mid_date <= timestamp <= end_date
+                current_period_condition = (df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)
+                df_current = df[current_period_condition]
 
-            if avg_first is None or avg_last is None:
-                logger.info(f"Insufficient data for patient {self.syntrillo_internal_key}: prior ({len(df_first)}); current ({len(df_last)})")
-                return True
+                avg_prior = round(df_prior['value_1'].mean(), 1) if not df_prior.empty and len(df_prior) > 3 else None
+                avg_current = round(df_current['value_1'].mean(), 1) if not df_current.empty and len(df_current) > 3 else None
 
-            if avg_last > avg_first:
-                logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_last}) than prior ({avg_first}). Sending notification...")
-                content = f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK PERIOD.</b></p>\n<ul><li>Current: {df_last}</li>\n<li>Prior: {df_first}</li></ul>"
-                return self.notify_clinicians(content)
+                if avg_prior is None or avg_current is None:
+                    logger.info(f"Insufficient data for patient {self.syntrillo_internal_key}: prior ({len(df_prior)}); current ({len(df_current)})")
+                    return
 
-        return
+                if avg_current > avg_prior:
+                    logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_current}) than prior ({avg_prior}). Sending notification...")
+                    content = (
+                        f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
+                        f"<ul><li>Current 2-week average ({mid_date.strftime('%m/%d/%y')} – {end_date.strftime('%m/%d/%y')}): {avg_current}</li>\n"
+                        f"<li>Prior 2-week average ({start_date.strftime('%m/%d/%y')} – {(mid_date - timedelta(days=1)).strftime('%m/%d/%y')}): {avg_prior}</li></ul>"
+                    )
+                    self.notify_clinicians(content)
 
-    # def notify_clinicians(self, syntrillo_internal_key: str, systolic_bp: float, diastolic_bp: float, timestamp: str) -> None:
+            return None
+
+        except Exception as e:
+            logger.error(f"Error analyzing BP data for patient {self.syntrillo_internal_key}: {e}")
+            raise e
+
+
     def notify_clinicians(self, content: str) -> None:
         """
         Notify clinicians when extreme blood pressure is detected
 
         Args:
-            syntrillo_internal_key (str): Syntrillo internal key
-            systolic_bp (float): Systolic blood pressure
-            diastolic_bp (float): Diastolic blood pressure
-            timestamp (str): Timestamp of the blood pressure measurement
+            content (str): Content of the notification to be passed into the create_note mutation.
         Returns:
             None
+        Raises:
+            Exception: If there is an error creating the conversation in Healthie
         """
         # Healthie Chat API Docs: https://docs.gethealthie.com/guides/chat/
         # Healthie Chat Overview: https://help.gethealthie.com/article/82-overview-chatting-with-a-client
 
         # 1. Create a new Healthie Conversation
         # Get patient name from the syntrillo_internal_key using the user_look_up_codes table
-        user_manager = HealthieUser(self.healthie_user_id)
-        patient_name = user_manager.get_name_by_healthie_user_id()
+        try:
+            user_manager = HealthieUser(self.healthie_user_id)
+            patient_name = user_manager.get_name_by_healthie_user_id()
 
-        # Retrieve healthie IDs env variable to use for conversation query
-        secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
-        healthie_ids = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY))
+            # Retrieve healthie IDs env variable to use for conversation query
+            secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
 
-        # Check if the environment is production or staging to determine which clinicians to notify
-        # Get environment from SSM parameter store to determine which clinicians to notify
-        env = self.get_aws_environment()
-        if not env:
-            logger.error("Environment variable not found ...")
-            return
+            excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
+            messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
+            clinicians = secrets.get_secret_value('healthie', 'clinicians')
 
-        excluded_patients = healthie_ids.get(env, {}).get(EXCLUDED_PATIENTS_KEY, [])
-        messenger_id = healthie_ids.get(env, {}).get(MESSENGER_KEY, "")
-        clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, [])
+            # If a specific patient is excluded from notifications, skip the notification
+            if excluded_patients and self.healthie_user_id in excluded_patients:
+                logger.info(f"Patient {patient_name} is excluded from notifications ...")
+                return
 
-        # If a specific patient is excluded from notifications, skip the notification
-        if excluded_patients and self.healthie_user_id in excluded_patients:
-            logger.info(f"Patient {patient_name} is excluded from notifications ...")
-            return
+            # The patient name is to be used as the title of the conversation
+            # alert_title = f"⚠️ {patient_name} - BP Alert"
+            alert_title = f"🔴 {patient_name} - BP Alert"
 
-        # The patient name is to be used as the title of the conversation
-        # alert_title = f"⚠️ {patient_name} - BP Alert"
-        alert_title = f"🔴 {patient_name} - BP Alert"
+            conversation_manager = HealthieConversations()
 
-        conversation_manager = HealthieConversations()
+            conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
 
-        conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
+            # Check if the conversation already exists
+            # conversation_id = self.get_conversation_id(messenger_id, alert_title)
 
-        # Check if the conversation already exists
-        # conversation_id = self.get_conversation_id(messenger_id, alert_title)
+            if not conversation_id:
+                # Create a new conversation
+                conversation_output = self.make_conversation_query(clinicians, messenger_id, alert_title)
+                if not conversation_output:
+                    raise Exception(f"Error creating conversation in Healthie")
 
-        if not conversation_id:
-            # Create a new conversation
-            conversation_output = self.make_conversation_query(clinicians, messenger_id, alert_title)
-            conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
-            logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
+                conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
+                logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
 
-        # Add a note (aka a message) to the conversation
-        # response = self.add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
+            # Add a note (aka a message) to the conversation
+            # response = self.add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
 
-        message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
-        logger.info(f"Successfully added note to conversation in Healthie: {message}")
+            message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
+            logger.info(f"Successfully added note to conversation in Healthie: {message}")
+
+        except Exception as e:
+            logger.error(f"Error notifying clinicians: {e}")
+            raise e
 
 
-    def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
+    def make_conversation_query(self, clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
         """
         Make a Healthie conversation query for the clinician
 
         Args:
             clinician_ids (List[str]): The ID of the clinician
-            alert_title (str): The title of the alert
+            messenger_id (str): The ID of the messenger
+            alert_title (str): The name of the patient
         Returns:
             None
+        Raises:
+            e (Exception): General exception from creating the conversation in Healthie
         """
         graphql_query = '''
             mutation createConversation(
@@ -265,14 +277,18 @@ class BloodPressureAlertManager:
         logger.info("Creating conversation in Healthie")
 
         try:
-            # Remove duplicates from the list of clinician IDs
-            clinician_ids = list(set(clinician_ids))
-            clinicians_str = f"{','.join(clinician_ids)}"
+            # Convert the clinician_ids to a GraphQL valid variable string
+            if type(clinician_ids) is list:
+                # If the clinician_ids is a list, remove duplicates and convert to a string
+                clinician_ids = list(set(clinician_ids))
+                clinician_ids = f"{','.join(clinician_ids)}"
+            else:
+                clinician_ids = clinician_ids.replace('[', '').replace(']', '').replace('"', '')
 
-            logger.info(f"Clinicians str: {clinicians_str}")
+            logger.info(f"Clinicians str: {clinician_ids}")
 
             variables = {
-                "simple_added_users": clinicians_str,
+                "simple_added_users": clinician_ids,
                 "owner_id": messenger_id,
                 "name": alert_title
             }
@@ -284,23 +300,6 @@ class BloodPressureAlertManager:
         except Exception as e:
             logger.error(f"Error creating conversation in Healthie: {e}")
 
-
-    def get_aws_clinician_ids() -> List[str]:
-        """
-        Get the environment from the SSM parameter store
-        Args:
-            None
-        Returns:
-            str: The environment
-        """
-        # Initialize AWS Systems Manager (SSM) client
-        logger.info("Retrieving env specific clinician ids from AWS...")
-        try:
-            AWS_CLINICIAN_IDS = os.environ['CLINICIAN_IDS']
-            return AWS_CLINICIAN_IDS
-        except Exception as e:
-            logger.error(f"Error retrieving environment variable from AWS: {e}")
-            return None
 
 
 if __name__ == '__main__':
@@ -317,6 +316,6 @@ if __name__ == '__main__':
 
     alert_manager = BloodPressureAlertManager(key)
 
-    two_week_response = alert_manager.handle_2week_measurement()
+    two_week_response = alert_manager.handle_two_week_measurement()
 
     print(f"----- {two_week_response}")

@@ -34,6 +34,9 @@ class LocalEnvironmentAndSecrets:
         'healthie' : {
             'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization'  ),
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
+            'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
+            'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
+            'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
@@ -343,6 +346,9 @@ class LocalEnvironmentAndSecretsNoCache:
         'healthie' : {
             'organization'  : ( 'HEALTHIE_ORGANIZATION', 'healthieOrganization'  ),
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
+            'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
+            'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
+            'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
