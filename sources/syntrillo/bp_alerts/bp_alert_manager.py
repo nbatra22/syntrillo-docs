@@ -282,8 +282,6 @@ class BloodPressureAlertManager:
                 # If the clinician_ids is a list, remove duplicates and convert to a string
                 clinician_ids = list(set(clinician_ids))
                 clinician_ids = f"{','.join(clinician_ids)}"
-            else:
-                clinician_ids = clinician_ids.replace('[', '').replace(']', '').replace('"', '')
 
             logger.info(f"Clinicians str: {clinician_ids}")
 

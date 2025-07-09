@@ -237,14 +237,18 @@ def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_t
     logger.info("Creating conversation in Healthie")
 
     try:
-        # Remove duplicates from the list of clinician IDs
-        clinician_ids = list(set(clinician_ids))
-        clinicians_str = f"{','.join(clinician_ids)}"
+        # Convert the clinician_ids to a GraphQL valid variable string
+        logger.info(f"Clinicians ids: {clinician_ids}")
+        if type(clinician_ids) is list:
+            # If the clinician_ids is a list, remove duplicates and convert to a string
+            clinician_ids = list(set(clinician_ids))
+            clinician_ids = f"{','.join(clinician_ids)}"
 
-        logger.info(f"Clinicians str: {clinicians_str}")
+
+        logger.info(f"Clinicians str: {clinician_ids}")
 
         variables = {
-            "simple_added_users": clinicians_str,
+            "simple_added_users": clinician_ids,
             "owner_id": messenger_id,
             "name": alert_title
         }
