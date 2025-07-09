@@ -185,6 +185,7 @@ class LocalEnvironmentAndSecrets:
         # get the secret code
         try:
             secret_code = self.SECRET_CODES[group][variable]
+            logger.info(f"Secret code: {secret_code}")
         except KeyError as e:
             # raise an exception if the secret is not found
             raise Exception(f"Secret not found : {group}, {variable} : {e}")
@@ -281,6 +282,9 @@ if __name__ == '__main__':
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
     healthie_organization = secrets.get_secret_value('healthie', 'organization')
+    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
 
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
@@ -596,6 +600,9 @@ if __name__ == '__main__':
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
     healthie_organization = secrets.get_secret_value('healthie', 'organization')
+    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
 
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
