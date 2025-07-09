@@ -247,6 +247,14 @@ class LocalEnvironmentAndSecrets:
         return self.get_secret_value('openai', 'api_key')
 
     # ------------------------------
+    # Are we in a production environment
+    def is_production(self):
+        return self.get_healthie_organization() == 'production'
+
+    # Are we in a staging environment
+    def is_staging(self):
+        return self.get_healthie_organization() == 'staging'
+
     # Are we in a local environment
     def is_local(self):
         return self._is_local
@@ -282,6 +290,12 @@ if __name__ == '__main__':
     )
 
     # get the secrets
+    healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
+    healthie_organization = secrets.get_secret_value('healthie', 'organization')
+    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
+
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
 
@@ -292,7 +306,14 @@ if __name__ == '__main__':
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
 
+    candid_client_id = secrets.get_secret_value('candid', 'client_id')
+    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
+    candid_api = secrets.get_secret_value('candid', 'candid_api')
+    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
+
     print("\n\nsecrets:")
+    print(f"healthie_api_key : {healthie_api_key}")
+    print(f"healthie_organization : {healthie_organization}")
 
     print(f"tenovi_api_key : {tenovi_api_key}")
     print(f"tenovi_client_domain : {tenovi_client_domain}")
@@ -555,6 +576,14 @@ class LocalEnvironmentAndSecretsNoCache:
         return self.get_secret_value('openai', 'api_key')
 
     # ------------------------------
+    # Are we in a production environment
+    def is_production(self):
+        return self.get_healthie_organization() == 'production'
+
+    # Are we in a staging environment
+    def is_staging(self):
+        return self.get_healthie_organization() == 'staging'
+
     # Are we in a local environment
     def is_local(self):
         return self._is_local
@@ -590,6 +619,12 @@ if __name__ == '__main__':
         )
 
     # get the secrets
+    healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
+    healthie_organization = secrets.get_secret_value('healthie', 'organization')
+    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
+
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
 
@@ -599,6 +634,11 @@ if __name__ == '__main__':
     aws_database_port = secrets.get_secret_value('aws_database', 'local_port')
 
     openai_api_key = secrets.get_secret_value('openai', 'api_key')
+
+    candid_client_id = secrets.get_secret_value('candid', 'client_id')
+    candid_client_secret = secrets.get_secret_value('candid', 'client_secret')
+    candid_api = secrets.get_secret_value('candid', 'candid_api')
+    candid_pre_encounter = secrets.get_secret_value('candid', 'pre_encounter')
 
     print("\n\nsecrets:")
 
@@ -613,6 +653,9 @@ if __name__ == '__main__':
     print(f"openai_api_key : {openai_api_key}")
 
     print("done")
+
+    print(f"healthie_api_key : {healthie_api_key}")
+    print(f"healthie_organization : {healthie_organization}")
 
     # should be available in the environment
     overide_uid = os.getenv('OVERDIDE_HEALTHIE_USER_ID')
