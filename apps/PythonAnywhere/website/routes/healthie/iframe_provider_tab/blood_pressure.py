@@ -10,6 +10,7 @@ from .post_management import PostManager
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
 from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
 from syntrillo.api_healthie.medications import HealthieMedications
 
@@ -211,5 +212,11 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     # Establish connection to PatientResponses class
     patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
 
+    # Retrieve exercise and bmi data
     exercise = patient_responses.get_exercise()
     bmi = patient_responses.get_bmi()
+
+    db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
+
+    # Retrieve heart rate measurements
+    hr_measurements = db_manager.get_latest_measurements(type='pulse', count=3)

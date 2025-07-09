@@ -55,14 +55,14 @@ class FormResponseService:
                 $page_size: Int, # e.g. "1" or "10" or "100"
                 $should_paginate: Boolean # e.g. "true" or "false"
                 $after: Cursor # e.g "eyJrIjpbIjIwMjUtMDMtMTRU....."
-                ) {
+            ) {
                 formAnswerGroups(
                     date: $date,
                     custom_module_form_id: $custom_module_form_id,
                     page_size: $page_size,
                     should_paginate: $should_paginate,
                     after: $after
-                    ) {
+                ) {
                     name
                     cursor
                     custom_module_form {

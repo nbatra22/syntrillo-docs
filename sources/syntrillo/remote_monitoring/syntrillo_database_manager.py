@@ -778,6 +778,56 @@ class SyntrilloDatabaseManager:
 
         return internal_keys, log
 
+    def get_latest_measurements(self, type, count):
+        """
+        Returns specific number of measurements
+
+        Args:
+            - type: blood_pressure or pulse
+            - count: number of measurements required
+
+        Returns:
+            - measurements: List[Dict(value_1, value_2, timestamp)] ordered by latest to earliest
+            - log
+
+        """
+
+        try:
+            with self.conn.cursor() as cursor:
+                # Determine the metric filter
+                if type == 'blood_pressure':
+                    metric_filter = "metric_name = 'blood_pressure'"
+                elif type == 'pulse':
+                    metric_filter = "metric_name = 'pulse'"
+                else:
+                    metric_filter = "1=1"  # No filter if type is not recognized
+
+                query = f"""
+                    SELECT value_1, value_2, timestamp_local as timestamp
+                    FROM tenovi_raw_measurements
+                    WHERE {metric_filter}
+                    ORDER BY timestamp_local DESC
+                    LIMIT %s
+                """
+
+                cursor.execute(query, (count,))
+                rows = cursor.fetchall()
+                # Convert to list of dicts
+                measurements = [
+                    {'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows
+                ]
+                log = {"success": True}
+
+        except pymysql.MySQLError as e:
+            logger.error(f"Error retrieving syntrillo_internal_key's.")
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            measurements = None
+
+        return measurements, log
+
 
 if __name__ == '__main__':
 
