@@ -23,12 +23,9 @@ class BloodPressureAlertManager:
     Handles blood pressure alert system.
     """
 
-    def __init__(self, syntrillo_internal_key: str):
-        lookup_manager = LookUpCodesManagement()
-        entry = lookup_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
-
+    def __init__(self, syntrillo_internal_key: str, healthie_user_id: str):
         self.syntrillo_internal_key = syntrillo_internal_key
-        self.healthie_user_id = entry['healthie_user_id']
+        self.healthie_user_id = healthie_user_id
 
 
     def handle_single_measurement(self, event):

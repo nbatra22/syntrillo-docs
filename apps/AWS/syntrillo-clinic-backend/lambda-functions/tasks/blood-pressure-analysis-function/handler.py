@@ -20,9 +20,10 @@ def handler(event, context):
             return list_patients()
 
         elif action == 'run_analysis':
-            syntrillo_internal_key = event.get('id')
+            syntrillo_internal_key = event.get('syntrillo_internal_key')
+            healthie_user_id = event.get('healthie_user_id')
 
-            alert_manager = BloodPressureAlertManager(syntrillo_internal_key)
+            alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
             alert_manager.handle_two_week_measurement()
 
             return {
@@ -54,7 +55,10 @@ def list_patients():
     for patient in patients['users']:
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient["id"])
         if entry:
-            patient_internal_key_list["users"].append({ "id": str(entry['syntrillo_internal_key'])})
+            patient_internal_key_list["users"].append({
+                "healthie_user_id": patient["id"],
+                "syntrillo_internal_key": str(entry['syntrillo_internal_key'])
+            })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
             error_msg = "Failed to find patient. No entry found in lookup"
