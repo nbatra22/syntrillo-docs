@@ -3,6 +3,7 @@ from typing import List
 from datetime import datetime, timedelta
 import pytz
 import pandas as pd
+import uuid
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.api_healthie.conversations import HealthieConversations
@@ -24,7 +25,7 @@ class BloodPressureAlertManager:
     """
 
     def __init__(self, syntrillo_internal_key: str, healthie_user_id: str):
-        self.syntrillo_internal_key = syntrillo_internal_key
+        self.syntrillo_internal_key = uuid.UUID(syntrillo_internal_key)
         self.healthie_user_id = healthie_user_id
 
 
@@ -206,10 +207,6 @@ class BloodPressureAlertManager:
             conversation_manager = HealthieConversations()
 
             conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
-
-            # Check if the conversation already exists
-            # conversation_id = self.get_conversation_id(messenger_id, alert_title)
-
             if not conversation_id:
                 # Create a new conversation
                 conversation_output = self.make_conversation_query(clinicians, messenger_id, alert_title)
@@ -309,7 +306,7 @@ if __name__ == '__main__':
 
     print(f"**** {key}")
 
-    alert_manager = BloodPressureAlertManager(key)
+    alert_manager = BloodPressureAlertManager(key, patient_id)
 
     two_week_response = alert_manager.handle_two_week_measurement()
 
