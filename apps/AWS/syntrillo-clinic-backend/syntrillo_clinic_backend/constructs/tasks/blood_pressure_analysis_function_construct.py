@@ -46,6 +46,7 @@ class BloodPressureAnalysis(Construct):
         self.secrets_tenovi_hwi_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-TenoviHwiSecrets-Arn")
         self.secrets_healthie_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-HealthieSecrets-Arn")
         self.secrets_candid_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-CandidSecrets-Arn")
+        self.secrets_healthie_ids_secrets_secret_arn = Fn.import_value("SyntrilloClinic-Secrets-Functions-HealthieIDsSecrets-Arn")
         self.secrets_secrets_kms_key_arn = Fn.import_value("SyntrilloClinic-Secrets-SecretsKMSKey-Arn")
 
         self.clinic_storage_efs_file_system_id = Fn.import_value("SyntrilloClinic-Storage-EFS-FileSystem-Id")
@@ -111,6 +112,7 @@ class BloodPressureAnalysis(Construct):
                 "AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN": self.secrets_tenovi_hwi_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_HEALTHIE_SECRET_ARN": self.secrets_healthie_secrets_secret_arn,
                 "AWS_SECRETS_MANAGER_CANDID_SECRET_ARN": self.secrets_candid_secrets_secret_arn,
+                "AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN": self.secrets_healthie_ids_secrets_secret_arn,
             },
             tracing=_lambda.Tracing.ACTIVE,
             memory_size=512,
@@ -121,6 +123,7 @@ class BloodPressureAnalysis(Construct):
         self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_candid_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.blood_pressure_analysis_function, self.secrets_healthie_ids_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
         self.function_security_group = self.blood_pressure_analysis_function.connections.security_groups[0]
 
         # ---------------------------------------------------------------------
