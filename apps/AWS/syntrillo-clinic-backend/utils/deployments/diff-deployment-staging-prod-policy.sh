@@ -27,4 +27,4 @@ diff prod-policy.json staging-policy.json
 echo "[ DIFF TasksBackendPolicy]"
 diff tasks-prod-policy.json tasks-staging-policy.json
 
-rm staging-policy.json prod-policy.json
+rm staging-policy.json prod-policy.json tasks-staging-policy.json tasks-prod-policy.json
