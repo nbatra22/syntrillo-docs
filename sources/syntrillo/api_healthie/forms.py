@@ -1167,7 +1167,36 @@ class HealthieForms():
 
         return response, log
 
+    def get_autoscored_sections(self, custom_module_form_id: str, user_id: str):
+        query = """
+            query getAutoscoredSections($custom_module_form_id: String!, $user_id: String!) {query formAnswerGroups(
+                $custom_module_form_id: ID,
+                $user_id: String,
+            ) {
+                formAnswerGroups(
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id,
+                ) {
+                    custom_module_form {    # The form template that was filled out
+                        id
+                    }
+                    user_id
+                    autoscored_sections {
+                        value
+                        section_title
+                    }
+                }
+            }
+        """
 
+        variables = {
+            'custom_module_form_id': custom_module_form_id,
+            'user_id': user_id,
+        }
+
+        response, log = self.auth.send_query(query, variables)
+
+        return response
 
 
 if __name__ == "__main__":
@@ -1175,6 +1204,13 @@ if __name__ == "__main__":
     forms = HealthieForms()
 
     if True:
+        response = forms.get_autoscored_sections(
+            custom_module_form_id="2455490",
+            user_id="1035117",
+        )
+        HealthieAuth.print_pretty_json(response)
+
+    if False:
         # List all forms
         response = forms.list_forms(sort_by='name_asc' , keywords='onboarding')
         print('==== All forms ====')
@@ -1382,6 +1418,3 @@ if __name__ == "__main__":
         """
 
         pass
-
-
-

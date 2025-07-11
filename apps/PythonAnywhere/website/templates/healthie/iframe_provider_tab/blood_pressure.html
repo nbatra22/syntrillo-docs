@@ -255,26 +255,76 @@
         animation: spin 1s linear infinite;
     }
 
-    /* Initially hidden */
-    .hidden {
-        display: none;
-    }
-
     .bp-biometric-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 1rem;
+        background-color: white;
+        /* border-radius: 0.375rem; */
+        overflow: hidden;
+        border: 1px solid black;
+        /* box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); */
     }
-    .bp-biometric-table th {
-        text-align: center;
-        padding: 10px;
-        border: 1px solid gray;
+
+    .bp-biometric-table tr {
+        border-bottom: 1px solid black;
     }
+
+    /* .bp-biometric-table tr:last-child {
+        border-bottom: none;
+    } */
+
     .bp-biometric-table td {
-        text-align: center;
-        padding: 8px;
-        border: 1px solid gray;
-        width: 50%;
+        padding: 1rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .bp-biometric-table td:first-child {
+        font-weight: bold;
+        color: #374151;
+        width: 40%;
+        background-color: #f9fafb;
+        border-right: 1px solid black;
+    }
+
+    .bp-biometric-table td:last-child {
+        width: 60%;
+        color: #6b7280;
+    }
+
+    .bp-biometric-table h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #16284a;
+    }
+
+    .bp-biometric-table h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .bp-biometric-table ul {
+        margin: 0;
+        padding-left: 1rem;
+        list-style-type: disc;
+    }
+
+    .bp-biometric-table li {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: #16284a;
+    }
+
+    .bp-biometric-table span {
+        font-size: 0.75rem;
+    }
+
+    .hidden {
+        display: none;
     }
 
 </style>
@@ -415,6 +465,7 @@
 
     <!-- Biometrics Infographic as Table -->
     <section id="bp-biometrics-section" class="bp-table-container">
+        <div id="bp-biometrics-spinner-container"></div>
         <table id="bp-biometrics-table" class="bp-biometric-table">
             <tbody>
                 <tr>
@@ -587,9 +638,106 @@
             })
     }
 
+    function getMetrics() {
+        let formData = new FormData()
+
+        formData.append('healthie_provider_id', healthieProviderId)
+        formData.append('healthie_user_id', healthieUserId)
+        formData.append('temporary_lookup_code', temporaryLookupCode)
+        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo)
+
+        const metricsContent = document.getElementById("bp-biometrics-table");
+        const metricsContentContainer = document.getElementById("bp-biometrics-section");
+        const exerciseContent = document.getElementById("bp-biometric-activity-value");
+        const bmiContent = document.getElementById("bp-biometric-bmi-value");
+        const hrContent = document.getElementById("bp-biometric-hr-value");
+        const sodiumContent = document.getElementById("bp-biometric-sodium-value");
+
+        // Hide table and show spinner initially
+        metricsContent.style.display = "none";
+        showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_metrics') }}", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+
+                let exerciseHTML = "";
+                let bmiHTML = "";
+                let hrHTML = "";
+
+                if (data.exercise.date) {
+                    exerciseHTML = `<h4>As of ${data.exercise.date}:</h4><ul><li>${data.exercise.value.mod_exercise} minutes of moderate exercise</li><li>${data.exercise.value.vig_exercise} minutes of vigorous exercise</li></ul>`
+                } else {
+                    exerciseHTML = "<h3>No exercise data found</h3>"
+                }
+
+                if (data.bmi.date) {
+                    bmiHTML = `<h4>As of ${data.bmi.date}:</h4><ul><li>${data.bmi.value.bmi}</li></ul>`
+                } else {
+                    bmiHTML = "<h3>No BMI data found</h3>"
+                }
+
+                if (data.hr_measurements.length > 0) {
+
+                    const average = data.hr_measurements.reduce((acc, curr) => acc + parseFloat(curr['value_1']), 0) / data.hr_measurements.length;
+                    // Find the earliest date
+                    const earliest = data.hr_measurements.reduce((min, curr) => {
+                        return new Date(curr.timestamp) < new Date(min.timestamp) ? curr : min;
+                    });
+                    const dateObj = new Date(earliest.timestamp);
+                    // Format as "M/D at H:MM AM/PM"
+                    const month = dateObj.getMonth() + 1;
+                    const day = dateObj.getDate();
+                    const hours = dateObj.getHours();
+                    const minutes = dateObj.getMinutes();
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    const displayMinutes = minutes.toString().padStart(2, '0');
+                    const formatted = `${month}/${day} at ${displayHours}:${displayMinutes} ${ampm}`;
+                    hrHTML = `<h4>Earliest measurement recorded at ${formatted}:</h4><ul><li>${average.toFixed(1)} bpm (avg of 3 latest measurements)</li></ul>`;
+
+                } else {
+                    hrHTML = "<h3>No resting heart rate data found</h3>";
+                }
+
+                if (data.ssq_score) {
+                    const ssqHTML = "<ul>"
+                    data.ssq_score.forEach(section => {
+                        ssqHTML += `<li><span style="text-decoration: underline;">${section.section_title}:</span> ${section.value}</li>`
+                    })
+                    ssqHTML += "</ul>"
+                } else {
+                    ssqHTML = "<h3>No SSQ score found</h3>"
+                }
+
+                exerciseContent.innerHTML = exerciseHTML;
+                bmiContent.innerHTML = bmiHTML;
+                hrContent.innerHTML = hrHTML;
+                sodiumContent.innerHTML = ssqHTML;
+
+                // Show table and hide spinners
+                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
+                metricsContent.style.display = "table";
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+                // Show table and hide spinners on error
+                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
+                metricsContent.style.display = "table";
+            })
+            .finally(() => {})
+    }
+
     // Fetch Blood Pressure data on first render
     $(document).ready(function () {
         getBloodPressureAnalysis();
+        getMetrics();
 
         document.addEventListener("DOMContentLoaded", function () {
             const startDateInput = document.getElementById("start-date");

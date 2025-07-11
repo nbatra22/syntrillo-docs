@@ -13,7 +13,7 @@ from syntrillo.stroke_risk_score.responses.patient_responses import PatientRespo
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
 from syntrillo.api_healthie.medications import HealthieMedications
-
+from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_bp_analysis_bp = Blueprint('iframe_healthie_provider_tab_bp_analysis_bp', __name__)
@@ -200,7 +200,7 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
 
 @iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/metrics', methods=['GET','POST'])
-def iframe_healthie_provider_tab_download_bp_pdf():
+def iframe_healthie_provider_tab_get_metrics():
 
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
@@ -219,4 +219,17 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    hr_measurements = db_manager.get_latest_measurements(type='pulse', count=3)
+    hr_measurements, log = db_manager.get_latest_measurements(type='pulse', count=3)
+
+    forms_manager = HealthieForms()
+    autoscored_sections  = forms_manager.get_autoscored_sections(
+        custom_module_form_id=2455490,
+        user_id=post_manager.posted_healthie_user_id,
+    )
+
+    return jsonify({
+        'ssq_score': autoscored_sections,
+        'exercise': exercise,
+        'bmi': bmi,
+        'hr_measurements': hr_measurements,
+    })

@@ -64,7 +64,7 @@ class PatientResponses:
         }
 
 
-    def __init__(self, syntrillo_internal_key : uuid.UUID, env) -> None:
+    def __init__(self, syntrillo_internal_key : uuid.UUID, env='staging') -> None:
         self.syntrillo_internal_key = syntrillo_internal_key
         self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
         self.env = env
