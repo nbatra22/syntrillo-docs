@@ -227,8 +227,10 @@ def iframe_healthie_provider_tab_get_metrics():
         user_id=post_manager.posted_healthie_user_id,
     )
 
+    ssq_score = autoscored_sections.data['formAnswerGroups'][0]['autoscored_sections'] if autoscored_sections and len(autoscored_sections.data['formAnswerGroups']) > 0 else None
+
     return jsonify({
-        'ssq_score': autoscored_sections,
+        'ssq_score': ssq_score,
         'exercise': exercise,
         'bmi': bmi,
         'hr_measurements': hr_measurements,
