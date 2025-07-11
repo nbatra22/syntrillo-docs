@@ -669,19 +669,19 @@
                 let bmiHTML = "";
                 let hrHTML = "";
 
-                if (data.exercise.date) {
+                if (data.exercise && data.exercise.date) {
                     exerciseHTML = `<h4>As of ${data.exercise.date}:</h4><ul><li>${data.exercise.value.mod_exercise} minutes of moderate exercise</li><li>${data.exercise.value.vig_exercise} minutes of vigorous exercise</li></ul>`
                 } else {
                     exerciseHTML = "<h3>No exercise data found</h3>"
                 }
 
-                if (data.bmi.date) {
+                if (data.bmi && data.bmi.date) {
                     bmiHTML = `<h4>As of ${data.bmi.date}:</h4><ul><li>${data.bmi.value.bmi}</li></ul>`
                 } else {
                     bmiHTML = "<h3>No BMI data found</h3>"
                 }
 
-                if (data.hr_measurements.length > 0) {
+                if (data.hr_measurements && data.hr_measurements.length > 0) {
 
                     const average = data.hr_measurements.reduce((acc, curr) => acc + parseFloat(curr['value_1']), 0) / data.hr_measurements.length;
                     // Find the earliest date
