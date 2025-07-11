@@ -1,35 +1,45 @@
-import os
-import base64
-import uuid
-import boto3
 import json
-from typing import List, Tuple
-from datetime import datetime, date, timedelta
-import pytz
-
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
-from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.bp_alerts.bp_alert_manager import BloodPressureAlertManager
 
 # TODO: comment these decorators when running locally
 @tracer.capture_lambda_handler
 @logger.inject_lambda_context(log_event=True)
 def handler(event, context):
+    try:
+        action = event.get('action', None)
+        if not action:
+            raise ValueError(f"No action provided")
 
-    action = event.get('action')
+        logger.info(f"Processing action: {action}")
 
-    if action == 'list_patients':
-        return list_patients()
-    elif action == 'run_analysis':
-        syntrillo_internal_key = event.get('id')
-        alert_manager = BloodPressureAlertManager(syntrillo_internal_key)
-        return alert_manager.handle_2week_measurement()
-    else:
-        raise ValueError(f"Unknown action: {action}")
+        if action == 'list_patients':
+            return list_patients()
+
+        elif action == 'run_analysis':
+            syntrillo_internal_key = event.get('syntrillo_internal_key')
+            healthie_user_id = event.get('healthie_user_id')
+
+            alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
+            alert_manager.handle_two_week_measurement()
+
+            return {
+                'statusCode': 200,
+                'body': f'Successfully processed 2-week BP analysis event.'
+            }
+
+        else:
+            raise ValueError(f"Unknown action: {action}")
+
+    except Exception as e:
+        logger.exception(f"An unexpected error occurred: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': f'An internal server error occurred: {e}'})
+        }
 
 
 def list_patients():
@@ -45,7 +55,10 @@ def list_patients():
     for patient in patients['users']:
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient["id"])
         if entry:
-            patient_internal_key_list["users"].append({ "id": str(entry['syntrillo_internal_key'])})
+            patient_internal_key_list["users"].append({
+                "healthie_user_id": patient["id"],
+                "syntrillo_internal_key": str(entry['syntrillo_internal_key'])
+            })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
             error_msg = "Failed to find patient. No entry found in lookup"

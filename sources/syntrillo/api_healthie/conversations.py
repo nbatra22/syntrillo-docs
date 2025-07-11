@@ -1,14 +1,12 @@
 # Path: ./sources/syntrillo/api_healthie/conversations.py
 import json
-import os
 
 from typing import Tuple
 
 from syntrillo.system.logger import logger
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.api_healthie.user import HealthieUser
-from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.api_healthie.utils import HealthieUtils
 
 
 class HealthieConversations:
@@ -32,6 +30,7 @@ class HealthieConversations:
         Initialize the HealthieConversations class.
         """
         self.auth = HealthieAuth()
+        self.healthie_utils = HealthieUtils()
 
 
     def get_conversation_id_from_note_id(
@@ -384,7 +383,7 @@ class HealthieConversations:
                 "keywords": alert_title,
                 "provider_id": messenger_id
             }
-            output: dict = self.auth.run_graphql_query(graphql_query, variables)
+            output: dict = self.healthie_utils.run_graphql_query(graphql_query, variables)
             logger.info(f"Successfully retrieved conversation memberships from Healthie")
 
             conversation_id = output.get('conversationMemberships', {})[0].get('convo', {}).get('id', None)

@@ -263,3 +263,11 @@ class DatabaseStack(Stack):
             "CandidBillingIngestorFunctionImportedSecurityGroup",
             "CandidBillingIngestorFunction"
         )
+
+        # Allow blood pressure anlysis function access
+        add_security_group_ingress_rule(
+            self,
+            Fn.import_value("SyntrilloClinic-TaskScheduling-BloodPressureAnalysis-SecurityGroup-Id"),
+            "BloodPressureAnalysisFunctionImportedSecurityGroup",
+            "BloodPressureAnalysisFunction"
+        )

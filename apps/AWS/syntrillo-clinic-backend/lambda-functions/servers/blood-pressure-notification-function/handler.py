@@ -1,10 +1,7 @@
-import os
 import base64
-import uuid
-import boto3
 import json
 from typing import List, Tuple
-from datetime import datetime, date, timedelta
+from datetime import datetime
 import pytz
 
 from syntrillo.api_healthie.utils import HealthieUtils
@@ -19,10 +16,6 @@ from constants import (
     AVERAGE_SYSTOLIC_BP_THRESHOLD,
     SYSTOLIC_BP_HIGH_THRESHOLD,
     SYSTOLIC_BP_LOW_THRESHOLD,
-    AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY,
-    EXCLUDED_PATIENTS_KEY,
-    MESSENGER_KEY,
-    CLINICIANS_KEY
 )
 
 # TODO: comment these decorators when running locally
@@ -127,19 +120,11 @@ def notify_clinicians(syntrillo_internal_key: str, systolic_bp: float, diastolic
     patient_name, healthie_user_id = get_patient_name_from_syntrillo_internal_key(syntrillo_internal_key)
 
     # Retrieve healthie IDs env variable to use for conversation query
-    secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
-    healthie_ids = secrets.get_secrets(os.getenv(AWS_SECRETS_MANAGER_HEALTHIE_IDS_SECRET_ARN_KEY))
+    secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
 
-    # Check if the environment is production or staging to determine which clinicians to notify
-    # Get environment from SSM parameter store to determine which clinicians to notify
-    env = get_aws_environment()
-    if not env:
-        logger.error("Environment variablenot found ...")
-        return
-
-    excluded_patients = healthie_ids.get(env, {}).get(EXCLUDED_PATIENTS_KEY, [])
-    messenger_id = healthie_ids.get(env, {}).get(MESSENGER_KEY, "")
-    clinicians = healthie_ids.get(env, {}).get(CLINICIANS_KEY, [])
+    excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+    messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+    clinicians = secrets.get_secret_value('healthie_ids', 'clinicians')
 
     # If a specific patient is excluded from notifications, skip the notification
     if excluded_patients and healthie_user_id in excluded_patients:
@@ -252,14 +237,18 @@ def make_conversation_query(clinician_ids: List[str], messenger_id: str, alert_t
     logger.info("Creating conversation in Healthie")
 
     try:
-        # Remove duplicates from the list of clinician IDs
-        clinician_ids = list(set(clinician_ids))
-        clinicians_str = f"{','.join(clinician_ids)}"
+        # Convert the clinician_ids to a GraphQL valid variable string
+        logger.info(f"Clinicians ids: {clinician_ids}")
+        if type(clinician_ids) is list:
+            # If the clinician_ids is a list, remove duplicates and convert to a string
+            clinician_ids = list(set(clinician_ids))
+            clinician_ids = f"{','.join(clinician_ids)}"
 
-        logger.info(f"Clinicians str: {clinicians_str}")
+
+        logger.info(f"Clinicians str: {clinician_ids}")
 
         variables = {
-            "simple_added_users": clinicians_str,
+            "simple_added_users": clinician_ids,
             "owner_id": messenger_id,
             "name": alert_title
         }
@@ -428,24 +417,6 @@ def get_healthie_user_information_by_healthie_user_id(healthie_user_id: str) -> 
         logger.error(f"Error fetching user information from Healthie: {e}")
 
 
-def get_aws_clinician_ids() -> List[str]:
-    """
-    Get the environment from the SSM parameter store
-    Args:
-        None
-    Returns:
-        str: The environment
-    """
-    # Initialize AWS Systems Manager (SSM) client
-    logger.info("Retrieving env specific clinician ids from AWS...")
-    try:
-        AWS_CLINICIAN_IDS = os.environ['CLINICIAN_IDS']
-        return AWS_CLINICIAN_IDS
-    except Exception as e:
-        logger.error(f"Error retrieving environment variable from AWS: {e}")
-        return None
-
-
 def get_conversation_id(messenger_id: str, alert_title: str) -> str:
     """
     Get the conversation id from the Healthie API
@@ -576,24 +547,3 @@ def decode_payload(base64_str: str) -> dict:
     payload = json.loads(json_str)
 
     return payload
-
-def get_aws_environment() -> str:
-    """
-    Get the environment from the SSM parameter store
-    Args:
-        None
-    Returns:
-        str: The AWS environment
-    Raises:
-        e (Exception): General exception from retrieving the AWS environment variable
-    """
-    # Initialize AWS Systems Manager (SSM) client
-    logger.info("Retrieving environment variable from AWS...")
-    try:
-        AWS_ENVIRONMENT = os.environ['AWS_ENVIRONMENT']
-        logger.info(f"Successfully retrieved AWS env. Environment: {AWS_ENVIRONMENT}")
-        return AWS_ENVIRONMENT
-
-    except Exception as e:
-        logger.error(f"Error retrieving environment variable from AWS: {e}")
-        raise e
