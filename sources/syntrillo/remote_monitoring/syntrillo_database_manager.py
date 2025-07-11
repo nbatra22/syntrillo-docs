@@ -805,7 +805,7 @@ class SyntrilloDatabaseManager:
                 query = f"""
                     SELECT value_1, value_2, timestamp_local as timestamp
                     FROM tenovi_raw_measurements
-                    WHERE {metric_filter}
+                    WHERE {metric_filter} AND syntrillo_internal_key = {self.syntrillo_internal_key}
                     ORDER BY timestamp_local DESC
                     LIMIT %s
                 """
