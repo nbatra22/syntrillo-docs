@@ -25,6 +25,7 @@ def handler(event, context):
 
             alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
             alert_manager.handle_two_week_measurement()
+            alert_manager.handle_two_week_status()
 
             return {
                 'statusCode': 200,

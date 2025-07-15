@@ -212,18 +212,19 @@ class BloodPressureAlertManager:
             current_status = analysis_df['Current']['Overall']
             prior_status = analysis_df['Prior']['Overall']
 
+            current_date_range = analysis_df['Current']['Date Range']
+            prior_date_range = analysis_df['Prior']['Date Range']
+
             current_pts = status_points[current_status]
             prior_pts = status_points[prior_status]
 
             if current_pts < prior_pts:
-                content = f"<b>⚠️ PATIENT'S OVERALL STATUS CHANGED FROM '{prior_status}' TO '{current_status}'.</b>"
+                content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
                 # print(f"Current: {current_status} // Prior: {prior_status}")
                 # content = f""
                 self.notify_clinicians(content)
-                print(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from {prior_status} to {current_status}.")
-                logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from {prior_status} to {current_status}.")
+                logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
             else:
-                print(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
                 logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
 
         except Exception as e:
