@@ -1,6 +1,6 @@
 
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytz
 import pandas as pd
 import uuid
@@ -25,12 +25,36 @@ class BloodPressureAlertManager:
     Handles blood pressure alert system.
     """
 
-    def __init__(self, syntrillo_internal_key: str, healthie_user_id: str):
-        self.syntrillo_internal_key = syntrillo_internal_key
+    def __init__(self, syntrillo_internal_key, healthie_user_id: str):
+        # Convert the syntrillo_internal_key to a UUID object for serialization issues
+        if isinstance(syntrillo_internal_key, str):
+            self.syntrillo_internal_key = uuid.UUID(syntrillo_internal_key)
+        elif isinstance(syntrillo_internal_key, uuid.UUID):
+            self.syntrillo_internal_key = syntrillo_internal_key
+
         self.healthie_user_id = healthie_user_id
 
 
-    def handle_single_measurement(self, event):
+    def handle_single_measurement(self, event: dict) -> dict:
+        """
+        Handle a single blood pressure measurement event.
+
+        Args:
+            event (dict): The event payload from the Tenovi Webhook.
+        Returns:
+            dict: A dictionary containing the status code and body of the response.
+        Raises:
+            e (Exception): General exception from retrieving the BP data from the database
+        """
+
+        # TODO: FIX THIS FUNCTION
+        # Delete the redundant call to retrieve the syntrillo_internal_key from the database
+        # Fix the parameters passed into notify_clinicians
+        # Construct 'content' string for notify_clinicians (only part of the function)
+
+
+        logger.info(f"This function will fail because of incorrect parameters passed into notify_clinicians")
+
         payload = event
         # Check if the body is base64 (AWS API Gateway) encoded before decoding
         if payload.get('body', None) and self.is_base64(payload.get('body')):
@@ -102,10 +126,10 @@ class BloodPressureAlertManager:
         Raises:
             e (Exception): General exception from retrieving the BP data from the database
         """
-        logger.info(f"Analyzing BP data for patient {self.syntrillo_internal_key}...")
+        logger.info(f"Analyzing BP data for patient {self.healthie_user_id}...")
 
         try:
-            end_date = datetime.now(pytz.UTC)
+            end_date = datetime.now(timezone.utc)
             start_date = end_date - timedelta(weeks=4)
             mid_date = end_date - timedelta(weeks=2)
 
@@ -233,6 +257,89 @@ class BloodPressureAlertManager:
 
         return
 
+    def handle_three_day_no_measurement(self) -> None:
+        """
+        Notify clinicians if a patient has not taken a blood pressure measurement in the last 3 days.
+
+        Args:
+            None
+        Returns:
+            None
+        Raises:
+            e (Exception): General exception from retrieving the BP data from the database
+        """
+        # 1. Get patient's last bp measurement
+        try:
+            data_end_date = datetime.now(timezone.utc)
+            data_start_date = data_end_date - timedelta(days=6)
+
+            db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+
+            df, log = db_manager.get_tenovi_device_metric_data(
+                metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+                start_date=data_start_date,
+                end_date=data_end_date
+            )
+
+            if df is None or df.empty:
+                logger.info(f"No BP measurements found for healthie user id {self.healthie_user_id} in the last 5 days")
+                return
+
+            # Convert timestamp to datetime if not already
+            df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
+
+            # Convert to UTC if needed (similar to handle_two_week_measurement)
+            if df['timestamp_local'].dt.tz is None: # If no timezone detected
+                df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
+            df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
+
+            # Define time periods
+            now = data_end_date
+            three_days_ago_start = now - timedelta(days=5)  # 5 days ago
+            three_days_ago_end = now - timedelta(days=4)    # 4 days ago
+
+            # Check for measurements around 3 days ago (between 4 and 3 days ago)
+            measurements_3_days_ago = df[
+                (df['timestamp_local'] >= three_days_ago_start) &
+                (df['timestamp_local'] < three_days_ago_end)
+            ]
+
+            # checks if there is a measurement in the last 3 days
+            measurements_since = df[
+                df['timestamp_local'] >= three_days_ago_end
+            ]
+
+            has_measurement_3_days_ago = not measurements_3_days_ago.empty
+            has_measurements_since = not measurements_since.empty
+
+            logger.info(f"Patient {self.syntrillo_internal_key}: "
+                    f"measurements 3-4 days ago: {len(measurements_3_days_ago)}, "
+                    f"measurements since (last 3 days): {len(measurements_since)}")
+
+            if has_measurement_3_days_ago and not has_measurements_since:
+                logger.info(f"Patient {self.syntrillo_internal_key} had measurements 3+ days ago but none since. Sending notification...")
+
+                # Get the most recent measurement from 3 days ago for context
+                last_measurement_3_days_ago = measurements_3_days_ago.iloc[-1]
+                measurement_date = last_measurement_3_days_ago['timestamp_local'].strftime('%m/%d/%y')
+
+                content = (
+                    f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 3 DAYS</b></p>\n"
+                    f"<p>Last measurement was taken on {measurement_date} "
+                    f"(systolic: {last_measurement_3_days_ago['value_1']}, "
+                    f"diastolic: {last_measurement_3_days_ago['value_2']}).</p>"
+                )
+                self.notify_clinicians(content)
+            else:
+                if not has_measurement_3_days_ago:
+                    logger.info(f"Patient {self.syntrillo_internal_key}: No measurement found 3-4 days ago, continuing")
+                if has_measurements_since:
+                    logger.info(f"Patient {self.syntrillo_internal_key}: Measurements found in last 3 days, continuing")
+        except Exception as e:
+            logger.error(f"Error while handling three day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
+            raise e
+
+
 
     def notify_clinicians(self, content: str) -> None:
         """
@@ -243,7 +350,7 @@ class BloodPressureAlertManager:
         Returns:
             None
         Raises:
-            Exception: If there is an error creating the conversation in Healthie
+            e (Exception): If there is an error creating the conversation in Healthie
         """
         # Healthie Chat API Docs: https://docs.gethealthie.com/guides/chat/
         # Healthie Chat Overview: https://help.gethealthie.com/article/82-overview-chatting-with-a-client
@@ -281,9 +388,6 @@ class BloodPressureAlertManager:
 
                 conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
                 logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
-
-            # Add a note (aka a message) to the conversation
-            # response = self.add_note_to_conversation(messenger_id, conversation_id, systolic_bp, diastolic_bp, timestamp, syntrillo_internal_key)
 
             message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
             logger.info(f"Successfully added note to conversation in Healthie: {message}")
@@ -363,20 +467,23 @@ class BloodPressureAlertManager:
 if __name__ == '__main__':
 
     # patient_id = '1525423' # Patient AWS Test
-    patient_id = '1966294' # Patient AWS Test 3
+    # patient_id = '1966294' # Patient AWS Test 3
     # patient_id = '2315391' # Bob Barker
+    patient_id = '1966292' # Patient AWS Test 2
 
     lookup_manager = LookUpCodesManagement()
-
     entry = lookup_manager.retrieve_entry_by_healthie_user_id(patient_id)
     key = entry['syntrillo_internal_key']
-
     print(f"**** {key}")
 
     alert_manager = BloodPressureAlertManager(key, patient_id)
 
-    # two_week_measurement_response = alert_manager.handle_two_week_measurement()
+    # #  ------- Testing 2 week_measurement alert function ------- #
+    # alert_manager.handle_two_week_measurement()
 
     # print(f"----- {two_week_measurement_response}")
 
-    two_week_status_response = alert_manager.handle_two_week_status()
+    #  ------- Testing 3 day no measurement alert function ------- #
+    alert_manager.handle_three_day_no_measurement()
+
+

@@ -525,12 +525,12 @@ class SyntrilloDatabaseManager:
         try:
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = f"""
-                SELECT device_name, metric_name, value_1, value_2, timestamp_local
-                FROM tenovi_raw_measurements
-                WHERE syntrillo_internal_key = %s
-                AND metric_name = %s
-                AND ( timestamp_local BETWEEN %s AND %s )
-                ORDER BY timestamp_local ASC
+                    SELECT device_name, metric_name, value_1, value_2, timestamp_local
+                        FROM tenovi_raw_measurements
+                        WHERE syntrillo_internal_key = %s
+                            AND metric_name = %s
+                            AND ( timestamp_local BETWEEN %s AND %s )
+                        ORDER BY timestamp_local ASC
                 """
                 cursor.execute(
                     query,

@@ -13,23 +13,36 @@ def handler(event, context):
         action = event.get('action', None)
         if not action:
             raise ValueError(f"No action provided")
-
         logger.info(f"Processing action: {action}")
 
         if action == 'list_patients':
             return list_patients()
 
-        elif action == 'run_analysis':
-            syntrillo_internal_key = event.get('syntrillo_internal_key')
-            healthie_user_id = event.get('healthie_user_id')
+        # BP Alert handling. In future, make this logic conditional for other functionality grouping
+        syntrillo_internal_key = event.get('syntrillo_internal_key')
+        healthie_user_id = event.get('healthie_user_id')
 
-            alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
+        # Input validation
+        if syntrillo_internal_key is None or healthie_user_id is None:
+            raise ValueError(f"No syntrillo_internal_key or healthie_user_id provided")
+
+        logger.info(f"Building BloodPressureAlertManager for patient {syntrillo_internal_key}...")
+        alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
+
+        if action == 'run_analysis':
             alert_manager.handle_two_week_measurement()
             alert_manager.handle_two_week_status()
 
             return {
                 'statusCode': 200,
-                'body': f'Successfully processed 2-week BP analysis event.'
+                'body': f'Successfully processed 2-week BP analysis event for patient {syntrillo_internal_key}.'
+            }
+
+        elif action == 'check_measurement_consistancy':
+            alert_manager.handle_three_day_no_measurement()
+            return {
+                'statusCode': 200,
+                'body': f'Successfully checked patient {syntrillo_internal_key}"s trailing 3 day BP measurement taking consistentcy.'
             }
 
         else:
