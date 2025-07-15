@@ -13,6 +13,7 @@ from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
+from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 
 from syntrillo.bp_alerts.constants import (
     SYSTOLIC_BP_HIGH_THRESHOLD,
@@ -25,7 +26,7 @@ class BloodPressureAlertManager:
     """
 
     def __init__(self, syntrillo_internal_key: str, healthie_user_id: str):
-        self.syntrillo_internal_key = uuid.UUID(syntrillo_internal_key)
+        self.syntrillo_internal_key = syntrillo_internal_key
         self.healthie_user_id = healthie_user_id
 
 
@@ -156,8 +157,8 @@ class BloodPressureAlertManager:
                     logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_current}) than prior ({avg_prior}). Sending notification...")
                     content = (
                         f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
-                        f"<ul><li>Current 2-week average ({mid_date.strftime('%m/%d/%y')} – {end_date.strftime('%m/%d/%y')}): {avg_current}</li>\n"
-                        f"<li>Prior 2-week average ({start_date.strftime('%m/%d/%y')} – {(mid_date - timedelta(days=1)).strftime('%m/%d/%y')}): {avg_prior}</li></ul>"
+                        f"<ul><li>Current ({mid_date.strftime('%-m/%-d/%y')} – {end_date.strftime('%-m/%-d/%y')}): {avg_current}</li>\n"
+                        f"<li>Prior ({start_date.strftime('%-m/%-d/%y')} – {(mid_date - timedelta(days=1)).strftime('%-m/%-d/%y')}): {avg_prior}</li></ul>"
                     )
                     self.notify_clinicians(content)
 
@@ -166,6 +167,70 @@ class BloodPressureAlertManager:
         except Exception as e:
             logger.error(f"Error analyzing BP data for patient {self.syntrillo_internal_key}: {e}")
             raise e
+
+
+    def handle_two_week_status(self) -> None:
+        """
+        Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
+
+        """
+        logger.info(f"Analyzing patient {self.syntrillo_internal_key} overall categorization...")
+
+        status_points = {
+            'Poor': 0,
+            'Okay': 1,
+            'Good': 2
+        }
+
+        try:
+            bp_analysis = BloodPressureAnalysis(self.syntrillo_internal_key)
+
+            end_date = datetime.today()
+            start_date = datetime.today() - pd.Timedelta(weeks=1, days=1)
+
+
+            _, log = bp_analysis.get_blood_pressure_dataframe(
+                start_date=None,
+                end_date=None
+            )
+
+            if log['success'] == False:
+                logger.error(f"Error fetching BP data: {log['error']}")
+
+            if _.empty:
+                logger.info(f"Insufficient BP data for patient {self.syntrillo_internal_key}")
+                return
+
+            timeframes = bp_analysis.calculate_timeframes()
+            analysis_df = bp_analysis.calculate_analysis()
+
+            if 'Latest' in analysis_df.columns:
+                logger.info(f"Patient {self.syntrillo_internal_key} does not have recent measurements")
+                print(f"{analysis_df}")
+                return "Bye"
+
+            current_status = analysis_df['Current']['Overall']
+            prior_status = analysis_df['Prior']['Overall']
+
+            current_pts = status_points[current_status]
+            prior_pts = status_points[prior_status]
+
+            if current_pts < prior_pts:
+                content = f"<b>⚠️ PATIENT'S OVERALL STATUS CHANGED FROM '{prior_status}' TO '{current_status}'.</b>"
+                # print(f"Current: {current_status} // Prior: {prior_status}")
+                # content = f""
+                self.notify_clinicians(content)
+                print(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from {prior_status} to {current_status}.")
+                logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from {prior_status} to {current_status}.")
+            else:
+                print(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
+                logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
+
+        except Exception as e:
+            logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
+            raise e
+
+        return
 
 
     def notify_clinicians(self, content: str) -> None:
@@ -297,7 +362,8 @@ class BloodPressureAlertManager:
 if __name__ == '__main__':
 
     # patient_id = '1525423' # Patient AWS Test
-    patient_id = '2315391' # Bob Barker
+    patient_id = '1966294' # Patient AWS Test 3
+    # patient_id = '2315391' # Bob Barker
 
     lookup_manager = LookUpCodesManagement()
 
@@ -308,6 +374,8 @@ if __name__ == '__main__':
 
     alert_manager = BloodPressureAlertManager(key, patient_id)
 
-    two_week_response = alert_manager.handle_two_week_measurement()
+    # two_week_measurement_response = alert_manager.handle_two_week_measurement()
 
-    print(f"----- {two_week_response}")
+    # print(f"----- {two_week_measurement_response}")
+
+    two_week_status_response = alert_manager.handle_two_week_status()

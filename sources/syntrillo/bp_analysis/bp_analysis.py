@@ -193,7 +193,6 @@ class BloodPressureAnalysis:
         # return the dataframe and the log
         return bpm_df, log
 
-
     def calculate_metadata(self):
         df = self.bpm_df
 
@@ -255,17 +254,29 @@ class BloodPressureAnalysis:
         # Include Baseline first if at least 4 weeks of data and it has enough measurements
         baseline_df = df[(df['timestamp_local'] >= baseline_start) & (df['timestamp_local'] < baseline_end)]
         if total_weeks >= 4 and is_valid_timeframe(baseline_df):
-            timeframes[f"Baseline ({baseline_start.strftime('%m/%d/%y')}-{baseline_end.strftime('%m/%d/%y')})"] = baseline_df
+            # timeframes[f"Baseline ({baseline_start.strftime('%-m/%-d/%y')}-{baseline_end.strftime('%-m/%-d/%y')})"] = baseline_df
+            timeframes[f"Baseline"] = (f"{baseline_start.strftime('%-m/%-d/%y')} - {baseline_end.strftime('%-m/%-d/%y')}", baseline_df)
 
         # Include Prior in the middle if at least 6 weeks of data and it has enough measurements
         prior_df = df[(df['timestamp_local'] >= prior_start) & (df['timestamp_local'] < prior_end)]
         if total_weeks >= 5 and is_valid_timeframe(prior_df):
-            timeframes[f"Prior ({prior_start.strftime('%m/%d/%y')}-{prior_end.strftime('%m/%d/%y')})"] = prior_df
+            # timeframes[f"Prior ({prior_start.strftime('%-m/%-d/%y')}-{prior_end.strftime('%-m/%-d/%y')})"] = prior_df
+            timeframes[f"Prior"] = (f"{prior_start.strftime('%-m/%-d/%y')} - {prior_end.strftime('%-m/%-d/%y')}", prior_df)
 
         # Always include Current last, but only if it has enough measurements
         current_df = df[df['timestamp_local'] >= current_start]
         if is_valid_timeframe(current_df):
-            timeframes[f"Current ({current_start.strftime('%m/%d/%y')}-{latest_date.strftime('%m/%d/%y')})"] = current_df
+            # Determine if latest_date is within 3 days of today
+            today = datetime.now().date()
+            if isinstance(latest_date, pd.Timestamp):
+                latest_date_only = latest_date.date()
+            else:
+                latest_date_only = latest_date
+            if (today - latest_date_only).days <= 3:
+                last_timeframe_name = "Current"
+            else:
+                last_timeframe_name = "Latest"
+            timeframes[f"{last_timeframe_name}"] = (f"{current_start.strftime('%-m/%-d/%y')} - {latest_date.strftime('%-m/%-d/%y')}", current_df)
 
         self.timeframed_data = timeframes
         return timeframes
@@ -302,9 +313,10 @@ class BloodPressureAnalysis:
 
         analysis = {}
 
-        for name, frame in timeframes.items():
+        for name, (date_range, frame) in timeframes.items():
             if frame.empty:
                 analysis[name] = {
+                    'Date Range': None,
                     'Measurement Count': None,
                     'Avg SBP (mmHg)': None,
                     'Avg DBP (mmHg)': None,
@@ -352,6 +364,7 @@ class BloodPressureAnalysis:
 
 
             analysis[name] = {
+                'Date Range': date_range,
                 'Measurement Count': measurement_count,
                 'Avg SBP (mmHg)': avg_systolic,
                 'Avg DBP (mmHg)': avg_diastolic,
