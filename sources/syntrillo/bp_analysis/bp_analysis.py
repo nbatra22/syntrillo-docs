@@ -450,7 +450,7 @@ class BloodPressureAnalysis:
         baseline_delta = 0
 
         # Extract available timeframes
-        current_timeframe = next((key for key in timeframed_data if "Current" in key), None)
+        current_timeframe = next((key for key in timeframed_data if ("Current" or "Latest") in key), None)
         prior_timeframe = next((key for key in timeframed_data if "Prior" in key), None)
         baseline_timeframe = next((key for key in timeframed_data if "Baseline" in key), None)
 
@@ -458,11 +458,12 @@ class BloodPressureAnalysis:
             return analysis  # No current timeframe means no comparison can be made
 
         # Initialize the progress tracking
+        all_metrics = list(next(iter(analysis.values())).keys())
         if baseline_timeframe:
-            analysis['Since Baseline¹'] = {metric: "-" for metric in points.keys()}
+            analysis['Since Baseline¹'] = {metric: ("" if metric not in points else "=") for metric in all_metrics}
 
         if prior_timeframe:
-            analysis['Since Prior¹'] = {metric: "-" for metric in points.keys()}
+            analysis['Since Prior¹'] = {metric: ("" if metric not in points else "=") for metric in all_metrics}
 
         # print(f"------------------- {analysis}")
 
