@@ -183,6 +183,8 @@ class DeploymentPipelinesStack(Stack):
                     f"arn:aws:lambda:us-east-1:{self.account}:function:BloodPressureNotificationFunction",
                     f"arn:aws:lambda:us-east-1:{self.account}:function:IFrameGeneratorFunction",
                     f"arn:aws:lambda:us-east-1:{self.account}:function:HealthieDataIngestorFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:CandidBillingIngestorFunction",
+                    f"arn:aws:lambda:us-east-1:{self.account}:function:BloodPressureAnalysisFunction",
                 ]
             )
         )
