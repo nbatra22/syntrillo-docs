@@ -229,6 +229,9 @@ class BloodPressureAnalysis:
         """
         df = self.bpm_df
 
+        # Ensure timestamp_local is datetime
+        # df['timestamp_local'] = pd.to_datetime(df['timestamp_local'], errors='coerce')
+
         latest_date = df['timestamp_local'].max()
         baseline_start = df['timestamp_local'].min()
 
@@ -279,6 +282,8 @@ class BloodPressureAnalysis:
             timeframes[f"{last_timeframe_name}"] = (f"{current_start.strftime('%-m/%-d/%y')} - {latest_date.strftime('%-m/%-d/%y')}", current_df)
 
         self.timeframed_data = timeframes
+
+        # print(f"---- Timeframed Data ----- {timeframes}")
         return timeframes
 
 
@@ -450,7 +455,7 @@ class BloodPressureAnalysis:
         baseline_delta = 0
 
         # Extract available timeframes
-        current_timeframe = next((key for key in timeframed_data if ("Current" or "Latest") in key), None)
+        current_timeframe = next((key for key in timeframed_data if "Current" in key or "Latest" in key), None)
         prior_timeframe = next((key for key in timeframed_data if "Prior" in key), None)
         baseline_timeframe = next((key for key in timeframed_data if "Baseline" in key), None)
 
