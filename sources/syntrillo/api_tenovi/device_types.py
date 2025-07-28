@@ -15,6 +15,7 @@ class DeviceTypes:
     TENOVI_DEVICE_NAME__BPM_PREFIX = "Tenovi BPM"
     TENOVI_DEVICE_NAME__BPM_LARGE  = "Tenovi BPM - L"
     TENOVI_DEVICE_NAME__BPM_SMALL  = "Tenovi BPM - S"
+    TENOVI_DEVICE_NAME__BPM_OMRON  = "Tenovi BPM - S"
 
     SYNTRILLO_TENOVI_DEVICE_NAMES = [
         TENOVI_DEVICE_NAME__WATCH,
@@ -68,6 +69,3 @@ if __name__ == "__main__":
     print(log)
     if log['success']:
         device_types_module.print_device_names(device_types)
-
-
-
