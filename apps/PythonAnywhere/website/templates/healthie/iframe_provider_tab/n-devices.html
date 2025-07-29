@@ -1,0 +1,315 @@
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/devices.html -->
+
+<!-- Styling: Adopted from blood_pressure.html for consistency -->
+<style>
+    section {
+        padding: 1rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    section h2 {
+        font-weight: bold;
+        font-size: large;
+        margin: 0;
+    }
+    .dev-biometric-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        background-color: white;
+        border: 1px solid black;
+    }
+    .dev-biometric-table tr {
+        border-bottom: 1px solid black;
+    }
+    .dev-biometric-table td, .dev-biometric-table th {
+        padding: 1rem;
+        text-align: left;
+        vertical-align: top;
+    }
+    .dev-biometric-table th {
+        font-weight: bold;
+        color: #374151;
+        background-color: #f9fafb;
+        border-right: 1px solid black;
+    }
+    .dev-biometric-table td:first-child {
+        font-weight: bold;
+        color: #374151;
+        background-color: #f9fafb;
+        border-right: 1px solid black;
+    }
+    .dev-biometric-table td:last-child {
+        color: #6b7280;
+    }
+    .dev-form-submit-button {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: white;
+        border-radius: 0.375rem;
+        border: none;
+        background-color: #3b82f6;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
+    }
+    .dev-form-submit-button:hover {
+        background-color: #2563eb;
+        text-decoration: none;
+    }
+    .dev-form-submit-button:active {
+        transform: scale(0.95);
+    }
+    .dev-form-input-container {
+        width: 100%;
+        display: flex;
+        /* flex-direction: column; */
+    }
+    .dev-form-input-container label {
+        font-size: smaller;
+        font-weight: bold;
+        margin: 0;
+    }
+    .dev-form-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        outline: none;
+    }
+    .dev-form-input:focus {
+        box-shadow: 0 0 0 2px #3b82f6;
+        border-color: #3b82f6;
+    }
+    .dev-spinner {
+        display: inline-block;
+        width: 2rem !important;
+        height: 2rem !important;
+        border: 4px solid white;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .flex {
+        display: flex;
+    }
+    .flex-col {
+        flex-direction: column;
+    }
+    .gap-4 {
+        gap: 1rem;
+    }
+</style>
+
+<div class="flex flex-col gap-4">
+    <section>
+        <h2 class="text-lg font-bold">Devices in use</h2>
+        <div class="table-container-data">
+            <table class="dev-biometric-table">
+                <thead>
+                    <tr>
+                        <th>Device Name</th>
+                        <th>Gateway ID</th>
+                        <th>Created At</th>
+                        <th>Patient SMS opt-in</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if paired_devices %}
+                        {% for device in paired_devices %}
+                            <tr>
+                                <td>{{ device.device.name }}</td>
+                                <td>{{ device.device.hardware_uuid_formatted }}</td>
+                                <td>{{ device.device.created_USformat }}</td>
+                                <td>{{ device.patient.sms_opt_in }}</td>
+                                <td>
+                                    {% if device.status == 'Dropship Requested' %}
+                                        {% if device.device.fulfillment_request and device.device.fulfillment_request.flagged_by_client %}
+                                            Flagged (dropship pending)
+                                        {% else %}
+                                            {{ device.status }}
+                                        {% endif %}
+                                    {% else %}
+                                        {{ device.status }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5">No device available</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="text-lg font-bold">Order new Tenovi device(s)</h2>
+        <ul>
+            <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
+            <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
+            <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
+            <li>Obtain the patient's consent to receive SMS messages.</li>
+            <li>Flagged devices will be on hold. You can review them on the Tenovi portal and validate the dropship order.</li>
+        </ul>
+        <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
+            <div class="dev-form-input-container">
+                <label>Phone number:</label>
+                <input class="dev-form-input" type="text" value="{{ user_pii.phone_number }}" readonly>
+            </div>
+            {% if n_user_locations > 1 %}
+            <div class="dev-form-input-container">
+                <label>Choose location:</label>
+                <select name="location_index" class="dev-form-input">
+                    {% for location in user_pii.locations %}
+                    <option value="{{ loop.index0 }}">
+                        {{ location.line1 }}, {{ location.line2 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}, {{ location.country }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            {% if n_user_locations == 0 %}
+            <div class="dev-form-input-container">
+                <label>Address:</label>
+                <input class="dev-form-input" type="text" value="No locations available" readonly>
+            </div>
+            {% else %}
+            {% for location in user_pii.locations %}
+            <div class="dev-form-input-container">
+                <label>Address:</label>
+                <input class="dev-form-input" type="text" value="{{ location.line1 }} {{ location.line2 }}" readonly>
+            </div>
+            <div class="dev-form-input-container">
+                <label>City:</label>
+                <input class="dev-form-input" type="text" value="{{ location.city }}" readonly>
+            </div>
+            <div class="dev-form-input-container">
+                <label>State:</label>
+                <input class="dev-form-input" type="text" value="{{ location.state }}" readonly>
+            </div>
+            <div class="dev-form-input-container">
+                <label>Zip code:</label>
+                <input class="dev-form-input" type="text" value="{{ location.zip }}" readonly>
+            </div>
+            <div class="dev-form-input-container">
+                <label>Country:</label>
+                <input class="dev-form-input" type="text" value="{{ location.country }}" readonly>
+            </div>
+            {% endfor %}
+            {% endif %}
+            <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
+            {% if n_user_locations > 1 %}
+            <div class="dev-form-input-container">
+                <label for="includeGatewayId">Include Gateway ID :</label>
+                <input class="dev-form-input" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes" {{ gateway_checked }}>
+                <input class="dev-form-input" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
+            </div>
+            {% endif %}
+            <div class="dev-form-input-container">
+                <input class="dev-form-input" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
+                <label for="sms_opt_in">SMS opt-in [if patient gave consent]</label>
+            </div>
+            <div class="dev-form-input-container">
+                <input class="dev-form-input" type="checkbox" id="FlagDevices" name="flag_devices" value="yes">
+                <label for="flag_devices">Flag devices for review</label>
+            </div>
+            <fieldset class="dev-form-input-container">
+                <legend class="styled-legend">Select Devices:</legend>
+                <input class="dev-form-input" type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
+                <label for="bpmLarge">BPM Large</label>
+                <!-- <input class="dev-form-input" type="checkbox" id="bpmSmall" name="device_bpm_small" value="yes"> -->
+                <!-- <label for="bpmSmall">BPM Small</label> -->
+                <input class="dev-form-input" type="checkbox" id="bpmOmron" name="device_bpm_omron" value="yes">
+                <label for="bpmOmron">BPM Omron</label>
+                <input class="dev-form-input" type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
+                <label for="pillbox">Pillbox</label>
+                <input class="dev-form-input" type="checkbox" id="watch" name="device_watch" value="yes" checked>
+                <label for="watch">Watch</label>
+            </fieldset>
+            <button type="button" id="orderNewDevicesFormButton" class="dev-form-submit-button">Place Order</button>
+            <span id="orderNewDevicesFormLoading" class="response-message" style="display:none;"><b>Running - Please wait ...</b></span>
+            <span id="orderNewDevicesFormSuccess" class="response-message" style="display:none;"></span>
+            <textarea id="orderNewDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off" style="width:100%;margin-top:1rem;"></textarea>
+        </form>
+    </section>
+</div>
+
+<!-- ========================= SCRIPTS ============================ -->
+
+<script>
+
+$(document).ready(function() {
+
+    // ========================= Order New Tenovi Devices =========================
+
+    // allows to prevent multiple requests from being sent at the same time
+    let isOrderNewDevicesRunning = false;
+
+    $('#orderNewDevicesFormButton').click(function() {
+
+        // allows to prevent multiple requests from being sent at the same time
+        if (isOrderNewDevicesRunning) return;
+        isOrderNewDevicesRunning = true;
+
+        // Hide and erase previous log and show loading indicator
+        $('#orderNewDevicesFormTextarea').val("");
+        $('#orderNewDevicesFormSuccess').hide();
+        $('#orderNewDevicesFormLoading').show();
+        $('body').addClass('loading'); // Apply loading cursor
+
+        $.ajax({
+            url: $('#orderNewDevicesForm').attr('action'),
+            type: 'POST',
+            data: $('#orderNewDevicesForm').serialize(),
+            success: function(response) {
+                $('#orderNewDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
+                if (response.success) {
+                        $('#orderNewDevicesFormSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#orderNewDevicesFormSuccess').show();
+                        // Reload the page after a delay to allow the user to read the success message
+                        setTimeout(function() {
+                            // allows to prevent multiple requests from being sent at the same time
+                            // disabling until timer ends
+                            isOrderNewDevicesRunning = false;
+
+                            // location.reload();
+                            // reloading only the device_s_ tab. loadTabContent is defined in the index.html
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
+                            loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
+                        }, 5000); // Reload after a delay
+                    } else {
+                        $('#orderNewDevicesFormSuccess').html("Error. See logs below.");
+                        $('#orderNewDevicesFormSuccess').show();
+                        // enables the button to try again
+                        isOrderNewDevicesRunning = false;
+                    }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error); // Log AJAX error to console
+                $('#orderNewDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+
+                // allows to prevent multiple requests from being sent at the same time
+                isOrderNewDevicesRunning = false;
+            },
+            complete: function() {
+                // Hide loading indicator after AJAX completes (whether success or error)
+                $('#orderNewDevicesFormLoading').hide();
+                $('body').removeClass('loading'); // Remove loading cursor
+
+            }
+        });
+    });
+});
+</script>

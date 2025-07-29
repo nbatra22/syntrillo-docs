@@ -226,7 +226,7 @@ class Devices:
     def create_set_of_devices_with_fulfillment_request(
         self,
         # devices
-        devices_names: list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox'),
+        devices_names: list = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox', 'Omron BPM'),
 
         # pairing
         pair_devices: bool = True,
@@ -481,5 +481,3 @@ if __name__ == "__main__":
         devices_module.auth.print_pretty_json(created_devices)
 
         devices_module.auth.print_pretty_json(log)
-
-

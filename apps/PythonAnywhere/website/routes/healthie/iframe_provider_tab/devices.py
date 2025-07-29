@@ -117,6 +117,7 @@ def tenovi_order_new_devices_form():
 
     device_bpm_large = _checkbox_to_bool(request.form.get('device_bpm_large'))
     device_bpm_small = _checkbox_to_bool(request.form.get('device_bpm_small'))
+    device_bpm_omron = _checkbox_to_bool(request.form.get('device_bpm_omron'))
     device_pillbox = _checkbox_to_bool(request.form.get('device_pillbox'))
     device_watch = _checkbox_to_bool(request.form.get('device_watch'))
 
@@ -135,7 +136,8 @@ def tenovi_order_new_devices_form():
     log_place_order = order.place_order(
         devices_names=[
             'Tenovi BPM - L' if device_bpm_large else None,
-            'Tenovi BPM - S' if device_bpm_small else None,
+            # 'Tenovi BPM - S' if device_bpm_small else None,
+            'Omron BPM' if device_bpm_omron else None,
             'Tenovi Watch' if device_watch else None,
             'Tenovi Pillbox' if device_pillbox else None,
         ],
@@ -179,4 +181,3 @@ def tenovi_order_new_devices_form():
         }
 
     return jsonify( log ), 200
-
