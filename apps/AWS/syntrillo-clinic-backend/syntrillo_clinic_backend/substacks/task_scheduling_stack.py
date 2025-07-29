@@ -131,7 +131,7 @@ class HealthieDataIngestorWorkFlow(Construct):
 
         # Create the Lambda task
         process_task = tasks.LambdaInvoke(
-            self, "FetchHealthieData", 
+            self, "FetchHealthieData",
             lambda_function=lambda_function,
             payload=sfn.TaskInput.from_object({
                 "action": "process"
@@ -141,7 +141,7 @@ class HealthieDataIngestorWorkFlow(Construct):
         # Create the state machine
         self.state_machine = sfn.StateMachine(
             self, "HealthieDataIngestorWorkFlow",
-            state_machine_name="HealthieDataIngestorWorkFlow", 
+            state_machine_name="HealthieDataIngestorWorkFlow",
             definition_body=sfn.DefinitionBody.from_chainable(process_task),
             timeout=Duration.minutes(5),
             tracing_enabled=True
@@ -178,7 +178,7 @@ class CandidBillingIngestorWorkFlow(Construct):
 
         # Create the Lambda task
         process_task = tasks.LambdaInvoke(
-            self, "FetchCandidBilling", 
+            self, "FetchCandidBilling",
             lambda_function=lambda_function,
             payload=sfn.TaskInput.from_object({
                 "action": "process"
@@ -188,7 +188,7 @@ class CandidBillingIngestorWorkFlow(Construct):
         # Create the state machine
         self.state_machine = sfn.StateMachine(
             self, "CandidBillingIngestorWorkFlow",
-            state_machine_name="CandidBillingIngestorWorkFlow", 
+            state_machine_name="CandidBillingIngestorWorkFlow",
             definition_body=sfn.DefinitionBody.from_chainable(process_task),
             timeout=Duration.minutes(5),
             tracing_enabled=True
@@ -240,7 +240,7 @@ class BloodPressureAnalysisWorkFlow(Construct):
             self, "AnalysePatientBloodPressure",
             lambda_function=lambda_function,
             payload=sfn.TaskInput.from_object({
-                "action": "analyse_patient_blood_pressure",
+                "action": "analyze_patient_blood_pressure",
                 "id.$": "$.id"
             }),
             result_path="$",
@@ -308,13 +308,13 @@ class BloodPressureAnalysisWorkFlow(Construct):
 # STACKS
 # -----------------------------------------------------------------------------
 class SyntrilloClinicTaskSchedulingStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, 
+    def __init__(self, scope: Construct, construct_id: str,
                  environment_context: dict,
-                 network: Construct, 
+                 network: Construct,
                  database: Construct,
                  storage: Construct,
                  secrets: Construct,
-                 lambda_function: _lambda.Function, 
+                 lambda_function: _lambda.Function,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -366,7 +366,7 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
         )
 
 
-       
+
         self.candid_billing_ingestor = CandidBillingIngestor(
             self, "CandidBillingIngestor",
             aws_environment=self.aws_environment,
@@ -381,7 +381,7 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
             lambda_function=self.candid_billing_ingestor.candid_billing_ingestor_function
         )
 
-        if self.aws_environment == "staging":        
+        if self.aws_environment == "staging":
             self.blood_pressure_analysis = BloodPressureAnalysis(
                 self, "BloodPressureAnalysis",
                 aws_environment=self.aws_environment,

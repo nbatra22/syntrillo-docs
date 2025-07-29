@@ -1,4 +1,5 @@
 import json
+import uuid
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.system.logger import logger
@@ -19,8 +20,12 @@ def handler(event, context):
             return list_patients()
 
         # BP Alert handling. In future, make this logic conditional for other functionality grouping
-        syntrillo_internal_key = event.get('syntrillo_internal_key')
-        healthie_user_id = event.get('healthie_user_id')
+        syntrillo_internal_key = event.get('id')
+
+        lookup_codes = LookUpCodesManagement()
+
+        entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=uuid.UUID(syntrillo_internal_key))
+        healthie_user_id = entry['healthie_user_id']
 
         # Input validation
         if syntrillo_internal_key is None or healthie_user_id is None:
@@ -29,7 +34,7 @@ def handler(event, context):
         logger.info(f"Building BloodPressureAlertManager for patient {syntrillo_internal_key}...")
         alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
 
-        if action == 'run_analysis':
+        if action == 'analyze_patient_blood_pressure':
             alert_manager.handle_two_week_measurement()
             alert_manager.handle_two_week_status()
 
@@ -38,7 +43,7 @@ def handler(event, context):
                 'body': f'Successfully processed 2-week BP analysis event for patient {syntrillo_internal_key}.'
             }
 
-        elif action == 'check_measurement_consistancy':
+        if action == 'check_measurement_consistancy':
             alert_manager.handle_three_day_no_measurement()
             return {
                 'statusCode': 200,
@@ -70,8 +75,7 @@ def list_patients():
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient["id"])
         if entry:
             patient_internal_key_list["users"].append({
-                "healthie_user_id": patient["id"],
-                "syntrillo_internal_key": str(entry['syntrillo_internal_key'])
+                "id": str(entry['syntrillo_internal_key'])
             })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
