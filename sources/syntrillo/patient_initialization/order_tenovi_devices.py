@@ -77,7 +77,7 @@ class OrderTenoviDevices:
         error_flag = False
         error_message = ""
         # make sure the device names are valid
-        valid_device_names = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Tenovi Watch', 'Tenovi Pillbox', None)
+        valid_device_names = ('Tenovi BPM - L', 'Tenovi BPM - S', 'Omron BPM', 'Tenovi Watch', 'Tenovi Pillbox', None)
         for device_name in devices_names:
             if device_name not in valid_device_names:
                 error_flag = True
@@ -149,7 +149,3 @@ class OrderTenoviDevices:
             }
 
         return log
-
-
-
-
