@@ -1,0 +1,304 @@
+{% extends "healthie/iframe_provider_tab/forms/index_form.html" %}
+
+{% block extra_head %}
+<style>
+    .checklist-form {
+        margin-bottom: 1rem;
+    }
+
+    .input-button-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+
+    .input-button-group input[type="text"] {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 0.375rem;
+    }
+
+    .input-button-group button {
+        padding: 0.5rem 1rem;
+        background-color: #2563eb;
+        /* Tailwind's blue-600 */
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        cursor: pointer;
+    }
+
+    .input-button-group button:hover {
+        background-color: #1d4ed8;
+        /* Tailwind's blue-700 */
+    }
+
+    .checklist-add-btn {
+        color: white;
+        background-color: #3B82F6;
+        border-radius: 0.25rem;
+        /* padding: 0.5rem 0.75rem; */
+        border: none !important;
+        outline: none !important;
+    }
+
+    .checklist-add-btn:hover {
+        background-color: #2563EB;
+    }
+
+    .checklist {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .checklist li {
+        margin-bottom: 0.5rem;
+        display: flex;
+    }
+
+    .checklist input[type="checkbox"] {
+        margin-right: 0.5rem;
+    }
+
+    .checklist-add {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<form id="medication-form" class="form-subcontainer" onsubmit="">
+
+    <div id="" class="form-content">
+
+        <div class="form-group">
+            <label for="service-date">Date of Service:</label>
+            <input type="date" id="service-date" name="service_date" required>
+        </div>
+
+        <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">Physical Activity</h2>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="moderate-activity">Moderate Activity (min/day)</label>
+            <input type="number" id="moderate-activity" name="moderate_activity" min="0" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="vigorous-activity">Vigorous Activity (min/day)</label>
+            <input type="number" id="vigorous-activity" name="vigorous_activity" min="0" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="sitting-activity">Sitting (hours/day)</label>
+            <input type="number" id="sitting-activity" name="sitting_activity" min="0" max="24" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="sleep-activity">Sleep (hours/day)</label>
+            <input type="number" id="sleep-activity" name="sleep_activity" min="0" max="24" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="physical-activity-notes">Notes</label>
+            <textarea id="physical-activity-notes" name="physical_activity_notes" rows="4" required></textarea>
+        </div>
+
+        <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">SF-36 Scores</h2>
+            <div class="divider-line"></div>
+        </div>
+
+        <h2 class="form-section-info">
+            Higher scores indicate better health, while lower scores indicate more disability.
+        </h2>
+
+        <div class="form-group">
+            <label for="sf-36-date">Date</label>
+            <input type="date" id="sf-36-date" name="sf36_date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="physical-functioning">Physical functioning:</label>
+            <input type="number" id="physical-functioning" name="physical_functioning" min="0" max="100" step="1"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="role-limitations-physical">Role limitations due to physical health:</label>
+            <input type="number" id="role-limitations-physical" name="role_limitations_physical" min="0" max="100"
+                step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="role-limitations-emotional">Role limitations due to emotional problems:</label>
+            <input type="number" id="role-limitations-emotional" name="role_limitations_emotional" min="0" max="100"
+                step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="energy-fatigue">Energy/fatigue:</label>
+            <input type="number" id="energy-fatigue" name="energy_fatigue" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="emotional-wellbeing">Emotional well-being:</label>
+            <input type="number" id="emotional-wellbeing" name="emotional_wellbeing" min="0" max="100" step="1"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="social-functioning">Social functioning:</label>
+            <input type="number" id="social-functioning" name="social_functioning" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="pain">Pain:</label>
+            <input type="number" id="pain" name="pain" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="general-health">General health:</label>
+            <input type="number" id="general-health" name="general_health" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-group">
+            <label for="health-change">Health change:</label>
+            <input type="number" id="health-change" name="health_change" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">Sodium Questionnaire Score</h2>
+            <div class="divider-line"></div>
+        </div>
+
+        <h2 class="form-section-info">
+            High sodium user: 65 or greater, low sodium user: below 65
+        </h2>
+
+        <div class="form-group">
+            <label for="sodium-score">Score</label>
+            <input type="number" id="sodium-score" name="sodium_score" min="0" max="100" step="1" required>
+        </div>
+
+        <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">Substance & Fluid Intake</h2>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="nicotine">Nicotine:</label>
+            <input type="text" id="nicotine" name="nicotine" required>
+        </div>
+
+        <div class="form-group">
+            <label for="caffeinated-beverages">Cups of caffeinated beverages per day:</label>
+            <input type="text" id="caffeinated-beverages" name="caffeinated_beverages_per_day" required>
+        </div>
+
+        <div class="form-group">
+            <label for="non-caffeinated-beverages">Cups of non-caffeinated beverages per day:</label>
+            <input type="text" id="non-caffeinated-beverages" name="non_caffeinated_beverages_per_day" required>
+        </div>
+
+        <div class="form-group">
+            <label for="alcohol-consumption">Alcohol consumption (daily, weekly, etc.):</label>
+            <input type="text" id="alcohol-consumption" name="alcohol_consumption_frequency" required>
+        </div>
+
+        <div class="form-group">
+            <label for="alcohol-servings">On average, how many servings in one setting? (1 serving = 12 oz beer, 5 oz
+                wine,
+                1 oz liquor)</label>
+            <input type="text" id="alcohol-servings" name="alcohol_servings_per_setting" required>
+        </div>
+
+        <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">Patient Interaction</h2>
+            <div class="divider-line"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary" rows="4" required></textarea>
+        </div>
+
+        <!-- <div class="form-divider">
+            <div class="divider-line"></div>
+            <h2 class="divider-title">Checklist</h2>
+            <div class="divider-line"></div>
+        </div> -->
+
+        <!-- <div class="form-group">
+            <label for="new-checklist-item">Add Checklist Item</label>
+            <div id="" class="checklist-add">
+                <input type="text" id="new-checklist-item" name="new_checklist_item"
+                    placeholder="e.g. Review medication adherence">
+                <button type="button" class="checklist-add-btn" onclick="addChecklistItem()">
+                    Add
+                </button>
+            </div>
+        </div> -->
+
+        <!-- <div class="form-group">
+            <label class="">Checklist</label>
+            <ul id="checklist-items" class="checklist">
+                <li>
+                    <input type="checkbox" name="checklist_items[]" value="review_medication">
+                    <label>
+                        Review medication adherence
+                    </label>
+                </li>
+            </ul>
+        </div> -->
+
+    </div>
+
+    <div class="form-submit-footer">
+        <h3 id="" class="">
+
+        </h3>
+        <button type="submit" id="follow-up-submit-btn" class="form-submit-btn" onclick="">
+            Save
+        </button>
+    </div>
+
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.getElementById("add-checklist-btn").addEventListener("click", function () {
+        const input = document.getElementById("new-checklist-item");
+        const value = input.value.trim();
+        if (value === "") return;
+
+        const list = document.getElementById("checklist-items");
+
+        const li = document.createElement("li");
+        const id = `checklist-${Date.now()}`;
+
+        li.innerHTML = `
+            <label for="${id}">
+                <input type="checkbox" id="${id}" name="checklist_items[]" value="${value}" />
+                ${value}
+            </label>
+        `;
+
+        list.appendChild(li);
+        input.value = "";
+    });
+
+</script>
+{% endblock %}
