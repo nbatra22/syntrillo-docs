@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 import pytz
 import pandas as pd
 import uuid
+import boto3
+import json
 
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.api_healthie.conversations import HealthieConversations
@@ -257,9 +259,9 @@ class BloodPressureAlertManager:
 
         return
 
-    def handle_three_day_no_measurement(self) -> None:
+    def handle_five_day_no_measurement(self) -> None:
         """
-        Notify clinicians if a patient has not taken a blood pressure measurement in the last 3 days.
+        Notify clinicians if a patient has not taken a blood pressure measurement in the last 5 days.
 
         Args:
             None
@@ -271,7 +273,7 @@ class BloodPressureAlertManager:
         # 1. Get patient's last bp measurement
         try:
             data_end_date = datetime.now(timezone.utc)
-            data_start_date = data_end_date - timedelta(days=6)
+            data_start_date = data_end_date - timedelta(days=8)
 
             db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
@@ -282,7 +284,7 @@ class BloodPressureAlertManager:
             )
 
             if df is None or df.empty:
-                logger.info(f"No BP measurements found for healthie user id {self.healthie_user_id} in the last 5 days")
+                logger.info(f"No BP measurements found for healthie user id {self.healthie_user_id} in the last 7 days")
                 return
 
             # Convert timestamp to datetime if not already
@@ -295,51 +297,75 @@ class BloodPressureAlertManager:
 
             # Define time periods
             now = data_end_date
-            three_days_ago_start = now - timedelta(days=5)  # 5 days ago
-            three_days_ago_end = now - timedelta(days=4)    # 4 days ago
+            five_days_ago_start = now - timedelta(days=7)  # 7 days ago
+            five_days_ago_end = now - timedelta(days=6)    # 6 days ago
 
-            # Check for measurements around 3 days ago (between 4 and 3 days ago)
-            measurements_3_days_ago = df[
-                (df['timestamp_local'] >= three_days_ago_start) &
-                (df['timestamp_local'] < three_days_ago_end)
+            # Check for measurements around 5 days ago (between 6 and 5 days ago)
+            measurements_5_days_ago = df[
+                (df['timestamp_local'] >= five_days_ago_start) &
+                (df['timestamp_local'] < five_days_ago_end)
             ]
 
-            # checks if there is a measurement in the last 3 days
+            # checks if there is a measurement in the last 5 days
             measurements_since = df[
-                df['timestamp_local'] >= three_days_ago_end
+                df['timestamp_local'] >= five_days_ago_end
             ]
 
-            has_measurement_3_days_ago = not measurements_3_days_ago.empty
+            has_measurement_5_days_ago = not measurements_5_days_ago.empty
             has_measurements_since = not measurements_since.empty
 
             logger.info(f"Patient {self.syntrillo_internal_key}: "
-                    f"measurements 3-4 days ago: {len(measurements_3_days_ago)}, "
-                    f"measurements since (last 3 days): {len(measurements_since)}")
+                    f"measurements 5-6 days ago: {len(measurements_5_days_ago)}, "
+                    f"measurements since (last 5 days): {len(measurements_since)}")
 
-            if has_measurement_3_days_ago and not has_measurements_since:
-                logger.info(f"Patient {self.syntrillo_internal_key} had measurements 3+ days ago but none since. Sending notification...")
+            if has_measurement_5_days_ago and not has_measurements_since:
+                logger.info(f"Patient {self.syntrillo_internal_key} had measurements 5+ days ago but none since. Sending notification...")
 
-                # Get the most recent measurement from 3 days ago for context
-                last_measurement_3_days_ago = measurements_3_days_ago.iloc[-1]
-                measurement_date = last_measurement_3_days_ago['timestamp_local'].strftime('%m/%d/%y')
+                # Get the most recent measurement from 5 days ago for context
+                last_measurement_5_days_ago = measurements_5_days_ago.iloc[-1]
+                measurement_date = last_measurement_5_days_ago['timestamp_local'].strftime('%m/%d/%y')
 
                 content = (
-                    f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 3 DAYS</b></p>\n"
+                    f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 5 DAYS</b></p>\n"
                     f"<p>Last measurement was taken on {measurement_date} "
-                    f"(systolic: {last_measurement_3_days_ago['value_1']}, "
-                    f"diastolic: {last_measurement_3_days_ago['value_2']}).</p>"
+                    f"(systolic: {last_measurement_5_days_ago['value_1']}, "
+                    f"diastolic: {last_measurement_5_days_ago['value_2']}).</p>"
                 )
                 self.notify_clinicians(content)
             else:
-                if not has_measurement_3_days_ago:
-                    logger.info(f"Patient {self.syntrillo_internal_key}: No measurement found 3-4 days ago, continuing")
+                if not has_measurement_5_days_ago:
+                    logger.info(f"Patient {self.syntrillo_internal_key}: No measurement found 5-6 days ago, continuing")
                 if has_measurements_since:
-                    logger.info(f"Patient {self.syntrillo_internal_key}: Measurements found in last 3 days, continuing")
+                    logger.info(f"Patient {self.syntrillo_internal_key}: Measurements found in last 5 days, continuing")
         except Exception as e:
-            logger.error(f"Error while handling three day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
+            logger.error(f"Error while handling five day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
             raise e
 
+    def create_schedule(self):
+        """
 
+        Create a schedule for the patient
+
+        """
+        schedule_name = f"bp-analysis-schedule-{self.syntrillo_internal_key}"
+
+        response = boto3.client('scheduler').create_schedule(
+            name=schedule_name,
+            schedule_expression=f"rate(14 days)",
+            state='ENABLED',
+            target={
+                'arn': 'arn:aws:lambda:us-east-1:021891579520:function:BloodPressureAnalysisFunction',
+                'roleArn': 'arn:aws:iam::123456789012:role/scheduler-role',
+                'input': json.dumps({
+                    'action': 'analyze_patient_blood_pressure',
+                    'id': str(self.syntrillo_internal_key)
+                })
+            }
+        )
+
+        logger.info(f"Successfully created BP analysis schedule for patient {self.syntrillo_internal_key}")
+
+        return
 
     def notify_clinicians(self, content: str) -> None:
         """
@@ -485,5 +511,3 @@ if __name__ == '__main__':
 
     #  ------- Testing 3 day no measurement alert function ------- #
     alert_manager.handle_three_day_no_measurement()
-
-

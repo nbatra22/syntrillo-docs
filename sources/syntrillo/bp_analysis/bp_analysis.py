@@ -226,6 +226,13 @@ class BloodPressureAnalysis:
         Extracts bpm_df values into Baseline (first 2 weeks), Prior (2 weeks before Current), and Current (latest 2 weeks).
         Dynamically includes only relevant timeframes based on total available data.
         Ensures a minimum of 3 measurements per timeframe and at least one non-null measurement for it to be included.
+
+        Returns:
+            dict: {
+                "Baseline": (date_range, dataframe),
+                "Prior": (date_range, dataframe),
+                "Current": (date_range, dataframe)
+            }
         """
         df = self.bpm_df
 
