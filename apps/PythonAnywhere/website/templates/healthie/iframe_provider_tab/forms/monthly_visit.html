@@ -1,0 +1,242 @@
+{% extends "healthie/iframe_provider_tab/forms/index_form.html" %}
+
+{% block extra_head %}
+<style>
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<form id="medication-form" class="form-subcontainer" onsubmit="">
+
+    <div id="" class="form-content">
+
+        <div id="" class="form-group">
+            <label for="previous-stroke">
+                1. Has the patient had a previous stroke?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-yes" name="previous_stroke" value="yes">
+                    <label for="previous-stroke-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-no" name="previous_stroke" value="no">
+                    <label for="previous-stroke-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="previous-stroke-count">
+                1a. How many strokes has the patient had?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-count-one" name="previous_stroke_count" value="one">
+                    <label for="previous-stroke-count-one">
+                        One
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-multiple" name="previous_stroke_count" value="multiple">
+                    <label for="previous-stroke-multiple">
+                        Multiple
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="previous-stroke-count">
+                1b. What was the latest stroke's mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-small-vessel" name="previous_stroke_mechanism" value="small-vessel">
+                    <label for="previous-stroke-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-large-vessel" name="previous_stroke_mechanism" value="large-vessel">
+                    <label for="previous-stroke-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-cryptogenic" name="previous_stroke_mechanism" value="cryptogenic">
+                    <label for="previous-stroke-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-hypercoagulable" name="previous_stroke_mechanism" value="hypercoagulable">
+                    <label for="previous-stroke-mechanism-hypercoagulable">
+                        Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-structural" name="previous_stroke_mechanism" value="structural">
+                    <label for="previous-stroke-mechanism-structural">
+                        Structural
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-other" name="previous_stroke_mechanism" value="other">
+                    <label for="previous-stroke-mechanism-other">
+                        Other
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="tia-screening">
+                2. For neurologist: Has the patient been screened for TIA?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-screening-yes" name="tia_screening" value="yes">
+                    <label for="tia-screening-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-screening-no" name="tia_screening" value="no">
+                    <label for="tia-screening-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="tia-likelihood">
+                2a. What is the likelihood of TIA?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-yes" name="tia_likelihood" value="likely">
+                    <label for="tia-likelihood-yes">
+                        High likelihood
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-no" name="tia_likelihood" value="not-likely">
+                    <label for="tia-likelihood-no">
+                        Not likely
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="tia-likelihood">
+                2b. What was the TIA mechanism? If 'other', what other mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-small-vessel" name="previous_stroke_mechanism" value="small-vessel">
+                    <label for="tia-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-large-vessel" name="tia_mechanishm" value="large-vessel">
+                    <label for="tia-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-cryptogenic" name="tia_mechanishm" value="cryptogenic">
+                    <label for="tia-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-hypercoagulable" name="tia_mechanishm" value="hypercoagulable">
+                    <label for="tia-mechanism-hypercoagulable">
+                        Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-structural" name="tia_mechanishm" value="structural">
+                    <label for="tia-mechanism-structural">
+                        Structural
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-other" name="tia_mechanishm" value="other">
+                    <label for="tia-mechanism-other">
+                        Other
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="prior-head-ct">
+                3. Has the patient had a prior head CT?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-yes" name="tia_likelihood" value="likely">
+                    <label for="tia-likelihood-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-no" name="tia_likelihood" value="not-likely">
+                    <label for="tia-likelihood-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="form-submit-footer">
+        <h3 id="" class="">
+
+        </h3>
+        <button type="submit" id="follow-up-submit-btn" class="form-submit-btn" onclick="">
+            Save
+        </button>
+    </div>
+
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.getElementById("add-checklist-btn").addEventListener("click", function () {
+        const input = document.getElementById("new-checklist-item");
+        const value = input.value.trim();
+        if (value === "") return;
+
+        const list = document.getElementById("checklist-items");
+
+        const li = document.createElement("li");
+        const id = `checklist-${Date.now()}`;
+
+        li.innerHTML = `
+            <label for="${id}">
+                <input type="checkbox" id="${id}" name="checklist_items[]" value="${value}" />
+                ${value}
+            </label>
+        `;
+
+        list.appendChild(li);
+        input.value = "";
+    });
+
+</script>
+{% endblock %}
