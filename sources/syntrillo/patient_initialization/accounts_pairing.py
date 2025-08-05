@@ -157,11 +157,14 @@ class AccountsPairing:
         if healthie_user_id is not None:
             entry = lookup_manager.retrieve_entry_by_healthie_user_id(healthie_user_id)
             pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
+
         elif syntrillo_internal_key is not None:
             entry = lookup_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
             pseudo_code_for_tenovi_phi_access = entry.get('pseudo_code_for_tenovi_phi_access')
+
         elif pseudo_code_for_tenovi_phi_access is not None:
             entry = lookup_manager.retrieve_entry_by_pseudo_code(pseudo_code_for_tenovi_phi_access)
+
         elif pseudo_code_for_tenovi_phi_access is None:
             return None
 
@@ -260,5 +263,3 @@ if __name__ == "__main__":
         healthie_user_id = "1051529" # Omar's "Patient One" with devices
         devices = AccountsPairing.get_paired_devices(healthie_user_id=healthie_user_id, add_syntrillo_database_stats=True, add_tenovi_latest_record_timestamp=True)
         print(json.dumps(devices, indent=4))
-
-

@@ -93,7 +93,7 @@ class CandidBillingIngestor(Construct):
         # -----------------------------------------------------------------------
         # Remote monitoring Lambdas
 
-        self.candid_billing_ingestor_function = _lambda.Function(self, "CandidBillingIngestorFunction",
+        self.function = _lambda.Function(self, "CandidBillingIngestorFunction",
             function_name="CandidBillingIngestorFunction",
             vpc = self.vpc,
             handler="handler.handler",
@@ -117,11 +117,11 @@ class CandidBillingIngestor(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.candid_billing_ingestor_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.candid_billing_ingestor_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.candid_billing_ingestor_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.candid_billing_ingestor_function, self.secrets_candid_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.function_security_group = self.candid_billing_ingestor_function.connections.security_groups[0]
+        self.grant_read_secrets(self.function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_candid_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.function_security_group = self.function.connections.security_groups[0]
 
         # ---------------------------------------------------------------------
         # OUTPUTS

@@ -214,6 +214,10 @@
         {
           "ip": "13.56.235.252/32",
           "ip_owner": "tenovi-prod"
+        },
+        {
+          "ip": "54.85.195.54/32",
+          "ip_owner": "tenovi-prod"
         }
       ],
       "disable_execute_api_endpoint": true
