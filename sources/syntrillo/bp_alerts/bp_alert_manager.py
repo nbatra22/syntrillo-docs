@@ -127,10 +127,15 @@ class BloodPressureAlertManager:
                 'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
             }
 
-        first_date = record['timestamp_local']
-        today = datetime.now()
+        eastern = pytz.timezone("US/Eastern")
 
-        # Calculate days since first measurement
+        # Parse timestamp_local and attach timezone
+        first_date = datetime.fromisoformat(record['timestamp_local']).astimezone(eastern)
+
+        # Get current time in EST
+        today = datetime.now(eastern)
+
+        # Calculate days since
         days_since_first = (today - first_date).days
 
         # print(f"------ {days_since_first} -------")
