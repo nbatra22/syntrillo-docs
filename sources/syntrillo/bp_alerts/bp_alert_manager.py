@@ -133,12 +133,12 @@ class BloodPressureAlertManager:
         # Calculate days since first measurement
         days_since_first = (today - first_date).days
 
-        print(f"------ {days_since_first} -------")
+        # print(f"------ {days_since_first} -------")
 
         # Check if days > 28 and divisible by 14
         if days_since_first > 28 and days_since_first % 14 == 0:
             self.handle_two_week_measurement()
-            self.handle_five_day_no_measurement()
+            self.handle_two_week_status()
             return {
                 'statusCode': 200,
                 'body': f"Successfully processed 2-week BP analysis for patient {self.syntrillo_internal_key}."
