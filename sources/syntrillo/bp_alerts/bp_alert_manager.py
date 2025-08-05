@@ -116,6 +116,40 @@ class BloodPressureAlertManager:
             'body': f'Successfully processed Tenovi Webhook Blood Pressure event. {body}'
         }
 
+    def handle_two_week_alerts(self) -> dict:
+        db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+
+        record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+
+        if log['success'] == False:
+            return {
+                'statusCode': 400,
+                'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
+            }
+
+        first_date = record['timestamp_local']
+        today = datetime.now()
+
+        # Calculate days since first measurement
+        days_since_first = (today - first_date).days
+
+        print(f"------ {days_since_first} -------")
+
+        # Check if days > 28 and divisible by 14
+        if days_since_first > 28 and days_since_first % 14 == 0:
+            self.handle_two_week_measurement()
+            self.handle_five_day_no_measurement()
+            return {
+                'statusCode': 200,
+                'body': f"Successfully processed 2-week BP analysis for patient {self.syntrillo_internal_key}."
+            }
+        else:
+            return {
+                'statusCode': 200,
+                'body': f"2-week BP analysis was not ran for patient {self.syntrillo_internal_key}. Days since first measurement: {days_since_first}"
+            }
+
+
     def handle_two_week_measurement(self) -> None:
         """
         Analyze specific patient's BP data over the last 4 weeks (2 weeks prior and 2 weeks after)
@@ -136,6 +170,20 @@ class BloodPressureAlertManager:
             mid_date = end_date - timedelta(weeks=2)
 
             db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+
+            record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+
+            if log['success'] == False:
+                return {
+                    'statusCode': 400,
+                    'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
+                }
+
+            if self.should_two_week_analysis(record['timestamp_local']) == False:
+                return {
+                    'statusCode': 200,
+                    'body': f"Two week measurement analysis {self.syntrillo_internal_key} "
+                }
 
             df, log = db_manager.get_tenovi_device_metric_data(
                 metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
@@ -213,7 +261,6 @@ class BloodPressureAlertManager:
 
             end_date = datetime.today()
             start_date = datetime.today() - pd.Timedelta(weeks=1, days=1)
-
 
             _, log = bp_analysis.get_blood_pressure_dataframe(
                 start_date=None,
@@ -340,32 +387,6 @@ class BloodPressureAlertManager:
         except Exception as e:
             logger.error(f"Error while handling five day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
             raise e
-
-    def create_schedule(self):
-        """
-
-        Create a schedule for the patient
-
-        """
-        schedule_name = f"bp-analysis-schedule-{self.syntrillo_internal_key}"
-
-        response = boto3.client('scheduler').create_schedule(
-            name=schedule_name,
-            schedule_expression=f"rate(14 days)",
-            state='ENABLED',
-            target={
-                'arn': 'arn:aws:lambda:us-east-1:021891579520:function:BloodPressureAnalysisFunction',
-                'roleArn': 'arn:aws:iam::123456789012:role/scheduler-role',
-                'input': json.dumps({
-                    'action': 'analyze_patient_blood_pressure',
-                    'id': str(self.syntrillo_internal_key)
-                })
-            }
-        )
-
-        logger.info(f"Successfully created BP analysis schedule for patient {self.syntrillo_internal_key}")
-
-        return
 
     def notify_clinicians(self, content: str) -> None:
         """
@@ -510,4 +531,7 @@ if __name__ == '__main__':
     # print(f"----- {two_week_measurement_response}")
 
     #  ------- Testing 3 day no measurement alert function ------- #
-    alert_manager.handle_three_day_no_measurement()
+    # alert_manager.handle_three_day_no_measurement()
+
+    #  ------- Testing 3 day no measurement alert function ------- #
+    alert_manager.handle_two_week_alerts()

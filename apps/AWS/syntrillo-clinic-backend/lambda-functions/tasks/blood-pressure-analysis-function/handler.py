@@ -5,6 +5,7 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.system.logger import logger
 from syntrillo.system.tracer import tracer
 from syntrillo.bp_alerts.bp_alert_manager import BloodPressureAlertManager
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
 # TODO: comment these decorators when running locally
 @tracer.capture_lambda_handler
@@ -35,13 +36,8 @@ def handler(event, context):
         alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
 
         if action == 'analyze_patient_blood_pressure':
-            alert_manager.handle_two_week_measurement()
-            alert_manager.handle_two_week_status()
 
-            return {
-                'statusCode': 200,
-                'body': f'Successfully processed 2-week BP analysis event for patient {syntrillo_internal_key}.'
-            }
+            return alert_manager.handle_two_week_alerts()
 
         if action == 'check_measurement_consistancy':
             alert_manager.handle_three_day_no_measurement()
