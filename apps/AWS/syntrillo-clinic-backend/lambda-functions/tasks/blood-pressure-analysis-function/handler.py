@@ -37,14 +37,22 @@ def handler(event, context):
 
         if action == 'analyze_patient_blood_pressure':
 
-            return alert_manager.handle_two_week_alerts()
+            has_recent_measurement = alert_manager.handle_five_day_measurement_check()
 
-        if action == 'check_measurement_consistancy':
-            alert_manager.handle_three_day_no_measurement()
-            return {
-                'statusCode': 200,
-                'body': f'Successfully checked patient {syntrillo_internal_key}"s trailing 3 day BP measurement taking consistentcy.'
-            }
+            if has_recent_measurement:
+                return alert_manager.handle_two_week_alerts()
+            else:
+                return {
+                    'statusCode': 200,
+                    'body': f"2-week BP analysis was not run for patient {syntrillo_internal_key} because the patient has not recorded a measurement in the past 5 days."
+                }
+
+        # if action == 'check_measurement_consistancy':
+        #     alert_manager.handle_three_day_no_measurement()
+        #     return {
+        #         'statusCode': 200,
+        #         'body': f'Successfully checked patient {syntrillo_internal_key}"s trailing 3 day BP measurement taking consistentcy.'
+        #     }
 
         else:
             raise ValueError(f"Unknown action: {action}")

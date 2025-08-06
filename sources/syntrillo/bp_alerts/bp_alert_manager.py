@@ -27,7 +27,15 @@ class BloodPressureAlertManager:
     Handles blood pressure alert system.
     """
 
-    def __init__(self, syntrillo_internal_key, healthie_user_id: str):
+    bpm_df = None
+    timeframed_data = None
+    analysis_df = None
+
+    def __init__(
+        self,
+        syntrillo_internal_key,
+        healthie_user_id: str,
+    ):
         # Convert the syntrillo_internal_key to a UUID object for serialization issues
         if isinstance(syntrillo_internal_key, str):
             self.syntrillo_internal_key = uuid.UUID(syntrillo_internal_key)
@@ -35,6 +43,34 @@ class BloodPressureAlertManager:
             self.syntrillo_internal_key = syntrillo_internal_key
 
         self.healthie_user_id = healthie_user_id
+
+        self.initialize_bp_data()
+
+
+    def initialize_bp_data(self):
+        try:
+            analysis_manager = BloodPressureAnalysis(syntrillo_internal_key=self.syntrillo_internal_key)
+
+            # Retrieve all BP measurements
+            bpm_df, log = analysis_manager.get_blood_pressure_dataframe(start_date=None, end_date=None)
+            self.bpm_df = bpm_df
+
+            # Separate BP dataframe into timeframes
+            timeframed_data = analysis_manager.calculate_timeframes()
+            metadata = {}
+
+            for name, (date_range, df) in timeframed_data.items():
+                metadata[name] = analysis_manager.calculate_metadata(date_range=date_range, df=df)
+
+            self.timeframed_data = metadata
+
+            # Retrieve timeframed data + overall rows + progress cols
+            analysis_df = analysis_manager.get_analysis_table()
+            self.analysis_df = analysis_df
+
+        except Exception as e:
+            logger.error(f"Error retrieving BP data for patient {self.syntrillo_internal_key}: {e}")
+            raise e
 
 
     def handle_single_measurement(self, event: dict) -> dict:
@@ -117,6 +153,11 @@ class BloodPressureAlertManager:
         }
 
     def handle_two_week_alerts(self) -> dict:
+        """
+        Handles logic to determine whether analysis should be ran for a specific patient.
+        """
+        logger.info(f"Starting 2-week BP analysis...")
+
         db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
         record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
@@ -127,22 +168,22 @@ class BloodPressureAlertManager:
                 'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
             }
 
-        eastern = pytz.timezone("US/Eastern")
+        # Parse timestamp_local and get its timezone
+        first_date = datetime.fromisoformat(record['timestamp_local'])
 
-        # Parse timestamp_local and attach timezone
-        first_date = datetime.fromisoformat(record['timestamp_local']).astimezone(eastern)
+        # If the timestamp has timezone info, use it; otherwise assume UTC
+        if first_date.tzinfo is None:
+            first_date = first_date.replace(tzinfo=pytz.UTC)
 
-        # Get current time in EST
-        today = datetime.now(eastern)
+        # Get current time in the same timezone as the first measurement
+        today = datetime.now(first_date.tzinfo)
 
         # Calculate days since
         days_since_first = (today - first_date).days
 
-        # print(f"------ {days_since_first} -------")
-
         # Check if days > 28 and divisible by 14
         if days_since_first > 28 and days_since_first % 14 == 0:
-            self.handle_two_week_measurement()
+            self.handle_two_week_avg_sbp()
             self.handle_two_week_status()
             return {
                 'statusCode': 200,
@@ -151,104 +192,44 @@ class BloodPressureAlertManager:
         else:
             return {
                 'statusCode': 200,
-                'body': f"2-week BP analysis was not ran for patient {self.syntrillo_internal_key}. Days since first measurement: {days_since_first}"
+                'body': f"2-week BP analysis was not ran for patient {self.syntrillo_internal_key}. Days until next 2-week analysis: {days_since_first % 14}"
             }
 
-
-    def handle_two_week_measurement(self) -> None:
+    def handle_two_week_avg_sbp(self) -> bool:
         """
-        Analyze specific patient's BP data over the last 4 weeks (2 weeks prior and 2 weeks after)
-        and determine if to notify clinicians.
+        Sends notification if current timeframe's SBP is greater than prior period's
 
-        Args:
-            None
-        Returns:
-            None
-        Raises:
-            e (Exception): General exception from retrieving the BP data from the database
         """
-        logger.info(f"Analyzing BP data for patient {self.healthie_user_id}...")
+        logger.info(f"Comparing current vs. prior average SBP for patient {self.syntrillo_internal_key}...")
 
-        try:
-            end_date = datetime.now(timezone.utc)
-            start_date = end_date - timedelta(weeks=4)
-            mid_date = end_date - timedelta(weeks=2)
+        if 'Latest' in self.timeframed_data.columns:
+            logger.info(f"Patient {self.syntrillo_internal_key} has not recorded a measurement in 5 days.")
+            return False
 
-            db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+        if not self.timeframed_data['Prior'] or self.timeframed_data['Current']:
+            logger.info(f"Insufficient SBP data to analyze for patient {self.syntrillo_internal_key}.")
+            return False
 
-            record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+        prior_avg_sbp = self.timeframed_data['Prior']['Avg SBP (mmHg)']
+        current_avg_sbp = self.timeframed_data['Current']['Avg SBP (mmHg)']
 
-            if log['success'] == False:
-                return {
-                    'statusCode': 400,
-                    'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
-                }
+        prior_date_range = self.timeframed_data['Prior']['Date Range']
+        current_date_range = self.timeframed_data['Current']['Date Range']
 
-            if self.should_two_week_analysis(record['timestamp_local']) == False:
-                return {
-                    'statusCode': 200,
-                    'body': f"Two week measurement analysis {self.syntrillo_internal_key} "
-                }
-
-            df, log = db_manager.get_tenovi_device_metric_data(
-                metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
-                start_date=start_date,
-                end_date=end_date
+        if current_avg_sbp > prior_avg_sbp:
+            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
+            content = (
+                f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
+                f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
+                f"<li>Prior ({prior_date_range}): {prior_avg_sbp}</li></ul>"
             )
+            self.notify_clinicians(content)
+            return True
+        else:
+            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
+            return False
 
-            if df is not None and not df.empty:
-                # Convert timestamp_local to datetime if not already
-                df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
-
-                # Convert to UTC (assumes timestamp_local is timezone-aware or local time)
-                if df['timestamp_local'].dt.tz is None:
-                    # If naive, localize to the correct local timezone first, e.g., 'America/New_York'
-                    df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
-
-                # Convert to UTC
-                df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
-
-                # Now rename the column
-                df = df.rename(columns={'timestamp_local': 'timestamp'})
-
-                # Ensure the date column is datetime
-                df['timestamp'] = pd.to_datetime(df['timestamp'])
-
-                # Convert systolic ('value_1') values to numbers
-                df['value_1'] = pd.to_numeric(df['value_1'], errors='coerce')
-
-                # Prior 2-week period: start_date <= timestamp < mid_date
-                prior_period_condition = (df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)
-                df_prior = df[prior_period_condition]
-
-                # Current 2-week period: mid_date <= timestamp <= end_date
-                current_period_condition = (df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)
-                df_current = df[current_period_condition]
-
-                avg_prior = round(df_prior['value_1'].mean(), 1) if not df_prior.empty and len(df_prior) > 3 else None
-                avg_current = round(df_current['value_1'].mean(), 1) if not df_current.empty and len(df_current) > 3 else None
-
-                if avg_prior is None or avg_current is None:
-                    logger.info(f"Insufficient data for patient {self.syntrillo_internal_key}: prior ({len(df_prior)}); current ({len(df_current)})")
-                    return
-
-                if avg_current > avg_prior:
-                    logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_current}) than prior ({avg_prior}). Sending notification...")
-                    content = (
-                        f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
-                        f"<ul><li>Current ({mid_date.strftime('%-m/%-d/%y')} – {end_date.strftime('%-m/%-d/%y')}): {avg_current}</li>\n"
-                        f"<li>Prior ({start_date.strftime('%-m/%-d/%y')} – {(mid_date - timedelta(days=1)).strftime('%-m/%-d/%y')}): {avg_prior}</li></ul>"
-                    )
-                    self.notify_clinicians(content)
-
-            return None
-
-        except Exception as e:
-            logger.error(f"Error analyzing BP data for patient {self.syntrillo_internal_key}: {e}")
-            raise e
-
-
-    def handle_two_week_status(self) -> None:
+    def handle_two_week_status(self) -> bool:
         """
         Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
 
@@ -262,30 +243,11 @@ class BloodPressureAlertManager:
         }
 
         try:
-            bp_analysis = BloodPressureAnalysis(self.syntrillo_internal_key)
-
-            end_date = datetime.today()
-            start_date = datetime.today() - pd.Timedelta(weeks=1, days=1)
-
-            _, log = bp_analysis.get_blood_pressure_dataframe(
-                start_date=None,
-                end_date=None
-            )
-
-            if log['success'] == False:
-                logger.error(f"Error fetching BP data: {log['error']}")
-
-            if _.empty:
-                logger.info(f"Insufficient BP data for patient {self.syntrillo_internal_key}")
-                return
-
-            timeframes = bp_analysis.calculate_timeframes()
-            analysis_df = bp_analysis.calculate_analysis()
+            analysis_df = self.analysis_df
 
             if 'Latest' in analysis_df.columns:
-                logger.info(f"Patient {self.syntrillo_internal_key} does not have recent measurements")
-                print(f"{analysis_df}")
-                return "Bye"
+                logger.info(f"Patient {self.syntrillo_internal_key} has does not ")
+                return False
 
             current_status = analysis_df['Current']['Overall']
             prior_status = analysis_df['Prior']['Overall']
@@ -298,99 +260,43 @@ class BloodPressureAlertManager:
 
             if current_pts < prior_pts:
                 content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
-                # print(f"Current: {current_status} // Prior: {prior_status}")
-                # content = f""
                 self.notify_clinicians(content)
                 logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
             else:
                 logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
 
+            return True
+
         except Exception as e:
             logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
             raise e
 
-        return
 
-    def handle_five_day_no_measurement(self) -> None:
+    def handle_five_day_measurement_check(self) -> bool:
         """
-        Notify clinicians if a patient has not taken a blood pressure measurement in the last 5 days.
-
-        Args:
-            None
-        Returns:
-            None
-        Raises:
-            e (Exception): General exception from retrieving the BP data from the database
+        Sends notification if patient has not recorded a measurement in 5 days.
         """
-        # 1. Get patient's last bp measurement
         try:
-            data_end_date = datetime.now(timezone.utc)
-            data_start_date = data_end_date - timedelta(days=8)
+            analysis_df = self.analysis_df
+            measurement_date = self.bpm_df['timestamp_local'].max().strftime('%-m/%-d/%y')
 
-            db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
-
-            df, log = db_manager.get_tenovi_device_metric_data(
-                metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
-                start_date=data_start_date,
-                end_date=data_end_date
-            )
-
-            if df is None or df.empty:
-                logger.info(f"No BP measurements found for healthie user id {self.healthie_user_id} in the last 7 days")
-                return
-
-            # Convert timestamp to datetime if not already
-            df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
-
-            # Convert to UTC if needed (similar to handle_two_week_measurement)
-            if df['timestamp_local'].dt.tz is None: # If no timezone detected
-                df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
-            df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
-
-            # Define time periods
-            now = data_end_date
-            five_days_ago_start = now - timedelta(days=7)  # 7 days ago
-            five_days_ago_end = now - timedelta(days=6)    # 6 days ago
-
-            # Check for measurements around 5 days ago (between 6 and 5 days ago)
-            measurements_5_days_ago = df[
-                (df['timestamp_local'] >= five_days_ago_start) &
-                (df['timestamp_local'] < five_days_ago_end)
-            ]
-
-            # checks if there is a measurement in the last 5 days
-            measurements_since = df[
-                df['timestamp_local'] >= five_days_ago_end
-            ]
-
-            has_measurement_5_days_ago = not measurements_5_days_ago.empty
-            has_measurements_since = not measurements_since.empty
-
-            logger.info(f"Patient {self.syntrillo_internal_key}: "
-                    f"measurements 5-6 days ago: {len(measurements_5_days_ago)}, "
-                    f"measurements since (last 5 days): {len(measurements_since)}")
-
-            if has_measurement_5_days_ago and not has_measurements_since:
-                logger.info(f"Patient {self.syntrillo_internal_key} had measurements 5+ days ago but none since. Sending notification...")
-
-                # Get the most recent measurement from 5 days ago for context
-                last_measurement_5_days_ago = measurements_5_days_ago.iloc[-1]
-                measurement_date = last_measurement_5_days_ago['timestamp_local'].strftime('%m/%d/%y')
-
+            # 'Latest' column will exist if no measurement recorded in latest 5 days, else 'Current'
+            if 'Latest' in analysis_df.columns:
+                logger.info(f"Patient {self.syntrillo_internal_key} has not recorded a measurement in 5 days. Sending notification...")
                 content = (
                     f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 5 DAYS</b></p>\n"
-                    f"<p>Last measurement was taken on {measurement_date} "
-                    f"(systolic: {last_measurement_5_days_ago['value_1']}, "
-                    f"diastolic: {last_measurement_5_days_ago['value_2']}).</p>"
+                    f"<p>Last measurement was taken on {measurement_date}."
+                    # f"(systolic: {last_measurement_5_days_ago['value_1']}, "
+                    # f"diastolic: {last_measurement_5_days_ago['value_2']}).</p>"
                 )
                 self.notify_clinicians(content)
+                return False
             else:
-                if not has_measurement_5_days_ago:
-                    logger.info(f"Patient {self.syntrillo_internal_key}: No measurement found 5-6 days ago, continuing")
-                if has_measurements_since:
-                    logger.info(f"Patient {self.syntrillo_internal_key}: Measurements found in last 5 days, continuing")
+                logger.info(f"Patient {self.syntrillo_internal_key} has recorded a measurement within the past 5 days. Starting 2-week analysis...")
+                return True
+
         except Exception as e:
-            logger.error(f"Error while handling five day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
+            logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
             raise e
 
     def notify_clinicians(self, content: str) -> None:
@@ -514,6 +420,176 @@ class BloodPressureAlertManager:
         except Exception as e:
             logger.error(f"Error creating conversation in Healthie: {e}")
 
+
+    # OLD CODE / TO BE DELETED
+    # TO BE DELETED
+    # def handle_two_week_measurement(self) -> None:
+    #     """
+    #     Analyze specific patient's BP data over the last 4 weeks (2 weeks prior and 2 weeks after)
+    #     and determine if to notify clinicians.
+
+    #     Args:
+    #         None
+    #     Returns:
+    #         None
+    #     Raises:
+    #         e (Exception): General exception from retrieving the BP data from the database
+    #     """
+    #     logger.info(f"Analyzing BP data for patient {self.healthie_user_id}...")
+
+    #     try:
+    #         end_date = datetime.now(timezone.utc)
+    #         start_date = end_date - timedelta(weeks=4)
+    #         mid_date = end_date - timedelta(weeks=2)
+
+    #         db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+
+    #         record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+
+    #         if log['success'] == False:
+    #             return {
+    #                 'statusCode': 400,
+    #                 'body': f"Error fetching patient {self.syntrillo_internal_key}'s first Tenovi measurement. {log['error']}"
+    #             }
+
+    #         df, log = db_manager.get_tenovi_device_metric_data(
+    #             metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+    #             start_date=start_date,
+    #             end_date=end_date
+    #         )
+
+    #         if df is not None and not df.empty:
+    #             # Convert timestamp_local to datetime if not already
+    #             df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
+
+    #             # Convert to UTC (assumes timestamp_local is timezone-aware or local time)
+    #             if df['timestamp_local'].dt.tz is None:
+    #                 # If naive, localize to the correct local timezone first, e.g., 'America/New_York'
+    #                 df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
+
+    #             # Convert to UTC
+    #             df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
+
+    #             # Now rename the column
+    #             df = df.rename(columns={'timestamp_local': 'timestamp'})
+
+    #             # Ensure the date column is datetime
+    #             df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+    #             # Convert systolic ('value_1') values to numbers
+    #             df['value_1'] = pd.to_numeric(df['value_1'], errors='coerce')
+
+    #             # Prior 2-week period: start_date <= timestamp < mid_date
+    #             prior_period_condition = (df['timestamp'] >= start_date) & (df['timestamp'] < mid_date)
+    #             df_prior = df[prior_period_condition]
+
+    #             # Current 2-week period: mid_date <= timestamp <= end_date
+    #             current_period_condition = (df['timestamp'] >= mid_date) & (df['timestamp'] <= end_date)
+    #             df_current = df[current_period_condition]
+
+    #             avg_prior = round(df_prior['value_1'].mean(), 1) if not df_prior.empty and len(df_prior) > 3 else None
+    #             avg_current = round(df_current['value_1'].mean(), 1) if not df_current.empty and len(df_current) > 3 else None
+
+    #             if avg_prior is None or avg_current is None:
+    #                 logger.info(f"Insufficient data for patient {self.syntrillo_internal_key}: prior ({len(df_prior)}); current ({len(df_current)})")
+    #                 return
+
+    #             if avg_current > avg_prior:
+    #                 logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({avg_current}) than prior ({avg_prior}). Sending notification...")
+    #                 content = (
+    #                     f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
+    #                     f"<ul><li>Current ({mid_date.strftime('%-m/%-d/%y')} – {end_date.strftime('%-m/%-d/%y')}): {avg_current}</li>\n"
+    #                     f"<li>Prior ({start_date.strftime('%-m/%-d/%y')} – {(mid_date - timedelta(days=1)).strftime('%-m/%-d/%y')}): {avg_prior}</li></ul>"
+    #                 )
+    #                 self.notify_clinicians(content)
+
+    #         return None
+
+    #     except Exception as e:
+    #         logger.error(f"Error analyzing BP data for patient {self.syntrillo_internal_key}: {e}")
+    #         raise e
+
+    # def handle_five_day_no_measurement(self) -> None:
+    #     """
+    #     Notify clinicians if a patient has not taken a blood pressure measurement in the last 5 days.
+
+    #     Args:
+    #         None
+    #     Returns:
+    #         None
+    #     Raises:
+    #         e (Exception): General exception from retrieving the BP data from the database
+    #     """
+    #     # 1. Get patient's last bp measurement
+    #     try:
+    #         data_end_date = datetime.now(timezone.utc)
+    #         data_start_date = data_end_date - timedelta(days=8)
+
+    #         db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
+
+    #         df, log = db_manager.get_tenovi_device_metric_data(
+    #             metric_name=DeviceMeasurements.TENOVI_METRICS_BPM_BLOOD_PRESSURE,
+    #             start_date=data_start_date,
+    #             end_date=data_end_date
+    #         )
+
+    #         if df is None or df.empty:
+    #             logger.info(f"No BP measurements found for healthie user id {self.healthie_user_id} in the last 7 days")
+    #             return
+
+    #         # Convert timestamp to datetime if not already
+    #         df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
+
+    #         # Convert to UTC if needed (similar to handle_two_week_measurement)
+    #         if df['timestamp_local'].dt.tz is None: # If no timezone detected
+    #             df['timestamp_local'] = df['timestamp_local'].dt.tz_localize('America/New_York')
+    #         df['timestamp_local'] = df['timestamp_local'].dt.tz_convert('UTC')
+
+    #         # Define time periods
+    #         now = data_end_date
+    #         five_days_ago_start = now - timedelta(days=7)  # 7 days ago
+    #         five_days_ago_end = now - timedelta(days=6)    # 6 days ago
+
+    #         # Check for measurements around 5 days ago (between 6 and 5 days ago)
+    #         measurements_5_days_ago = df[
+    #             (df['timestamp_local'] >= five_days_ago_start) &
+    #             (df['timestamp_local'] < five_days_ago_end)
+    #         ]
+
+    #         # checks if there is a measurement in the last 5 days
+    #         measurements_since = df[
+    #             df['timestamp_local'] >= five_days_ago_end
+    #         ]
+
+    #         has_measurement_5_days_ago = not measurements_5_days_ago.empty
+    #         has_measurements_since = not measurements_since.empty
+
+    #         logger.info(f"Patient {self.syntrillo_internal_key}: "
+    #                 f"measurements 5-6 days ago: {len(measurements_5_days_ago)}, "
+    #                 f"measurements since (last 5 days): {len(measurements_since)}")
+
+    #         if has_measurement_5_days_ago and not has_measurements_since:
+    #             logger.info(f"Patient {self.syntrillo_internal_key} had measurements 5+ days ago but none since. Sending notification...")
+
+    #             # Get the most recent measurement from 5 days ago for context
+    #             last_measurement_5_days_ago = measurements_5_days_ago.iloc[-1]
+    #             measurement_date = last_measurement_5_days_ago['timestamp_local'].strftime('%m/%d/%y')
+
+    #             content = (
+    #                 f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 5 DAYS</b></p>\n"
+    #                 f"<p>Last measurement was taken on {measurement_date} "
+    #                 f"(systolic: {last_measurement_5_days_ago['value_1']}, "
+    #                 f"diastolic: {last_measurement_5_days_ago['value_2']}).</p>"
+    #             )
+    #             self.notify_clinicians(content)
+    #         else:
+    #             if not has_measurement_5_days_ago:
+    #                 logger.info(f"Patient {self.syntrillo_internal_key}: No measurement found 5-6 days ago, continuing")
+    #             if has_measurements_since:
+    #                 logger.info(f"Patient {self.syntrillo_internal_key}: Measurements found in last 5 days, continuing")
+    #     except Exception as e:
+    #         logger.error(f"Error while handling five day bp measurement check for patient {self.syntrillo_internal_key}: {e}")
+    #         raise e
 
 
 if __name__ == '__main__':
