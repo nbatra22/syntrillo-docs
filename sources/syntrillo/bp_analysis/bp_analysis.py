@@ -254,6 +254,7 @@ class BloodPressureAnalysis:
                 latest_date_only = latest_date.date()
             else:
                 latest_date_only = latest_date
+            # 'Current' if most recent measurement is within 5 days of today, 'Latest' if not
             if (today - latest_date_only).days <= 5:
                 last_timeframe_name = "Current"
             else:
