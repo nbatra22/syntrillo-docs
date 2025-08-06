@@ -279,14 +279,14 @@ class BloodPressureAnalysis:
             'Peak DBP² (mmHg)': None,
             'Low SBP³ (mmHg)': None,
             'Low DBP³ (mmHg)': None,
-            'SBP SD (mmHg)': None,
-            'DBP SD (mmHg)': None,
+            # 'SBP SD (mmHg)': None,
+            # 'DBP SD (mmHg)': None,
             'SBP CV (%)': None,
             'DBP CV (%)': None,
             # 'SBP Count (>= 160)': 0,
             # 'SBP Count (>= 165)': 0,
             'SBP Count (>= 170)': 0,
-            'SBP Count (>= 175)': 0,
+            # 'SBP Count (>= 175)': 0,
             # 'SBP Count (<=80)': 0,
             # 'SBP Count (<=85)': 0,
             # 'SBP Count (<=90)': 0,
@@ -305,12 +305,14 @@ class BloodPressureAnalysis:
         data['Peak DBP² (mmHg)'] = round(df['diastolic'].nlargest(3).mean(), 2)
         data['Low SBP³ (mmHg)'] = round(df['systolic'].min(), 2)
         data['Low DBP³ (mmHg)'] = round(df['diastolic'].min(), 2)
-        data['SBP SD (mmHg)'] = round(df['systolic'].std(), 2)
-        data['DBP SD (mmHg)'] = round(df['diastolic'].std(), 2)
+        # data['SBP SD (mmHg)'] = round(df['systolic'].std(), 2)
+        # data['DBP SD (mmHg)'] = round(df['diastolic'].std(), 2)
 
         # Calculate coefficients of variation
-        systolic_sd = data['SBP SD (mmHg)']
-        diastolic_sd = data['DBP SD (mmHg)']
+        # systolic_sd = data['SBP SD (mmHg)']
+        systolic_sd = round(df['systolic'].std(), 2)
+        # diastolic_sd = data['DBP SD (mmHg)']
+        diastolic_sd = round(df['diastolic'].std(), 2)
         avg_systolic = data['Avg SBP (mmHg)']
         avg_diastolic = data['Avg DBP (mmHg)']
 
@@ -321,7 +323,7 @@ class BloodPressureAnalysis:
         # data['SBP Count (>= 160)'] = len(df[df['systolic'] >= 160])
         # data['SBP Count (>= 165)'] = len(df[df['systolic'] >= 165])
         data['SBP Count (>= 170)'] = len(df[df['systolic'] >= 170])
-        data['SBP Count (>= 175)'] = len(df[df['systolic'] >= 175])
+        # data['SBP Count (>= 175)'] = len(df[df['systolic'] >= 175])
         # data['SBP Count (<=80)'] = len(df[df['systolic'] <= 80])
         # data['SBP Count (<=85)'] = len(df[df['systolic'] <= 85])
         # data['SBP Count (<=90)'] = len(df[df['systolic'] <= 90])
