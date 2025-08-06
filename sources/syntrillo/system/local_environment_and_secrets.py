@@ -27,7 +27,8 @@ class LocalEnvironmentAndSecrets:
     AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN = 'AWS_SECRETS_MANAGER_TENOVI_HWI_SECRET_ARN'
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
     AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
-
+    AWS_LAMBDA_BLOOD_PRESSURE_ANALYSIS_ARN = 'AWS_LAMBDA_BLOOD_PRESSURE_ANALYSIS_ARN'
+    
     # ------------------------------
     # array of available secret codes
     # first is local in .env, second is in aws secrets managers

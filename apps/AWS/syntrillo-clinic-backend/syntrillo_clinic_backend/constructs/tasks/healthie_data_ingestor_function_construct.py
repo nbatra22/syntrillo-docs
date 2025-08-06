@@ -91,7 +91,7 @@ class HealthieDataIngestor(Construct):
         # -----------------------------------------------------------------------
         # Remote monitoring Lambdas
 
-        self.healthie_data_ingestor_function = _lambda.Function(self, "HealthieDataIngestorFunction",
+        self.function = _lambda.Function(self, "HealthieDataIngestorFunction",
             function_name="HealthieDataIngestorFunction",
             vpc = self.vpc,
             handler="handler.handler",
@@ -114,11 +114,11 @@ class HealthieDataIngestor(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.healthie_data_ingestor_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        self.function_security_group = self.healthie_data_ingestor_function.connections.security_groups[0]
+        self.function_security_group = self.function.connections.security_groups[0]
 
         # ---------------------------------------------------------------------
         # OUTPUTS

@@ -93,7 +93,7 @@ class PIIDataSync(Construct):
         # -----------------------------------------------------------------------
         # Pii Sync Lambdas
 
-        self.pii_data_sync_function = _lambda.Function(self, "PIIDataSyncFunction",
+        self.function = _lambda.Function(self, "PIIDataSyncFunction",
             function_name="PIIDataSyncFunction",
             vpc = self.vpc,
             handler="handler.handler",
@@ -117,11 +117,11 @@ class PIIDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.pii_data_sync_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        self.function_security_group = self.pii_data_sync_function.connections.security_groups[0]
+        self.function_security_group = self.function.connections.security_groups[0]
 
         # ---------------------------------------------------------------------
         # EXPORT VALUES
@@ -133,7 +133,7 @@ class PIIDataSync(Construct):
         )
 
         CfnOutput(self, "SyntrilloClinicTaskSchedulingPIIDataSyncFunctionRoleArn",
-            value=self.pii_data_sync_function.role.role_arn,
+            value=self.function.role.role_arn,
             export_name="SyntrilloClinic-TaskScheduling-PIIDataSyncFunction-Role-Arn"
         )
 

@@ -97,7 +97,7 @@ class RemoteMonitoringDataSync(Construct):
         # -----------------------------------------------------------------------
         # Remote monitoring Lambdas
 
-        self.remote_monitoring_data_sync_function = _lambda.Function(self, "RemoteMonitoringDataSyncFunction",
+        self.function = _lambda.Function(self, "RemoteMonitoringDataSyncFunction",
             function_name="RemoteMonitoringDataSyncFunction",
             vpc = self.vpc,
             handler="handler.handler",
@@ -120,11 +120,11 @@ class RemoteMonitoringDataSync(Construct):
             timeout=Duration.seconds(600),
         )
 
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
-        self.grant_read_secrets(self.remote_monitoring_data_sync_function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_database_lambda_user_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_tenovi_hwi_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
+        self.grant_read_secrets(self.function, self.secrets_healthie_secrets_secret_arn, self.secrets_secrets_kms_key_arn)
 
-        self.function_security_group = self.remote_monitoring_data_sync_function.connections.security_groups[0]
+        self.function_security_group = self.function.connections.security_groups[0]
 
         # self.database.db_from_snapshot_security_group.add_ingress_rule(
         #     self.function_security_group,

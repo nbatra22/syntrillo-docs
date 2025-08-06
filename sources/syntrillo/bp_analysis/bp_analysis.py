@@ -193,39 +193,18 @@ class BloodPressureAnalysis:
         # return the dataframe and the log
         return bpm_df, log
 
-    def calculate_metadata(self):
-        df = self.bpm_df
-
-        counts = {
-            'Avg SBP (mmHg)': round(df['systolic'].mean(), 2),
-            'Avg DBP (mmHg)': round(df['diastolic'].mean(), 2),
-            'Peak SBP² (mmHg)': round(df['systolic'].nlargest(3).mean(), 2),
-            'Peak DBP² (mmHg)': round(df['diastolic'].nlargest(3).mean(), 2),
-            'Low SBP³ (mmHg)': round(df['systolic'].min(), 2),
-            'Low DBP³ (mmHg)': round(df['diastolic'].min(), 2),
-            'SBP SD (mmHg)': round(df['systolic'].std(), 2),
-            'DBP SD (mmHg)': round(df['diastolic'].std(), 2),
-            'SBP CV (%)': round((df['systolic'].std() / df['systolic'].mean()) * 100, 2) if df['systolic'].mean() != 0 else None,
-            'DBP CV (%)': round((df['diastolic'].std() / df['diastolic'].mean()) * 100, 2) if df['diastolic'].mean() != 0 else None,
-            # 'SBP Count (>= 160)': len(df[df['systolic'] >= 160]),
-            # 'SBP Count (>= 165)': len(df[df['systolic'] >= 165]),
-            'SBP Count (>= 170)': len(df[df['systolic'] >= 170]),
-            'SBP Count (>= 175)': len(df[df['systolic'] >= 175]),
-            # 'SBP Count (<=80)': len(df[df['systolic'] <= 80]),
-            # 'SBP Count (<=85)': len(df[df['systolic'] <= 85]),
-            # 'SBP Count (<=90)': len(df[df['systolic'] <= 90]),
-            # 'SBP Count (<=95)': len(df[df['systolic'] <= 95]),
-            'Hypotensive Count⁴': len(df[df['systolic'] <= 100]),
-        }
-
-        return counts
-
-
     def calculate_timeframes(self) -> dict:
         """
         Extracts bpm_df values into Baseline (first 2 weeks), Prior (2 weeks before Current), and Current (latest 2 weeks).
         Dynamically includes only relevant timeframes based on total available data.
         Ensures a minimum of 3 measurements per timeframe and at least one non-null measurement for it to be included.
+
+        Returns:
+            dict: {
+                "Baseline": (date_range, dataframe),
+                "Prior": (date_range, dataframe),
+                "Current": (date_range, dataframe)
+            }
         """
         df = self.bpm_df
 
@@ -239,10 +218,10 @@ class BloodPressureAnalysis:
         total_weeks = (latest_date - baseline_start).days / 7
 
         # Define time ranges
-        current_start = latest_date - pd.Timedelta(weeks=2) + pd.Timedelta(days=1)
-        baseline_end = baseline_start + pd.Timedelta(weeks=1, days=6)
+        current_start = latest_date - pd.Timedelta(weeks=2)
+        baseline_end = baseline_start + pd.Timedelta(weeks=2)
         prior_end = current_start - pd.Timedelta(days=1)
-        prior_start = prior_end - pd.Timedelta(weeks=1, days=6)
+        prior_start = prior_end - pd.Timedelta(weeks=2)
 
         # Minimum number of required measurements
         min_measurements = 3
@@ -275,7 +254,8 @@ class BloodPressureAnalysis:
                 latest_date_only = latest_date.date()
             else:
                 latest_date_only = latest_date
-            if (today - latest_date_only).days <= 3:
+            # 'Current' if most recent measurement is within 5 days of today, 'Latest' if not
+            if (today - latest_date_only).days <= 5:
                 last_timeframe_name = "Current"
             else:
                 last_timeframe_name = "Latest"
@@ -286,8 +266,72 @@ class BloodPressureAnalysis:
         # print(f"---- Timeframed Data ----- {timeframes}")
         return timeframes
 
+    def calculate_metadata(self, date_range, df) -> dict:
+        """Calculate blood pressure analysis metadata from dataframe."""
 
-    def calculate_analysis(self) -> pd.DataFrame:
+        # Initialize default data structure
+        data = {
+            'Date Range': date_range,
+            'Measurement Count': 0,
+            'Avg SBP (mmHg)': None,
+            'Avg DBP (mmHg)': None,
+            'Peak SBP² (mmHg)': None,
+            'Peak DBP² (mmHg)': None,
+            'Low SBP³ (mmHg)': None,
+            'Low DBP³ (mmHg)': None,
+            'SBP SD (mmHg)': None,
+            'DBP SD (mmHg)': None,
+            'SBP CV (%)': None,
+            'DBP CV (%)': None,
+            # 'SBP Count (>= 160)': 0,
+            # 'SBP Count (>= 165)': 0,
+            'SBP Count (>= 170)': 0,
+            'SBP Count (>= 175)': 0,
+            # 'SBP Count (<=80)': 0,
+            # 'SBP Count (<=85)': 0,
+            # 'SBP Count (<=90)': 0,
+            # 'SBP Count (<=95)': 0,
+            'Hypotensive Count⁴': 0,
+        }
+
+        if df.empty:
+            return data
+
+        # Set values directly in the data dictionary
+        data['Measurement Count'] = len(df)
+        data['Avg SBP (mmHg)'] = round(df['systolic'].mean(), 2)
+        data['Avg DBP (mmHg)'] = round(df['diastolic'].mean(), 2)
+        data['Peak SBP² (mmHg)'] = round(df['systolic'].nlargest(3).mean(), 2)
+        data['Peak DBP² (mmHg)'] = round(df['diastolic'].nlargest(3).mean(), 2)
+        data['Low SBP³ (mmHg)'] = round(df['systolic'].min(), 2)
+        data['Low DBP³ (mmHg)'] = round(df['diastolic'].min(), 2)
+        data['SBP SD (mmHg)'] = round(df['systolic'].std(), 2)
+        data['DBP SD (mmHg)'] = round(df['diastolic'].std(), 2)
+
+        # Calculate coefficients of variation
+        systolic_sd = data['SBP SD (mmHg)']
+        diastolic_sd = data['DBP SD (mmHg)']
+        avg_systolic = data['Avg SBP (mmHg)']
+        avg_diastolic = data['Avg DBP (mmHg)']
+
+        data['SBP CV (%)'] = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
+        data['DBP CV (%)'] = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
+
+        # Calculate threshold counts
+        # data['SBP Count (>= 160)'] = len(df[df['systolic'] >= 160])
+        # data['SBP Count (>= 165)'] = len(df[df['systolic'] >= 165])
+        data['SBP Count (>= 170)'] = len(df[df['systolic'] >= 170])
+        data['SBP Count (>= 175)'] = len(df[df['systolic'] >= 175])
+        # data['SBP Count (<=80)'] = len(df[df['systolic'] <= 80])
+        # data['SBP Count (<=85)'] = len(df[df['systolic'] <= 85])
+        # data['SBP Count (<=90)'] = len(df[df['systolic'] <= 90])
+        # data['SBP Count (<=95)'] = len(df[df['systolic'] <= 95])
+        data['Hypotensive Count⁴'] = len(df[df['systolic'] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
+
+        return data
+
+
+    def get_analysis_table(self) -> pd.DataFrame:
         """
 
         Creates analysis dataframe using self.timeframed_data. Each column is a timeframe.
@@ -319,80 +363,7 @@ class BloodPressureAnalysis:
         analysis = {}
 
         for name, (date_range, frame) in timeframes.items():
-            if frame.empty:
-                analysis[name] = {
-                    'Date Range': None,
-                    'Measurement Count': None,
-                    'Avg SBP (mmHg)': None,
-                    'Avg DBP (mmHg)': None,
-                    'Peak SBP² (mmHg)': None,
-                    'Peak DBP² (mmHg)': None,
-                    'Low SBP³ (mmHg)': None,
-                    'Low DBP³ (mmHg)': None,
-                    'SBP SD (mmHg)': None,
-                    'DBP SD (mmHg)': None,
-                    'SBP CV (%)': None,
-                    'DBP CV (%)': None,
-                    # 'SBP Count (>= 160)': None,
-                    # 'SBP Count (>= 165)': None,
-                    'SBP Count (>= 170)': None,
-                    'SBP Count (>= 175)': None,
-                    # 'SBP Count (<=80)': None,
-                    # 'SBP Count (<=85)': None,
-                    # 'SBP Count (<=90)': None,
-                    # 'SBP Count (<=95)': None,
-                    'Hypotensive Count⁴': None,
-                }
-                continue
-
-            measurement_count = len(frame)
-            avg_systolic = round(frame['systolic'].mean(), 2)
-            avg_diastolic = round(frame['diastolic'].mean(), 2)
-            peak_systolic = round(frame['systolic'].nlargest(3).mean(), 2)  # Avg of 3 highest values
-            peak_diastolic = round(frame['diastolic'].nlargest(3).mean(), 2)  # Avg of 3 highest values
-            low_systolic = round(frame['systolic'].min(), 2)
-            low_diastolic = round(frame['diastolic'].min(), 2)
-            systolic_sd = round(frame['systolic'].std(), 2)
-            diastolic_sd = round(frame['diastolic'].std(), 2)
-            systolic_cv = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
-            diastolic_cv = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
-            # sbp_count_160 = len(frame[frame['systolic'] >= 160])
-            # sbp_count_165 = len(frame[frame['systolic'] >= 165])
-            sbp_count_170 = len(frame[frame['systolic'] >= 170])
-            sbp_count_175 = len(frame[frame['systolic'] >= 175])
-            # sbp_count_80 = len(frame[frame['systolic'] <= 80])
-            # sbp_count_85 = len(frame[frame['systolic'] <= 85])
-            # sbp_count_90 = len(frame[frame['systolic'] <= 90])
-            # sbp_count_95 = len(frame[frame['systolic'] <= 95])
-            # hypertensive_dbp_count = len(frame[frame['diastolic'] >= self.HYPERTENSION_DBP_THRESHOLD])
-            hypotensive_count = len(frame[frame['systolic'] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
-
-
-            analysis[name] = {
-                'Date Range': date_range,
-                'Measurement Count': measurement_count,
-                'Avg SBP (mmHg)': avg_systolic,
-                'Avg DBP (mmHg)': avg_diastolic,
-                'Peak SBP² (mmHg)': peak_systolic,
-                'Peak DBP² (mmHg)': peak_diastolic,
-                'Low SBP³ (mmHg)': low_systolic,
-                'Low DBP³ (mmHg)': low_diastolic,
-                'SBP SD (mmHg)': systolic_sd,
-                'DBP SD (mmHg)': diastolic_sd,
-                'SBP CV (%)': systolic_cv,
-                'DBP CV (%)': diastolic_cv,
-                # 'SBP Count (>= 160)': sbp_count_160,
-                # 'SBP Count (>= 165)': sbp_count_165,
-                'SBP Count (>= 170)': sbp_count_170,
-                'SBP Count (>= 175)': sbp_count_175,
-                # 'SBP Count (<=80)': sbp_count_80,
-                # 'SBP Count (<=85)': sbp_count_85,
-                # 'SBP Count (<=90)': sbp_count_90,
-                # 'SBP Count (<=95)': sbp_count_95,
-                'Hypotensive Count⁴': hypotensive_count,
-            }
-
-            # End loop
+            analysis[name] = self.calculate_metadata(date_range=date_range, df=frame)
 
         analysis_with_progress = self.calculate_progress(analysis=analysis, timeframed_data=timeframes)
         df = pd.DataFrame.from_dict(analysis_with_progress, orient='index').T

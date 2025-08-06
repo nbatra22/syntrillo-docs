@@ -27,7 +27,7 @@ from aws_cdk import (
 from constructs import Construct
 
 # -----------------------------------------------------------------------------
-# CONSTRUCTS
+# FUNCTION CONSTRUCTS
 # -----------------------------------------------------------------------------
 from syntrillo_clinic_backend.constructs.tasks.remote_monitoring_datasync_function_construct import RemoteMonitoringDataSync
 from syntrillo_clinic_backend.constructs.tasks.pii_datasync_function_construct import PIIDataSync
@@ -35,274 +35,13 @@ from syntrillo_clinic_backend.constructs.tasks.healthie_data_ingestor_function_c
 from syntrillo_clinic_backend.constructs.tasks.candid_billing_ingestor_function_construct import CandidBillingIngestor
 from syntrillo_clinic_backend.constructs.tasks.blood_pressure_analysis_function_construct import BloodPressureAnalysis
 
-class DataSyncWorkflow(Construct):
-    def __init__(self, scope: Construct, id: str,
-                 remote_monitoring_data_sync_function: _lambda.Function,
-                 pii_data_sync_function: _lambda.Function,
-                 **kwargs):
-        super().__init__(scope, id, **kwargs)
-
-        # Create Step Functions tasks
-        list_patients_task = tasks.LambdaInvoke(
-            self, "ListPatients",
-            lambda_function=remote_monitoring_data_sync_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "list_patients"
-            }),
-            result_path="$",
-            result_selector={
-                "users.$": "$.Payload.users",
-            }
-        )
-
-        sync_patient_task = tasks.LambdaInvoke(
-            self, "SyncPatientData",
-            lambda_function=remote_monitoring_data_sync_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "sync_patient",
-                "id.$": "$.id"
-            }),
-            result_path="$",
-            result_selector={
-                "success.$": "$.Payload.success",
-                "error.$": "$.Payload.error"
-            }
-        )
-
-        # Create Map state for processing patients
-        map_state = sfn.Map(
-            self, "ProcessEachPatient",
-            max_concurrency=5,
-            items_path="$.users"
-        )
-
-        map_state.item_processor(sync_patient_task)
-
-        # Add PII sync task
-        pii_sync_task = tasks.LambdaInvoke(
-            self, "PIISyncTask",
-            lambda_function=pii_data_sync_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "sync_pii"
-            }),
-            result_path="$"
-        )
-
-        # Create the state machine
-        self.state_machine = sfn.StateMachine(
-            self, "StepFunctionsDataSyncWorkflow",
-            state_machine_name="StepFunctionsDataSyncWorkflow",
-            definition_body=sfn.DefinitionBody.from_chainable(
-                list_patients_task.next(map_state.next(pii_sync_task))
-            ),
-            timeout=Duration.minutes(30),
-            tracing_enabled=True
-        )
-
-        # Create a scheduled event rule
-        # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
-        # the lambda is triggered. With cron, you can decide exactly when you start.
-        # This avoids using database resources during working hours
-        schedule = events.Schedule.cron(
-            minute="0",
-            hour="0/6",
-            month="*",
-            week_day="*",
-            year="*",
-        )
-
-        event_rule = events.Rule(
-            self, "RemoteMonitoringDataSyncRule",
-            schedule=schedule,
-            enabled=True,
-        )
-
-        # Add the state machine as a target for the rule
-        event_rule.add_target(
-            targets.SfnStateMachine(self.state_machine)
-        )
-
-
-class HealthieDataIngestorWorkFlow(Construct):
-    def __init__(self, scope: Construct, id: str,
-                 lambda_function: _lambda.Function,
-                 **kwargs):
-        super().__init__(scope, id, **kwargs)
-
-        # Create the Lambda task
-        process_task = tasks.LambdaInvoke(
-            self, "FetchHealthieData",
-            lambda_function=lambda_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "process"
-            })
-        )
-
-        # Create the state machine
-        self.state_machine = sfn.StateMachine(
-            self, "HealthieDataIngestorWorkFlow",
-            state_machine_name="HealthieDataIngestorWorkFlow",
-            definition_body=sfn.DefinitionBody.from_chainable(process_task),
-            timeout=Duration.minutes(5),
-            tracing_enabled=True
-        )
-
-        # # Create a scheduled event rule
-        # # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
-        # # the lambda is triggered. With cron, you can decide exactly when you start.
-        # # This avoids using database resources during working hours
-        schedule = events.Schedule.cron(
-            minute="0",
-            hour="0/6",
-            month="*",
-            week_day="*",
-            year="*",
-        )
-
-        event_rule = events.Rule(
-            self, "HealthieDataIngestorWorkFlowSyncRule",
-            schedule=schedule,
-            enabled=True,
-        )
-
-        # Add the state machine as a target for the rule
-        event_rule.add_target(
-            targets.SfnStateMachine(self.state_machine)
-        )
-
-class CandidBillingIngestorWorkFlow(Construct):
-    def __init__(self, scope: Construct, id: str,
-                 lambda_function: _lambda.Function,
-                 **kwargs):
-        super().__init__(scope, id, **kwargs)
-
-        # Create the Lambda task
-        process_task = tasks.LambdaInvoke(
-            self, "FetchCandidBilling",
-            lambda_function=lambda_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "process"
-            })
-        )
-
-        # Create the state machine
-        self.state_machine = sfn.StateMachine(
-            self, "CandidBillingIngestorWorkFlow",
-            state_machine_name="CandidBillingIngestorWorkFlow",
-            definition_body=sfn.DefinitionBody.from_chainable(process_task),
-            timeout=Duration.minutes(5),
-            tracing_enabled=True
-        )
-
-        # # Create a scheduled event rule
-        # # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
-        # # the lambda is triggered. With cron, you can decide exactly when you start.
-        # # This avoids using database resources during working hours
-        schedule = events.Schedule.cron(
-            minute="0",
-            hour="0/6",
-            month="*",
-            week_day="*",
-            year="*",
-        )
-
-        event_rule = events.Rule(
-            self, "CandidBillingIngestorWorkFlowSyncRule",
-            schedule=schedule,
-            enabled=True,
-        )
-
-        # Add the state machine as a target for the rule
-        event_rule.add_target(
-            targets.SfnStateMachine(self.state_machine)
-        )
-
-class BloodPressureAnalysisWorkFlow(Construct):
-    def __init__(self, scope: Construct, id: str,
-                 lambda_function: _lambda.Function,
-                 **kwargs):
-        super().__init__(scope, id, **kwargs)
-
-        # Create Step Functions tasks
-        list_patients_task = tasks.LambdaInvoke(
-            self, "ListPatients",
-            lambda_function=lambda_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "list_patients"
-            }),
-            result_path="$",
-            result_selector={
-                "users.$": "$.Payload.users",
-            }
-        )
-
-        analyse_patient_blood_pressure_task = tasks.LambdaInvoke(
-            self, "AnalysePatientBloodPressure",
-            lambda_function=lambda_function,
-            payload=sfn.TaskInput.from_object({
-                "action": "analyze_patient_blood_pressure",
-                "id.$": "$.id"
-            }),
-            result_path="$",
-            result_selector={
-                "success.$": "$.Payload.success",
-                "error.$": "$.Payload.error"
-            }
-        )
-
-        # Create Map state for processing patients
-        map_state = sfn.Map(
-            self, "ProcessEachPatient",
-            max_concurrency=5,
-            items_path="$.users"
-        )
-
-        map_state.item_processor(analyse_patient_blood_pressure_task)
-
-        # # Add PII sync task
-        # pii_sync_task = tasks.LambdaInvoke(
-        #     self, "PIISyncTask",
-        #     lambda_function=pii_data_sync_function,
-        #     payload=sfn.TaskInput.from_object({
-        #         "action": "sync_pii"
-        #     }),
-        #     result_path="$"
-        # )
-
-        # Create the state machine
-        self.state_machine = sfn.StateMachine(
-            self, "BloodPressureAnalysisWorkflow",
-            state_machine_name="BloodPressureAnalysisWorkflow",
-            definition_body=sfn.DefinitionBody.from_chainable(
-                # list_patients_task.next(map_state.next(pii_sync_task))
-                list_patients_task.next(map_state)
-            ),
-            timeout=Duration.minutes(30),
-            tracing_enabled=True
-        )
-
-        # Create a scheduled event rule
-        # we prefer a cron expression instead of a rate, because with a rate we do not know exactly when
-        # the lambda is triggered. With cron, you can decide exactly when you start.
-        # This avoids using database resources during working hours
-        schedule = events.Schedule.cron(
-            minute="0",
-            hour="23",
-            month="*",
-            day="1,15",
-            year="*"
-        )
-
-        event_rule = events.Rule(
-            self, "BloodPressureAnalysisRule",
-            schedule=schedule,
-            enabled=True,
-        )
-
-        # Add the state machine as a target for the rule
-        event_rule.add_target(
-            targets.SfnStateMachine(self.state_machine)
-        )
+# -----------------------------------------------------------------------------
+# WORKFLOW CONSTRUCTS
+# -----------------------------------------------------------------------------
+from syntrillo_clinic_backend.constructs.workflows.blood_pressure_analysis_workflow_construct import BloodPressureAnalysisWorkFlow
+from syntrillo_clinic_backend.constructs.workflows.candid_billing_ingestor_workflow_construct import CandidBillingIngestorWorkFlow
+from syntrillo_clinic_backend.constructs.workflows.healthie_data_ingestor_workflow_construct import HealthieDataIngestorWorkFlow
+from syntrillo_clinic_backend.constructs.workflows.datasync_workflow_construct import DataSyncWorkflow
 
 # -----------------------------------------------------------------------------
 # STACKS
@@ -327,6 +66,10 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         self.termination_protection = self.environment_context["stacks-termination-protection"]
 
+        # ---------------------------------------------------------------------
+        # REMOTE MONITORING DATA SYNC
+        # ---------------------------------------------------------------------
+
         self.remote_monitoring_data_sync = RemoteMonitoringDataSync(
             self, "RemoteMonitoringDataSyncFunction",
             aws_environment=self.aws_environment,
@@ -347,9 +90,13 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         data_sync_workflow = DataSyncWorkflow(
             self, "DataSyncFunction",
-            remote_monitoring_data_sync_function = self.remote_monitoring_data_sync.remote_monitoring_data_sync_function,
-            pii_data_sync_function = pii_data_sync.pii_data_sync_function,
+            remote_monitoring_data_sync_function = self.remote_monitoring_data_sync.function,
+            pii_data_sync_function = pii_data_sync.function,
         )
+
+        # ---------------------------------------------------------------------
+        # HEALTHIE DATA INGESTOR
+        # ---------------------------------------------------------------------
 
         self.healthie_data_ingestor = HealthieDataIngestor(
             self, "HealthieDataIngestor",
@@ -362,10 +109,12 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         self.healthie_data_ingestor_worflow = HealthieDataIngestorWorkFlow(
             self, "HealthieDataIngestorWorkFlow",
-            lambda_function=self.healthie_data_ingestor.healthie_data_ingestor_function
+            lambda_function=self.healthie_data_ingestor.function
         )
 
-
+        # ---------------------------------------------------------------------
+        # CANDID BILLING INGESTOR
+        # ---------------------------------------------------------------------
 
         self.candid_billing_ingestor = CandidBillingIngestor(
             self, "CandidBillingIngestor",
@@ -378,10 +127,14 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
         self.candid_billing_ingestor_worflow = CandidBillingIngestorWorkFlow(
             self, "CandidBillingIngestorWorkFlow",
-            lambda_function=self.candid_billing_ingestor.candid_billing_ingestor_function
+            lambda_function=self.candid_billing_ingestor.function
         )
 
-        if self.aws_environment == "staging":
+        # ---------------------------------------------------------------------
+        # BLOOD PRESSURE ANALYSIS
+        # ---------------------------------------------------------------------
+
+        if self.aws_environment == "staging" or self.aws_environment == "sandbox" :
             self.blood_pressure_analysis = BloodPressureAnalysis(
                 self, "BloodPressureAnalysis",
                 aws_environment=self.aws_environment,
@@ -393,5 +146,5 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
 
             self.blood_pressure_analysis_worflow = BloodPressureAnalysisWorkFlow(
                 self, "BloodPressureAnalysisWorkFlow",
-                lambda_function=self.blood_pressure_analysis.blood_pressure_analysis_function,
+                lambda_function=self.blood_pressure_analysis.function,
             )
