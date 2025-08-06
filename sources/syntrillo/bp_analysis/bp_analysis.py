@@ -218,10 +218,10 @@ class BloodPressureAnalysis:
         total_weeks = (latest_date - baseline_start).days / 7
 
         # Define time ranges
-        current_start = latest_date - pd.Timedelta(weeks=2) + pd.Timedelta(days=1)
-        baseline_end = baseline_start + pd.Timedelta(weeks=1, days=6)
+        current_start = latest_date - pd.Timedelta(weeks=2)
+        baseline_end = baseline_start + pd.Timedelta(weeks=2)
         prior_end = current_start - pd.Timedelta(days=1)
-        prior_start = prior_end - pd.Timedelta(weeks=1, days=6)
+        prior_start = prior_end - pd.Timedelta(weeks=2)
 
         # Minimum number of required measurements
         min_measurements = 3
