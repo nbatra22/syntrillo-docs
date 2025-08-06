@@ -74,7 +74,7 @@ class DatabaseConnection:
 
             # select database to use
             self.database_server = os.getenv('DATABASE_SERVER')
-
+            print('***** DATABASE_SERVER ******: ', self.database_server) # print to display the env variable value.
             if self.database_server == 'AWS':
 
                 self.AWS_DB_CONFIG = {

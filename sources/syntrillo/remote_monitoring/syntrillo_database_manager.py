@@ -3,14 +3,16 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.api_tenovi.device_types import DeviceTypes
+from syntrillo.stroke_risk_score_v2.models.treatment_compliance import TreatmentCompliance
 from syntrillo.system.logger import logger
+from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
 
 
 class SyntrilloDatabaseManager:
@@ -828,6 +830,144 @@ class SyntrilloDatabaseManager:
 
         return measurements, log
 
+    def get_srs_form_responses(self, syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list[SRSFormResponse], dict]:
+        """
+        Retrieves all the SRS form responses for a given patient from the srs_form_responses table
+
+        Args:
+            syntrillo_internal_key_patient (uuid.UUID): The Syntrillo internal key
+
+        Returns:
+            srs_form_responses (list[SRSFormResponse]): The SRS form responses
+            log (dict): The log of the request, with "success" key set to True or False
+        """
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                    SELECT
+                        sfr.*,
+                        sc.strokeCompliance,
+                        sc.tiaCompliance,
+                        sc.chronicInfarctCompliance,
+                        sc.atrialFibrillationCompliance,
+                        sc.ironDeficiencyAnemiaCompliance,
+                        sc.arterialClotsCompliance,
+                        sc.venousClotsCompliance,
+                        sc.chfCompliance,
+                        sc.carotidStenosisCompliance,
+                        sc.osaCompliance,
+                        sc.cadCompliance,
+                        sc.valvularHeartDiseaseCompliance,
+                        sc.ckdCompliance,
+                        sc.pfoCompliance,
+                    FROM
+                        srs_form_responses AS sfr
+                    LEFT JOIN
+                        srs_compliance AS sc ON sfr.srs_form_response_id = sc.srs_form_response_id
+                    WHERE
+                        sfr.syntrillo_internal_key_patient = %s
+                    ORDER BY
+                        sfr.created_at DESC;
+                """
+                cursor.execute(query, (syntrillo_internal_key_patient,))
+                rows = cursor.fetchall()
+
+                srs_form_responses = []
+                for row in rows:
+                    # The row contains all fields needed for SRSFormResponse,
+                    # and Pydantic will ignore extra fields.
+                    form_response = SRSFormResponse.model_validate(row)
+
+                    # Check if there is any compliance data from the LEFT JOIN.
+                    if row.get('strokeCompliance') is not None:
+                        # The row also contains all fields for TreatmentCompliance.
+                        compliance_obj = TreatmentCompliance.model_validate(row)
+                        form_response.compliance = compliance_obj
+
+                    srs_form_responses.append(form_response)
+
+                log = {"success": True}
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            srs_form_responses = None
+
+        return srs_form_responses, log
+
+    def insert_srs_form_response(self, srs_form_response: SRSFormResponse) -> Tuple[Optional[int], dict]:
+        """
+        Insert the SRS form response and associated compliance data into the database.
+
+        Args:
+            srs_form_response (SRSFormResponse): The SRS form response data model.
+
+        Returns:
+            A tuple containing:
+                - Optional[int]: The ID of the newly created SRS form response, or None on failure.
+                - dict: A log dictionary.
+        """
+        logger.info(f"Inserting SRS form response ...")
+        # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
+        form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
+        # Extract the compliance data from the SRS form response.
+        compliance_data = srs_form_response.compliance
+
+        try:
+            self.conn.begin()  # Start a transaction
+
+            with self.conn.cursor() as cursor:
+                # 1. Insert into srs_form_responses
+                form_columns = ', '.join(form_data.keys())
+                form_placeholders = ', '.join(['%s'] * len(form_data))
+                form_query = f"""
+                    INSERT INTO srs_form_responses ({form_columns})
+                    VALUES ({form_placeholders});
+                """
+                cursor.execute(form_query, list(form_data.values()))
+
+                # Get the ID of the new record
+                srs_form_response_id = cursor.lastrowid
+                logger.info(f"Inserted into srs_form_responses with ID: {srs_form_response_id}")
+
+                # 2. Insert into srs_compliance if compliance data exists
+                if compliance_data:
+                    logger.info(f"Inserting compliance data ...")
+
+                    compliance_dict = compliance_data.model_dump(exclude_none=True)
+                    compliance_dict['srs_form_response_id'] = srs_form_response_id
+
+                    compliance_columns = ', '.join(compliance_dict.keys())
+                    compliance_placeholders = ', '.join(['%s'] * len(compliance_dict))
+                    compliance_query = f"""
+                        INSERT INTO srs_compliance ({compliance_columns})
+                        VALUES ({compliance_placeholders});
+                    """
+                    cursor.execute(compliance_query, list(compliance_dict.values()))
+                    logger.info(f"Inserted into srs_compliance for response ID: {srs_form_response_id}")
+
+            self.conn.commit()  # Commit the transaction
+            log = {"success": True}
+            return srs_form_response_id, log
+
+        except pymysql.MySQLError as e:
+            self.conn.rollback()  # Rollback on error
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            logger.error(f"Error inserting SRS form response: {e}")
+            return None, log
+        except Exception as e:
+            self.conn.rollback()  # Rollback on error
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            logger.error(f"An unexpected error occurred during SRS form insertion: {e}")
+
 
 if __name__ == '__main__':
 
@@ -868,3 +1008,64 @@ if __name__ == '__main__':
 
         print(log)
         print(df)
+
+    if False: # Test block for SRS form insertion
+        print("\n--- Testing SRS Form Insertion ---")
+
+        try:
+            # 1. Create dummy data for TreatmentCompliance.
+            # A dummy srs_form_response_id is required to satisfy the Pydantic model.
+            # The actual ID will be generated and overwritten by the insertion logic.
+            dummy_compliance = TreatmentCompliance(
+                srs_form_response_id=0,
+                strokeCompliance="optimized",
+                tiaCompliance="partially optimized",
+                chronicInfarctCompliance="not optimized",
+                atrialFibrillationCompliance="optimized",
+                ironDeficiencyAnemiaCompliance="partially optimized",
+                arterialClotsCompliance="not optimized",
+                venousClotsCompliance="optimized",
+                chfCompliance="partially optimized",
+                carotidStenosisCompliance="not optimized",
+                osaCompliance="optimized",
+                cadCompliance="partially optimized",
+                valvularHeartDiseaseCompliance="not optimized",
+                ckdCompliance="optimized",
+                pfoCompliance="partially optimized"
+            )
+
+            # 2. Create dummy data for the main SRSFormResponse.
+            dummy_form_response = SRSFormResponse(
+                syntrillo_internal_key_patient=str(entry['syntrillo_internal_key']),
+                syntrillo_internal_key_clinician=str(uuid.uuid4()),
+                created_at=datetime.now(),
+                HasPreviousStroke=True,
+                NumberOfStrokes="Multiple",
+                LatestStrokeMechanism="Large Vessel",
+                ScreenedForTIA=True,
+                LikelihoodOfTIA="High Likelihood",
+                Weight=175.5,
+                Height="5'11\"",
+                BMI=24.5,
+                compliance=dummy_compliance  # Nest the compliance object
+            )
+
+            # 3. Call the insertion function.
+            print("Attempting to insert the following data:")
+            print(dummy_form_response.model_dump_json(indent=2))
+
+            new_id, log = data_manager.insert_srs_form_response(dummy_form_response)
+
+            # 4. Print the results.
+            print(f"\nInsertion Log: {log}")
+            if log.get('success'):
+                print(f"✅ Successfully inserted new SRS form response with ID: {new_id}")
+            else:
+                print(f"❌ Insertion failed.")
+
+        except Exception as e:
+            print(f"An error occurred during the test setup: {e}")
+            import traceback
+            traceback.print_exc()
+
+        print("--- End of SRS Form Insertion Test ---\n")

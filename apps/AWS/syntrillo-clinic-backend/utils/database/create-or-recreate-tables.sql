@@ -134,7 +134,9 @@ CREATE TABLE IF NOT EXISTS billing_eligibility (
 )
 
 CREATE TABLE IF NOT EXISTS srs_form_responses (
-    syntrillo_internal_key VARCHAR(255) NOT NULL,
+    srs_form_response_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    syntrillo_internal_key_patient VARCHAR(255) NOT NULL,
+    syntrillo_internal_key_clinician VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     HasPreviousStroke BOOLEAN,
     NumberOfStrokes VARCHAR(20),
@@ -192,5 +194,24 @@ CREATE TABLE IF NOT EXISTS srs_form_responses (
     CHECK (LDLLevel IN ('Borderline', 'High', 'Very High', 'Unknown')),
     CHECK (HDLLevel IN ('Low', 'Unknown')),
     CHECK (TriglyceridesLevel IN ('Moderate', 'High', 'Unknown')),
-    PRIMARY KEY (syntrillo_internal_key, created_at)
+    UNIQUE KEY unique_response (syntrillo_internal_key_patient, syntrillo_internal_key_clinician, created_at)
 );
+
+CREATE TABLE IF NOT EXISTS srs_compliance (
+    srs_form_response_id INT NOT NULL PRIMARY KEY,
+    strokeCompliance VARCHAR(50),
+    tiaCompliance VARCHAR(50),
+    chronicInfarctCompliance VARCHAR(50),
+    atrialFibrillationCompliance VARCHAR(50),
+    ironDeficiencyAnemiaCompliance VARCHAR(50),
+    arterialClotsCompliance VARCHAR(50),
+    venousClotsCompliance VARCHAR(50),
+    chfCompliance VARCHAR(50),
+    carotidStenosisCompliance VARCHAR(50),
+    osaCompliance VARCHAR(50),
+    cadCompliance VARCHAR(50),
+    valvularHeartDiseaseCompliance VARCHAR(50),
+    ckdCompliance VARCHAR(50),
+    pfoCompliance VARCHAR(50),
+    FOREIGN KEY (srs_form_response_id) REFERENCES srs_form_responses(srs_form_response_id) ON DELETE CASCADE ON UPDATE CASCADE
+)
