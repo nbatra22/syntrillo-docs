@@ -100,3 +100,20 @@ WHERE HEX(tenovi_raw_measurements.syntrillo_internal_key) = '341441B854D34D0F92F
 INSERT INTO syntrillo$HealthInformation.tenovi_raw_measurements (syntrillo_internal_key , device_name, metric_name, value_1, value_2, timestamp_local, data_json, date) VALUES (UNHEX('849B0F5648AC4A08B6F19519A3BC3D51'), 'Tenovi BPM - L', 'pulse', '86.00', '0.00', '2024-10-16T00:10:00.000000-04:00', '{"metric": "pulse", "created": "2024-10-16T04:10:28.109806Z", "value_1": "86.00", "value_2": "0.00", "timestamp": "2024-10-16T04:10:00.000000Z", "patient_id": "5383853", "device_name": "Tenovi BPM - L", "sensor_code": "10", "filter_params": {"measurement_index": 587}, "hardware_uuid": "297056120BD7", "hwi_device_id": "e9c24a26-7d69-490f-9546-93c5a31486aa", "timezone_offset": -4, "estimated_timestamp": false}', '2024-10-17 00:08:21');
 
 DELETE FROM syntrillo$HealthInformation.tenovi_raw_measurements where HEX(tenovi_raw_measurements.syntrillo_internal_key) = '849B0F5648AC4A08B6F19519A3BC3D51';
+
+-- ----------------------------------------------------------------------------
+-- Example with syntrillo_internal_key having different formats
+-- ----------------------------------------------------------------------------
+SELECT 
+    u.healthie_user_id,
+    h.module_id,
+    h.form_id,
+    h.created_at,
+    h.answer
+FROM syntrillo$PseudonymManagement.user_look_up_codes u
+JOIN syntrillo$HealthInformation.healthie_form_responses h 
+    ON BIN_TO_UUID(u.syntrillo_internal_key) = h.syntrillo_internal_key
+WHERE
+   u.healthie_user_id = '???'
+   AND h.form_id = '2174066'
+   AND h.module_id = '29945718';
