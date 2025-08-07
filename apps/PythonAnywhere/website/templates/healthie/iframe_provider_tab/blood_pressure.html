@@ -681,25 +681,8 @@
                     bmiHTML = "<h3>No BMI data found</h3>"
                 }
 
-                if (data.hr_measurements && data.hr_measurements.length > 0) {
-
-                    const average = data.hr_measurements.reduce((acc, curr) => acc + parseFloat(curr['value_1']), 0) / data.hr_measurements.length;
-                    // Find the earliest date
-                    const earliest = data.hr_measurements.reduce((min, curr) => {
-                        return new Date(curr.timestamp) < new Date(min.timestamp) ? curr : min;
-                    });
-                    const dateObj = new Date(earliest.timestamp);
-                    // Format as "M/D at H:MM AM/PM"
-                    const month = dateObj.getMonth() + 1;
-                    const day = dateObj.getDate();
-                    const hours = dateObj.getHours();
-                    const minutes = dateObj.getMinutes();
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    const displayHours = hours % 12 || 12;
-                    const displayMinutes = minutes.toString().padStart(2, '0');
-                    const formatted = `${month}/${day} at ${displayHours}:${displayMinutes} ${ampm}`;
-                    hrHTML = `<h4>Earliest measurement recorded at ${formatted}:</h4><ul><li>${average.toFixed(1)} bpm (avg of 3 latest measurements)</li></ul>`;
-
+                if (data.hr_measurements && data.hr_measurements.avg_hr) {
+                    hrHTML = `<h4>Latest measurement recorded on ${data.hr_measurements.latest_date}:</h4><ul><li>${data.hr_measurements.avg_hr} bpm (avg of 3 latest measurements)</li></ul>`;
                 } else {
                     hrHTML = "<h3>No resting heart rate data found</h3>";
                 }

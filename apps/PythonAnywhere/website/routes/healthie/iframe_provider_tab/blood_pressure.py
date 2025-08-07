@@ -4,6 +4,7 @@ import json
 import base64
 import io
 from datetime import datetime
+import uuid
 
 from .post_management import PostManager
 
@@ -229,19 +230,28 @@ def iframe_healthie_provider_tab_get_metrics():
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    hr_measurements, log = db_manager.get_latest_measurements(type='pulse', count=3)
+    hr_measurements, log = db_manager.get_latest_measurements(metric='pulse', count=3)
+
+    # Calculate average heart rate from the first value of each tuple
+    hr_values = [float(measurement[0]) for measurement in hr_measurements]
+    average_hr = round(sum(hr_values) / len(hr_values), 1)
+
+    hr_measurements_cleaned = {
+        'latest_date': datetime.fromisoformat(hr_measurements[0][2]).strftime('%-m/%-d/%y'),
+        'avg_hr': average_hr
+    }
 
     forms_manager = HealthieForms()
     autoscored_sections  = forms_manager.get_autoscored_sections(
-        custom_module_form_id=2455490,
+        custom_module_form_id="2455490",
         user_id=post_manager.posted_healthie_user_id,
     )
 
-    ssq_score = autoscored_sections.data['formAnswerGroups'][0]['autoscored_sections'] if autoscored_sections and len(autoscored_sections.data['formAnswerGroups']) > 0 else None
+    ssq_score = autoscored_sections['data']['formAnswerGroups'][0]['autoscored_sections'] if autoscored_sections and len(autoscored_sections['data']['formAnswerGroups']) > 0 else None
 
     return jsonify({
         'ssq_score': ssq_score,
         'exercise': exercise,
         'bmi': bmi,
-        'hr_measurements': hr_measurements,
+        'hr_measurements': hr_measurements_cleaned,
     })
