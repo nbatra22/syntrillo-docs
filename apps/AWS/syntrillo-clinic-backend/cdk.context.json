@@ -238,7 +238,7 @@
       "create-rds-backup-plan": true
     },
     "bastion": {
-      "bastion-enabled": false,
+      "bastion-enabled": true,
       "bastion-instance-size": "t3.medium"
     }
   },
