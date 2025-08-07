@@ -21,6 +21,12 @@ if [ "$(which jq)" == "" ]; then
   exit
 fi
 
+if [ "$(which mysql)" == "" ]; then
+  echo "!!!Please install mysql client"
+  echo "example on ubuntu: sudo apt-get install mysql-client"
+  exit
+fi
+
 PROFILE="syntrillo-clinic-$ENVIRONMENT"
 if [ "$ENVIRONMENT" == "staging" ]; then
   if grep -q "syntrillo-clinic-staging-database" ~/.aws/config; then
