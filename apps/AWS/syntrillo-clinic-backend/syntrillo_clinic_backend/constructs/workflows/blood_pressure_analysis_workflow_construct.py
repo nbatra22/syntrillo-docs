@@ -98,7 +98,7 @@ class BloodPressureAnalysisWorkFlow(Construct):
             minute="0",
             hour="23",
             month="*",
-            day="1,15",
+            day="*",
             year="*"
         )
 

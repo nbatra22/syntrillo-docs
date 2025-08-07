@@ -778,7 +778,7 @@ class SyntrilloDatabaseManager:
 
         return internal_keys, log
 
-    def get_latest_measurements(self, type, count):
+    def get_latest_measurements(self, metric, count):
         """
         Returns specific number of measurements
 
@@ -794,28 +794,17 @@ class SyntrilloDatabaseManager:
 
         try:
             with self.conn.cursor() as cursor:
-                # Determine the metric filter
-                if type == 'blood_pressure':
-                    metric_filter = "metric_name = 'blood_pressure'"
-                elif type == 'pulse':
-                    metric_filter = "metric_name = 'pulse'"
-                else:
-                    metric_filter = "1=1"  # No filter if type is not recognized
-
-                query = f"""
+                query = """
                     SELECT value_1, value_2, timestamp_local as timestamp
                     FROM tenovi_raw_measurements
-                    WHERE {metric_filter} AND syntrillo_internal_key = {self.syntrillo_internal_key}
+                    WHERE metric_name = %s AND syntrillo_internal_key = %s
                     ORDER BY timestamp_local DESC
                     LIMIT %s
                 """
 
-                cursor.execute(query, (count,))
-                rows = cursor.fetchall()
-                # Convert to list of dicts
-                measurements = [
-                    {'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows
-                ]
+                cursor.execute(query, (metric, self.syntrillo_internal_key.bytes, count,))
+                response = cursor.fetchall()
+
                 log = {"success": True}
 
         except pymysql.MySQLError as e:
@@ -824,15 +813,16 @@ class SyntrilloDatabaseManager:
                 "success": False,
                 "error": str(e)
             }
-            measurements = None
+            response = None
 
-        return measurements, log
+        return response, log
 
 
 if __name__ == '__main__':
 
     lookup_codes = LookUpCodesManagement()
-    entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One"
+    # entry = lookup_codes.retrieve_entry_by_healthie_user_id('1051529') # 1051529 : Omar's "Patient One"
+    entry = lookup_codes.retrieve_entry_by_healthie_user_id('2062692') # Patient AWS 5
 
     data_manager = SyntrilloDatabaseManager(entry['syntrillo_internal_key'])
 
@@ -862,9 +852,16 @@ if __name__ == '__main__':
         print(log)
         print(json.dumps(records, indent=4, default=str))
 
-    if True:
+    if False:
         today = datetime.now().date()
         df, log = data_manager.get_tenovi_device_data("Tenovi Pillbox", datetime(2024, 1, 1), today)
+
+        print(log)
+        print(df)
+
+    if True:
+        # today = datetime.now().date()
+        df, log = data_manager.get_latest_measurements('pulse', 3)
 
         print(log)
         print(df)
