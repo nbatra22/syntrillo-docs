@@ -137,12 +137,12 @@
         </div>
 
         <div id="" class="form-group">
-            <label for="tia-likelihood">
+            <label for="tia-mechanism">
                 2b. What was the TIA mechanism? If 'other', what other mechanism?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-small-vessel" name="previous_stroke_mechanism" value="small-vessel">
+                    <input type="radio" id="tia-mechanism-small-vessel" name="tia_mechanism" value="small-vessel">
                     <label for="tia-mechanism-small-vessel">
                         Small Vessel
                     </label>
@@ -186,15 +186,312 @@
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-likelihood-yes" name="tia_likelihood" value="likely">
-                    <label for="tia-likelihood-yes">
+                    <input type="radio" id="prior-head-ct-yes" name="prior_head_ct" value="yes">
+                    <label for="prior-head-ct-yes">
                         Yes
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-likelihood-no" name="tia_likelihood" value="not-likely">
-                    <label for="tia-likelihood-no">
+                    <input type="radio" id="prior-head-ct-no" name="prior_head_ct" value="no">
+                    <label for="prior-head-ct-no">
                         No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="prior-head-ct-date">
+                3a. When was the most recent CT?
+            </label>
+            <input type="date" id="prior-head-ct-date" name="prior_head_ct_date" value="" />
+        </div>
+
+        <div id="" class="form-group">
+            <label for="prior-head-ct-chronic-infarct">
+                3b. Was a chronic infarct present?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-yes" name="prior_head_ct_chronic_infarct" value="yes">
+                    <label for="prior-head-ct-chronic-infarct-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-no" name="prior_head_ct_chronic_infarct" value="no">
+                    <label for="prior-head-ct-chronic-infarct-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="">
+                4. History of any of the following:
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="a-fib" name="a_fib">
+                    <label for="a_fib">
+                        Atrial fibrillation
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="iron-deficiency-anemia" name="iron_deficiency_anemia">
+                    <label for="iron_deficiency_anemia">
+                        Iron deficiency anemia
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="arterial-clots" name="arterial_clots">
+                    <label for="arterial_clots">
+                        Arterial clots
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="venous-clots" name="venous_clots">
+                    <label for="venous_clots">
+                        Venous clots
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="chf" name="chf">
+                    <label for="chf">
+                        Congestive heart failure (CHF)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="cad" name="cad">
+                    <label for="cad">
+                        Carotid stenosis
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="osa" name="osa">
+                    <label for="osa">
+                        Obstructive sleep apnea (OSA)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="cad" name="cad">
+                    <label for="cad">
+                        Coronary artery disease (CAD)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="valvular-heart-disease" name="valvular_heart_disease">
+                    <label for="valvular_heart_disease">
+                        Valvular heart disease
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="ckd" name="ckd">
+                    <label for="ckd">
+                        Chronic kidney disease
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="iron-deficiency-anemia-severity">
+                (Iron Deficiency Anemia) Severity?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-mild" name="iron_deficiency_anemia_severity" value="mild">
+                    <label for="iron-deficiency-anemia-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-severe" name="iron_deficiency_anemia_severity" value="severe">
+                    <label for="iron-deficiency-anemia-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="arterial-clots-num-occurences">
+                (Arterial clots) Number of occurences?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-once" name="arterial_clots_num_occurence" value="single">
+                    <label for="arterial-clots-once">
+                        Once
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-multiple" name="arterial_clots_num_occurence" value="multiple">
+                    <label for="arterial-clots-multiple">
+                        More than once
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="venous-clots-num-occurences">
+                (Venous clots) Number of occurences?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-once" name="venous_clots_num_occurence" value="single">
+                    <label for="venous-clots-once">
+                        Once
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-multiple" name="venous_clots_num_occurence" value="multiple">
+                    <label for="venous-clots-multiple">
+                        More than once
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="pfo-presence">
+                (Venous clots) Presence of PFO?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-yes" name="pfo_presence" value="positive">
+                    <label for="pfo-presence-yes">
+                        Positive
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-no" name="pfo_presence" value="negative">
+                    <label for="pfo-presence-no">
+                        Negative
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-unknown" name="pfo_presence" value="unknown">
+                    <label for="pfo-presence-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="ejection-fraction">
+                (CHF) What was the patient's ejection fraction (EF)?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-less" name="ejection_fraction" value="<=40">
+                    <label for="ejection-fraction-less">
+                        <= 40%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-more" name="ejection_fraction" value=">40">
+                    <label for="ejection-fraction-more">
+                        > 40%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-unknown" name="ejection_fraction" value="unknown">
+                    <label for="ejection-fraction-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="carotid-stenosis-percent">
+                (Carotid Stenosis) What was the patient's % of stenosis?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-50-70" name="carotid_stenosis_percent" value="50-70">
+                    <label for="carotid-stenosis-percent-less">
+                        50 - 70%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-70-plus" name="carotid_stenosis_percent" value=">70">
+                    <label for="carotid-stenosis-percent-more">
+                        > 70%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-unknown" name="carotid_stenosis_percent" value="unknown">
+                    <label for="carotid-stenosis-percent-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="osa-severity">
+                (OSA) Severity?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-mild" name="osa_severity" value="mild">
+                    <label for="osa-severity-less">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-moderate" name="osa_severity" value="moderate">
+                    <label for="osa-severity-more">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-severe" name="osa_severity" value="severe">
+                    <label for="osa-severity-more">
+                        Severe
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-unknown" name="osa_severity" value="unknown">
+                    <label for="osa-severity-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="cad-type">
+                (CAD) Type of CAD?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-symptomatic" name="cad_type" value="symptomatic">
+                    <label for="cad-type-less">
+                        Symptomatic single or multivessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-asymp-multi" name="cad_type" value="asymp-multi">
+                    <label for="cad-type-more">
+                        Asymptomatic multivessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-asymp-single" name="cad_type" value="asymp-single">
+                    <label for="cad-type-more">
+                        Asymptomatic single vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-unknown" name="cad_type" value="unknown">
+                    <label for="cad-type-unknown">
+                        Unknown
                     </label>
                 </div>
             </div>
@@ -237,6 +534,82 @@
         list.appendChild(li);
         input.value = "";
     });
+
+    function submitForm() {
+        // Collect all form data
+        const formData = {
+            // TIA screening
+            tia_screening: document.querySelector('input[name="tia_screening"]:checked')?.value || null,
+
+            // Prior head CT
+            prior_head_ct: document.querySelector('input[name="prior_head_ct"]:checked')?.value || null,
+            prior_head_ct_date: document.getElementById('prior-head-ct-date').value || null,
+            prior_head_ct_chronic_infarct: document.querySelector('input[name="prior_head_ct_chronic_infarct"]:checked')?.value || null,
+
+            // Medical history checkboxes
+            a_fib: document.getElementById('a-fib').checked,
+            iron_deficiency_anemia: document.getElementById('iron-deficiency-anemia').checked,
+            arterial_clots: document.getElementById('arterial-clots').checked,
+            venous_clots: document.getElementById('venous-clots').checked,
+            chf: document.getElementById('chf').checked,
+            carotid_stenosis: document.getElementById('carotid-stenosis').checked,
+            osa: document.getElementById('osa').checked,
+            cad: document.getElementById('cad').checked,
+            valvular_heart_disease: document.getElementById('valvular-heart-disease').checked,
+            ckd: document.getElementById('ckd').checked,
+
+            // Conditional fields based on checkboxes
+            iron_deficiency_anemia_severity: document.querySelector('input[name="iron_deficiency_anemia_severity"]:checked')?.value || null,
+            arterial_clots_num_occurence: document.querySelector('input[name="arterial_clots_num_occurence"]:checked')?.value || null,
+            venous_clots_num_occurence: document.querySelector('input[name="venous_clots_num_occurence"]:checked')?.value || null,
+            pfo_presence: document.querySelector('input[name="pfo_presence"]:checked')?.value || null,
+            ejection_fraction: document.querySelector('input[name="ejection_fraction"]:checked')?.value || null,
+            carotid_stenosis_percent: document.querySelector('input[name="carotid_stenosis_percent"]:checked')?.value || null,
+            osa_severity: document.querySelector('input[name="osa_severity"]:checked')?.value || null,
+            cad_type: document.querySelector('input[name="cad_type"]:checked')?.value || null
+        };
+
+        // Validate required fields (you can customize this)
+        if (!formData.tia_screening) {
+            alert('Please answer the TIA screening question.');
+            return;
+        }
+
+        // Show loading state
+        const submitButton = document.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        submitButton.textContent = 'Submitting...';
+        submitButton.disabled = true;
+
+        // Send data to server
+        fetch('{{ url_for("") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Form submitted successfully!');
+                // Optionally reset form or redirect
+                // document.getElementById('monthly-visit-form').reset();
+            } else {
+                alert('Error submitting form: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error submitting form. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        });
+    }
 
 </script>
 {% endblock %}
