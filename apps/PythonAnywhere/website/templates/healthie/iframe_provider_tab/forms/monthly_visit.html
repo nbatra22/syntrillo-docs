@@ -2,15 +2,17 @@
 
 {% block extra_head %}
 <style>
-
+    h2 {
+        margin: 0 !important;
+    }
 </style>
 {% endblock %}
 
 
 {% block content %}
-<form id="medication-form" class="form-subcontainer" onsubmit="">
+<form id="monthly-visit-form" class="form-subcontainer" onsubmit="">
 
-    <div id="" class="form-content">
+    <div id="monthly-visit-form-content" class="form-content">
 
         <div id="" class="form-group">
             <label for="previous-stroke">
@@ -148,31 +150,31 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-large-vessel" name="tia_mechanishm" value="large-vessel">
+                    <input type="radio" id="tia-mechanism-large-vessel" name="tia_mechanism" value="large-vessel">
                     <label for="tia-mechanism-large-vessel">
                         Large Vessel
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-cryptogenic" name="tia_mechanishm" value="cryptogenic">
+                    <input type="radio" id="tia-mechanism-cryptogenic" name="tia_mechanism" value="cryptogenic">
                     <label for="tia-mechanism-cryptogenic">
                         Cryptogenic
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-hypercoagulable" name="tia_mechanishm" value="hypercoagulable">
+                    <input type="radio" id="tia-mechanism-hypercoagulable" name="tia_mechanism" value="hypercoagulable">
                     <label for="tia-mechanism-hypercoagulable">
                         Hypercoagulable
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-structural" name="tia_mechanishm" value="structural">
+                    <input type="radio" id="tia-mechanism-structural" name="tia_mechanism" value="structural">
                     <label for="tia-mechanism-structural">
                         Structural
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-mechanism-other" name="tia_mechanishm" value="other">
+                    <input type="radio" id="tia-mechanism-other" name="tia_mechanism" value="other">
                     <label for="tia-mechanism-other">
                         Other
                     </label>
@@ -310,6 +312,32 @@
                     <input type="radio" id="iron-deficiency-anemia-severe" name="iron_deficiency_anemia_severity" value="severe">
                     <label for="iron-deficiency-anemia-severe">
                         Severe
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="" class="form-group">
+            <label for="iron-deficiency-anemia-treatment">
+                (Iron Deficiency Anemia) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-none" name="iron_deficiency_anemia_treatment" value="none">
+                    <label for="iron-deficiency-anemia-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-partial" name="iron_deficiency_anemia_treatment" value="partial">
+                    <label for="iron-deficiency-anemia-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-full" name="iron_deficiency_anemia_treatment" value="full">
+                    <label for="iron-deficiency-anemia-treatment-full">
+                        Fully optimized
                     </label>
                 </div>
             </div>
@@ -497,13 +525,150 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="ha1c">
+                What's the patient's last known Hemoglobin A1c (HA1c)?
+            </label>
+            <input type="number" id="ha1c" name="ha1c">
+        </div>
+
+        <div class="form-group">
+            <label for="physical-inactivity">
+                What's the patient's physical inactivity level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-mild" name="physical_inactivity" value="mild">
+                    <label for="physical-inactivity-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-moderate" name="physical_inactivity" value="moderate">
+                    <label for="physical-inactivity-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-severe" name="physical_inactivity" value="severe">
+                    <label for="physical-inactivity-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="ldl-level">
+                What's the patient's LDL level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-level-borderline" name="ldl_level" value="borderline">
+                    <label for="ldl-level-borderline">
+                        Borderline
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-level-high" name="ldl_level" value="high">
+                    <label for="ldl-level-high">
+                        High
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-level-very-high" name="ldl_level" value="very-high">
+                    <label for="ldl-level-very-high">
+                        Very high
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-level-unknown" name="ldl_level" value="unknown">
+                    <label for="ldl-level-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="hdl-level">
+                What's the patient's HDL level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-level-low" name="hdl_level" value="low">
+                    <label for="hdl-level-low">
+                        Low
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-level-unknown" name="hdl_level" value="unknown">
+                    <label for="hdl-level-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="triglycerides-level">
+                What's the patient's triglycerides level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-level-moderate" name="triglycerides_level" value="moderate">
+                    <label for="triglycerides-level-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-level-high" name="triglycerides_level" value="high">
+                    <label for="triglycerides-level-high">
+                        High
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-level-unknown" name="triglycerides_level" value="unknown">
+                    <label for="triglycerides-level-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="physical-inactivity">
+                What's the patient's creatine level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-mild" name="physical_inactivity" value="mild">
+                    <label for="physical-inactivity-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-moderate" name="physical_inactivity" value="moderate">
+                    <label for="physical-inactivity-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-severe" name="physical_inactivity" value="severe">
+                    <label for="physical-inactivity-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="form-submit-footer">
-        <h3 id="" class="">
+        <h3>
 
         </h3>
-        <button type="submit" id="follow-up-submit-btn" class="form-submit-btn" onclick="">
+        <button type="submit" id="monthly-visit-submit-btn" class="form-submit-btn">
             Save
         </button>
     </div>
@@ -514,102 +679,6 @@
 
 {% block scripts %}
 <script>
-    document.getElementById("add-checklist-btn").addEventListener("click", function () {
-        const input = document.getElementById("new-checklist-item");
-        const value = input.value.trim();
-        if (value === "") return;
-
-        const list = document.getElementById("checklist-items");
-
-        const li = document.createElement("li");
-        const id = `checklist-${Date.now()}`;
-
-        li.innerHTML = `
-            <label for="${id}">
-                <input type="checkbox" id="${id}" name="checklist_items[]" value="${value}" />
-                ${value}
-            </label>
-        `;
-
-        list.appendChild(li);
-        input.value = "";
-    });
-
-    function submitForm() {
-        // Collect all form data
-        const formData = {
-            // TIA screening
-            tia_screening: document.querySelector('input[name="tia_screening"]:checked')?.value || null,
-
-            // Prior head CT
-            prior_head_ct: document.querySelector('input[name="prior_head_ct"]:checked')?.value || null,
-            prior_head_ct_date: document.getElementById('prior-head-ct-date').value || null,
-            prior_head_ct_chronic_infarct: document.querySelector('input[name="prior_head_ct_chronic_infarct"]:checked')?.value || null,
-
-            // Medical history checkboxes
-            a_fib: document.getElementById('a-fib').checked,
-            iron_deficiency_anemia: document.getElementById('iron-deficiency-anemia').checked,
-            arterial_clots: document.getElementById('arterial-clots').checked,
-            venous_clots: document.getElementById('venous-clots').checked,
-            chf: document.getElementById('chf').checked,
-            carotid_stenosis: document.getElementById('carotid-stenosis').checked,
-            osa: document.getElementById('osa').checked,
-            cad: document.getElementById('cad').checked,
-            valvular_heart_disease: document.getElementById('valvular-heart-disease').checked,
-            ckd: document.getElementById('ckd').checked,
-
-            // Conditional fields based on checkboxes
-            iron_deficiency_anemia_severity: document.querySelector('input[name="iron_deficiency_anemia_severity"]:checked')?.value || null,
-            arterial_clots_num_occurence: document.querySelector('input[name="arterial_clots_num_occurence"]:checked')?.value || null,
-            venous_clots_num_occurence: document.querySelector('input[name="venous_clots_num_occurence"]:checked')?.value || null,
-            pfo_presence: document.querySelector('input[name="pfo_presence"]:checked')?.value || null,
-            ejection_fraction: document.querySelector('input[name="ejection_fraction"]:checked')?.value || null,
-            carotid_stenosis_percent: document.querySelector('input[name="carotid_stenosis_percent"]:checked')?.value || null,
-            osa_severity: document.querySelector('input[name="osa_severity"]:checked')?.value || null,
-            cad_type: document.querySelector('input[name="cad_type"]:checked')?.value || null
-        };
-
-        // Validate required fields (you can customize this)
-        if (!formData.tia_screening) {
-            alert('Please answer the TIA screening question.');
-            return;
-        }
-
-        // Show loading state
-        const submitButton = document.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Submitting...';
-        submitButton.disabled = true;
-
-        // Send data to server
-        fetch('{{ url_for("") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Form submitted successfully!');
-                // Optionally reset form or redirect
-                // document.getElementById('monthly-visit-form').reset();
-            } else {
-                alert('Error submitting form: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error submitting form. Please try again.');
-        })
-        .finally(() => {
-            // Reset button state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        });
-    }
 
 </script>
 {% endblock %}
