@@ -14,7 +14,7 @@
 
     <div id="monthly-visit-form-content" class="form-content">
 
-        <div id="" class="form-group">
+        <div id="previous-stroke" class="form-group">
             <label for="previous-stroke">
                 1. Has the patient had a previous stroke?
             </label>
@@ -34,7 +34,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="previous-stroke-count" class="form-group">
             <label for="previous-stroke-count">
                 1a. How many strokes has the patient had?
             </label>
@@ -54,7 +54,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="previous-stroke-mechanism" class="form-group">
             <label for="previous-stroke-count">
                 1b. What was the latest stroke's mechanism?
             </label>
@@ -98,7 +98,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="tia-screening" class="form-group">
             <label for="tia-screening">
                 2. For neurologist: Has the patient been screened for TIA?
             </label>
@@ -118,7 +118,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="tia-likelihood" class="form-group">
             <label for="tia-likelihood">
                 2a. What is the likelihood of TIA?
             </label>
@@ -138,7 +138,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="tia-mechanism" class="form-group">
             <label for="tia-mechanism">
                 2b. What was the TIA mechanism? If 'other', what other mechanism?
             </label>
@@ -182,7 +182,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="prior-head-ct" class="form-group">
             <label for="prior-head-ct">
                 3. Has the patient had a prior head CT?
             </label>
@@ -202,14 +202,14 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="prior-head-ct-date" class="form-group">
             <label for="prior-head-ct-date">
                 3a. When was the most recent CT?
             </label>
             <input type="date" id="prior-head-ct-date" name="prior_head_ct_date" value="" />
         </div>
 
-        <div id="" class="form-group">
+        <div id="prior-head-ct-chronic-infarct" class="form-group">
             <label for="prior-head-ct-chronic-infarct">
                 3b. Was a chronic infarct present?
             </label>
@@ -229,8 +229,8 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
-            <label for="">
+        <div id="history-select" class="form-group">
+            <label for="history-select">
                 4. History of any of the following:
             </label>
             <div class="input-button-group">
@@ -291,7 +291,19 @@
                 <div class="input-button-group-item">
                     <input type="checkbox" id="ckd" name="ckd">
                     <label for="ckd">
-                        Chronic kidney disease
+                        Chronic kidney disease (CKD)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="diabetes" name="diabetes">
+                    <label for="diabetes">
+                        Diabetes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="obesity" name="obesity">
+                    <label for="obesity">
+                        Obesity
                     </label>
                 </div>
             </div>
@@ -335,27 +347,27 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="iron-deficiency-anemia-treatment-full" name="iron_deficiency_anemia_treatment" value="full">
-                    <label for="iron-deficiency-anemia-treatment-full">
-                        Fully optimized
+                    <input type="radio" id="iron-deficiency-anemia-treatment-optimized" name="iron_deficiency_anemia_treatment" value="optimized">
+                    <label for="iron-deficiency-anemia-treatment-optimized">
+                        Optimized
                     </label>
                 </div>
             </div>
         </div>
 
-        <div id="" class="form-group">
+        <div id="arterial-clots-occurences" class="form-group">
             <label for="arterial-clots-num-occurences">
                 (Arterial clots) Number of occurences?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="arterial-clots-once" name="arterial_clots_num_occurence" value="single">
+                    <input type="radio" id="arterial-clots-once" name="arterial_clots_occurences" value="single">
                     <label for="arterial-clots-once">
                         Once
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="arterial-clots-multiple" name="arterial_clots_num_occurence" value="multiple">
+                    <input type="radio" id="arterial-clots-multiple" name="arterial_clots_occurences" value="multiple">
                     <label for="arterial-clots-multiple">
                         More than once
                     </label>
@@ -363,19 +375,45 @@
             </div>
         </div>
 
-        <div id="" class="form-group">
-            <label for="venous-clots-num-occurences">
+        <div id="arterial-clots-treatment" class="form-group">
+            <label for="arterial-clots-treatment">
+                (Arterial clots) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-none" name="arterial_clots_treatment" value="none">
+                    <label for="arterial-clots-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-partial" name="arterial_clots_treatment" value="partial">
+                    <label for="arterial-clots-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-optimized" name="arterial_clots_treatment" value="optimized">
+                    <label for="arterial-clots-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="venous-clots-occurences" class="form-group">
+            <label for="venous-clots-occurences">
                 (Venous clots) Number of occurences?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="venous-clots-once" name="venous_clots_num_occurence" value="single">
+                    <input type="radio" id="venous-clots-once" name="venous_clots_occurence" value="single">
                     <label for="venous-clots-once">
                         Once
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="venous-clots-multiple" name="venous_clots_num_occurence" value="multiple">
+                    <input type="radio" id="venous-clots-multiple" name="venous_clots_occurence" value="multiple">
                     <label for="venous-clots-multiple">
                         More than once
                     </label>
@@ -409,6 +447,32 @@
             </div>
         </div>
 
+        <div id="venous-clots-treatment" class="form-group">
+            <label for="venous-clots-treatment">
+                (Venous clots) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-none" name="venous_clots_treatment" value="none">
+                    <label for="venous-clots-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-partial" name="venous_clots_treatment" value="partial">
+                    <label for="venous-clots-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-optimized" name="venous_clots_treatment" value="optimized">
+                    <label for="venous-clots-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div id="" class="form-group">
             <label for="ejection-fraction">
                 (CHF) What was the patient's ejection fraction (EF)?
@@ -435,9 +499,35 @@
             </div>
         </div>
 
+        <div id="chf-treatment" class="form-group">
+            <label for="chf-treatment">
+                (CHF) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-none" name="chf_treatment" value="none">
+                    <label for="chf-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-partial" name="chf_treatment" value="partial">
+                    <label for="chf-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-optimized" name="chf_treatment" value="optimized">
+                    <label for="chf-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div id="" class="form-group">
             <label for="carotid-stenosis-percent">
-                (Carotid Stenosis) What was the patient's % of stenosis?
+                (Carotid Stenosis) What was the patient's percent/degree of stenosis?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -456,6 +546,32 @@
                     <input type="radio" id="carotid-stenosis-percent-unknown" name="carotid_stenosis_percent" value="unknown">
                     <label for="carotid-stenosis-percent-unknown">
                         Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="carotid-stenosis-treatment" class="form-group">
+            <label for="carotid-stenosis-treatment">
+                (Carotid stenosis) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-none" name="arterial_clots_treatment" value="none">
+                    <label for="carotid-stenosis-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-partial" name="arterial_clots_treatment" value="partial">
+                    <label for="carotid-stenosis-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-optimized" name="arterial_clots_treatment" value="optimized">
+                    <label for="carotid-stenosis-treatment-optimized">
+                        Optimized
                     </label>
                 </div>
             </div>
@@ -493,6 +609,32 @@
             </div>
         </div>
 
+        <div id="osa-treatment" class="form-group">
+            <label for="osa-treatment">
+                (OSA) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-none" name="osa_treatment" value="none">
+                    <label for="osa-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-partial" name="osa_treatment" value="partial">
+                    <label for="osa-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-optimized" name="osa_treatment" value="optimized">
+                    <label for="osa-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div id="" class="form-group">
             <label for="cad-type">
                 (CAD) Type of CAD?
@@ -525,11 +667,30 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="ha1c">
-                What's the patient's last known Hemoglobin A1c (HA1c)?
+        <div id="cad-treatment" class="form-group">
+            <label for="cad-treatment">
+                (CAD) Treatment optimization?
             </label>
-            <input type="number" id="ha1c" name="ha1c">
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-none" name="cad_treatment" value="none">
+                    <label for="cad-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-partial" name="cad_treatment" value="partial">
+                    <label for="cad-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-optimized" name="cad_treatment" value="optimized">
+                    <label for="cad-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
         </div>
 
         <div class="form-group">
@@ -556,6 +717,13 @@
                     </label>
                 </div>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label for="ha1c">
+                What's the patient's last known Hemoglobin A1c (HA1c)?
+            </label>
+            <input type="number" id="ha1c" name="ha1c">
         </div>
 
         <div class="form-group">

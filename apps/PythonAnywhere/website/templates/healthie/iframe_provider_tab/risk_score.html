@@ -1,15 +1,77 @@
 <!-- Styling -->
 <style>
     .rs-tab-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .rs-tab-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+
+    .rs-tab-left-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .rs-tab-left-subheader {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .rs-tab-header h1 {
+        font-weight: bold;
+        font-size: large;
+        margin: 0;
+    }
+
+    .rs-tab-left-header h2 {
+        font-size: small;
+        /* font-weight: lighter; */
+        color: #6B7280;
+    }
+
+    #rs-create-charting-note-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        border: none;
+        color: #16284a;
+        ;
+        background-color: #e5e7eb;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
+    }
+
+    #rs-create-charting-note-btn:hover {
+        background-color: #D1D5DB;
+    }
+
+    #rs-create-charting-note-btn:focus {
+        outline: 2px solid #1e40af;
+    }
+
+    .rs-col-container {
         width: 100%;
-        height: 90vh;
+        height: 70vh;
         gap: 2rem;
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: 1fr 1fr;
         overflow: hidden;
     }
 
-    .rs-tab-container section {
+    .rs-col-container section {
         background-color: #e5e7eb;
         border-radius: 0.375rem;
         padding: 1rem;
@@ -28,12 +90,12 @@
     }
 
     #rs-score-column {
-        grid-column: span 2;
+        grid-column: span 1;
         height: 100%;
     }
 
     #rs-data-column {
-        grid-column: span 3;
+        grid-column: span 1;
     }
 
     /* #rs-score-section {
@@ -50,7 +112,9 @@
         top: 1rem;
     }
 
-    h2, h3, h4 {
+    h2,
+    h3,
+    h4 {
         margin: 0;
     }
 
@@ -80,7 +144,8 @@
         background-color: #d1d5db;
     }
 
-    .rs-section-select-container.active, .rs-section-select-container.active * {
+    .rs-section-select-container.active,
+    .rs-section-select-container.active * {
         background-color: #16284a;
         color: #d1d5db !important;
     }
@@ -110,7 +175,8 @@
 
     #rs-create-button {
         background-color: transparent;
-        border-radius: 9999px; /* rounded-full */
+        border-radius: 9999px;
+        /* rounded-full */
         height: 2rem;
         width: 2rem;
         display: flex;
@@ -120,7 +186,8 @@
     }
 
     #rs-create-button:hover {
-        background-color: #d1d5db; /* hover:bg-gray-300 */
+        background-color: #d1d5db;
+        /* hover:bg-gray-300 */
     }
 
     .rs-max-score {
@@ -134,8 +201,11 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        /* gap: .25rem; */
-        padding: 1rem 0;
+        gap: .25rem;
+        padding: 1rem;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        width: 15%;
     }
 
     .rs-score-subcontainer {
@@ -204,15 +274,18 @@
         border-radius: 0.25rem;
     }
 
-    .rs-metric-container.active, .rs-metric-container.legend-active {
+    .rs-metric-container.active,
+    .rs-metric-container.legend-active {
         background-color: #16284a;
     }
 
-    .rs-metric-container.active h3, .rs-metric-container.legend-active h3 {
+    .rs-metric-container.active h3,
+    .rs-metric-container.legend-active h3 {
         color: #d1d5db !important;
     }
 
-    .rs-metric-container.active h4, .rs-metric-container.legend-active h4 {
+    .rs-metric-container.active h4,
+    .rs-metric-container.legend-active h4 {
         color: #9ca3af !important;
     }
 
@@ -221,12 +294,15 @@
         flex-direction: column;
     }
 
-    .rs-metric-title, .rs-metric-value {
+    .rs-metric-title,
+    .rs-metric-value {
         font-weight: bold;
         font-size: 14px;
     }
 
-    .rs-metric-subtitle, .rs-metric-value-unit, .rs-metrics-footer {
+    .rs-metric-subtitle,
+    .rs-metric-value-unit,
+    .rs-metrics-footer {
         font-size: 12px;
         color: #6b7280;
     }
@@ -259,7 +335,8 @@
 
     .toggle-other-meds-btn {
         background: none;
-        color: #16284a; /* Feel free to change */
+        color: #16284a;
+        /* Feel free to change */
         border: none;
         cursor: pointer;
         font-size: 0.95rem;
@@ -286,20 +363,29 @@
     }
 
     #other-meds-container.open {
-        max-height: 1000px; /* large enough to fit content */
+        max-height: 1000px;
+        /* large enough to fit content */
     }
 
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
     .spinner {
         display: inline-block;
-        width: 2rem; /* Adjust size as needed */
+        width: 2rem;
+        /* Adjust size as needed */
         height: 2rem;
-        border: 4px solid transparent; /* Light blue */
-        border-top-color: #3b82f6; /* Solid blue for animation */
+        border: 4px solid transparent;
+        /* Light blue */
+        border-top-color: #3b82f6;
+        /* Solid blue for animation */
         border-radius: 50%;
         animation: spin 1s linear infinite;
         padding: 4px 0;
@@ -366,252 +452,375 @@
     .close-btn:active {
         outline: none !important;
     }
-
 </style>
 
 <!-- Main Content -->
 <div class="rs-tab-container">
 
-    <div id="rs-score-column" class="rs-column">
-
-        <section id="rs-score-section" class="">
-            <h2 id="" class="rs-section-header">
-                Risk Score
-            </h2>
-
-            <div id="" class="rs-total-score-container">
-                <h3 id="rs-risk-score-classification" class="rs-section-info">
-                    MEDIUM RISK
-                </h3>
-                <h2 id="rs-total-score" class="rs-total-score">
-                    12.5
-                </h2>
-                <h3 id="rs-total-max-score" class="rs-max-score">
-                    max 20.2
-                </h3>
-            </div>
-
-        </section>
-
-        <section id="rs-charting-section" class="">
-            <div id="" class="rs-section-header">
+    <div id="" class="rs-tab-header">
+        <div id="" class="rs-tab-left-header">
+            <div id="" class="rs-tab-left-subheader">
+                <h1 id="" class="">
+                    Stroke Risk Score
+                </h1>
                 <h2 id="" class="">
-                    Charting Notes
+                    Charting notes encompass all factors included in the stroke risk score calculation. To update
+                    specific sections of the patient's health information only, click on the plus (+) icon in the
+                    respective category.
                 </h2>
-                <button id="rs-create-button" class="" title="Create new charting note" onclick="openModal('/healthie/iframe_provider_tab/forms/monthly_visit', 'Charting Note')">
-                    <i class="fa-solid fa-plus"></i>
+            </div>
+            <div id="" class="rs-header-btns-container">
+                <button id="rs-create-charting-note-btn" class=""
+                    onclick="openModal('/healthie/iframe_provider_tab/forms/charting_note', 'Charting Note')">
+                    <i class="fa-solid fa-plus"></i> Charting Note
                 </button>
             </div>
-            <div id="" class="rs-metric-container">
-                <div class="rs-metric-info">
-                    <h3 class="rs-metric-title">
-                        8/11/225 - Charting Note
-                    </h3>
-                    <h4 class="rs-metric-subtitle">
-                        Test Doctor
-                    </h4>
-                </div>
-                <div class="rs-metric-value-container">
-                    <h3 id="rs-height" class="rs-metric-value">
-                        12.5
-                    </h3>
-                    <h4 class="rs-metric-value-unit">
-                        MEDIUM RISK
-                    </h4>
-                </div>
-            </div>
-            <div id="" class="rs-metric-container">
-                <div class="rs-metric-info">
-                    <h3 class="rs-metric-title">
-                        6/6/225 - Charting Note
-                    </h3>
-                    <h4 class="rs-metric-subtitle">
-                        Test Doctor
-                    </h4>
-                </div>
-                <div class="rs-metric-value-container">
-                    <h3 id="rs-height" class="rs-metric-value">
-                        18.3
-                    </h3>
-                    <h4 class="rs-metric-value-unit">
-                        HIGH RISK
-                    </h4>
-                </div>
-            </div>
-        </section>
-
+        </div>
+        <div id="" class="rs-total-score-container">
+            <h3 id="rs-risk-score-classification" class="rs-section-info">
+                MEDIUM RISK
+            </h3>
+            <h2 id="rs-total-score" class="rs-total-score">
+                12.5
+            </h2>
+            <h3 id="rs-total-max-score" class="rs-max-score">
+                max 20.2
+            </h3>
+        </div>
     </div>
 
-    <div id="rs-data-column" class="rs-column">
+    <div id="" class="rs-col-container">
 
-        <!-- <section id="rs-medictions-section" class="rs-section-container">
-            <h3 class="rs-section-header">
-                Medications
-            </h3>
+        <div id="rs-score-column" class="rs-column">
 
-            <div id="rs-medications-container" class="rs-metrics-container">
+            <!-- <section id="rs-score-section" class="">
+                <h2 id="" class="rs-section-header">
+                    Risk Score
+                </h2>
 
-                <div class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Aspirin
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Antiplatelet · Blood Thinner
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value">
-                        <h3 class="">
-                            C
-                        </h3>
-                    </div>
+                <div id="" class="rs-total-score-container">
+                    <h3 id="rs-risk-score-classification" class="rs-section-info">
+                        MEDIUM RISK
+                    </h3>
+                    <h2 id="rs-total-score" class="rs-total-score">
+                        12.5
+                    </h2>
+                    <h3 id="rs-total-max-score" class="rs-max-score">
+                        max 20.2
+                    </h3>
                 </div>
 
-            </div>
+            </section> -->
 
-            <div class="rs-metrics-footer-container">
-                <h3 class="rs-metrics-footer">
-                    Intake-Record Review w/ Patient (Navigator)(v1.3)
-                </h3>
-                <h3 class="rs-metrics-footer">
-                    C = compliant; NC = not compliant
-                </h3>
-            </div>
-        </section> -->
-
-        <section id="rs-biometrics-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Biometrics
-            </h2>
-
-            <div class="rs-metrics-container">
-                <div id="rs-v-height" class="rs-metric-container">
+            <!-- <section id="rs-charting-section" class="">
+                <div id="" class="rs-section-header">
+                    <h2 id="" class="">
+                        Charting Notes
+                    </h2>
+                    <button id="rs-create-button" class="" title="Create new charting note"
+                        onclick="openModal('/healthie/iframe_provider_tab/forms/srs/monthly_visit', 'Charting Note')">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div id="" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Height
+                            8/11/225 - Charting Note
                         </h3>
                         <h4 class="rs-metric-subtitle">
-                            Onboarding - Patient Information (v1.1)
+                            Test Doctor
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
                         <h3 id="rs-height" class="rs-metric-value">
-                            -
+                            12.5
                         </h3>
                         <h4 class="rs-metric-value-unit">
-                            in
+                            MEDIUM RISK
                         </h4>
                     </div>
                 </div>
-                <div id="rs-v-weight" class="rs-metric-container">
+                <div id="" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Weight
+                            6/6/225 - Charting Note
                         </h3>
                         <h4 class="rs-metric-subtitle">
-                            Onboarding - Patient Information (v1.1)
+                            Test Doctor
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
-                        <h3 id="rs-weight" class="rs-metric-value">
-                            -
+                        <h3 id="rs-height" class="rs-metric-value">
+                            18.3
                         </h3>
                         <h4 class="rs-metric-value-unit">
-                            lbs
+                            HIGH RISK
                         </h4>
                     </div>
                 </div>
-                <div id="rs-v-bmi" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            BMI
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Onboarding - Patient Information (v1.1)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-bmi" class="rs-metric-value">
-                            -
-                        </h3>
-                    </div>
-                </div>
-                <div id="rs-iii-sbp" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Systolic BP (initial)
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-sbp" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            mmHg
-                        </h4>
-                    </div>
-                </div>
-                <div id="rs-iii-dbp" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Diastolic BP (initial)
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-dbp" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            mmHg
-                        </h4>
-                    </div>
-                </div>
-                <!-- <div class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            HRV
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
+            </section> -->
 
-                        </h4>
+            <section id="rs-biometrics-section" class="rs-section-container">
+                <h2 class="rs-section-header">
+                    Biometrics
+                </h2>
+
+                <div class="rs-metrics-container">
+                    <div id="rs-v-height" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Height
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Onboarding - Patient Information (v1.1)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-height" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                in
+                            </h4>
+                        </div>
                     </div>
-                    <div class="rs-metric-value">
-                        <h3 class="">
-                            25
-                        </h3>
+                    <div id="rs-v-weight" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Weight
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Onboarding - Patient Information (v1.1)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-weight" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                lbs
+                            </h4>
+                        </div>
                     </div>
-                </div> -->
-                <div id="rs-vii-rhr" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Resting Heart Rate
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
+                    <div id="rs-v-bmi" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                BMI
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Onboarding - Patient Information (v1.1)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-bmi" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-rhr" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            BPM
-                        </h4>
+
+                </div>
+            </section>
+
+            <section id="rs-bp-section" class="rs-section-container">
+                <h2 class="rs-section-header">
+                    Blood Pressure
+                </h2>
+
+                <div class="rs-metrics-container">
+
+                    <div id="rs-iii-sbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Systolic BP - Average (Baseline)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-sbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-iii-dbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Diastolic BP - Average (Baseline)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-dbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-iii-sbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Systolic BP - Average (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-sbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-iii-dbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Diastolic BP - Average (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-dbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-iii-dbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Systolic BP - Variability (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-dbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-iii-dbp" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Diastolic BP - Peak (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-dbp" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
                     </div>
                 </div>
+
+            </section>
+
+            <section id="rs-hr-section" class="rs-section-container">
+                <h2 class="rs-section-header">
+                    Heart Rate
+                </h2>
+
+                <div class="rs-metrics-container">
+                    <div id="rs-vii-rhr" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Resting Heart Rate - Average (Baseline)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-rhr" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                BPM
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-vii-rhr" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Resting Heart Rate - Average (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-rhr" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                BPM
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-vii-rhr" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Heart Rate - Average (1mo. Trailing)
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Tenovi BPM
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-rhr" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                BPM
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="rs-physical-activity-section" class="rs-section-container">
+                <div id="" class="rs-section-header">
+                    <h2 id="" class="">
+                        Physical Activity
+                    </h2>
+                    <!-- <button id="rs-create-button" class="" title="Update patient activity"
+                        onclick="openModal('/healthie/iframe_provider_tab/forms/srs/monthly_visit', 'Charting Note')">
+                        <i class="fa-solid fa-plus"></i>
+                    </button> -->
+                </div>
+
                 <div id="rs-iv-exercise" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Moderate/Vigorous Activity
                         </h3>
                         <h4 class="rs-metric-subtitle">
-                            Intake - Physical Acitvity Questionaire
+                            Intake/Charting - Physical Acitvity Questionnaire
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
@@ -623,36 +832,109 @@
                         </h4>
                     </div>
                 </div>
-
-            </div>
-        </section>
-
-        <section id="rs-history-section" class="rs-section-container">
-            <h3 class="rs-section-header">
-                History
-            </h3>
-
-            <div class="rs-metrics-container">
-
-                <div id="rs-i-stroke-etiology" class="rs-metric-container">
+                <div id="rs-iv-exercise" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Stroke Etiology
+                            Physical Inactivity (sitting)
                         </h3>
                         <h4 class="rs-metric-subtitle">
-                            Telemed - Neurology note (Neurology) (v1.0)
+                            Syntrillo - Charting Note
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
-                        <h3 id="rs-stroke-etiology" class="rs-metric-value">
+                        <h3 id="rs-exercise" class="rs-metric-value">
                             -
                         </h3>
                         <h4 class="rs-metric-value-unit">
-
+                            hrs/day
                         </h4>
                     </div>
                 </div>
-                <div id="rs-i-intracranial-atherosclerosis" class="rs-metric-container">
+            </section>
+
+        </div>
+
+        <div id="rs-data-column" class="rs-column">
+
+            <!-- <section id="rs-medictions-section" class="rs-section-container">
+                <h3 class="rs-section-header">
+                    Medications
+                </h3>
+
+                <div id="rs-medications-container" class="rs-metrics-container">
+
+                    <div class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Aspirin
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Antiplatelet · Blood Thinner
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value">
+                            <h3 class="">
+                                C
+                            </h3>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="rs-metrics-footer-container">
+                    <h3 class="rs-metrics-footer">
+                        Intake-Record Review w/ Patient (Navigator)(v1.3)
+                    </h3>
+                    <h3 class="rs-metrics-footer">
+                        C = compliant; NC = not compliant
+                    </h3>
+                </div>
+            </section> -->
+
+            <section id="rs-history-section" class="rs-section-container">
+                <h3 class="rs-section-header">
+                    Patient History
+                </h3>
+
+                <div class="rs-metrics-container">
+
+                    <div id="rs-i-stroke-etiology" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Stroke History
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-stroke-etiology" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-stroke-etiology" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Stroke Etiology
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-stroke-etiology" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <!-- <div id="rs-i-intracranial-atherosclerosis" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Intracranial Atherosclerosis
@@ -669,80 +951,206 @@
 
                         </h4>
                     </div>
-                </div>
-                <div id="rs-i-afib" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Atrial Fibrillation
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Intake-Record Review w/ Patient (Navigator)(v1.3)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-afib" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
+                </div> -->
+                    <div id="rs-i-afib" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Atrial Fibrillation
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-afib" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
 
-                        </h4>
+                            </h4>
+                        </div>
                     </div>
-                </div>
-                <div id="rs-i-osa" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Obstructive Sleep Apnea
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Intake-Record Review w/ Patient (Navigator)(v1.3)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-osa" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
+                    <div id="rs-i-afib" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Arterial Clots
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-afib" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
 
-                        </h4>
+                            </h4>
+                        </div>
                     </div>
-                </div>
-                <div id="rs-ii-carotid-stenosis" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Carotid Stenosis
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Intake-Record Review w/ Patient (Navigator)(v1.3)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-carotid-stenosis" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
+                    <div id="rs-i-afib" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Venous Clots
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-afib" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
 
-                        </h4>
+                            </h4>
+                        </div>
                     </div>
-                </div>
-                <div id="rs-ii-diabetes" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Diabetes
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Intake-Record Review w/ Patient (Navigator)(v1.3)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-diabetes" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
+                    <div id="rs-i-afib" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Congestive Heart Failure
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-afib" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
 
-                        </h4>
+                            </h4>
+                        </div>
                     </div>
-                </div>
-                <div id="rs-i-cpap-prescription" class="rs-metric-container">
+                    <div id="rs-ii-carotid-stenosis" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Carotid Stenosis
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-carotid-stenosis" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-osa" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Obstructive Sleep Apnea
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-osa" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-osa" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Coronary Artery Disease
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-osa" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-osa" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Valvular Heart Disease
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-osa" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-osa" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Chronic Kidney Disease
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-osa" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-ii-diabetes" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Diabetes
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-diabetes" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-ii-diabetes" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Obesity
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-diabetes" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+
+                            </h4>
+                        </div>
+                    </div>
+                    <!-- <div id="rs-i-cpap-prescription" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             CPAP Prescription
@@ -759,8 +1167,8 @@
 
                         </h4>
                     </div>
-                </div>
-                <div id="rs-i-cpap-usage" class="rs-metric-container">
+                </div> -->
+                    <!-- <div id="rs-i-cpap-usage" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             CPAP Usage
@@ -777,8 +1185,8 @@
 
                         </h4>
                     </div>
-                </div>
-                <div id="rs-i-smoker" class="rs-metric-container">
+                </div> -->
+                    <!-- <div id="rs-i-smoker" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Current/former smoker?
@@ -795,8 +1203,8 @@
 
                         </h4>
                     </div>
-                </div>
-                <div id="rs-viii-smoker-frequency" class="rs-metric-container">
+                </div> -->
+                    <!-- <div id="rs-viii-smoker-frequency" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Packs per day
@@ -813,93 +1221,147 @@
                             pack(s)/day
                         </h4>
                     </div>
+                </div> -->
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="rs-lab-values-section" class="rs-section-container">
-            <h3 class="rs-section-header">
-                Lab Values
-            </h3>
+            <section id="rs-lab-values-section" class="rs-section-container">
+                <h3 class="rs-section-header">
+                    Lab Values
+                </h3>
 
-            <div class="rs-metrics-container">
-                <div id="rs-i-ldl" class="rs-metric-container">
-                    <div class="">
-                        <h3 class="rs-metric-title">
-                            Low-Density Lipoprotein (LDL)
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
+                <div class="rs-metrics-container">
+                    <div id="rs-i-ha1c" class="rs-metric-container">
+                        <div class="">
+                            <h3 class="rs-metric-title">
+                                Hemoglobin A1c (HA1c) Level
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ha1c" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                %
+                            </h4>
+                        </div>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-ldl" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            mg/dL
-                        </h4>
+                    <div id="rs-i-ldl" class="rs-metric-container">
+                        <div class="">
+                            <h3 class="rs-metric-title">
+                                Low-Density Lipoprotein (LDL) Level
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ldl" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mg/dL
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-ldl" class="rs-metric-container">
+                        <div class="">
+                            <h3 class="rs-metric-title">
+                                High-Density Lipoprotein (HDL) Level
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ldl" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mg/dL
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-ldl" class="rs-metric-container">
+                        <div class="">
+                            <h3 class="rs-metric-title">
+                                Triglycerides Level
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ldl" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mg/dL
+                            </h4>
+                        </div>
+                    </div>
+                    <div id="rs-i-ldl" class="rs-metric-container">
+                        <div class="">
+                            <h3 class="rs-metric-title">
+                                Creatinine Level
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ldl" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mg/dL
+                            </h4>
+                        </div>
                     </div>
                 </div>
-                <div id="rs-i-ha1c" class="rs-metric-container">
-                    <div class="">
-                        <h3 class="rs-metric-title">
-                            Hemoglobin A1c (HA1c)
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-ha1c" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            %
-                        </h4>
-                    </div>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <section id="rs-tests-orders-section" class="rs-section-container">
-            <h3 class="rs-section-header">
-                Tests/Orders
-            </h3>
+            <section id="rs-tests-orders-section" class="rs-section-container">
+                <h3 class="rs-section-header">
+                    Tests/Orders
+                </h3>
 
-            <div class="rs-metrics-container">
+                <div class="rs-metrics-container">
 
-                <div id="rs-ii-cta-performed" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            CTA performed during hospitalization?
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
+                    <div id="rs-ii-cta-performed" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                CTA performed during hospitalization?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Enrollment-Patient Information (Site Nurse)(v1.1)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-cta-performed" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-cta-performed" class="rs-metric-value">
-                            -
-                        </h3>
+                    <div id="rs-ii-cardiac-monitoring" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                30 day cardiac monitor ordered?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Intake-Record Review w/ Patient (Navigator)(v1.3)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-cardiac-monitoring" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
-                </div>
-                <div id="rs-ii-cardiac-monitoring" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            30 day cardiac monitor ordered?
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Intake-Record Review w/ Patient (Navigator)(v1.3)
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-cardiac-monitoring" class="rs-metric-value">
-                            -
-                        </h3>
-                    </div>
-                </div>
-                <!-- <div class="rs-metric-container">
+                    <!-- <div class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Carotid imaging in last 6 months?
@@ -914,29 +1376,32 @@
                         </h3>
                     </div>
                 </div> -->
-                <div id="rs-ii-ha1c-imaging" class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            HA1c in last 6 months?
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
-                            Enrollment-Patient Information (Site Nurse)(v1.1)
-                        </h4>
+                    <div id="rs-ii-ha1c-imaging" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                HA1c in last 6 months?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Enrollment-Patient Information (Site Nurse)(v1.1)
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-ha1c-imaging" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 id="rs-ha1c-imaging-date" class="rs-metric-value-unit">
+                                -
+                            </h4>
+                        </div>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-ha1c-imaging" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 id="rs-ha1c-imaging-date" class="rs-metric-value-unit">
-                            -
-                        </h4>
-                    </div>
-                </div>
 
-            </div>
-        </section>
+                </div>
+            </section>
+
+        </div>
 
     </div>
+
 
 </div>
 
@@ -1260,7 +1725,7 @@
 
     }
 
-    $(document).ready(function(){
+    $(document).ready(function () {
         getRiskScore()
     })
 

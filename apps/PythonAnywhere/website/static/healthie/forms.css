@@ -62,8 +62,8 @@ select {
     align-items: center;
     width: 100%;
     gap: 1rem;
-    /* color: #9ca3af; */
-    color: #2563EB;
+    color: #9ca3af;
+    /* color: #2563EB; */
     margin-bottom: 0.5rem;
 }
 
