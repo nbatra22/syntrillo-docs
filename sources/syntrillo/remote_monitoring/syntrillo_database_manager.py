@@ -3,14 +3,17 @@
 import uuid
 import json
 import pymysql
-from typing import Tuple, List
+from typing import Optional, Tuple, List, Union
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 from syntrillo.databases_management.connection import DatabaseConnection
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.api_tenovi.device_types import DeviceTypes
+from syntrillo.stroke_risk_score_v2.models.treatment_compliance import TreatmentCompliance
 from syntrillo.system.logger import logger
+from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
+from syntrillo.remote_monitoring.constants import BLOOD_PRESSURE_METRIC_NAME, PULSE_METRIC_NAME
 
 
 class SyntrilloDatabaseManager:
@@ -778,39 +781,39 @@ class SyntrilloDatabaseManager:
 
         return internal_keys, log
 
-    def get_latest_measurements(self, type, count):
+    def get_latest_measurements(self, metric_name: str, count: int = None) -> Tuple[list[dict], dict]:
         """
         Returns specific number of measurements
 
         Args:
-            - type: blood_pressure or pulse
-            - count: number of measurements required
+            metric_name (str): The name of the metric to retrieve
+            count (int): The number of measurements to retrieve (optional)
 
         Returns:
-            - measurements: List[Dict(value_1, value_2, timestamp)] ordered by latest to earliest
-            - log
+            measurements (list[dict]): The measurements
+            log (dict): The log of the request, with "success" key set to True or False
 
         """
 
         try:
             with self.conn.cursor() as cursor:
                 # Determine the metric filter
-                if type == 'blood_pressure':
-                    metric_filter = "metric_name = 'blood_pressure'"
-                elif type == 'pulse':
-                    metric_filter = "metric_name = 'pulse'"
-                else:
-                    metric_filter = "1=1"  # No filter if type is not recognized
+                if (not metric_name == BLOOD_PRESSURE_METRIC_NAME) and (not metric_name == PULSE_METRIC_NAME): # Blood Pressure data
+                    metric_name = "1=1"  # No filter if metric_name is not recognized
 
                 query = f"""
                     SELECT value_1, value_2, timestamp_local as timestamp
                     FROM tenovi_raw_measurements
-                    WHERE {metric_filter} AND syntrillo_internal_key = {self.syntrillo_internal_key}
+                    WHERE metric_name = %s AND syntrillo_internal_key = %s
                     ORDER BY timestamp_local DESC
-                    LIMIT %s
                 """
+                # If count is provided, add it to the query
+                if count:
+                    query += " LIMIT %s"
+                    cursor.execute(query, (metric_name, self.syntrillo_internal_key.bytes, count))
+                else:
+                    cursor.execute(query, (metric_name, self.syntrillo_internal_key.bytes))
 
-                cursor.execute(query, (count,))
                 rows = cursor.fetchall()
                 # Convert to list of dicts
                 measurements = [
@@ -819,7 +822,7 @@ class SyntrilloDatabaseManager:
                 log = {"success": True}
 
         except pymysql.MySQLError as e:
-            logger.error(f"Error retrieving syntrillo_internal_key's.")
+            logger.error(f"Error retrieving syntrillo_internal_key's: {e}")
             log = {
                 "success": False,
                 "error": str(e)
@@ -827,6 +830,309 @@ class SyntrilloDatabaseManager:
             measurements = None
 
         return measurements, log
+
+    def get_srs_form_responses(self, syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list[SRSFormResponse], dict]:
+        """
+        Retrieves all the SRS form responses for a given patient from the srs_form_responses table
+
+        Args:
+            syntrillo_internal_key_patient (uuid.UUID): The Syntrillo internal key
+
+        Returns:
+            srs_form_responses (list[SRSFormResponse]): The SRS form responses
+        Raises:
+            pymysql.MySQLError: If there is an error retrieving the SRS form responses.
+            Exception: If there is an unexpected error during the retrieval.
+        """
+        logger.info(f"Retrieving SRS form responses for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
+
+        try:
+            syntrillo_internal_key_patient_str = str(syntrillo_internal_key_patient) # Id is stored as a string in the database
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                    SELECT
+                        sfr.*,
+                        sc.strokeCompliance,
+                        sc.tiaCompliance,
+                        sc.chronicInfarctCompliance,
+                        sc.atrialFibrillationCompliance,
+                        sc.ironDeficiencyAnemiaCompliance,
+                        sc.arterialClotsCompliance,
+                        sc.venousClotsCompliance,
+                        sc.chfCompliance,
+                        sc.carotidStenosisCompliance,
+                        sc.osaCompliance,
+                        sc.cadCompliance,
+                        sc.valvularHeartDiseaseCompliance,
+                        sc.ckdCompliance,
+                        sc.pfoCompliance
+                    FROM
+                        srs_form_responses AS sfr
+                    LEFT JOIN
+                        srs_compliance_records AS sc ON sfr.srs_form_response_id = sc.srs_form_response_id
+                    WHERE
+                        sfr.syntrillo_internal_key_patient = %s
+                    ORDER BY
+                        sfr.created_at DESC;
+                """
+                cursor.execute(query, (syntrillo_internal_key_patient_str,))
+                rows = cursor.fetchall()
+
+                srs_form_responses = []
+                for row in rows:
+                    # The row contains all fields needed for SRSFormResponse,
+                    # and Pydantic will ignore extra fields.
+                    form_response = SRSFormResponse.model_validate(row)
+
+                    # Check if there is any compliance data from the LEFT JOIN.
+                    if row.get('strokeCompliance') is not None:
+                        # The row also contains all fields for TreatmentCompliance.
+                        compliance_obj = TreatmentCompliance.model_validate(row)
+                        form_response.compliance = compliance_obj
+
+                    srs_form_responses.append(form_response)
+
+                log = {"success": True}
+                return srs_form_responses
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None
+
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None
+
+
+    def insert_srs_form_response(self, srs_form_response: SRSFormResponse) -> Tuple[Optional[int], dict]:
+        """
+        Insert the SRS form response and associated compliance data into the database.
+
+        Args:
+            srs_form_response (SRSFormResponse): The SRS form response data model.
+
+        Returns:
+            A tuple containing:
+                - Optional[int]: The ID of the newly created SRS form response, or None on failure.
+                - dict: A log dictionary.
+        Raises:
+            pymysql.MySQLError: If there is an error inserting the SRS form response.
+            Exception: If there is an unexpected error during the insertion.
+        """
+        logger.info(f"Performing insertion of SRS form response into RDS DB ...")
+
+        # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
+        form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
+        # Extract the compliance data from the SRS form response.
+        compliance_data = srs_form_response.compliance
+
+        try:
+            self.conn.begin()  # Start a transaction
+
+            with self.conn.cursor() as cursor:
+                # 1. Insert into srs_form_responses
+                form_columns = ', '.join(form_data.keys())
+                form_placeholders = ', '.join(['%s'] * len(form_data))
+                form_query = f"""
+                    INSERT INTO srs_form_responses ({form_columns})
+                    VALUES ({form_placeholders});
+                """
+                cursor.execute(form_query, list(form_data.values()))
+
+                # Get the ID of the new record
+                srs_form_response_id = cursor.lastrowid
+                logger.info(f"Successfully inserted into srs_form_responses with ID: {srs_form_response_id}")
+
+                # 2. Insert into srs_compliance if compliance data exists
+                if compliance_data:
+                    logger.info(f"Performing insertion of compliance data into RDS DB ...")
+
+                    compliance_dict = compliance_data.model_dump(exclude_none=True)
+                    compliance_dict['srs_form_response_id'] = srs_form_response_id
+
+                    compliance_columns = ', '.join(compliance_dict.keys())
+                    compliance_placeholders = ', '.join(['%s'] * len(compliance_dict))
+                    compliance_query = f"""
+                        INSERT INTO srs_compliance_records ({compliance_columns})
+                        VALUES ({compliance_placeholders});
+                    """
+                    cursor.execute(compliance_query, list(compliance_dict.values()))
+                    logger.info(f"Successfully inserted compliance data into RDS DB for response ID: {srs_form_response_id}")
+
+            self.conn.commit()  # Commit the transaction
+            log = {"success": True}
+            return srs_form_response_id, log
+
+        except pymysql.MySQLError as e:
+            self.conn.rollback()  # Rollback insertion transaction on error
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            logger.error(f"Error inserting SRS form response: {e}")
+            return None, log
+
+        except Exception as e:
+            self.conn.rollback()  # Rollback insertion transaction on error
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            logger.error(f"An unexpected error occurred during SRS form insertion: {e}")
+            return None, log
+
+
+    def get_form_module_ids_by_module_label(self, module_label: str) -> Tuple[str, str]:
+        """
+        Get the form and module ids for a given module label.
+
+        Args:
+            module_label (str): The module label to query by.
+
+        Returns:
+            form_id (str): The form id associated with the module label.
+            module_id (str): The module id associated with the module label.
+        Raises:
+            pymysql.MySQLError: If there is an error retrieving the form and module ids.
+            Exception: If there is an unexpected error during the retrieval.
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT form_id, module_id
+                    FROM module_label_look_up
+                    WHERE module_label = %s;
+                """
+                cursor.execute(query, (module_label,))
+                form_id, module_id = cursor.fetchone()
+
+                return form_id, module_id
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None, None
+
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            return None, None
+
+    def get_patient_form_response_by_module_id(self, module_id: str, syntrillo_internal_key: str) -> str:
+        """
+        Get the form and module ids for a given module id.
+
+        Args:
+            module_id (str): The module id to query by.
+            syntrillo_internal_key (str): The syntrillo internal key to query by.
+        Returns:
+            answer (str): The answer to the question.
+            created_at (str): The timestamp of the answer.
+        Raises:
+            pymysql.MySQLError: If there is an error retrieving the form and module ids.
+            Exception: If there is an unexpected error during the retrieval.
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT
+                        answer,
+                        created_at
+                    FROM
+                        healthie_form_responses
+                    WHERE module_id = %s AND syntrillo_internal_key = %s
+                    ORDER BY created_at DESC;
+                """
+                cursor.execute(query, (module_id, syntrillo_internal_key))
+                answer, created_at = cursor.fetchone()
+
+                return answer, created_at
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None, None
+
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            return None, None
+
+    def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None) -> float:
+        """
+        Gets the SRS value assoicated with the risk factor's value.
+
+        Args:
+            category (str): The category of the risk factor.
+            value (float | str): The value of the risk factor.
+
+        Returns:
+            str: The SRS value.
+        Raises:
+            ValueError: If the value type is invalid.
+        """
+
+        try:
+            with self.conn.cursor() as cursor:
+                if value:
+                    if type(value) == str:
+                        query = """
+                            SELECT risk_value
+                            FROM srs_independent_risk_values
+                            WHERE category = %s AND categorical_value = %s;
+                        """
+                        variables = (category, value)
+                    elif type(value) == float:
+                        query = """
+                            SELECT risk_value
+                            FROM srs_independent_risk_values
+                            WHERE category = %s AND min_value <= %s AND max_value >= %s;
+                        """
+                        variables = (category, value, value)
+                    else:
+                        raise ValueError(f"Invalid value type: {type(value)}")
+                else:
+                    query = """
+                        SELECT risk_value
+                        FROM srs_independent_risk_values
+                        WHERE category = %s AND is_default = 1;
+                    """
+                    variables = (category)
+
+                cursor.execute(query, variables)
+                risk_value = cursor.fetchone()
+
+                return risk_value[0] if risk_value else 0.
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return log
+
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            return log
+
+
 
 
 if __name__ == '__main__':
@@ -868,3 +1174,64 @@ if __name__ == '__main__':
 
         print(log)
         print(df)
+
+    if False: # Test block for SRS form insertion
+        print("\n--- Testing SRS Form Insertion ---")
+
+        try:
+            # 1. Create dummy data for TreatmentCompliance.
+            # A dummy srs_form_response_id is required to satisfy the Pydantic model.
+            # The actual ID will be generated and overwritten by the insertion logic.
+            dummy_compliance = TreatmentCompliance(
+                srs_form_response_id=0,
+                strokeCompliance="optimized",
+                tiaCompliance="partially optimized",
+                chronicInfarctCompliance="not optimized",
+                atrialFibrillationCompliance="optimized",
+                ironDeficiencyAnemiaCompliance="partially optimized",
+                arterialClotsCompliance="not optimized",
+                venousClotsCompliance="optimized",
+                chfCompliance="partially optimized",
+                carotidStenosisCompliance="not optimized",
+                osaCompliance="optimized",
+                cadCompliance="partially optimized",
+                valvularHeartDiseaseCompliance="not optimized",
+                ckdCompliance="optimized",
+                pfoCompliance="partially optimized"
+            )
+
+            # 2. Create dummy data for the main SRSFormResponse.
+            dummy_form_response = SRSFormResponse(
+                syntrillo_internal_key_patient=str(entry['syntrillo_internal_key']),
+                syntrillo_internal_key_clinician=str(uuid.uuid4()),
+                created_at=datetime.now(),
+                HasPreviousStroke=True,
+                NumberOfStrokes="Multiple",
+                LatestStrokeMechanism="Large Vessel",
+                ScreenedForTIA=True,
+                LikelihoodOfTIA="High Likelihood",
+                Weight=175.5,
+                Height="5'11\"",
+                BMI=24.5,
+                compliance=dummy_compliance  # Nest the compliance object
+            )
+
+            # 3. Call the insertion function.
+            print("Attempting to insert the following data:")
+            print(dummy_form_response.model_dump_json(indent=2))
+
+            new_id, log = data_manager.insert_srs_form_response(dummy_form_response)
+
+            # 4. Print the results.
+            print(f"\nInsertion Log: {log}")
+            if log.get('success'):
+                print(f"✅ Successfully inserted new SRS form response with ID: {new_id}")
+            else:
+                print(f"❌ Insertion failed.")
+
+        except Exception as e:
+            print(f"An error occurred during the test setup: {e}")
+            import traceback
+            traceback.print_exc()
+
+        print("--- End of SRS Form Insertion Test ---\n")

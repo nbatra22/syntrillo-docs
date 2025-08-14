@@ -1,0 +1,47 @@
+CREATED_AT = "created_at"
+TIMESTAMP = "timestamp"
+VALUE_1 = "value_1"
+METRIC_STAT = "metric_stat"
+
+TYPE_BP = "bp"
+TYPE_RHR = "rhr"
+TYPE_HR = "hr"
+
+INACTIVITY_INTAKE_MODULE_LABEL = "inactivity_questionnaire_intake"
+INACTIVITY_CHARTING_MODULE_LABEL = "inactivity_questionnaire_charting"
+
+# Dependent Risk Factors (values)
+LOW_VALUE = "low"
+LOW_INTERMEDIATE_VALUE = "low_intermediate"
+INTERMEDIATE_HIGH_VALUE = "intermediate_high"
+HIGH_VALUE = "high"
+
+# Dependent Risk Factors (treatment efficacy)
+MODERATE_EFFICACY = "moderate_efficacy"
+HIGH_EFFICACY = "high_efficacy"
+
+# Dependent Risk Factors (treatment optimization)
+TREATMENT_OPTIMIZATION = "treatment_optimized"
+TREATMENT_PARTIALLY_OPTIMIZED = "treatment_partially_optimized"
+TREATMENT_NOT_OPTIMIZED = "treatment_not_optimized"
+
+# SRS Independent Risk Factors
+AVG_SBP = "avg_sbp"
+RHR = "rhr"
+HEMOGLOBIN_A1C = "hemoglobin_a1c"
+PHYSICAL_INACTIVITY = "physical_inactivity"
+CIGARETTE_USE = "cigarette_use"
+ALCOHOL_USE = "alcohol_use"
+MARIJUANA_USE = "marijuana_use"
+SBP_STD = "sbp_std"
+AVG_PEAK_SBP = "avg_peak_sbp"
+AVG_DBP = "avg_dbp"
+CREATININE = "creatinine"
+
+BASELINE_NUM_WEEKS = 2
+TRAILING_NUM_WEEKS = 4
+TRAILING_NUM_DAYS = 0
+
+VALUE = "value"
+TREATMENT_EFFICACY = "treatment_efficacy"
+TREATMENT_OPTIM = "treatment_optimization"
