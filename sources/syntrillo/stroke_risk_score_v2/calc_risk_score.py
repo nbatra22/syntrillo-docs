@@ -75,9 +75,15 @@ weighting = {
 }
 
 
-def calculate_risk_score(syntrillo_internal_key: uuid.UUID):
+def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict]:
     """
     Calculate the risk score for a given syntrillo internal key
+
+    Args:
+        syntrillo_internal_key (uuid.UUID): The syntrillo internal key
+
+    Returns:
+        tuple[float, dict]: The risk score and the aggregated data
     """
     try:
         agg_data = aggregate_data(syntrillo_internal_key)
@@ -94,10 +100,10 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID):
         total_srs = adjusted_dependent_srs + independent_risk_factor_value
         final_srs = round(total_srs**0.70, 2)
 
-        return final_srs
+        return final_srs, agg_data
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
-        return None
+        return None, None
 
 
 
@@ -403,7 +409,7 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
 
 if __name__ == "__main__":
     syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    srs = calculate_risk_score(syntrillo_internal_key)
+    srs, agg_data = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
     print(f"======== Final SRS: {srs} =========")
