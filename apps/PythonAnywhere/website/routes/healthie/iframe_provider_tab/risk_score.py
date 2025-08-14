@@ -58,7 +58,7 @@ def iframe_healthie_provider_tab_risk_score():
         patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
     )
 
-
+# TODO: Remove this endpoint
 @iframe_healthie_provider_tab_risk_score_bp.route('/healthie/iframe_provider_tab/risk_score/data', methods=['POST'])
 def iframe_healthie_provider_tab_risk_score_data():
     """
@@ -161,3 +161,73 @@ def iframe_healthie_provider_tab_risk_score_data():
     return jsonify({
         "risk_score": risk_score
     })
+
+
+@iframe_healthie_provider_tab_risk_score_bp.route('/healthie/iframe_provider_tab/risk_score/charting_note', methods=['POST'])
+def iframe_healthie_provider_tab_risk_score_charting_note():
+    """
+
+    This endpoint is used to save the charting note form data.
+
+    """
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        abort(403, description="Access Denied")
+
+    try:
+        # Get the JSON data from the request
+        form_data = request.get_json()
+
+        if not form_data:
+            return jsonify({
+                'success': False,
+                'error': 'No form data received'
+            }), 400
+
+        # post_manager = PostManager()
+        # post_manager.get_pseudonyms_from_tab_post(request)
+
+        # Validate required fields
+        required_fields = ['syntrillo_internal_key_patient', 'syntrillo_internal_key_clinician']
+        missing_fields = [field for field in required_fields if not form_data.get(field)]
+
+        if missing_fields:
+            return jsonify({
+                'success': False,
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
+
+        # Log the received data for debugging
+        current_app.logger.info(f"Received charting note data: {form_data}")
+
+        # TODO: Process the form data and save to database
+        # For now, just acknowledge receipt of the data
+
+        # Extract key fields for logging
+        patient_id = form_data.get('syntrillo_internal_key_patient')
+        clinician_id = form_data.get('syntrillo_internal_key_clinician')
+        has_previous_stroke = form_data.get('HasPreviousStroke')
+        screened_for_tia = form_data.get('ScreenedForTIA')
+
+        current_app.logger.info(f"Charting note for patient {patient_id} by clinician {clinician_id}")
+        current_app.logger.info(f"Has previous stroke: {has_previous_stroke}, Screened for TIA: {screened_for_tia}")
+
+        # Return success response
+        return jsonify({
+            'success': True,
+            'message': 'Charting note data received successfully',
+            'data': {
+                'patient_id': patient_id,
+                'clinician_id': clinician_id,
+                'timestamp': datetime.now().isoformat()
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Error processing charting note: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Internal server error: {str(e)}'
+        }), 500
