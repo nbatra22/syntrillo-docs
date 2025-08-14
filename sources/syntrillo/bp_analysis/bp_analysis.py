@@ -104,12 +104,11 @@ class BloodPressureAnalysis:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-        ) -> Tuple[pd.DataFrame, dict]:
+    ) -> Tuple[pd.DataFrame, dict]:
         """
-        Get BPM report, only Blood Pressure data.
+        Get Blood Pressure data from Tenovi device in internal database.
 
         https://tenovi.com/hwi-device-overview/#tenovi-bpm
-
         https://tenovi.com/bpm/
 
         Available metrics:

@@ -1,6 +1,7 @@
 CREATED_AT = "created_at"
 TIMESTAMP = "timestamp"
 VALUE_1 = "value_1"
+METRIC_STAT = "metric_stat"
 
 TYPE_BP = "bp"
 TYPE_RHR = "rhr"
@@ -36,3 +37,11 @@ SBP_STD = "sbp_std"
 AVG_PEAK_SBP = "avg_peak_sbp"
 AVG_DBP = "avg_dbp"
 CREATININE = "creatinine"
+
+BASELINE_NUM_WEEKS = 2
+TRAILING_NUM_WEEKS = 4
+TRAILING_NUM_DAYS = 0
+
+VALUE = "value"
+TREATMENT_EFFICACY = "treatment_efficacy"
+TREATMENT_OPTIM = "treatment_optimization"

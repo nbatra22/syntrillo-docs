@@ -8,10 +8,10 @@ from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.remote_monitoring.constants import PULSE_METRIC_NAME
-from syntrillo.api_healthie.constants import RHR_CATEGORY, ENTRY_TYPE
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.remote_monitoring.constants import PULSE_METRIC_NAME
+from syntrillo.api_healthie.constants import RHR_CATEGORY, ENTRY_TYPE
 from syntrillo.bp_analysis.constants import (
     TIMESTAMP_LOCAL,
     SYSTOLIC,
@@ -20,10 +20,8 @@ from syntrillo.bp_analysis.constants import (
     AVG_SBP,
     SBP_SD,
     AVG_DBP,
-    BASELINE,
     AVERAGE,
     VARIABILITY,
-    PEAK,
     TRAILING
 )
 from syntrillo.stroke_risk_score_v2.constants import (
@@ -35,6 +33,10 @@ from syntrillo.stroke_risk_score_v2.constants import (
     VALUE_1,
     INACTIVITY_INTAKE_MODULE_LABEL,
     INACTIVITY_CHARTING_MODULE_LABEL,
+    BASELINE_NUM_WEEKS,
+    TRAILING_NUM_WEEKS,
+    TRAILING_NUM_DAYS,
+    METRIC_STAT,
 )
 
 
@@ -47,6 +49,13 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
     Returns:
         dict: The aggregated data
+        {
+            "tenovi_bp_data": tenovi_bp_data,
+            "healthie_srs_data": healthie_srs_data,
+            "srs_response_data": srs_response_data,
+            "lab_data": {},
+            "substance_use_data": {},
+        }
     """
     try:
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
@@ -57,23 +66,19 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         healthie_user_id = entry['healthie_user_id']
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
-        tenovi_hr_data = get_tenovi_hr_data(db_manager)
-
         healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager)
-
         srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
 
-
-        # REFORMAT THE DATA SO THAT IT IS EASY TO PARSE AND CALC THE SRS
+        # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – tenovi_hr_data = get_tenovi_hr_data(db_manager)
 
         return {
             "tenovi_bp_data": tenovi_bp_data,
-            "tenovi_hr_data": tenovi_hr_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
             "lab_data": {},
             "substance_use_data": {},
         }
+
 
     except Exception as e:
         logger.error(f"Error aggregating SRS data: {e}")
@@ -108,8 +113,6 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
-
-
         return {
             "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
             "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
@@ -135,25 +138,24 @@ def get_healthie_activity_data(healthie_user_id: str, db_manager: SyntrilloDatab
     """
 
     try:
+        # Get the module ids for the intake and charting modules
         _, module_id_intake = db_manager.get_form_module_ids_by_module_label(INACTIVITY_INTAKE_MODULE_LABEL)
         _, module_id_charting = db_manager.get_form_module_ids_by_module_label(INACTIVITY_CHARTING_MODULE_LABEL)
 
-        # Retreive the intake inactivity value based on the module id and healthie user id
+        # Retreive the intake & charting inactivity value based on the module id and healthie user id
         intake_inactivity_minutes_answer, intake_created_at = db_manager.get_patient_form_response_by_module_id(module_id_intake, healthie_user_id)
-        # Retreive the charting inactivity value based on the module id and healthie user id
         charting_inactivity_minutes_answer, charting_created_at = db_manager.get_patient_form_response_by_module_id(module_id_charting, healthie_user_id)
 
-        # Use the most recent answer
+        # Use the most recent answer from the intake or charting responses
         if not intake_inactivity_minutes_answer and not charting_inactivity_minutes_answer:
             return None
-
         # TODO: use updated_at instead of created_at
-        if (not charting_inactivity_minutes_answer) or intake_created_at > charting_created_at:
+        elif (not charting_inactivity_minutes_answer) or intake_created_at > charting_created_at:
             inactivity_minutes_answer = intake_inactivity_minutes_answer
         else:
             inactivity_minutes_answer = charting_inactivity_minutes_answer
 
-        # Convert to int if not None
+        # Convert to int for DB range comparison
         inactivity_minutes_answer = int(inactivity_minutes_answer)
 
         return inactivity_minutes_answer
@@ -264,23 +266,23 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
         # BASELINE DATAFRAME
         # Determine the baseline start and end dates
         baseline_start = rhr_df[CREATED_AT].min()
-        baseline_end = baseline_start + pd.Timedelta(weeks=2)
+        baseline_end = baseline_start + pd.Timedelta(weeks=BASELINE_NUM_WEEKS)
 
         # Ensure the baseline dataframe is valid
         baseline_df = get_timeframed_data(rhr_df, baseline_start, baseline_end, TYPE_RHR)
-        baseline_average = baseline_df['metric_stat'].mean()
+        baseline_average = baseline_df[METRIC_STAT].mean()
 
 
         # TRAILING DATAFRAME
         # Determine the trailing start and end dates
-        trailing_start = rhr_df[CREATED_AT].max() - pd.Timedelta(weeks=4)
+        trailing_start = rhr_df[CREATED_AT].max() - pd.Timedelta(weeks=TRAILING_NUM_WEEKS)
         trailing_average = None
         if is_valid_trailing_timeframe_dates(trailing_start, baseline_end):
             trailing_end = rhr_df[CREATED_AT].max()
             trailing_df = get_timeframed_data(rhr_df, trailing_start, trailing_end, TYPE_RHR)
 
             # Calculate the average trailing for the rhr_data
-            trailing_average = trailing_df['metric_stat'].mean()
+            trailing_average = trailing_df[METRIC_STAT].mean()
         else:
             logger.error("Not enough data to calculate trailing average...")
 
@@ -312,6 +314,7 @@ def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: Syntril
     """
     try:
         srs_form_responses = db_manager.get_srs_form_responses(syntrillo_internal_key)
+
         # return most recent srs form response
         return srs_form_responses[0]
 
@@ -326,11 +329,13 @@ def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: Syntril
 def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
     """
     Get the tenovi hr data (metric_name is pulse in DB). Only returns trailing variability for now.
+
     Args:
         db_manager (SyntrilloDatabaseManager): The syntrillo database manager
-
     Returns:
         dict: The trailing variability for the hr data
+    Raises:
+        ValueError: If the hr data is not valid
     """
     try:
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
@@ -366,22 +371,43 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
     Returns:
         dict: The tenovi bp data
+        {
+            SYSTOLIC: {
+                TRAILING: {
+                    PEAK: trailing_bp_metadata[PEAK_SBP],
+                    VARIABILITY: trailing_bp_metadata[SBP_SD],
+                    AVERAGE: trailing_bp_metadata[AVG_SBP],
+                }
+            },
+            DIASTOLIC: {
+                TRAILING: {
+                    AVERAGE: trailing_bp_metadata[AVG_DBP],
+                },
+            },
+        }
+    Raises:
+        ValueError: If the bp metadata is not valid
     """
+    try:
+        bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
+        bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
 
-    bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
-    bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
+        # Get baseline start date as it used in both baseline and trailing dataframes
+        # Baseline start date is the first timestamp in the bp_df
+        baseline_start = bp_df[TIMESTAMP_LOCAL].min()
 
-    # Get baseline start date as it used in both baseline and trailing dataframes
-    baseline_start = bp_df[TIMESTAMP_LOCAL].min()
+        # Get the baseline and trailing dataframes
+        baseline_bp_df = get_baseline_bp_data(bp_df, baseline_start=baseline_start, baseline_weeks=BASELINE_NUM_WEEKS) # Get the baseline data
+        trailing_bp_df = get_trailing_bp_data(bp_df, baseline_start=baseline_start, trailing_weeks=TRAILING_NUM_WEEKS, trailing_days=TRAILING_NUM_DAYS) # Get the trailing data
 
-    # Get the baseline and trailing dataframes
-    baseline_bp_df = get_baseline_bp_data(bp_df, baseline_start=baseline_start, baseline_weeks=2) # Get the baseline data
-    trailing_bp_df = get_trailing_bp_data(bp_df, baseline_start=baseline_start, trailing_weeks=4, trailing_days=0) # Get the trailing data
+        # Calculate the bp metadata for the trailing and baseline dataframes
+        bp_metadata = calc_bp_metadata(bp_analysis, trailing_bp_df, baseline_bp_df)
 
-    # Calculate the bp metadata for the trailing and baseline dataframes
-    bp_metadata = calc_bp_metadata(bp_analysis, trailing_bp_df, baseline_bp_df)
+        return bp_metadata
 
-    return bp_metadata
+    except Exception as e:
+        logger.error(f"Error getting Tenovi BP data: {e}")
+        raise ValueError("Error getting Tenovi BP data")
 
 
 
@@ -426,8 +452,8 @@ def get_trailing_bp_data(bp_dataframe: pd.DataFrame, baseline_start: datetime, t
     """
     try:
         # Get the trailing start and end dates
-        trailing_start = bp_dataframe[TIMESTAMP_LOCAL].max() - pd.Timedelta(weeks=trailing_weeks, days=trailing_days)
         trailing_end = bp_dataframe[TIMESTAMP_LOCAL].max()
+        trailing_start = trailing_end - pd.Timedelta(weeks=trailing_weeks, days=trailing_days)
 
         if not is_valid_trailing_timeframe_dates(trailing_start, baseline_start):
             logger.error("Trailing data is not valid")
@@ -459,14 +485,8 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
                 },
-                BASELINE: {
-                    AVERAGE: baseline_bp_metadata[AVG_SBP],
-                },
             },
             DIASTOLIC: {
-                BASELINE: {
-                    AVERAGE: baseline_bp_metadata[AVG_DBP],
-                },
                 TRAILING: {
                     AVERAGE: trailing_bp_metadata[AVG_DBP],
                 },
@@ -476,25 +496,20 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         ValueError: If the bp metadata is not valid
     """
     try:
-        # Calculate the metadata for the trailing and baseline dataframes
+        # Calculate the metadata for the trailing dataframe
         trailing_bp_metadata = bp_analysis.calculate_metadata_v2(trailing_bp_dataframe)
-        baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
+        # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
 
+        # Trim the metadata to only include the necessary data for SRS calculation
         trimmed_bp_metadata = {
             SYSTOLIC: {
                 TRAILING: {
-                    SBP_COUNT_175: trailing_bp_metadata[SBP_COUNT_175],
+                    SBP_COUNT_175: trailing_bp_metadata[SBP_COUNT_175], # Considered the "PEAK" BP value for SRS
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                },
-                BASELINE: {
-                    AVERAGE: baseline_bp_metadata[AVG_SBP],
                 }
             },
             DIASTOLIC: {
-                BASELINE: {
-                    AVERAGE: baseline_bp_metadata[AVG_DBP],
-                },
                 TRAILING: {
                     AVERAGE: trailing_bp_metadata[AVG_DBP],
                 },
@@ -521,21 +536,26 @@ def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, time
     Raises:
         ValueError: If the timeframed data is not valid
     """
-    if type == TYPE_BP:
-        timeframe_df = dataframe[(dataframe[TIMESTAMP_LOCAL] >= timeframe_start) & (dataframe[TIMESTAMP_LOCAL] < timeframe_end)]
-    elif type == TYPE_RHR:
-        timeframe_df = dataframe[(dataframe[CREATED_AT] >= timeframe_start) & (dataframe[CREATED_AT] < timeframe_end)]
-    elif type == TYPE_HR:
-        timeframe_df = dataframe[(dataframe[TIMESTAMP] >= timeframe_start) & (dataframe[TIMESTAMP] < timeframe_end)]
-    else:
-        logger.error(f"Invalid type: {type}")
-        raise ValueError(f"Invalid type: {type}")
+    try:
+        if type == TYPE_BP:
+            timeframe_df = dataframe[(dataframe[TIMESTAMP_LOCAL] >= timeframe_start) & (dataframe[TIMESTAMP_LOCAL] < timeframe_end)]
+        elif type == TYPE_RHR:
+            timeframe_df = dataframe[(dataframe[CREATED_AT] >= timeframe_start) & (dataframe[CREATED_AT] < timeframe_end)]
+        elif type == TYPE_HR:
+            timeframe_df = dataframe[(dataframe[TIMESTAMP] >= timeframe_start) & (dataframe[TIMESTAMP] < timeframe_end)]
+        else:
+            logger.error(f"Invalid type: {type}")
+            raise ValueError(f"Invalid type: {type}")
 
-    if not is_valid_timeframe_num_measurements(timeframe_df):
-        logger.error("Timeframed data is not valid")
-        raise ValueError("Timeframed data is not valid")
+        if not is_valid_timeframe_num_measurements(timeframe_df):
+            logger.error("Timeframed data is not valid")
+            raise ValueError("Timeframed data is not valid")
 
-    return timeframe_df
+        return timeframe_df
+
+    except Exception as e:
+        logger.error(f"Error getting timeframed data: {e}")
+        raise ValueError("Error getting timeframed data")
 
 
 def is_valid_timeframe_num_measurements(timeframe_df: pd.DataFrame, min_measurements: int = 3) -> bool:
