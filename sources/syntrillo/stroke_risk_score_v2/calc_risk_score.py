@@ -1,6 +1,7 @@
 import uuid
 import numpy as np
 
+from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.agg_data import aggregate_data
 from syntrillo.stroke_risk_score_v2.constants import (
@@ -74,25 +75,35 @@ weighting = {
 }
 
 
-def calculate_risk_score(syntrillo_internal_key: uuid.UUID):
+def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict]:
     """
     Calculate the risk score for a given syntrillo internal key
+
+    Args:
+        syntrillo_internal_key (uuid.UUID): The syntrillo internal key
+
+    Returns:
+        tuple[float, dict]: The risk score and the aggregated data
     """
-    agg_data = aggregate_data(syntrillo_internal_key)
-    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+    try:
+        agg_data = aggregate_data(syntrillo_internal_key)
+        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
-    independent_risk_factor_values = calculate_independent_srs_values(agg_data, db_manager)
-    dependent_risk_values = calculate_dependent_risk_factors(agg_data)
+        independent_risk_factor_value = calculate_independent_srs_values(agg_data, db_manager)
+        dependent_risk_values = calculate_dependent_risk_factors(agg_data)
 
-    dependent_risk_factor_values = dependent_risk_values["dependent_risk_factor_values"]
-    dependent_efficacy_values = dependent_risk_values["dependent_efficacy_values"]
-    dependent_optimization_values = dependent_risk_values["dependent_optimization_values"]
+        dependent_risk_factor_value = dependent_risk_values["dependent_risk_factor_values"]
+        dependent_efficacy_value = dependent_risk_values["dependent_efficacy_values"]
+        dependent_optimization_value = dependent_risk_values["dependent_optimization_values"]
 
-    total_risk_factor_score = dependent_risk_factor_values + independent_risk_factor_values
-    raw_total_srs = ((total_risk_factor_score-1)*(1-(dependent_efficacy_values*dependent_optimization_values)))+1
-    final_srs = round(raw_total_srs**0.70, 2)
+        adjusted_dependent_srs = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+        total_srs = adjusted_dependent_srs + independent_risk_factor_value
+        final_srs = round(total_srs**0.70, 2)
 
-    return final_srs
+        return final_srs, agg_data
+    except Exception as e:
+        logger.error(f"Error calculating risk score: {e}")
+        return None, None
 
 
 
@@ -398,7 +409,7 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
 
 if __name__ == "__main__":
     syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    srs = calculate_risk_score(syntrillo_internal_key)
+    srs, agg_data = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
     print(f"======== Final SRS: {srs} =========")

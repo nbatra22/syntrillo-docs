@@ -320,7 +320,7 @@ def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: Syntril
         srs_form_responses = db_manager.get_srs_form_responses(syntrillo_internal_key)
 
         # return most recent srs form response
-        return srs_form_responses[0]
+        return srs_form_responses[0] if len(srs_form_responses) > 0 else None
 
     except Exception as e:
         logger.error(f"Error fetching SRS response data: {e}")
