@@ -63,6 +63,27 @@ def iframe_healthie_provider_tab_forms():
 def iframe_healthie_provider_tab_load_form(form_name):
 
     print("------ Requested form: ", form_name)
+    print("------ Request args: ", dict(request.args))
+    print("------ Request form: ", dict(request.form))
+
+    # Check if the request origin/referer is allowed
+    iframe_validator = IframeValidator()
+    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    if not iframe_valid:
+        print("------ Iframe validation failed: ", iframe_log)
+        abort(403, description="Access Denied")
+
+    # Get the required variables from query parameters or form data
+    healthie_provider_id = request.args.get('healthie_provider_id') or request.form.get('healthie_provider_id')
+    healthie_user_id = request.args.get('healthie_user_id') or request.form.get('healthie_user_id')
+    temporary_lookup_code = request.args.get('temporary_lookup_code') or request.form.get('temporary_lookup_code')
+    patient_not_registered_at_syntrillo_str = request.args.get('patient_not_registered_at_syntrillo') or request.form.get('patient_not_registered_at_syntrillo')
+
+    print("------ Extracted variables:")
+    print("  healthie_provider_id:", healthie_provider_id)
+    print("  healthie_user_id:", healthie_user_id)
+    print("  temporary_lookup_code:", temporary_lookup_code)
+    print("  patient_not_registered_at_syntrillo:", patient_not_registered_at_syntrillo_str)
 
     # allowed_forms = ['medications_form']
 
@@ -70,6 +91,14 @@ def iframe_healthie_provider_tab_load_form(form_name):
     #     abort(404)
 
     try:
-        return render_template(f'healthie/iframe_provider_tab/forms/{form_name}.html', title=form_name.replace('_', ' ').title())
-    except:
+        return render_template(
+            f'healthie/iframe_provider_tab/forms/{form_name}.html',
+            title=form_name.replace('_', ' ').title(),
+            healthie_provider_id=healthie_provider_id,
+            healthie_user_id=healthie_user_id,
+            temporary_lookup_code=temporary_lookup_code,
+            patient_not_registered_at_syntrillo=(patient_not_registered_at_syntrillo_str == 'True')
+        )
+    except Exception as e:
+        print("------ Template rendering error: ", str(e))
         abort(404)

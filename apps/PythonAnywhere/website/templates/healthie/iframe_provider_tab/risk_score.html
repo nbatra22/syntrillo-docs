@@ -478,10 +478,10 @@
         </div>
         <div id="" class="rs-total-score-container">
             <h3 id="rs-risk-score-classification" class="rs-section-info">
-                MEDIUM RISK
+                Calculating...
             </h3>
             <h2 id="rs-total-score" class="rs-total-score">
-                12.5
+                NA
             </h2>
             <h3 id="rs-total-max-score" class="rs-max-score">
                 max 20.2
@@ -1324,7 +1324,7 @@
                 </div>
             </section>
 
-            <section id="rs-tests-orders-section" class="rs-section-container">
+            <!-- <section id="rs-tests-orders-section" class="rs-section-container">
                 <h3 class="rs-section-header">
                     Tests/Orders
                 </h3>
@@ -1361,7 +1361,7 @@
                             </h3>
                         </div>
                     </div>
-                    <!-- <div class="rs-metric-container">
+                    <div class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Carotid imaging in last 6 months?
@@ -1375,7 +1375,7 @@
                             No
                         </h3>
                     </div>
-                </div> -->
+                </div>
                     <div id="rs-ii-ha1c-imaging" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
@@ -1396,7 +1396,7 @@
                     </div>
 
                 </div>
-            </section>
+            </section> -->
 
         </div>
 
@@ -1420,6 +1420,11 @@
 
 <!-- Scripts -->
 <script>
+
+    const healthieProviderId = "{{ healthie_provider_id }}";
+    const healthieUserId = "{{ healthie_user_id }}";
+    const temporaryLookupCode = "{{ temporary_lookup_code }}";
+    const PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     function showSpinner(targetElement) {
         targetElement.innerHTML = "";
@@ -1460,7 +1465,22 @@
         const iframe = document.getElementById('modalIframe');
         const header = document.getElementById('rs-modal-title');
 
-        iframe.src = src;
+        // Store the source URL to track which form was opened
+        modal.dataset.formSrc = src;
+
+        // If opening the charting note form, append the required variables as query parameters
+        let iframeSrc = src;
+        if (src.includes('charting_note')) {
+            const params = new URLSearchParams({
+                healthie_provider_id: healthieProviderId,
+                healthie_user_id: healthieUserId,
+                temporary_lookup_code: temporaryLookupCode,
+                patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
+            });
+            iframeSrc = `${src}?${params.toString()}`;
+        }
+
+        iframe.src = iframeSrc;
         header.textContent = title;
         modal.style.display = 'flex';
     }
@@ -1470,12 +1490,29 @@
         const iframe = document.getElementById('modalIframe');
         const header = document.getElementById('rs-modal-title');
 
+        // Check if the charting note form was opened
+        const wasChartingNoteForm = modal.dataset.formSrc &&
+                                   modal.dataset.formSrc.includes('charting_note');
+
         iframe.src = '';
         header.textContent = '';
         modal.style.display = 'none';
+
+        // If the charting note form was opened, refresh the risk score data
+        if (wasChartingNoteForm) {
+            console.log('Charting note form closed - refreshing risk score data...');
+            getRiskScore();
+        }
+
+        // Clear the stored form source
+        delete modal.dataset.formSrc;
     }
 
     function getRiskScore() {
+        // TODO: Update this function to work with the new SRSFormResponse backend
+        // The current implementation expects the old data structure
+        // New structure will include: HasPreviousStroke, ScreenedForTIA, HistoryOfAtrialFibrillation, etc.
+
         const totalScore = document.getElementById("rs-total-score");
         const scoreClassification = document.getElementById("rs-risk-score-classification")
         const sectionI = document.getElementById("rs-section-i-score");
@@ -1537,6 +1574,9 @@
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
 
+        // TODO: Update this endpoint to use the new charting note endpoint when backend is ready
+        // Current: iframe_healthie_provider_tab_risk_score_data
+        // New: iframe_healthie_provider_tab_risk_score_charting_note (or similar)
         fetch("{{ url_for('iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_data') }}", {
             method: "POST",
             body: formData
@@ -1725,8 +1765,37 @@
 
     }
 
+    function dummyFunction() {
+        showSpinner(totalScore)
+
+        setTimeout(() => {
+            hideSpinner(totalScore)
+        }, 3000)
+    }
+
+    // Listen for messages from the iframe (form submission events)
+    window.addEventListener('message', function(event) {
+        // Verify the origin for security
+        if (event.origin !== window.location.origin) {
+            return;
+        }
+
+        // Check if the message is a form submission notification
+        if (event.data && event.data.type === 'formSubmitted') {
+            console.log('Form submitted successfully - refreshing risk score data...');
+            getRiskScore();
+        }
+
+        // Check if the message is a request to close the modal
+        if (event.data && event.data.type === 'closeModal') {
+            console.log('Closing modal from iframe request...');
+            closeModal();
+        }
+    });
+
     $(document).ready(function () {
-        getRiskScore()
+        // getRiskScore()
+        // dummyFunction()
     })
 
     let activeSection = null
