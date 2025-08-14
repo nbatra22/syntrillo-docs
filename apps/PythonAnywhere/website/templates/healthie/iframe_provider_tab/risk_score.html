@@ -1556,11 +1556,6 @@
         const metricsContainers = document.getElementsByClassName("rs-metrics-container")
         const sectionToggleContainers = document.getElementsByClassName("rs-section-score-container")
 
-        const formOnboarding = document.getElementById("rs-form-onboarding")
-        const formEnrollment = document.getElementById("rs-form-enrollment")
-        const formIntakeWithPatient = document.getElementById("rs-form-intake-patient")
-        const formIntakeWithoutPatient = document.getElementById("rs-form-intake-no-patient")
-
         showSpinner(totalScore)
 
         const healthieProviderId = "{{ healthie_provider_id }}";
@@ -1583,178 +1578,8 @@
         })
             .then(response => response.json())
             .then(data => {
-                const riskScore = data.risk_score;
-
-                const i = riskScore.data.i;
-                const ii = riskScore.data.ii;
-                const iii = riskScore.data.iii;
-                const iv = riskScore.data.iv;
-                const v = riskScore.data.v;
-                const vi = riskScore.data.vi; // Optional
-                const vii = riskScore.data.vii;
-                const viii = riskScore.data.viii;
-
-                // Total score
-                totalScore.innerHTML = riskScore.total_score == null ? "-" : riskScore.total_score;
-
-                // Total score classification
-                if (riskScore.total_score < 3) {
-                    scoreClassification.innerHTML = "LOW RISK"
-                } else if (riskScore.total_score < 6) {
-                    scoreClassification.innerHTML = "MEDIUM RISK"
-                } else {
-                    scoreClassification.innerHTML = "HIGH RISK"
-                }
-
-                // Section scores
-                sectionI.innerHTML = i.score ?? "-";
-                sectionII.innerHTML = ii.score ?? "-";
-                sectionIII.innerHTML = iii.score ?? "-";
-                sectionIV.innerHTML = iv.score ?? "-";
-                sectionV.innerHTML = v.score ?? "-";
-                sectionVI.innerHTML = vi?.score ?? "-";
-                sectionVII.innerHTML = vii.score ?? "-";
-                sectionVIII.innerHTML = viii.score ?? "-";
-
-                if (
-                    i.medications &&
-                    i.medications.value &&
-                    Object.keys(i.medications.value).length > 0
-                ) {
-                    let medHTML = "";
-                    let otherMedHTML = "";
-
-                    Object.entries(i.medications.value).forEach(([category, meds]) => {
-                        meds.forEach(details => {
-                            const name = details.name || category;
-                            const isOther = category === "other";
-
-                            const rawClassification = details.classification || "";
-                            const rawSupercategory = details.supercategory || "";
-
-                            const classification = rawClassification
-                                ? rawClassification.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-                                : "-";
-
-                            const supercategory = rawSupercategory
-                                ? rawSupercategory.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-                                : "";
-
-                            const subtitle = supercategory ? `${classification} · ${supercategory}` : classification;
-
-                            const compliance = details.compliance !== null
-                                ? (details.compliance ? "C" : "NC")
-                                : "-";
-
-                            const medBlock = `
-                                <div class="rs-metric-container">
-                                    <div class="rs-metric-info">
-                                        <h3 class="rs-metric-title">${name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</h3>
-                                        <h4 class="rs-metric-subtitle">${subtitle}</h4>
-                                    </div>
-                                    <div class="rs-metric-value">
-                                        <h3>${compliance}</h3>
-                                    </div>
-                                </div>
-                            `;
-
-                            if (isOther) {
-                                otherMedHTML += medBlock;
-                            } else {
-                                medHTML += medBlock;
-                            }
-                        });
-                    });
-
-                    // Add meds and optional toggle
-                    // Inside medicationsList.innerHTML
-                    medicationsList.innerHTML = `
-                        ${medHTML}
-                        ${otherMedHTML
-                            ? `
-                                <button id="toggle-other-meds" class="toggle-other-meds-btn">
-                                    Show more <i id="caret-icon" class="fas fa-caret-down"></i>
-                                </button>
-                                <div id="other-meds-container">
-                                    ${otherMedHTML}
-                                </div>
-                            ` : ""}
-                    `;
-
-
-                    // Toggle logic
-                    const toggleBtn = document.getElementById("toggle-other-meds");
-                    const otherContainer = document.getElementById("other-meds-container");
-                    const caretIcon = document.getElementById("caret-icon");
-
-                    if (toggleBtn && otherContainer) {
-                        toggleBtn.addEventListener("click", () => {
-                            const isOpen = otherContainer.classList.toggle("open");
-
-                            toggleBtn.firstChild.textContent = isOpen ? "Show less " : "Show more ";
-                            caretIcon.className = isOpen ? "fas fa-caret-up" : "fas fa-caret-down";
-                        });
-                    }
-
-                } else {
-                    medicationsList.innerHTML = `<h3 id="rs-no-meds">No medications listed.</h3>`;
-                }
-
-                // Null value icon
-                const nullIcon = '<i class="fa-regular fa-circle-question"></i>'
-
-                // Form Dates
-                formEnrollment.innerHTML = iii.date !== null ? iii.date : "Incomplete"
-                formOnboarding.innerHTML = v.date !== null ? v.date : "Incomplete"
-                formIntakeWithPatient.innerHTML = i.medications.date !== null ? i.medications.date : "Incomplete"
-                formIntakeWithoutPatient.innerHTML = i.history.ia_date !== null ? i.history.ia_date : "Incomplete"
-
-                // Stroke + history
-                const history = i.history.value;
-
-                strokeEtiology.innerHTML = i.etiology.value || nullIcon;
-                intracranialAtherosclerosis.innerHTML = history.intracranial_atherosclerosis == null ? nullIcon : (history.intracranial_atherosclerosis ? "Yes" : "No");
-                afib.innerHTML = history.afib == null ? nullIcon : (history.afib ? "Yes" : "No");
-                osa.innerHTML = history.sleep_apnea == null ? nullIcon : (history.sleep_apnea ? "Yes" : "No");
-                diabetes.innerHTML = history.diabetes == null ? nullIcon : (history.diabetes ? "Yes" : "No");
-                carotidStenosis.innerHTML = history.carotid_stenosis == null ? nullIcon : (history.carotid_stenosis ? "Yes" : "No");
-                cpapPrescription.innerHTML = history.cpap_prescription == null ? nullIcon : (history.cpap_prescription ? "Yes" : "No");
-                cpapUsage.innerHTML = history.cpap_usage == null ? nullIcon : (history.cpap_usage ? "Yes" : "No");
-                smoker.innerHTML = history.smoker == null ? nullIcon : (history.smoker ? "Yes" : "No");
-                packsPerDay.innerHTML = viii.packs_per_day == null ? nullIcon : viii.packs_per_day;
-
-                // Labs
-                const labValues = i.lab_values.value;
-
-                ldl.innerHTML = labValues.ldl == null ? nullIcon : labValues.ldl;
-                ha1c.innerHTML = labValues.ha1c == null ? nullIcon : labValues.ha1c;
-
-                // Vitals
-                height.innerHTML = v.value.height == null ? nullIcon : v.value.height
-                weight.innerHTML = v.value.weight == null ? nullIcon : v.value.weight
-                bmi.innerHTML = v.value.bmi == null ? nullIcon : v.value.bmi;
-                sbp.innerHTML = iii.value.sbp == null ? nullIcon : iii.value.sbp;
-                dbp.innerHTML = iii.value.dbp == null ? nullIcon : iii.value.dbp;
-                restingHR.innerHTML = vii.resting_hr == null ? nullIcon : vii.resting_hr;
-
-                // Exercise total
-                const mod = parseFloat(iv.value.mod_exercise);
-                const vig = parseFloat(iv.value.vig_exercise);
-                const isModValid = !isNaN(mod);
-                const isVigValid = !isNaN(vig);
-
-                if (isModValid || isVigValid) {
-                    const total = (isModValid ? mod : 0) + (isVigValid ? vig : 0);
-                    exercise.innerHTML = Math.round(total * 10) / 10;
-                } else {
-                    exercise.innerHTML = nullIcon;
-                }
-
-                // Imaging + monitoring
-                ctaPerformed.innerHTML = ii.value.cta_performed == null ? nullIcon : (ii.value.cta_performed ? "Yes" : "No");
-                cardiacMonitoring.innerHTML = ii.value.cardiac_monitoring_30day == null ? nullIcon : (ii.value.cardiac_monitoring_30day ? "Yes" : "No");
-                ha1cImaging.innerHTML = ii.value.ha1c_6mo == null ? nullIcon : (ii.value.ha1c_6mo ? "Yes" : "No");
-                ha1cImagingDate.innerHTML = ii.ha1c_date == null ? "-" : ii.ha1c_date;
+                console.log(data)
+                return data
             })
             .catch(error => {
                 console.error("Error fetching risk score:", error);
@@ -1794,7 +1619,7 @@
     });
 
     $(document).ready(function () {
-        // getRiskScore()
+        getRiskScore()
         // dummyFunction()
     })
 

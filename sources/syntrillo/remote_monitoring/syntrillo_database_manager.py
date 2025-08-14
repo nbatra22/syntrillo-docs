@@ -926,7 +926,7 @@ class SyntrilloDatabaseManager:
             Exception: If there is an unexpected error during the insertion.
         """
         logger.info(f"Performing insertion of SRS form response into RDS DB ...")
-
+        print(f"Performing insertion of SRS form response into RDS DB ...")
         # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
         form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
         # Extract the compliance data from the SRS form response.
@@ -948,6 +948,7 @@ class SyntrilloDatabaseManager:
                 # Get the ID of the new record
                 srs_form_response_id = cursor.lastrowid
                 logger.info(f"Successfully inserted into srs_form_responses with ID: {srs_form_response_id}")
+                print(f"Successfully inserted into srs_form_responses with ID: {srs_form_response_id}")
 
                 # 2. Insert into srs_compliance if compliance data exists
                 if compliance_data:
@@ -975,6 +976,7 @@ class SyntrilloDatabaseManager:
                 "success": False,
                 "error": str(e)
             }
+            print(f"Error inserting SRS form response: {e}")
             logger.error(f"Error inserting SRS form response: {e}")
             return None, log
 
@@ -984,6 +986,7 @@ class SyntrilloDatabaseManager:
                 "success": False,
                 "error": f"An unexpected error occurred: {e}"
             }
+            print(f"An unexpected error occurred during SRS form insertion: {e}")
             logger.error(f"An unexpected error occurred during SRS form insertion: {e}")
             return None, log
 
