@@ -83,15 +83,15 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID):
         agg_data = aggregate_data(syntrillo_internal_key)
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
-        independent_risk_factor_values = calculate_independent_srs_values(agg_data, db_manager)
+        independent_risk_factor_value = calculate_independent_srs_values(agg_data, db_manager)
         dependent_risk_values = calculate_dependent_risk_factors(agg_data)
 
-        dependent_risk_factor_values = dependent_risk_values["dependent_risk_factor_values"]
-        dependent_efficacy_values = dependent_risk_values["dependent_efficacy_values"]
-        dependent_optimization_values = dependent_risk_values["dependent_optimization_values"]
+        dependent_risk_factor_value = dependent_risk_values["dependent_risk_factor_values"]
+        dependent_efficacy_value = dependent_risk_values["dependent_efficacy_values"]
+        dependent_optimization_value = dependent_risk_values["dependent_optimization_values"]
 
-        adjusted_dependent_srs = ((dependent_risk_factor_values-1)*(1-(dependent_efficacy_values*dependent_optimization_values)))+1
-        total_srs = adjusted_dependent_srs + independent_risk_factor_values
+        adjusted_dependent_srs = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+        total_srs = adjusted_dependent_srs + independent_risk_factor_value
         final_srs = round(total_srs**0.70, 2)
 
         return final_srs
