@@ -75,7 +75,7 @@ weighting = {
 }
 
 
-def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict]:
+def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict, float]:
     """
     Calculate the risk score for a given syntrillo internal key
 
@@ -89,7 +89,7 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
         agg_data = aggregate_data(syntrillo_internal_key)
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
-        independent_risk_factor_value = calculate_independent_srs_values(agg_data, db_manager)
+        independent_risk_factor_value, stroke_priority_score_total = calculate_independent_srs_values(agg_data, db_manager)
         dependent_risk_values = calculate_dependent_risk_factors(agg_data)
 
         dependent_risk_factor_value = dependent_risk_values["dependent_risk_factor_values"]
@@ -100,10 +100,13 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
         total_srs = adjusted_dependent_srs + independent_risk_factor_value
         final_srs = round(total_srs**0.70, 2)
 
-        return final_srs, agg_data
+        total_stroke_priority_score = adjusted_dependent_srs + stroke_priority_score_total
+        final_stroke_priority_score = round(total_stroke_priority_score**0.70, 2)
+
+        return final_srs, agg_data, final_stroke_priority_score
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
-        return None, None
+        return None, None, None
 
 
 
@@ -333,13 +336,13 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
 
 
 
-def calculate_independent_srs_values(agg_data: dict, db_manager: SyntrilloDatabaseManager) -> float:
+def calculate_independent_srs_values(agg_data: dict, db_manager: SyntrilloDatabaseManager) -> tuple[float, float]:
     """
     Calculates the risk score values associated with objective metrics.
     """
     independent_risk_factor_values = get_independent_risk_factor_values(agg_data)
-    independent_risk_score_total = get_independent_risk_score_value(independent_risk_factor_values, db_manager)
-    return independent_risk_score_total
+    independent_risk_score_total, stroke_priority_score_total = get_independent_risk_score_value(independent_risk_factor_values, db_manager)
+    return independent_risk_score_total, stroke_priority_score_total
 
 
 # Independent Risk Factors
@@ -390,27 +393,33 @@ def get_independent_risk_factor_values(agg_data: dict):
         CREATININE: creatinine_levels_value,
     }
 
-def get_independent_risk_score_value(independent_risk_factors: dict, db_manager: SyntrilloDatabaseManager) -> float:
+def get_independent_risk_score_value(independent_risk_factors: dict, db_manager: SyntrilloDatabaseManager) -> tuple[float, float]:
     """
     Get the risk values for a given independent risk factors.
     """
     independent_risk_score_total = 0.
+    stroke_priority_score_total = 0.
     for category, value in independent_risk_factors.items():
         if value:
             if type(value) == np.float64:
                 value = float(value)
-            independent_risk_score_total += db_manager.get_srs_value_by_category_and_value(category, value)
+            risk_values = db_manager.get_srs_value_by_category_and_value(category, value)
+            independent_risk_score_total += risk_values["risk_value"]
+            stroke_priority_score_total += risk_values["stroke_priority_value"]
         else:
             # Get most likely risk value for the factor
-            independent_risk_score_total += db_manager.get_srs_value_by_category_and_value(category)
+            risk_values = db_manager.get_srs_value_by_category_and_value(category)
+            independent_risk_score_total += risk_values["risk_value"]
+            stroke_priority_score_total += risk_values["stroke_priority_value"]
 
-    return independent_risk_score_total
+    return independent_risk_score_total, stroke_priority_score_total
 
 
 if __name__ == "__main__":
     syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    srs, agg_data = calculate_risk_score(syntrillo_internal_key)
+    srs, agg_data, stroke_priority_score = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
     print(f"======== Final SRS: {srs} =========")
+    print(f"======== Final Stroke Priority Score: {stroke_priority_score} =========")
     print("================================================")

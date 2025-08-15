@@ -1075,7 +1075,7 @@ class SyntrilloDatabaseManager:
             }
             return None, None
 
-    def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None) -> float:
+    def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None) -> dict:
         """
         Gets the SRS value assoicated with the risk factor's value.
 
@@ -1084,7 +1084,7 @@ class SyntrilloDatabaseManager:
             value (float | str): The value of the risk factor.
 
         Returns:
-            str: The SRS value.
+            dict: The SRS value and the stroke priority value.
         Raises:
             ValueError: If the value type is invalid.
         """
@@ -1114,12 +1114,27 @@ class SyntrilloDatabaseManager:
                         FROM srs_independent_risk_values
                         WHERE category = %s AND is_default = 1;
                     """
+                    query_stroke_priority = """
+                        SELECT max(risk_value)
+                        FROM srs_independent_risk_values
+                        WHERE category = %s;
+                    """
                     variables = (category)
 
                 cursor.execute(query, variables)
                 risk_value = cursor.fetchone()
 
-                return risk_value[0] if risk_value else 0.
+                stroke_priority_value = risk_value
+                if not value:
+                    cursor.execute(query_stroke_priority, variables)
+                    stroke_priority_value = cursor.fetchone()
+
+                risk_values = {
+                    "risk_value": risk_value[0] if risk_value else 0.0,
+                    "stroke_priority_value": stroke_priority_value[0] if stroke_priority_value else 0.0
+                }
+
+                return risk_values
 
         except pymysql.MySQLError as e:
             log = {
