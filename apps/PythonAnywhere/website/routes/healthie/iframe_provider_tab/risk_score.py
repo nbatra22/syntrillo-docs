@@ -6,6 +6,7 @@ import io
 from datetime import datetime
 import uuid
 
+
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
 from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
@@ -89,13 +90,20 @@ def iframe_healthie_provider_tab_risk_score_data():
     post_manager.get_pseudonyms_from_tab_post(request)
 
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
-    print(f"-------------- syntrillo_internal_key_patient: {syntrillo_internal_key_patient}")
 
     try:
 
-        risk_score = calculate_risk_score(syntrillo_internal_key_patient)
-        metrics = aggregate_data(syntrillo_internal_key_patient)
+        risk_score, metrics = calculate_risk_score(syntrillo_internal_key_patient)
 
+        print(f"-------------- risk_score: {risk_score}")
+        print(f"-------------- metrics: {metrics}")
+        print(f"-------------- risk_score: {type(risk_score)}")
+        print(f"-------------- metrics: {type(metrics)}")
+        print(f"-------------- metrics: {type(metrics['srs_response_data'])}")
+
+        metrics['srs_response_data'] = metrics['srs_response_data'].model_dump()
+
+        print(f"-------------- After")
         # Return success response
         return jsonify({
             'success': True,
@@ -107,7 +115,7 @@ def iframe_healthie_provider_tab_risk_score_data():
         })
 
     except Exception as e:
-        current_app.logger.error(f"Error processing charting note: {str(e)}")
+        current_app.logger.error(f"Error retrieving risk score data: {str(e)}")
         return jsonify({
             'success': False,
             'error': f'Internal server error: {str(e)}'
@@ -229,7 +237,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
 
 
         # Add breakpoint to debug the exact issue
-        breakpoint()
+        # breakpoint()
 
         # Insert the SRS form response into the database
         response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="", data=processed_data)

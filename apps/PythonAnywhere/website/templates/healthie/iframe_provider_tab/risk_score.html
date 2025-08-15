@@ -313,10 +313,6 @@
         align-items: end;
     }
 
-    .rs-metric-value {
-        font-size: 16px;
-    }
-
     #rs-forms-container .rs-metric-value {
         color: #6b7280;
         font-size: 14px !important;
@@ -493,25 +489,6 @@
 
         <div id="rs-score-column" class="rs-column">
 
-            <!-- <section id="rs-score-section" class="">
-                <h2 id="" class="rs-section-header">
-                    Risk Score
-                </h2>
-
-                <div id="" class="rs-total-score-container">
-                    <h3 id="rs-risk-score-classification" class="rs-section-info">
-                        MEDIUM RISK
-                    </h3>
-                    <h2 id="rs-total-score" class="rs-total-score">
-                        12.5
-                    </h2>
-                    <h3 id="rs-total-max-score" class="rs-max-score">
-                        max 20.2
-                    </h3>
-                </div>
-
-            </section> -->
-
             <!-- <section id="rs-charting-section" class="">
                 <div id="" class="rs-section-header">
                     <h2 id="" class="">
@@ -627,8 +604,8 @@
                 </h2>
 
                 <div class="rs-metrics-container">
-
-                    <div id="rs-iii-sbp" class="rs-metric-container">
+                    <!-- Baseline BP -->
+                    <div id="rs-bp-baseline-sbp-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Systolic BP - Average (Baseline)
@@ -638,7 +615,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-sbp" class="rs-metric-value">
+                            <h3 id="rs-bp-baseline-sbp" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -646,7 +623,8 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-iii-dbp" class="rs-metric-container">
+
+                    <div id="rs-bp-baseline-dbp-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Diastolic BP - Average (Baseline)
@@ -656,7 +634,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-dbp" class="rs-metric-value">
+                            <h3 id="rs-bp-baseline-dbp" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -664,7 +642,9 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-iii-sbp" class="rs-metric-container">
+
+                    <!-- Trailing BP -->
+                    <div id="rs-bp-trailing-sbp-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Systolic BP - Average (1mo. Trailing)
@@ -674,7 +654,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-sbp" class="rs-metric-value">
+                            <h3 id="rs-bp-trailing-sbp" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -682,7 +662,8 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-iii-dbp" class="rs-metric-container">
+
+                    <div id="rs-bp-trailing-dbp-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Diastolic BP - Average (1mo. Trailing)
@@ -692,7 +673,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-dbp" class="rs-metric-value">
+                            <h3 id="rs-bp-trailing-dbp" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -700,7 +681,9 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-iii-dbp" class="rs-metric-container">
+
+                    <!-- BP Variability and Peak -->
+                    <div id="rs-bp-variability-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Systolic BP - Variability (1mo. Trailing)
@@ -710,7 +693,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-dbp" class="rs-metric-value">
+                            <h3 id="rs-bp-variability" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -718,17 +701,18 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-iii-dbp" class="rs-metric-container">
+
+                    <div id="rs-bp-peak-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
-                                Diastolic BP - Peak (1mo. Trailing)
+                                Systolic BP - Peak (1mo. Trailing)
                             </h3>
                             <h4 class="rs-metric-subtitle">
                                 Tenovi BPM
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-dbp" class="rs-metric-value">
+                            <h3 id="rs-bp-peak" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -737,7 +721,6 @@
                         </div>
                     </div>
                 </div>
-
             </section>
 
             <section id="rs-hr-section" class="rs-section-container">
@@ -746,7 +729,7 @@
                 </h2>
 
                 <div class="rs-metrics-container">
-                    <div id="rs-vii-rhr" class="rs-metric-container">
+                    <div id="rs-hr-baseline-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Resting Heart Rate - Average (Baseline)
@@ -756,7 +739,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-rhr" class="rs-metric-value">
+                            <h3 id="rs-hr-baseline" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -764,7 +747,8 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-vii-rhr" class="rs-metric-container">
+
+                    <div id="rs-hr-trailing-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Resting Heart Rate - Average (1mo. Trailing)
@@ -774,7 +758,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-rhr" class="rs-metric-value">
+                            <h3 id="rs-hr-trailing" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -782,7 +766,8 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-vii-rhr" class="rs-metric-container">
+
+                    <div id="rs-hr-avg-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Heart Rate - Average (1mo. Trailing)
@@ -792,7 +777,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-rhr" class="rs-metric-value">
+                            <h3 id="rs-hr-avg" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -808,23 +793,19 @@
                     <h2 id="" class="">
                         Physical Activity
                     </h2>
-                    <!-- <button id="rs-create-button" class="" title="Update patient activity"
-                        onclick="openModal('/healthie/iframe_provider_tab/forms/srs/monthly_visit', 'Charting Note')">
-                        <i class="fa-solid fa-plus"></i>
-                    </button> -->
                 </div>
 
-                <div id="rs-iv-exercise" class="rs-metric-container">
+                <div id="rs-moderate-vigorous-activity-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Moderate/Vigorous Activity
                         </h3>
                         <h4 class="rs-metric-subtitle">
-                            Intake/Charting - Physical Acitvity Questionnaire
+                            Intake/Charting - Physical Activity Questionnaire
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
-                        <h3 id="rs-exercise" class="rs-metric-value">
+                        <h3 id="rs-moderate-vigorous-activity" class="rs-metric-value">
                             -
                         </h3>
                         <h4 class="rs-metric-value-unit">
@@ -832,21 +813,22 @@
                         </h4>
                     </div>
                 </div>
-                <div id="rs-iv-exercise" class="rs-metric-container">
+
+                <div id="rs-physical-inactivity-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
-                            Physical Inactivity (sitting)
+                            Physical Inactivity Level
                         </h3>
                         <h4 class="rs-metric-subtitle">
                             Syntrillo - Charting Note
                         </h4>
                     </div>
                     <div class="rs-metric-value-container">
-                        <h3 id="rs-exercise" class="rs-metric-value">
+                        <h3 id="rs-physical-inactivity" class="rs-metric-value">
                             -
                         </h3>
                         <h4 class="rs-metric-value-unit">
-                            hrs/day
+                            Level
                         </h4>
                     </div>
                 </div>
@@ -898,7 +880,7 @@
 
                 <div class="rs-metrics-container">
 
-                    <div id="rs-i-stroke-etiology" class="rs-metric-container">
+                    <div id="rs-stroke-history-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Stroke History
@@ -908,7 +890,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-stroke-etiology" class="rs-metric-value">
+                            <h3 id="rs-stroke-history" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -916,7 +898,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-stroke-etiology" class="rs-metric-container">
+                    <div id="rs-stroke-etiology-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Stroke Etiology
@@ -952,7 +934,7 @@
                         </h4>
                     </div>
                 </div> -->
-                    <div id="rs-i-afib" class="rs-metric-container">
+                    <div id="rs-afib-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Atrial Fibrillation
@@ -970,7 +952,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-afib" class="rs-metric-container">
+                    <div id="rs-arterial-clots-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Arterial Clots
@@ -980,7 +962,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-afib" class="rs-metric-value">
+                            <h3 id="rs-arterial-clots" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -988,7 +970,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-afib" class="rs-metric-container">
+                    <div id="rs-venous-clots-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Venous Clots
@@ -998,7 +980,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-afib" class="rs-metric-value">
+                            <h3 id="rs-venous-clots" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1006,7 +988,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-afib" class="rs-metric-container">
+                    <div id="rs-chf-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Congestive Heart Failure
@@ -1016,7 +998,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-afib" class="rs-metric-value">
+                            <h3 id="rs-chf" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1024,7 +1006,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-ii-carotid-stenosis" class="rs-metric-container">
+                    <div id="rs-carotid-stenosis-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Carotid Stenosis
@@ -1042,7 +1024,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-osa" class="rs-metric-container">
+                    <div id="rs-osa-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Obstructive Sleep Apnea
@@ -1060,7 +1042,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-osa" class="rs-metric-container">
+                    <div id="rs-cad-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Coronary Artery Disease
@@ -1070,7 +1052,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-osa" class="rs-metric-value">
+                            <h3 id="rs-cad" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1078,7 +1060,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-osa" class="rs-metric-container">
+                    <div id="rs-valvular-heart-disease-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Valvular Heart Disease
@@ -1088,7 +1070,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-osa" class="rs-metric-value">
+                            <h3 id="rs-valvular-heart-disease" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1096,7 +1078,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-osa" class="rs-metric-container">
+                    <div id="rs-ckd-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Chronic Kidney Disease
@@ -1106,7 +1088,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-osa" class="rs-metric-value">
+                            <h3 id="rs-ckd" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1114,7 +1096,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-ii-diabetes" class="rs-metric-container">
+                    <div id="rs-diabetes-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Diabetes
@@ -1132,7 +1114,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-ii-diabetes" class="rs-metric-container">
+                    <div id="rs-obesity-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 Obesity
@@ -1142,7 +1124,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-diabetes" class="rs-metric-value">
+                            <h3 id="rs-obesity" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1230,8 +1212,8 @@
                     Lab Values
                 </h3>
 
-                <div class="rs-metrics-container">
-                    <div id="rs-i-ha1c" class="rs-metric-container">
+                <div id="rs-lab-values-container" class="rs-metrics-container">
+                    <div id="rs-ha1c-container" class="rs-metric-container">
                         <div class="">
                             <h3 class="rs-metric-title">
                                 Hemoglobin A1c (HA1c) Level
@@ -1249,7 +1231,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-ldl" class="rs-metric-container">
+                    <div id="rs-ldl-container" class="rs-metric-container">
                         <div class="">
                             <h3 class="rs-metric-title">
                                 Low-Density Lipoprotein (LDL) Level
@@ -1267,7 +1249,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-ldl" class="rs-metric-container">
+                    <div id="rs-hdl-container" class="rs-metric-container">
                         <div class="">
                             <h3 class="rs-metric-title">
                                 High-Density Lipoprotein (HDL) Level
@@ -1277,7 +1259,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-ldl" class="rs-metric-value">
+                            <h3 id="rs-hdl" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1285,7 +1267,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-ldl" class="rs-metric-container">
+                    <div id="rs-triglycerides-container" class="rs-metric-container">
                         <div class="">
                             <h3 class="rs-metric-title">
                                 Triglycerides Level
@@ -1295,7 +1277,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-ldl" class="rs-metric-value">
+                            <h3 id="rs-triglycerides" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1303,7 +1285,7 @@
                             </h4>
                         </div>
                     </div>
-                    <div id="rs-i-ldl" class="rs-metric-container">
+                    <div id="rs-creatinine-container" class="rs-metric-container">
                         <div class="">
                             <h3 class="rs-metric-title">
                                 Creatinine Level
@@ -1313,7 +1295,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-ldl" class="rs-metric-value">
+                            <h3 id="rs-creatinine" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1324,14 +1306,14 @@
                 </div>
             </section>
 
-            <!-- <section id="rs-tests-orders-section" class="rs-section-container">
+            <section id="rs-tests-orders-section" class="rs-section-container">
                 <h3 class="rs-section-header">
                     Tests/Orders
                 </h3>
 
                 <div class="rs-metrics-container">
-
-                    <div id="rs-ii-cta-performed" class="rs-metric-container">
+                    <!-- Existing Tests -->
+                    <!-- <div id="rs-cta-performed-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 CTA performed during hospitalization?
@@ -1345,8 +1327,9 @@
                                 -
                             </h3>
                         </div>
-                    </div>
-                    <div id="rs-ii-cardiac-monitoring" class="rs-metric-container">
+                    </div> -->
+
+                    <!-- <div id="rs-cardiac-monitoring-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 30 day cardiac monitor ordered?
@@ -1360,23 +1343,25 @@
                                 -
                             </h3>
                         </div>
-                    </div>
-                    <div class="rs-metric-container">
-                    <div class="rs-metric-info">
-                        <h3 class="rs-metric-title">
-                            Carotid imaging in last 6 months?
-                        </h3>
-                        <h4 class="rs-metric-subtitle">
+                    </div> -->
 
-                        </h4>
-                    </div>
-                    <div class="rs-metric-value">
-                        <h3 class="">
-                            No
-                        </h3>
-                    </div>
-                </div>
-                    <div id="rs-ii-ha1c-imaging" class="rs-metric-container">
+                    <!-- <div id="rs-carotid-imaging-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Carotid imaging in last 6 months?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-carotid-imaging" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div> -->
+
+                    <!-- <div id="rs-ha1c-imaging-container" class="rs-metric-container">
                         <div class="rs-metric-info">
                             <h3 class="rs-metric-title">
                                 HA1c in last 6 months?
@@ -1393,10 +1378,122 @@
                                 -
                             </h4>
                         </div>
+                    </div> -->
+
+                    <!-- New Tests/Orders from SRS Response -->
+                    <div id="rs-tia-screening-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Screened for TIA?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-tia-screening" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
 
+                    <div id="rs-tia-likelihood-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                TIA Likelihood
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-tia-likelihood" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="rs-tia-mechanism-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                TIA Mechanism
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-tia-mechanism" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="rs-prior-ct-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Prior Head CT?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-prior-ct" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="rs-prior-ct-date-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Prior CT Date
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-prior-ct-date" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="rs-chronic-infarct-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Chronic Infarct Present?
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-chronic-infarct" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div id="rs-chronic-infarct-mechanism-container" class="rs-metric-container">
+                        <div class="rs-metric-info">
+                            <h3 class="rs-metric-title">
+                                Chronic Infarct Mechanism
+                            </h3>
+                            <h4 class="rs-metric-subtitle">
+                                Syntrillo - Charting Note
+                            </h4>
+                        </div>
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-chronic-infarct-mechanism" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                    </div>
                 </div>
-            </section> -->
+            </section>
 
         </div>
 
@@ -1509,54 +1606,72 @@
     }
 
     function getRiskScore() {
-        // TODO: Update this function to work with the new SRSFormResponse backend
-        // The current implementation expects the old data structure
-        // New structure will include: HasPreviousStroke, ScreenedForTIA, HistoryOfAtrialFibrillation, etc.
-
+        // Get all the HTML elements we need to update
         const totalScore = document.getElementById("rs-total-score");
-        const scoreClassification = document.getElementById("rs-risk-score-classification")
-        const sectionI = document.getElementById("rs-section-i-score");
-        const sectionII = document.getElementById("rs-section-ii-score");
-        const sectionIII = document.getElementById("rs-section-iii-score");
-        const sectionIV = document.getElementById("rs-section-iv-score");
-        const sectionV = document.getElementById("rs-section-v-score");
-        const sectionVI = document.getElementById("rs-section-vi-score"); // optional
-        const sectionVII = document.getElementById("rs-section-vii-score");
-        const sectionVIII = document.getElementById("rs-section-viii-score");
+        const scoreClassification = document.getElementById("rs-risk-score-classification");
 
-        const medicationsList = document.getElementById("rs-medications-container");
-
+        // Biometrics
         const height = document.getElementById("rs-height");
         const weight = document.getElementById("rs-weight");
         const bmi = document.getElementById("rs-bmi");
-        const sbp = document.getElementById("rs-sbp");
-        const dbp = document.getElementById("rs-dbp");
-        const exercise = document.getElementById("rs-exercise");
-        const restingHR = document.getElementById("rs-rhr");
 
-        const strokeEtiology = document.getElementById("rs-stroke-etiology");
-        const intracranialAtherosclerosis = document.getElementById("rs-intracranial-atherosclerosis");
-        const afib = document.getElementById("rs-afib");
-        const osa = document.getElementById("rs-osa");
-        const diabetes = document.getElementById("rs-diabetes");
-        const carotidStenosis = document.getElementById("rs-carotid-stenosis");
-        const cpapPrescription = document.getElementById("rs-cpap-prescription");
-        const cpapUsage = document.getElementById("rs-cpap-usage");
-        const smoker = document.getElementById("rs-smoker");
-        const packsPerDay = document.getElementById("rs-smoker-frequency");
+        // Blood Pressure
+        const sbpBaseline = document.getElementById("rs-bp-baseline-sbp");
+        const dbpBaseline = document.getElementById("rs-bp-baseline-dbp");
+        const sbpTrailing = document.getElementById("rs-bp-trailing-sbp");
+        const dbpTrailing = document.getElementById("rs-bp-trailing-dbp");
+        const sbpVariability = document.getElementById("rs-bp-variability");
+        const sbpPeak = document.getElementById("rs-bp-peak");
 
-        const ldl = document.getElementById("rs-ldl");
+        // Heart Rate
+        const hrBaseline = document.getElementById("rs-hr-baseline");
+        const hrTrailing = document.getElementById("rs-hr-trailing");
+        const hrAvg = document.getElementById("rs-hr-avg");
+
+        // Physical Activity
+        const moderateVigorousActivity = document.getElementById("rs-moderate-vigorous-activity");
+        const physicalInactivity = document.getElementById("rs-physical-inactivity");
+
+        // Lab Values
         const ha1c = document.getElementById("rs-ha1c");
+        const ldl = document.getElementById("rs-ldl");
+        const hdl = document.getElementById("rs-hdl");
+        const triglycerides = document.getElementById("rs-triglycerides");
+        const creatinine = document.getElementById("rs-creatinine");
 
-        const ctaPerformed = document.getElementById("rs-cta-performed");
-        const cardiacMonitoring = document.getElementById("rs-cardiac-monitoring");
-        const ha1cImaging = document.getElementById("rs-ha1c-imaging");
-        const ha1cImagingDate = document.getElementById("rs-ha1c-imaging-date");
+        // Patient History
+        const strokeHistory = document.getElementById("rs-stroke-history");
+        const strokeEtiology = document.getElementById("rs-stroke-etiology");
+        const afib = document.getElementById("rs-afib");
+        const arterialClots = document.getElementById("rs-arterial-clots");
+        const venousClots = document.getElementById("rs-venous-clots");
+        const chf = document.getElementById("rs-chf");
+        const carotidStenosis = document.getElementById("rs-carotid-stenosis");
+        const osa = document.getElementById("rs-osa");
+        const cad = document.getElementById("rs-cad");
+        const valvularHeartDisease = document.getElementById("rs-valvular-heart-disease");
+        const ckd = document.getElementById("rs-ckd");
+        const diabetes = document.getElementById("rs-diabetes");
+        const obesity = document.getElementById("rs-obesity");
 
-        const metricsContainers = document.getElementsByClassName("rs-metrics-container")
-        const sectionToggleContainers = document.getElementsByClassName("rs-section-score-container")
+        // Tests/Orders
+        // const ctaPerformed = document.getElementById("rs-cta-performed");
+        // const cardiacMonitoring = document.getElementById("rs-cardiac-monitoring");
+        // const carotidImaging = document.getElementById("rs-carotid-imaging");
+        // const ha1cImaging = document.getElementById("rs-ha1c-imaging");
+        // const ha1cImagingDate = document.getElementById("rs-ha1c-imaging-date");
 
-        showSpinner(totalScore)
+        // New Tests/Orders
+        const tiaScreening = document.getElementById("rs-tia-screening");
+        const tiaLikelihood = document.getElementById("rs-tia-likelihood");
+        const tiaMechanism = document.getElementById("rs-tia-mechanism");
+        const priorCT = document.getElementById("rs-prior-ct");
+        const priorCTDate = document.getElementById("rs-prior-ct-date");
+        const chronicInfarct = document.getElementById("rs-chronic-infarct");
+        const chronicInfarctMechanism = document.getElementById("rs-chronic-infarct-mechanism");
+
+
+        showSpinner(totalScore);
 
         const healthieProviderId = "{{ healthie_provider_id }}";
         const healthieUserId = "{{ healthie_user_id }}";
@@ -1569,35 +1684,126 @@
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
 
-        // TODO: Update this endpoint to use the new charting note endpoint when backend is ready
-        // Current: iframe_healthie_provider_tab_risk_score_data
-        // New: iframe_healthie_provider_tab_risk_score_charting_note (or similar)
         fetch("{{ url_for('iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_data') }}", {
             method: "POST",
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                console.log(data)
-                return data
+                console.log('Risk score data received:', data);
+
+                if (data.success && data.data) {
+                    // Update total score
+                    if (totalScore) {
+                        totalScore.textContent = data.data.total_score || 'NA';
+                    }
+
+                    // Update score classification based on total score
+                    if (scoreClassification) {
+                        const score = data.data.total_score;
+                        if (score === null || score === undefined) {
+                            scoreClassification.textContent = 'Calculating...';
+                        } else if (score < 7) {
+                            scoreClassification.textContent = 'LOW RISK';
+                        } else if (score < 14) {
+                            scoreClassification.textContent = 'MEDIUM RISK';
+                        } else {
+                            scoreClassification.textContent = 'HIGH RISK';
+                        }
+                    }
+
+                    const metrics = data.data.metrics;
+                    if (metrics) {
+                        // Update SRS Response Data (Charting Note data)
+                        if (metrics.srs_response_data) {
+                            const srs = metrics.srs_response_data;
+
+                            // Biometrics
+                            if (height) height.textContent = srs.Height || '-';
+                            if (weight) weight.textContent = srs.Weight || '-';
+                            if (bmi) bmi.textContent = srs.BMI || '-';
+
+                            // Blood Pressure (from SRS data)
+                            if (sbpBaseline) sbpBaseline.textContent = srs.AvgSBP || '-';
+
+                            // Heart Rate (from SRS data)
+                            if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
+
+                            // Physical Activity
+                            if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityLevel || '-';
+
+                            // Lab Values
+                            if (ha1c) ha1c.textContent = srs.HemoglobinA1c || '-';
+                            if (ldl) ldl.textContent = srs.LDLLevel || '-';
+                            if (hdl) hdl.textContent = srs.HDLLevel || '-';
+                            if (triglycerides) triglycerides.textContent = srs.TriglyceridesLevel || '-';
+                            if (creatinine) creatinine.textContent = srs.CreatineLevel || '-';
+
+                            // Patient History
+                            if (strokeHistory) strokeHistory.textContent = srs.HasPreviousStroke ? 'Yes' : 'No';
+                            if (strokeEtiology) strokeEtiology.textContent = srs.LatestStrokeMechanism || '-';
+                            if (afib) afib.textContent = srs.HistoryOfAtrialFibrillation ? 'Yes' : 'No';
+                            if (arterialClots) arterialClots.textContent = srs.HistoryOfArterialClots ? 'Yes' : 'No';
+                            if (venousClots) venousClots.textContent = srs.HistoryOfVenousClots ? 'Yes' : 'No';
+                            if (chf) chf.textContent = srs.HistoryOfCHF ? 'Yes' : 'No';
+                            if (carotidStenosis) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
+                            if (osa) osa.textContent = srs.HistoryOfOSA ? 'Yes' : 'No';
+                            if (cad) cad.textContent = srs.HistoryOfCAD ? 'Yes' : 'No';
+                            if (valvularHeartDisease) valvularHeartDisease.textContent = srs.HistoryOfValvularHeartDisease ? 'Yes' : 'No';
+                            if (ckd) ckd.textContent = srs.HistoryOfCKD ? 'Yes' : 'No';
+                            if (diabetes) diabetes.textContent = srs.HistoryOfDiabetes ? 'Yes' : 'No';
+                            if (obesity) obesity.textContent = srs.HistoryOfObesity ? 'Yes' : 'No';
+
+                            // Tests/Orders
+                            if (tiaScreening) tiaScreening.textContent = srs.ScreenedForTIA ? 'Yes' : 'No';
+                            if (tiaLikelihood) tiaLikelihood.textContent = srs.LikelihoodOfTIA || '-';
+                            if (tiaMechanism) tiaMechanism.textContent = srs.TIAMechanism || '-';
+                            if (priorCT) priorCT.textContent = srs.HasPriorHeadCT ? 'Yes' : 'No';
+                            if (priorCTDate) priorCTDate.textContent = srs.PriorCTDate || '-';
+                            if (chronicInfarct) chronicInfarct.textContent = srs.ChronicInfarctPresent ? 'Yes' : 'No';
+                            if (chronicInfarctMechanism) chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
+                        }
+
+                        // Update Tenovi BP Data
+                        if (metrics.tenovi_bp_data) {
+                            const bp = metrics.tenovi_bp_data;
+
+                            // Update BP values
+                            if (bp.systolic && bp.systolic.trailing) {
+                                if (sbpTrailing) sbpTrailing.textContent = bp.systolic.trailing.average || '-';
+                                if (sbpVariability) sbpVariability.textContent = bp.systolic.trailing.variability || '-';
+                                // Note: peak is not in your data, so we'll leave it as '-'
+                            }
+
+                            if (bp.diastolic && bp.diastolic.trailing) {
+                                if (dbpTrailing) dbpTrailing.textContent = bp.diastolic.trailing.average || '-';
+                            }
+                        }
+
+                        // Update Healthie SRS Data
+                        if (metrics.healthie_srs_data) {
+                            const healthie = metrics.healthie_srs_data;
+
+                            // Update RHR if SRS data doesn't have it
+                            if (healthie.average_rhr_baseline && hrBaseline && hrBaseline.textContent === '-') {
+                                hrBaseline.textContent = healthie.average_rhr_baseline || '-';
+                            }
+                            if (healthie.average_rhr_trailing && hrTrailing) {
+                                hrTrailing.textContent = healthie.average_rhr_trailing || '-';
+                            }
+                        }
+                    }
+                }
             })
             .catch(error => {
                 console.error("Error fetching risk score:", error);
+                if (totalScore) totalScore.textContent = 'Error';
+                if (scoreClassification) scoreClassification.textContent = 'Error loading data';
             })
             .finally(() => {
-                hideSpinner(totalScore)
-            })
-
+                hideSpinner(totalScore);
+            });
     }
-
-    function dummyFunction() {
-        showSpinner(totalScore)
-
-        setTimeout(() => {
-            hideSpinner(totalScore)
-        }, 3000)
-    }
-
     // Listen for messages from the iframe (form submission events)
     window.addEventListener('message', function(event) {
         // Verify the origin for security
@@ -1620,7 +1826,6 @@
 
     $(document).ready(function () {
         getRiskScore()
-        // dummyFunction()
     })
 
     let activeSection = null
