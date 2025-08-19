@@ -138,6 +138,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         # Get the form data from the request (FormData instead of JSON)
         form_data = {}
         # Extract form fields manually from request.form
+        form_data['Gender'] = request.form.get('Gender') or None
         form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'true'
         form_data['NumberOfStrokes'] = request.form.get('NumberOfStrokes') or None
         form_data['LatestStrokeMechanism'] = request.form.get('LatestStrokeMechanism') or None
@@ -157,6 +158,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['HistoryOfCAD'] = request.form.get('HistoryOfCAD') == 'true'
         form_data['HistoryOfValvularHeartDisease'] = request.form.get('HistoryOfValvularHeartDisease') == 'true'
         form_data['HistoryOfCKD'] = request.form.get('HistoryOfCKD') == 'true'
+        form_data['HistoryOfHyperlipidemia'] = request.form.get('HistoryOfHyperlipidemia') == 'true'
         form_data['HistoryOfDiabetes'] = request.form.get('HistoryOfDiabetes') == 'true'
         form_data['HistoryOfObesity'] = request.form.get('HistoryOfObesity') == 'true'
         form_data['AnemiaSeverity'] = request.form.get('AnemiaSeverity') or None
@@ -169,16 +171,21 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['CADType'] = request.form.get('CADType') or None
         form_data['PhysicalInactivityLevel'] = request.form.get('PhysicalInactivityLevel') or None
         form_data['HemoglobinA1c'] = request.form.get('HemoglobinA1c') or None
-        form_data['LDLLevel'] = request.form.get('LDLLevel') or None
-        form_data['HDLLevel'] = request.form.get('HDLLevel') or None
-        form_data['TriglyceridesLevel'] = request.form.get('TriglyceridesLevel') or None
+        # form_data['LDLLevel'] = request.form.get('LDLLevel') or None
+        # form_data['HDLLevel'] = request.form.get('HDLLevel') or None
+        form_data['LDLValue'] = request.form.get('LDLValue') or None
+        form_data['LDLCompliance'] = request.form.get('LDLCompliance') or None
+        form_data['HDLValue'] = request.form.get('HDLValue') or None
+        form_data['TriglyceridesValue'] = request.form.get('TriglyceridesValue') or None
+        form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
+        # form_data['TriglyceridesLevel'] = request.form.get('TriglyceridesLevel') or None
         form_data['CreatineLevel'] = request.form.get('CreatineLevel') or None
         form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism') or None
-        form_data['Height'] = request.form.get('Height') or None
-        form_data['Weight'] = request.form.get('Weight') or None
-        form_data['AvgSBP'] = request.form.get('AvgSBP') or None
-        form_data['RHR'] = request.form.get('RHR') or None
-        form_data['BMI'] = request.form.get('BMI') or None
+        # form_data['Height'] = request.form.get('Height') or None
+        # form_data['Weight'] = request.form.get('Weight') or None
+        # form_data['AvgSBP'] = request.form.get('AvgSBP') or None
+        # form_data['RHR'] = request.form.get('RHR') or None
+        # form_data['BMI'] = request.form.get('BMI') or None
 
         # Parse compliance data from JSON string
         compliance_json = request.form.get('compliance')

@@ -95,9 +95,31 @@
 
     <div id="charting-note-form-content" class="form-content">
 
+        <div id="patient-information-container" class="form-group">
+            <label for="patient-information-container">
+                1. Gender?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="gender-male" name="Gender" value="man">
+                    <label for="gender-male">
+                        Male
+                    </label>
+                </div>
+            </div>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="gender-female" name="Gender" value="woman">
+                    <label for="gender-female">
+                        Female
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div id="previous-stroke-container" class="form-group">
             <label for="previous-stroke-container">
-                1. Has the patient had a previous stroke?
+                2. Has the patient had a previous stroke?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -208,7 +230,7 @@
 
         <div id="tia-screening" class="form-group">
             <label for="tia-screening">
-                2. For neurologist: Has the patient been screened for TIA?
+                3. For neurologist: Has the patient been screened for TIA?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -313,7 +335,7 @@
 
         <div id="prior-head-ct" class="form-group">
             <label for="prior-head-ct">
-                3. Has the patient had a prior head CT?
+                4. Has the patient had a prior head CT?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -389,7 +411,7 @@
 
         <div id="history-select" class="form-group">
             <label for="history-select">
-                4. History of any of the following:
+                5. History of any of the following:
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -1131,7 +1153,7 @@
 
         <div class="form-group">
             <label for="physical-inactivity">
-                5. What's the patient's physical inactivity level?
+                6. What's the patient's physical inactivity level?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -1157,7 +1179,7 @@
 
         <div class="form-group">
             <label for="ha1c">
-                6. What's the patient's last known Hemoglobin A1c (HA1c)?
+                7. What's the patient's last known Hemoglobin A1c (HA1c)?
             </label>
             <input type="number" id="ha1c" name="HemoglobinA1c" step="0.1">
         </div>
@@ -1245,7 +1267,7 @@
 
         <div class="form-group">
             <label for="creatine-level">
-                7. What's the patient's creatinine level?
+                8. What's the patient's creatinine level?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -1283,7 +1305,7 @@
 
     <div class="form-submit-footer">
         <h3 id="form-status-message">
-            Ready to submit
+
         </h3>
         <button type="submit" id="monthly-visit-submit-btn" class="form-submit-btn" onclick="submitForm()">
             Save
@@ -1364,15 +1386,15 @@
         // Update status
         statusElement.textContent = 'Submitting form data...';
 
-        // Show loading state
-        const submitButton = document.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
-        submitButton.disabled = true;
+        // // Show loading state
+        // const submitButton = document.querySelector('button[type="submit"]');
+        // const originalText = submitButton.textContent;
+        // submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+        // submitButton.disabled = true;
 
-        // Show loading overlay
-        const loadingOverlay = document.getElementById('loading-overlay');
-        loadingOverlay.style.display = 'flex';
+        // // Show loading overlay
+        // const loadingOverlay = document.getElementById('loading-overlay');
+        // loadingOverlay.style.display = 'flex';
 
         // Log the form data for debugging
         console.log('Submitting to endpoint:', '{{ url_for("iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_charting_note") }}');
@@ -1420,23 +1442,23 @@
                        statusElement.className = 'error';
                    }
                })
-                           .catch(error => {
+                .catch(error => {
                    console.error('Error:', error);
                    statusElement.textContent = 'Network error: Please try again.';
                    statusElement.className = 'error';
                })
-                                          .finally(() => {
+                .finally(() => {
                    // Reset button state
                    submitButton.textContent = originalText;
                    submitButton.disabled = false;
 
                    // Hide loading overlay
-                   const loadingOverlay = document.getElementById('loading-overlay');
-                   loadingOverlay.style.display = 'none';
+                //    const loadingOverlay = document.getElementById('loading-overlay');
+                //    loadingOverlay.style.display = 'none';
 
                    // Reset status message if not successful
                    if (statusElement.textContent.includes('Submitting')) {
-                       statusElement.textContent = 'Ready to submit';
+                       statusElement.textContent = '';
                        statusElement.className = '';
                    }
                });

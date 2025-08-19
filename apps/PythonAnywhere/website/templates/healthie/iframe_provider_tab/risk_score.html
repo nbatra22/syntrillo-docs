@@ -19,9 +19,15 @@
         gap: 1rem;
     }
 
-    .rs-tab-left-subheader {
+    .rs-tab-left-subheader-container {
         display: flex;
         flex-direction: column;
+        gap: 1rem;
+    }
+
+    .rs-tab-left-subheader-title-container {
+        display: flex;
+        align-items: center;
         gap: 0.5rem;
     }
 
@@ -66,6 +72,44 @@
 
     .rs-btn:focus {
         outline: 2px solid #1e40af;
+    }
+
+    /* Error Message Styling */
+    .rs-error-message {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        animation: slideInDown 0.3s ease-out;
+    }
+
+    .rs-error-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #dc2626;
+    }
+
+    .rs-error-content i {
+        font-size: 1rem;
+        color: #dc2626;
+    }
+
+    .rs-error-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #dc2626;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .rs-plus-btn {
@@ -537,10 +581,18 @@
 
     <div id="" class="rs-tab-header">
         <div id="" class="rs-tab-left-header">
-            <div id="" class="rs-tab-left-subheader">
-                <h1 id="" class="">
-                    Stroke Risk Score
-                </h1>
+            <div id="" class="rs-tab-left-subheader-container">
+                <div id="" class="rs-tab-left-subheader-title-container">
+                    <h1 id="" class="">
+                        Stroke Risk Score
+                    </h1>
+                    <div id="rs-error-message" class="rs-error-message" style="display: none;">
+                        <div class="rs-error-content">
+                            <i class="fa-solid fa-exclamation-triangle"></i>
+                            <span id="rs-error-message-text" class="rs-error-text"></span>
+                        </div>
+                    </div>
+                </div>
                 <h2 id="" class="">
                     Charting notes encompass all factors included in the stroke risk score calculation. To update
                     specific sections of the patient's health information only, click on the plus (+) icon in the
@@ -1186,9 +1238,7 @@
                                     Iron Deficiency Anemia
                                 </h3>
                                 <p id="rs-iron-deficiency-anemia-treatment-optimization" class="rs-treatment-optimization"
-                                    >NOT OPTIMIZED</p>
-                                <!-- <p id="rs-iron-deficiency-anemia-treatment-optimization" class="rs-treatment-optimization"
-                                    style="display: none;"></p> -->
+                                    style="display: none;"></p>
                             </div>
                             <h4 class="rs-metric-subtitle">
                                 Syntrillo - Charting Note
@@ -1273,9 +1323,7 @@
                                     Congestive Heart Failure
                                 </h3>
                                 <p id="rs-chf-treatment-optimization" class="rs-treatment-optimization"
-                                    >PARTIALLY OPTIMIZED</p>
-                                <!-- <p id="rs-chf-treatment-optimization" class="rs-treatment-optimization"
-                                    style="display: none;"></p> -->
+                                    style="display: none;"></p>
                             </div>
                             <h4 class="rs-metric-subtitle">
                                 Syntrillo - Charting Note
@@ -1807,9 +1855,7 @@
                                     TIA Likelihood
                                 </h3>
                                 <p id="rs-tia-likelihood-treatment-optimization" class="rs-treatment-optimization"
-                                    >OPTIMIZED</p>
-                                <!-- <p id="rs-tia-likelihood-treatment-optimization" class="rs-treatment-optimization"
-                                    style="display: none;"></p> -->
+                                    style="display: none;"></p>
                             </div>
                             <h4 class="rs-metric-subtitle">
                                 Syntrillo - Charting Note
@@ -1988,6 +2034,9 @@
     }
 
     function getRiskScore() {
+        const errorMessage = document.getElementById("rs-error-message");
+        const errorMessageText = document.getElementById("rs-error-message-text");
+
         // Get all the HTML elements we need to update
         const riskScore = document.getElementById("rs-risk-score-value");
         const priorityScore = document.getElementById("rs-priority-score-value");
@@ -2083,6 +2132,10 @@
 
         showSpinner(riskScore);
         showSpinner(priorityScore);
+        errorMessage.style.display = 'none';
+        errorMessageText.textContent = '';
+        riskScoreClassification.textContent = 'Calculating...';
+        priorityScoreClassification.textContent = 'Calculating...';
 
         const healthieProviderId = "{{ healthie_provider_id }}";
         const healthieUserId = "{{ healthie_user_id }}";
@@ -2099,7 +2152,18 @@
             method: "POST",
             body: formData
         })
-            .then(response => response.json())
+            .then(response => {
+                const statusCode = response.status;
+                if (!response.ok) {
+                    riskScore.textContent = 'NA';
+                    priorityScore.textContent = 'NA';
+                    riskScoreClassification.textContent = 'Insufficient Data';
+                    priorityScoreClassification.textContent = 'Insufficient Data';
+                    errorMessage.style.display = 'block';
+                    errorMessageText.textContent = `Error ${statusCode}: Unable to retrieve risk score data`;
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Risk score data received:', data);
 
@@ -2393,6 +2457,14 @@
                 console.error("Error fetching risk score:", error);
                 if (totalScore) totalScore.textContent = 'Error';
                 if (scoreClassification) scoreClassification.textContent = 'Error loading data';
+                errorMessage.style.display = 'block';
+
+                // Extract status code from error message if it's an HTTP error
+                if (error.message && error.message.includes('HTTP')) {
+                    errorMessageText.textContent = error.message;
+                } else {
+                    errorMessageText.textContent = 'Error loading data';
+                }
             })
             .finally(() => {
                 hideSpinner(riskScore);
