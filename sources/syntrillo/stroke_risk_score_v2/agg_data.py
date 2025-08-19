@@ -33,6 +33,8 @@ from syntrillo.stroke_risk_score_v2.constants import (
     VALUE_1,
     INACTIVITY_INTAKE_MODULE_LABEL,
     INACTIVITY_CHARTING_MODULE_LABEL,
+    ACTIVITY_INTAKE_MODULE_LABEL,
+    ACTIVITY_CHARTING_MODULE_LABEL,
     BASELINE_NUM_WEEKS,
     TRAILING_NUM_WEEKS,
     TRAILING_NUM_DAYS,
@@ -58,6 +60,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         }
     """
     try:
+        logger.info(f"Beginning to aggregate data for patient with syntrillo_internal_key {syntrillo_internal_key} ...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
 
         # Get healthie user id from lookup codes
@@ -98,10 +101,17 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
 
     Returns:
         dict: The healthie data
+        {
+            "average_rhr_baseline": average_rhr_baseline,
+            "average_rhr_trailing": average_rhr_trailing,
+            "inactivity_hours_answer": inactivity_hours_answer,
+            "activity_minutes_answer": activity_minutes_answer,
+        }
     Raises:
         ValueError: If the healthie data is not valid
     """
     try:
+        logger.info(f"Fetching RHR and Activity data from Healthie...")
         # Retreive resting hr from healthie
         healthie_utils = HealthieUtils()
 
@@ -109,14 +119,16 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else None
 
         # Retreive the activity data
-        inactivity_minutes_answer = get_healthie_activity_data(healthie_user_id, db_manager)
+        activity_data = get_healthie_activity_data(healthie_user_id, db_manager)
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
+        logger.info(f"Successfully fetched RHR and Activity data from Healthie...")
         return {
             "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
             "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
-            "inactivity_minutes_answer": inactivity_minutes_answer,
+            "inactivity_hours_answer": activity_data["inactivity_hours_answer"],
+            "activity_minutes_answer": activity_data["activity_minutes_answer"],
         }
 
     except Exception as e:
@@ -138,27 +150,44 @@ def get_healthie_activity_data(healthie_user_id: str, db_manager: SyntrilloDatab
     """
 
     try:
+        logger.info(f"Fetching activity data from healthie...")
         # Get the module ids for the intake and charting modules
-        _, module_id_intake = db_manager.get_form_module_ids_by_module_label(INACTIVITY_INTAKE_MODULE_LABEL)
-        _, module_id_charting = db_manager.get_form_module_ids_by_module_label(INACTIVITY_CHARTING_MODULE_LABEL)
+        _, module_id_inactivity_intake = db_manager.get_form_module_ids_by_module_label(INACTIVITY_INTAKE_MODULE_LABEL)
+        _, module_id_inactivity_charting = db_manager.get_form_module_ids_by_module_label(INACTIVITY_CHARTING_MODULE_LABEL)
+
+        _, module_id_activity_intake = db_manager.get_form_module_ids_by_module_label(ACTIVITY_INTAKE_MODULE_LABEL)
+        _, module_id_activity_charting = db_manager.get_form_module_ids_by_module_label(ACTIVITY_CHARTING_MODULE_LABEL)
 
         # Retreive the intake & charting inactivity value based on the module id and healthie user id
-        intake_inactivity_minutes_answer, intake_created_at = db_manager.get_patient_form_response_by_module_id(module_id_intake, healthie_user_id)
-        charting_inactivity_minutes_answer, charting_created_at = db_manager.get_patient_form_response_by_module_id(module_id_charting, healthie_user_id)
+        intake_inactivity_hours_answer, intake_created_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, healthie_user_id)
+        charting_inactivity_hours_answer, charting_created_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, healthie_user_id)
+
+        intake_activity_minutes_answer, intake_activity_created_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, healthie_user_id)
+        charting_activity_minutes_answer, charting_activity_created_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, healthie_user_id)
 
         # Use the most recent answer from the intake or charting responses
-        if not intake_inactivity_minutes_answer and not charting_inactivity_minutes_answer:
-            return None
+        if not intake_inactivity_hours_answer and not charting_inactivity_hours_answer:
+            return {
+                "inactivity_hours_answer": None,
+                "activity_minutes_answer": None,
+            }
         # TODO: use updated_at instead of created_at
-        elif (not charting_inactivity_minutes_answer) or intake_created_at > charting_created_at:
-            inactivity_minutes_answer = intake_inactivity_minutes_answer
+        elif (not charting_inactivity_hours_answer) or intake_created_at > charting_created_at:
+            inactivity_hours_answer = intake_inactivity_hours_answer
+            activity_minutes_answer = intake_activity_minutes_answer
         else:
-            inactivity_minutes_answer = charting_inactivity_minutes_answer
+            inactivity_hours_answer = charting_inactivity_hours_answer
+            activity_minutes_answer = charting_activity_minutes_answer
 
         # Convert to int for DB range comparison
-        inactivity_minutes_answer = int(inactivity_minutes_answer)
+        inactivity_hours_answer = int(inactivity_hours_answer)
+        activity_minutes_answer = int(activity_minutes_answer)
 
-        return inactivity_minutes_answer
+        logger.info(f"Successfully fetched activity data from healthie...")
+        return {
+            "inactivity_hours_answer": inactivity_hours_answer,
+            "activity_minutes_answer": activity_minutes_answer,
+        }
 
     except Exception as e:
         logger.error(f"Error fetching activity data from healthie: {e}")
@@ -176,7 +205,7 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
     Returns:
         dict: The resting hr data
     """
-    logger.info(f"Fetching resting hr data from healthie for user {healthie_user_id}")
+    logger.info(f"Fetching RHR data from healthie...")
     try:
         all_rhr_data = []
         cursor = None
@@ -235,7 +264,7 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
                 has_more_pages = False
                 logger.info("No more pages to fetch.")
 
-        logger.info(f"Successfully fetched {len(all_rhr_data)} resting hr data from healthie.")
+        logger.info(f"Successfully fetched {len(all_rhr_data)} RHR data points from healthie.")
         return all_rhr_data
 
     except Exception as e:
@@ -256,6 +285,7 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
         ValueError: If the RHR metadata is not valid
     """
     try:
+        logger.info(f"Calculating RHR metadata...")
         # Convert rhr_data to pandas dataframe
         rhr_df = pd.DataFrame(rhr_data)
 
@@ -270,7 +300,7 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
 
         # Ensure the baseline dataframe is valid
         baseline_df = get_timeframed_data(rhr_df, baseline_start, baseline_end, TYPE_RHR)
-        baseline_average = baseline_df[METRIC_STAT].mean()
+        baseline_average = baseline_df[METRIC_STAT].mean() if not baseline_df.empty else None
 
 
         # TRAILING DATAFRAME
@@ -282,10 +312,11 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
             trailing_df = get_timeframed_data(rhr_df, trailing_start, trailing_end, TYPE_RHR)
 
             # Calculate the average trailing for the rhr_data
-            trailing_average = trailing_df[METRIC_STAT].mean()
+            trailing_average = trailing_df[METRIC_STAT].mean() if not trailing_df.empty else None
         else:
             logger.error("Not enough data to calculate trailing average...")
 
+        logger.info(f"Successfully calculated RHR metadata...")
         # Return the metadata
         return {
             "average_rhr_baseline": baseline_average,
@@ -314,7 +345,6 @@ def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: Syntril
     """
     try:
         srs_form_responses = db_manager.get_srs_form_responses(syntrillo_internal_key)
-
         # return most recent srs form response
         return srs_form_responses[0] if len(srs_form_responses) > 0 else None
 
@@ -338,6 +368,7 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         ValueError: If the hr data is not valid
     """
     try:
+        logger.info(f"Fetching Tenovi HR data...")
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
         hr_df = pd.DataFrame(hr_measurements)
 
@@ -352,8 +383,9 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         trailing_end = hr_df[TIMESTAMP].max()
 
         trailing_df = get_timeframed_data(hr_df, trailing_start, trailing_end, TYPE_HR)
-        trailing_variability = trailing_df[VALUE_1].std()
+        trailing_variability = trailing_df[VALUE_1].std() if not trailing_df.empty else None
 
+        logger.info(f"Successfully fetched Tenovi HR data...")
         return trailing_variability
 
     except Exception as e:
@@ -389,14 +421,17 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
         ValueError: If the bp metadata is not valid
     """
     try:
+        logger.info(f"Beginning Tenovi BP data aggregation...")
         bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
         bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
+        logger.info(f"Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
         # Baseline start date is the first timestamp in the bp_df
         baseline_start = bp_df[TIMESTAMP_LOCAL].min()
 
         # Get the baseline and trailing dataframes
+        logger.info(f"Getting baseline and trailing dataframes...")
         baseline_bp_df = get_baseline_bp_data(bp_df, baseline_start=baseline_start, baseline_weeks=BASELINE_NUM_WEEKS) # Get the baseline data
         trailing_bp_df = get_trailing_bp_data(bp_df, baseline_start=baseline_start, trailing_weeks=TRAILING_NUM_WEEKS, trailing_days=TRAILING_NUM_DAYS) # Get the trailing data
 
@@ -429,7 +464,7 @@ def get_baseline_bp_data(bp_dataframe: pd.DataFrame, baseline_start: datetime, b
 
         # Get the baseline dataframe
         baseline_df = get_timeframed_data(bp_dataframe, baseline_start, baseline_end, TYPE_BP)
-        return baseline_df
+        return baseline_df if not baseline_df.empty else None
 
     except Exception as e:
         logger.error(f"Error getting baseline data: {e}")
@@ -461,7 +496,7 @@ def get_trailing_bp_data(bp_dataframe: pd.DataFrame, baseline_start: datetime, t
 
         # Get the trailing dataframe
         trailing_df = get_timeframed_data(bp_dataframe, trailing_start, trailing_end, TYPE_BP)
-        return trailing_df
+        return trailing_df if not trailing_df.empty else None
 
     except Exception as e:
         logger.error(f"Error getting trailing data: {e}")
@@ -496,6 +531,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         ValueError: If the bp metadata is not valid
     """
     try:
+        logger.info(f"Calculating bp metadata...")
         # Calculate the metadata for the trailing dataframe
         trailing_bp_metadata = bp_analysis.calculate_metadata_v2(trailing_bp_dataframe)
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
@@ -515,7 +551,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                 },
             },
         }
-
+        logger.info(f"Successfully calculated bp metadata...")
         return trimmed_bp_metadata
 
     except Exception as e:
@@ -549,13 +585,13 @@ def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, time
 
         if not is_valid_timeframe_num_measurements(timeframe_df):
             logger.error("Timeframed data is not valid")
-            raise ValueError("Timeframed data is not valid")
+            return pd.DataFrame()
 
         return timeframe_df
 
     except Exception as e:
         logger.error(f"Error getting timeframed data: {e}")
-        raise ValueError("Error getting timeframed data")
+        return pd.DataFrame()
 
 
 def is_valid_timeframe_num_measurements(timeframe_df: pd.DataFrame, min_measurements: int = 3) -> bool:
