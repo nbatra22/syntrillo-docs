@@ -132,9 +132,12 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
 
 if __name__ == "__main__":
 
+    # syntrillo_internal_key_patient = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
+    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    # print(srs_form_responses)
+
     # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
     # syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
-
     # srs_data = {
     #     "HasPreviousStroke": True,
     #     "ScreenedForTIA": True,
@@ -195,10 +198,8 @@ if __name__ == "__main__":
     #         hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
     #     )
     # }
-
     # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
-    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
-    # print(srs_form_responses)
+
 
     # Staging Test Patient (modeled from Omar's Prod data)
     # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")

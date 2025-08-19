@@ -351,6 +351,7 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.LDLLevel == UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            # if compliance_data.ldlCompliance is not None:
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ldlCompliance]
             final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
@@ -493,8 +494,9 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
 
 
 if __name__ == "__main__":
-    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94")
+    # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
+    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36") # 3.33 / 5.05
+    # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77
     srs, agg_data, stroke_priority_score = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
@@ -502,9 +504,8 @@ if __name__ == "__main__":
     print(f"================ Final SPS: {stroke_priority_score} ===============")
     print("================================================")
 
-
-
-            # return {
+        # Patient: "ff8d04c4-9307-4171-888b-447047d5fa36"
+        # return {
         #     GENDER: gender,
         #     AVG_SBP: 124.21,
         #     RHR: 56.0,
@@ -519,6 +520,8 @@ if __name__ == "__main__":
         #     AVG_DBP: 63.269,
         #     CREATININE: creatinine_levels_value,
         # }
+
+        # Patient: "99fddf03-9304-4e48-8711-0cc4d825eb94"
         # return {
         #     GENDER: gender,
         #     AVG_SBP: 138.19,

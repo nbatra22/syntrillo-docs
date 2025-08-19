@@ -544,7 +544,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         trimmed_bp_metadata = {
             SYSTOLIC: {
                 TRAILING: {
-                    SBP_COUNT_175: trailing_bp_metadata[SBP_COUNT_175], # Considered the "PEAK" BP value for SRS
+                    SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]), # Considered the "PEAK" BP value for SRS
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
                 }
