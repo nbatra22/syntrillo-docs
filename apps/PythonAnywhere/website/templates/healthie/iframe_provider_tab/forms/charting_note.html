@@ -446,10 +446,16 @@
                         Valvular heart disease
                     </label>
                 </div>
-                <div class="input-button-group-item">
+                <!-- <div class="input-button-group-item">
                     <input type="checkbox" id="history-of-ckd" name="HistoryOfCKD">
                     <label for="history-of-ckd">
                         Chronic kidney disease (CKD)
+                    </label>
+                </div> -->
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-hyperlipidemia" name="HistoryOfHyperlipidemia">
+                    <label for="history-of-hyperlipidemia">
+                        Hyperlipidemia
                     </label>
                 </div>
                 <div class="input-button-group-item">
@@ -612,7 +618,7 @@
             </div>
         </div>
 
-        <div id="venous-clots-treatment-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
+        <!-- <div id="venous-clots-treatment-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
             <label for="venous-clots-treatment">
                 (Venous clots) Treatment optimization?
             </label>
@@ -638,7 +644,7 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div id="venous-clots-pfo-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
             <label for="pfo-presence">
@@ -667,7 +673,7 @@
         </div>
 
         <!-- PFO treatment optimization question -->
-        <div id="venous-clots-pfo-treatment-dependent" class="form-group dependent-question" data-parent="venous-clots-pfo-dependent">
+        <div id="venous-clots-pfo-treatment-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
             <label for="pfo-treatment">
                 (Venous clots / PFO) Treatment optimization?
             </label>
@@ -945,7 +951,7 @@
             </div>
         </div>
 
-        <div id="ckd-treatment-dependent" class="form-group dependent-question" data-parent="history-of-ckd">
+        <!-- <div id="ckd-treatment-dependent" class="form-group dependent-question" data-parent="history-of-ckd">
             <label for="ckd-treatment">
                 (CKD) Treatment optimization?
             </label>
@@ -969,9 +975,109 @@
                     </label>
                 </div>
             </div>
+        </div> -->
+
+        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="ldl">
+                (Hyperlipidemia) Last known LDL level?
+            </label>
+            <input type="number" id="ldl" name="LDLValue" step="0.1">
         </div>
 
-        <div id="diabetes-treatment-dependent" class="form-group dependent-question" data-parent="history-of-diabetes">
+        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="ldl-treatment">
+                (Hyperlipidemia - LDL) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-none" name="ldlCompliance" value="not optimized">
+                    <label for="ldl-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-partial" name="ldlCompliance" value="partially optimized">
+                    <label for="ldl-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-optimized" name="ldlCompliance" value="optimized">
+                    <label for="ldl-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="hyperlipidemia-treatment">
+                (Hyperlipidemia) Last known HDL level?
+            </label>
+            <input type="number" id="hdl" name="HDLValue" step="0.1">
+        </div>
+
+        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="hyperlipidemia-treatment">
+                (Hyperlipidemia) Last known triglycerides level?
+            </label>
+            <input type="number" id="triglycerides" name="TriglyceridesValue" step="0.1">
+        </div>
+
+        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="triglycerides-treatment">
+                (Hyperlipidemia - Triglycerides) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance" value="not optimized">
+                    <label for="triglycerides-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance" value="partially optimized">
+                    <label for="triglycerides-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance" value="optimized">
+                    <label for="triglycerides-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="hyperlipidemia-treatment">
+                (Hyperlipidemia) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-none" name="hyperlipidemiaCompliance" value="not optimized">
+                    <label for="hyperlipidemia-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-partial" name="hyperlipidemiaCompliance" value="partially optimized">
+                    <label for="hyperlipidemia-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-optimized" name="hyperlipidemiaCompliance" value="optimized">
+                    <label for="hyperlipidemia-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div id="diabetes-treatment-dependent" class="form-group dependent-question" data-parent="history-of-diabetes">
             <label for="diabetes-treatment">
                 (Diabetes) Treatment optimization?
             </label>
@@ -995,9 +1101,9 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div id="obesity-treatment-dependent" class="form-group dependent-question" data-parent="history-of-obesity">
+        <!-- <div id="obesity-treatment-dependent" class="form-group dependent-question" data-parent="history-of-obesity">
             <label for="obesity-treatment">
                 (Obesity) Treatment optimization?
             </label>
@@ -1021,7 +1127,7 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="form-group">
             <label for="physical-inactivity">
@@ -1056,7 +1162,8 @@
             <input type="number" id="ha1c" name="HemoglobinA1c" step="0.1">
         </div>
 
-        <div class="form-group">
+        <!-- LDL -->
+        <!-- <div class="form-group">
             <label for="ldl-level">
                 7. What's the patient's LDL level?
             </label>
@@ -1086,9 +1193,10 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="form-group">
+        <!-- HDL -->
+        <!-- <div class="form-group">
             <label for="hdl-level">
                 8. What's the patient's HDL level?
             </label>
@@ -1106,9 +1214,10 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="form-group">
+        <!-- Triglycerides -->
+        <!-- <div class="form-group">
             <label for="triglycerides-level">
                 9. What's the patient's triglycerides level?
             </label>
@@ -1132,11 +1241,11 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="form-group">
             <label for="creatine-level">
-                10. What's the patient's creatine level?
+                7. What's the patient's creatinine level?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -1230,8 +1339,9 @@
             valvularHeartDiseaseCompliance: document.querySelector('input[name="valvularHeartDiseaseCompliance"]:checked')?.value || null,
             ckdCompliance: document.querySelector('input[name="ckdCompliance"]:checked')?.value || null,
             pfoCompliance: document.querySelector('input[name="pfoCompliance"]:checked')?.value || null,
-            diabetesCompliance: document.querySelector('input[name="diabetesCompliance"]:checked')?.value || null,
-            obesityCompliance: document.querySelector('input[name="obesityCompliance"]:checked')?.value || null
+            // hyperlipidemiaCompliance: document.querySelector('input[name="hyperlipidemiaCompliance"]:checked')?.value || null,
+            ldlCompliance: document.querySelector('input[name="ldlCompliance"]:checked')?.value || null,
+            triglyceridesCompliance: document.querySelector('input[name="triglyceridesCompliance"]:checked')?.value || null,
         };
         formDataObj.append('compliance', JSON.stringify(complianceData));
 

@@ -93,24 +93,18 @@ def iframe_healthie_provider_tab_risk_score_data():
 
     try:
 
-        risk_score, metrics = calculate_risk_score(syntrillo_internal_key_patient)
-
-        print(f"-------------- risk_score: {risk_score}")
-        print(f"-------------- metrics: {metrics}")
-        print(f"-------------- risk_score: {type(risk_score)}")
-        print(f"-------------- metrics: {type(metrics)}")
-        print(f"-------------- metrics: {type(metrics['srs_response_data'])}")
+        risk_score, metrics, stroke_priority_score = calculate_risk_score(syntrillo_internal_key_patient)
 
         metrics['srs_response_data'] = metrics['srs_response_data'].model_dump()
 
-        print(f"-------------- After")
         # Return success response
         return jsonify({
             'success': True,
             'message': 'Charting note data received successfully',
             'data': {
-                'total_score': risk_score,
-                'metrics': metrics
+                'risk_score': risk_score,
+                'metrics': metrics,
+                'priority_score': stroke_priority_score
             }
         })
 
