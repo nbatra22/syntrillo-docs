@@ -10,6 +10,9 @@ TYPE_HR = "hr"
 INACTIVITY_INTAKE_MODULE_LABEL = "inactivity_questionnaire_intake"
 INACTIVITY_CHARTING_MODULE_LABEL = "inactivity_questionnaire_charting"
 
+ACTIVITY_INTAKE_MODULE_LABEL = "activity_questionnaire_intake"
+ACTIVITY_CHARTING_MODULE_LABEL = "activity_questionnaire_charting"
+
 # Dependent Risk Factors (values)
 LOW_VALUE = "low"
 LOW_INTERMEDIATE_VALUE = "low_intermediate"
@@ -20,16 +23,12 @@ HIGH_VALUE = "high"
 MODERATE_EFFICACY = "moderate_efficacy"
 HIGH_EFFICACY = "high_efficacy"
 
-# Dependent Risk Factors (treatment optimization)
-TREATMENT_OPTIMIZATION = "treatment_optimized"
-TREATMENT_PARTIALLY_OPTIMIZED = "treatment_partially_optimized"
-TREATMENT_NOT_OPTIMIZED = "treatment_not_optimized"
-
 # SRS Independent Risk Factors
 AVG_SBP = "avg_sbp"
 RHR = "rhr"
 HEMOGLOBIN_A1C = "hemoglobin_a1c"
 PHYSICAL_INACTIVITY = "physical_inactivity"
+PHYSICAL_ACTIVITY = "physical_activity"
 CIGARETTE_USE = "cigarette_use"
 ALCOHOL_USE = "alcohol_use"
 MARIJUANA_USE = "marijuana_use"
@@ -45,3 +44,6 @@ TRAILING_NUM_DAYS = 0
 VALUE = "value"
 TREATMENT_EFFICACY = "treatment_efficacy"
 TREATMENT_OPTIM = "treatment_optimization"
+
+GENDER = "gender"
+UNKNOWN = "Unknown"

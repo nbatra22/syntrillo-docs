@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS srs_form_responses (
     syntrillo_internal_key_patient VARCHAR(255) NOT NULL,
     syntrillo_internal_key_clinician VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Gender VARCHAR(50) NOT NULL,
     HasPreviousStroke BOOLEAN,
     NumberOfStrokes VARCHAR(20),
     LatestStrokeMechanism VARCHAR(50),
@@ -156,6 +157,7 @@ CREATE TABLE IF NOT EXISTS srs_form_responses (
     HistoryOfCAD BOOLEAN,
     HistoryOfValvularHeartDisease BOOLEAN,
     HistoryOfCKD BOOLEAN,
+    HistoryOfHyperlipidemia BOOLEAN,
     AnemiaSeverity VARCHAR(20),
     ArterialClotOccurrences VARCHAR(50),
     PFOPresence VARCHAR(50),
@@ -173,13 +175,18 @@ CREATE TABLE IF NOT EXISTS srs_form_responses (
     LDLLevel VARCHAR(50),
     HDLLevel VARCHAR(50),
     TriglyceridesLevel VARCHAR(50),
-    CreatineLevel FLOAT,
+    Creatinine FLOAT,
     BMI FLOAT,
+    PhysicalInactivityHours FLOAT,
+    PhysicalActivityMinutes FLOAT,
+    Triglycerides FLOAT,
+    LDL FLOAT,
+    HDL FLOAT,
     CHECK (NumberOfStrokes IN ('One', 'Multiple')),
-    CHECK (LatestStrokeMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural')),
+    CHECK (LatestStrokeMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural', 'Cardioembolic')),
     CHECK (LikelihoodOfTIA IN ('High Likelihood', 'TIA not likely')),
-    CHECK (TIAMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural')),
-    CHECK (ChronicInfarctMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural')),
+    CHECK (TIAMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural', 'Cardioembolic')),
+    CHECK (ChronicInfarctMechanism IN ('Small Vessel', 'Large Vessel', 'Cryptogenic', 'Hypercoagulable', 'Structural', 'Cardioembolic')),
     CHECK (AnemiaSeverity IN ('Mild', 'Severe')),
     CHECK (ArterialClotOccurrences IN ('Single prior event', 'Multiple prior events')),
     CHECK (PFOPresence IN ('Positive', 'Negative', 'Unknown')),
@@ -192,10 +199,11 @@ CREATE TABLE IF NOT EXISTS srs_form_responses (
     CHECK (LDLLevel IN ('Borderline', 'High', 'Very High', 'Unknown')),
     CHECK (HDLLevel IN ('Low', 'Unknown')),
     CHECK (TriglyceridesLevel IN ('Moderate', 'High', 'Unknown')),
+    CHECK (Gender IN ('man', 'woman')),
     UNIQUE KEY unique_response (syntrillo_internal_key_patient, syntrillo_internal_key_clinician, created_at)
 );
 
-CREATE TABLE IF NOT EXISTS srs_compliance (
+CREATE TABLE IF NOT EXISTS srs_compliance_records (
     srs_form_response_id INT NOT NULL PRIMARY KEY,
     strokeCompliance VARCHAR(50),
     tiaCompliance VARCHAR(50),
@@ -210,7 +218,9 @@ CREATE TABLE IF NOT EXISTS srs_compliance (
     cadCompliance VARCHAR(50),
     valvularHeartDiseaseCompliance VARCHAR(50),
     ckdCompliance VARCHAR(50),
-    pfoCompliance VARCHAR(50),
+    triglyceridesCompliance VARCHAR(50),
+    ldlCompliance VARCHAR(50),
+    hdlCompliance VARCHAR(50),
     FOREIGN KEY (srs_form_response_id) REFERENCES srs_form_responses(srs_form_response_id) ON DELETE CASCADE ON UPDATE CASCADE
 )
 
