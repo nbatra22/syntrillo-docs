@@ -94,7 +94,99 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
 
 if __name__ == "__main__":
 
-    syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key_patient = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
+    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    # print(srs_form_responses)
+
+    # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
+    # srs_data = {
+    #     "HasPreviousStroke": True,
+    #     "ScreenedForTIA": True,
+    #     "HasPriorHeadCT": True,
+    #     "ChronicInfarctPresent": True,
+    #     "HistoryOfAtrialFibrillation": True,
+    #     "HistoryOfIronDeficiencyAnemia": True,
+    #     "HistoryOfArterialClots": True,
+    #     "HistoryOfVenousClots": True,
+    #     "HistoryOfCHF": True,
+    #     "HistoryOfCarotidStenosis": True,
+    #     "HistoryOfOSA": True,
+    #     "HistoryOfCAD": True,
+    #     "HistoryOfValvularHeartDisease": True,
+    #     "HistoryOfCKD": True,
+    #     "NumberOfStrokes": NumberOfStrokesOptions.MULTIPLE,
+    #     "LatestStrokeMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "LikelihoodOfTIA": LikelihoodOfTIAOptions.HIGH_LIKELIHOOD,
+    #     "TIAMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "ChronicInfarctMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "AnemiaSeverity": AnemiaSeverityOptions.MILD,
+    #     "ArterialClotOccurrences": ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT,
+    #     "PFOPresence": PFOPresenceOptions.POSITIVE,
+    #     "VenousClotOccurrences": VenousClotOccurrencesOptions.SINGLE,
+    #     "EjectionFraction": EjectionFractionOptions.LESS_THAN_OR_EQUAL_40,
+    #     "StenosisPercentage": StenosisPercentageOptions.FIFTY_TO_SEVENTY,
+    #     "OSASeverity": OSASeverityOptions.MILD,
+    #     "CADType": CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL,
+    #     "Gender": GenderOptions.MAN,
+    #     "Creatinine": 1.0,
+    #     "AvgSBP": 120,
+    #     "RHR": 60,
+    #     "Height": 71.0,
+    #     "Weight": 175.5,
+    #     "HemoglobinA1c": 5.0,
+    #     "PhysicalInactivityHours": 10.0,
+    #     "PhysicalActivityMinutes": 10.0,
+    #     "Triglycerides": 100.0,
+    #     "LDL": 99.0,
+    #     "HDL": 30.0,
+    #     "PriorCTDate": datetime.now(),
+    #     "compliance": TreatmentCompliance(
+    #         strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         tiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         chronicInfarctCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         atrialFibrillationCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         arterialClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         venousClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         chfCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         carotidStenosisCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         osaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         cadCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ironDeficiencyAnemiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         valvularHeartDiseaseCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ckdCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #     )
+    # }
+    # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
+
+
+    # Staging Test Patient (modeled from Omar's Prod data)
+    # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
+
+    # srs_data = {
+    #     "HasPreviousStroke": True,
+    #     "NumberOfStrokes": NumberOfStrokesOptions.ONE,
+    #     "LatestStrokeMechanism": StrokeMechanismOptions.CARDIOEMBOLIC,
+    #     "Gender": GenderOptions.WOMAN,
+    #     "HistoryOfAtrialFibrillation": True,
+    #     "LDL": 140.0,
+    #     "HDL": 45.0,
+    #     "Height": 72.0,
+    #     "Weight": 255.0,
+    #     "compliance": TreatmentCompliance(
+    #         strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         atrialFibrillationCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #     )
+    # }
+
+    syntrillo_internal_key_patient = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94")
     syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
 
     srs_data = {

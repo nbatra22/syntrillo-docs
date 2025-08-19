@@ -314,25 +314,75 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
         dependent_risk_factor_values += weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
         dependent_efficacy_values += weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
-    if most_recent_srs_form_response.HistoryOfCAD:
-        if most_recent_srs_form_response.CADType == CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL:
-            dependent_risk_factor_values += weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
-            dependent_efficacy_values += weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
-        elif most_recent_srs_form_response.CADType == CADTypeOptions.ASYMPTOMATIC_MULTIVESSEL:
-            dependent_risk_factor_values += weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
-            dependent_efficacy_values += weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
-        elif most_recent_srs_form_response.CADType == CADTypeOptions.ASYMPTOMATIC_SINGLE_VESSEL:
-            dependent_risk_factor_values += weighting[VALUE][LOW_VALUE]
-            dependent_efficacy_values += weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
-        elif most_recent_srs_form_response.CADType == CADTypeOptions.UNKNOWN:
-            dependent_risk_factor_values += weighting[VALUE][LOW_INTERMEDIATE_VALUE]
-            dependent_efficacy_values += weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+        if most_recent_srs_form_response.HistoryOfCAD:
+            if most_recent_srs_form_response.CADType == CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL:
+                dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.CADType == CADTypeOptions.ASYMPTOMATIC_MULTIVESSEL:
+                dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.CADType == CADTypeOptions.ASYMPTOMATIC_SINGLE_VESSEL:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.CADType == CADTypeOptions.UNKNOWN:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-    return {
-        "dependent_risk_factor_values": dependent_risk_factor_values,
-        "dependent_efficacy_values": dependent_efficacy_values,
-        "dependent_optimization_values": dependent_optimization_values,
-    }
+            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.cadCompliance]
+            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+
+
+        # ========================================================================
+        # TODO: Make this section based on the lab values and NOT the enum values
+        # ========================================================================
+        # if most_recent_srs_form_response.HistoryOfHyperlipidemia:
+        if most_recent_srs_form_response.LDLLevel:
+            if most_recent_srs_form_response.LDLLevel == LDLLevelOptions.BORDERLINE:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.LDLLevel == LDLLevelOptions.HIGH:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.LDLLevel == LDLLevelOptions.VERY_HIGH:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.LDLLevel == UNKNOWN:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            # if compliance_data.ldlCompliance is not None:
+
+            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ldlCompliance]
+            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+
+        if most_recent_srs_form_response.HDLLevel:
+            if most_recent_srs_form_response.HDLLevel == HDLLevelOptions.LOW:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.HDLLevel == UNKNOWN:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+
+            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.hdlCompliance]
+            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+
+        if most_recent_srs_form_response.TriglyceridesLevel:
+            if most_recent_srs_form_response.TriglyceridesLevel == TriglyceridesLevelOptions.MODERATE:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.TriglyceridesLevel == TriglyceridesLevelOptions.HIGH:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            elif most_recent_srs_form_response.TriglyceridesLevel == UNKNOWN:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+
+            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.triglyceridesCompliance]
+            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+
+        logger.info(f"Successfully calculated dependent risk factors...")
+        return {
+            "final_dependent_score": final_dependent_score,
+        }
 
 
 
@@ -416,10 +466,46 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
 
 
 if __name__ == "__main__":
-    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
+    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36") # 3.33 / 5.05
+    # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77
     srs, agg_data, stroke_priority_score = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
     print(f"======== Final SRS: {srs} =========")
     print(f"======== Final Stroke Priority Score: {stroke_priority_score} =========")
     print("================================================")
+
+        # Patient: "ff8d04c4-9307-4171-888b-447047d5fa36"
+        # return {
+        #     GENDER: gender,
+        #     AVG_SBP: 124.21,
+        #     RHR: 56.0,
+        #     HEMOGLOBIN_A1C: 5.5,
+        #     PHYSICAL_INACTIVITY: 8.0,
+        #     PHYSICAL_ACTIVITY: activity_minutes_answer,
+        #     CIGARETTE_USE: 0.0,
+        #     ALCOHOL_USE: 0.0,
+        #     MARIJUANA_USE: 0.0,
+        #     SBP_STD: 9.30,
+        #     AVG_PEAK_SBP: 133.0,
+        #     AVG_DBP: 63.269,
+        #     CREATININE: creatinine_levels_value,
+        # }
+
+        # Patient: "99fddf03-9304-4e48-8711-0cc4d825eb94"
+        # return {
+        #     GENDER: gender,
+        #     AVG_SBP: 138.19,
+        #     RHR: None,
+        #     HEMOGLOBIN_A1C: 5.2,
+        #     PHYSICAL_INACTIVITY: 5.0,
+        #     PHYSICAL_ACTIVITY: activity_minutes_answer,
+        #     CIGARETTE_USE: 25.0,
+        #     ALCOHOL_USE: 2.0,
+        #     MARIJUANA_USE: 3.0,
+        #     SBP_STD: 16.90,
+        #     AVG_PEAK_SBP: 161.67,
+        #     AVG_DBP: 81.825,
+        #     CREATININE: creatinine_levels_value,
+        # }

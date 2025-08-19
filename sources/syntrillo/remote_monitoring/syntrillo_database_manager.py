@@ -1087,44 +1087,31 @@ class SyntrilloDatabaseManager:
         """
 
         try:
-            with self.conn.cursor() as cursor:
-                if value:
+            CATEGORIES_WITH_GENDER = {"alcohol_use", "hdl"}
+            with self.conn.cursor() as cursor, self.conn.cursor() as cursor_stroke_priority:
+                if value is not None:
                     if type(value) == str:
-                        query = """
-                            SELECT risk_value
-                            FROM srs_independent_risk_values
-                            WHERE category = %s AND categorical_value = %s;
-                        """
-                        variables = (category, value)
+                        query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND categorical_value = '{value}';"
                     elif type(value) == float:
-                        query = """
-                            SELECT risk_value
-                            FROM srs_independent_risk_values
-                            WHERE category = %s AND min_value <= %s AND max_value >= %s;
-                        """
-                        variables = (category, value, value)
+                        query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND min_value <= {value} AND max_value >= {value};"
                     else:
                         raise ValueError(f"Invalid value type: {type(value)}")
                 else:
-                    query = """
-                        SELECT risk_value
-                        FROM srs_independent_risk_values
-                        WHERE category = %s AND is_default = 1;
-                    """
-                    query_stroke_priority = """
-                        SELECT max(risk_value)
-                        FROM srs_independent_risk_values
-                        WHERE category = %s;
-                    """
-                    variables = (category)
+                    query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND is_default = 1;"
+                    query_stroke_priority = f"SELECT max(risk_value) AS stroke_priority_value FROM srs_independent_risk_values WHERE category = '{category}';"
 
-                cursor.execute(query, variables)
+                if category in CATEGORIES_WITH_GENDER and gender is not None:
+                    query = query.replace(";", f" AND gender = '{gender}';")
+                    if value is None:
+                        query_stroke_priority = query_stroke_priority.replace(";", f" AND gender = '{gender}';")
+
+                cursor.execute(query)
                 risk_value = cursor.fetchone()
 
                 stroke_priority_value = risk_value
-                if not value:
-                    cursor.execute(query_stroke_priority, variables)
-                    stroke_priority_value = cursor.fetchone()
+                if value is None:
+                    cursor_stroke_priority.execute(query_stroke_priority)
+                    stroke_priority_value = cursor_stroke_priority.fetchone()
 
                 risk_values = {
                     "risk_value": risk_value[0] if risk_value else 0.0,
