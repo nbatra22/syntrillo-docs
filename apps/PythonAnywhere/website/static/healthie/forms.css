@@ -27,6 +27,7 @@ h2 {
     bottom: 0;
     display: flex;
     justify-content: space-between;
+    gap: 2rem;
     align-items: center;
     padding: 1rem;
     border-top: 1px solid #d1d5db;

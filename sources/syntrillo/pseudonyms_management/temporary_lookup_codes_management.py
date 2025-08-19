@@ -229,7 +229,7 @@ class TemporaryLookUpCodesManagement:
         """
         self.cursor.execute(query, (temp_code, purpose))
         result = self.cursor.fetchone()
-
+        
         add_log_entry(self.cursor, "TemporaryLookUpCodesManagement", f"Retrieved syntrillo internal key for purpose: {purpose}")
 
         syntrillo_internal_key = uuid.UUID(result[0]) if result else None

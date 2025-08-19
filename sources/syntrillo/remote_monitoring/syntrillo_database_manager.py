@@ -847,25 +847,84 @@ class SyntrilloDatabaseManager:
         logger.info(f"Retrieving SRS form responses for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
 
         try:
+            logger.info(f"Retrieving SRS form responses for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
+
             syntrillo_internal_key_patient_str = str(syntrillo_internal_key_patient) # Id is stored as a string in the database
+
             with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                     SELECT
-                        sfr.*,
-                        sc.strokeCompliance,
-                        sc.tiaCompliance,
-                        sc.chronicInfarctCompliance,
-                        sc.atrialFibrillationCompliance,
-                        sc.ironDeficiencyAnemiaCompliance,
-                        sc.arterialClotsCompliance,
-                        sc.venousClotsCompliance,
-                        sc.chfCompliance,
-                        sc.carotidStenosisCompliance,
-                        sc.osaCompliance,
-                        sc.cadCompliance,
-                        sc.valvularHeartDiseaseCompliance,
-                        sc.ckdCompliance,
-                        sc.pfoCompliance
+                        JSON_OBJECT(
+                            'srs_form_response_id', sfr.srs_form_response_id,
+                            'syntrillo_internal_key_patient', sfr.syntrillo_internal_key_patient,
+                            'syntrillo_internal_key_clinician', sfr.syntrillo_internal_key_clinician,
+                            'created_at', sfr.created_at,
+                            'Gender', sfr.Gender,
+                            'HasPreviousStroke', sfr.HasPreviousStroke,
+                            'NumberOfStrokes', sfr.NumberOfStrokes,
+                            'LatestStrokeMechanism', sfr.LatestStrokeMechanism,
+                            'ScreenedForTIA', sfr.ScreenedForTIA,
+                            'LikelihoodOfTIA', sfr.LikelihoodOfTIA,
+                            'TIAMechanism', sfr.TIAMechanism,
+                            'HasPriorHeadCT', sfr.HasPriorHeadCT,
+                            'ChronicInfarctPresent', sfr.ChronicInfarctPresent,
+                            'ChronicInfarctMechanism', sfr.ChronicInfarctMechanism,
+                            'HistoryOfAtrialFibrillation', sfr.HistoryOfAtrialFibrillation,
+                            'HistoryOfIronDeficiencyAnemia', sfr.HistoryOfIronDeficiencyAnemia,
+                            'AnemiaSeverity', sfr.AnemiaSeverity,
+                            'HistoryOfArterialClots', sfr.HistoryOfArterialClots,
+                            'ArterialClotOccurrences', sfr.ArterialClotOccurrences,
+                            'HistoryOfVenousClots', sfr.HistoryOfVenousClots,
+                            'PFOPresence', sfr.PFOPresence,
+                            'VenousClotOccurrences', sfr.VenousClotOccurrences,
+                            'HistoryOfCHF', sfr.HistoryOfCHF,
+                            'EjectionFraction', sfr.EjectionFraction,
+                            'HistoryOfCarotidStenosis', sfr.HistoryOfCarotidStenosis,
+                            'StenosisPercentage', sfr.StenosisPercentage,
+                            'HistoryOfOSA', sfr.HistoryOfOSA,
+                            'OSASeverity', sfr.OSASeverity,
+                            'HistoryOfCAD', sfr.HistoryOfCAD,
+                            'CADType', sfr.CADType,
+                            'HistoryOfValvularHeartDisease', sfr.HistoryOfValvularHeartDisease,
+                            'HistoryOfCKD', sfr.HistoryOfCKD,
+                            'HistoryOfHyperlipidemia', sfr.HistoryOfHyperlipidemia,
+                            'Triglycerides', sfr.Triglycerides,
+                            'LDL', sfr.LDL,
+                            'HDL', sfr.HDL,
+                            'HemoglobinA1c', sfr.HemoglobinA1c,
+                            'Creatinine', sfr.Creatinine,
+                            'LDLLevel', sfr.LDLLevel,
+                            'HDLLevel', sfr.HDLLevel,
+                            'TriglyceridesLevel', sfr.TriglyceridesLevel,
+                            'PhysicalInactivityLevel', sfr.PhysicalInactivityLevel,
+                            'PhysicalInactivityHours', sfr.PhysicalInactivityHours,
+                            'PhysicalActivityMinutes', sfr.PhysicalActivityMinutes,
+                            'PriorCTDate', sfr.PriorCTDate,
+                            'Height', sfr.Height,
+                            'Weight', sfr.Weight,
+                            'AvgSBP', sfr.AvgSBP,
+                            'RHR', sfr.RHR,
+                            'BMI', sfr.BMI
+                        ) AS srs_form_response,
+                        JSON_OBJECT(
+                            'srs_form_response_id', sc.srs_form_response_id,
+                            'strokeCompliance', sc.strokeCompliance,
+                            'tiaCompliance', sc.tiaCompliance,
+                            'chronicInfarctCompliance', sc.chronicInfarctCompliance,
+                            'atrialFibrillationCompliance', sc.atrialFibrillationCompliance,
+                            'ironDeficiencyAnemiaCompliance', sc.ironDeficiencyAnemiaCompliance,
+                            'arterialClotsCompliance', sc.arterialClotsCompliance,
+                            'venousClotsCompliance', sc.venousClotsCompliance,
+                            'chfCompliance', sc.chfCompliance,
+                            'carotidStenosisCompliance', sc.carotidStenosisCompliance,
+                            'osaCompliance', sc.osaCompliance,
+                            'cadCompliance', sc.cadCompliance,
+                            'valvularHeartDiseaseCompliance', sc.valvularHeartDiseaseCompliance,
+                            'ckdCompliance', sc.ckdCompliance,
+                            'triglyceridesCompliance', sc.triglyceridesCompliance,
+                            'ldlCompliance', sc.ldlCompliance,
+                            'hdlCompliance', sc.hdlCompliance
+                        ) AS compliance
                     FROM
                         srs_form_responses AS sfr
                     LEFT JOIN
@@ -877,38 +936,86 @@ class SyntrilloDatabaseManager:
                 """
                 cursor.execute(query, (syntrillo_internal_key_patient_str,))
                 rows = cursor.fetchall()
+                if not rows:
+                    logger.error(f"No SRS form responses found for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
+                    return None, {"success": False}
 
                 srs_form_responses = []
                 for row in rows:
-                    # The row contains all fields needed for SRSFormResponse,
-                    # and Pydantic will ignore extra fields.
-                    form_response = SRSFormResponse.model_validate(row)
+                    # Parse the JSON string into a dictionary before validation
+                    form_response_data = json.loads(row['srs_form_response'])
+                    form_response = SRSFormResponse.model_validate(form_response_data)
 
                     # Check if there is any compliance data from the LEFT JOIN.
-                    if row.get('strokeCompliance') is not None:
-                        # The row also contains all fields for TreatmentCompliance.
-                        compliance_obj = TreatmentCompliance.model_validate(row)
+                    if row.get('compliance') is not None:
+                        # Parse the JSON string into a dictionary before validation
+                        compliance_data = json.loads(row['compliance'])
+                        compliance_obj = TreatmentCompliance.model_validate(compliance_data)
                         form_response.compliance = compliance_obj
 
                     srs_form_responses.append(form_response)
-
+                logger.info(f"Successfully retrieved SRS form responses for patient ...")
                 log = {"success": True}
-                return srs_form_responses
+                return srs_form_responses, log
 
         except pymysql.MySQLError as e:
+            logger.error(f"Error retrieving SRS form responses for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
             log = {
                 "success": False,
                 "error": str(e)
             }
-            return None
+            return None, log
 
         except Exception as e:
+            logger.error(f"Error retrieving SRS form responses for patient with syntrillo_internal_key {syntrillo_internal_key_patient} ...")
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None, log
+
+    def get_categorical_value(self, value: float, category: str, gender: str = "") -> str:
+        """
+        Get the categorical value for a given value and category.
+
+        Args:
+            value (float): The value to get the categorical value for.
+            category (str): The category to get the categorical value for.
+            gender (str): The gender to get the categorical value for.
+        Returns:
+            str: The categorical value.
+        Raises:
+            pymysql.MySQLError: If there is an error retrieving the categorical value.
+            Exception: If there is an unexpected error during the retrieval.
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT categorical_value, gender
+                    FROM srs_independent_risk_values
+                    WHERE min_value <= %s AND max_value >= %s AND category = %s;
+                """
+                cursor.execute(query, (value, value, category))
+                records = cursor.fetchall()
+                for record in records:
+                    if record[1] == None or record[1] == gender:
+                        return record[0]
+                return None
+
+        except pymysql.MySQLError as e:
+            logger.error(f"Error getting categorical value for value {value}, category {category}, and gender {gender} ...")
             log = {
                 "success": False,
                 "error": str(e)
             }
             return None
-
+        except Exception as e:
+            logger.error(f"Error getting categorical value for value {value}, category {category}, and gender {gender} ...")
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None
 
     def insert_srs_form_response(self, srs_form_response: SRSFormResponse) -> Tuple[Optional[int], dict]:
         """
@@ -926,7 +1033,7 @@ class SyntrilloDatabaseManager:
             Exception: If there is an unexpected error during the insertion.
         """
         logger.info(f"Performing insertion of SRS form response into RDS DB ...")
-
+        print(f"Performing insertion of SRS form response into RDS DB ...")
         # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
         form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
         # Extract the compliance data from the SRS form response.
@@ -948,6 +1055,7 @@ class SyntrilloDatabaseManager:
                 # Get the ID of the new record
                 srs_form_response_id = cursor.lastrowid
                 logger.info(f"Successfully inserted into srs_form_responses with ID: {srs_form_response_id}")
+                print(f"Successfully inserted into srs_form_responses with ID: {srs_form_response_id}")
 
                 # 2. Insert into srs_compliance if compliance data exists
                 if compliance_data:
@@ -971,21 +1079,11 @@ class SyntrilloDatabaseManager:
 
         except pymysql.MySQLError as e:
             self.conn.rollback()  # Rollback insertion transaction on error
-            log = {
-                "success": False,
-                "error": str(e)
-            }
-            logger.error(f"Error inserting SRS form response: {e}")
-            return None, log
+            raise e
 
         except Exception as e:
             self.conn.rollback()  # Rollback insertion transaction on error
-            log = {
-                "success": False,
-                "error": f"An unexpected error occurred: {e}"
-            }
-            logger.error(f"An unexpected error occurred during SRS form insertion: {e}")
-            return None, log
+            raise e
 
 
     def get_form_module_ids_by_module_label(self, module_label: str) -> Tuple[str, str]:
@@ -1072,14 +1170,14 @@ class SyntrilloDatabaseManager:
             }
             return None, None
 
-    def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None) -> dict:
+    def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None, gender: str = None) -> dict:
         """
         Gets the SRS value assoicated with the risk factor's value.
 
         Args:
             category (str): The category of the risk factor.
             value (float | str): The value of the risk factor.
-
+            gender (str): The gender of the patient.
         Returns:
             dict: The SRS value and the stroke priority value.
         Raises:
@@ -1114,13 +1212,14 @@ class SyntrilloDatabaseManager:
                     stroke_priority_value = cursor_stroke_priority.fetchone()
 
                 risk_values = {
-                    "risk_value": risk_value[0] if risk_value else 0.0,
-                    "stroke_priority_value": stroke_priority_value[0] if stroke_priority_value else 0.0
+                    "risk_value": risk_value[0] if risk_value else 1.0,
+                    "stroke_priority_value": stroke_priority_value[0] if stroke_priority_value else 1.0
                 }
 
                 return risk_values
 
         except pymysql.MySQLError as e:
+            logger.error(f"Error getting SRS value by category and value: {e}")
             log = {
                 "success": False,
                 "error": str(e)
@@ -1128,6 +1227,7 @@ class SyntrilloDatabaseManager:
             return log
 
         except Exception as e:
+            logger.error(f"Error getting SRS value by category and value: {e}")
             log = {
                 "success": False,
                 "error": f"An unexpected error occurred: {e}"

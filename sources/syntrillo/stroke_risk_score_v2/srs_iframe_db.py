@@ -16,14 +16,31 @@ from syntrillo.stroke_risk_score_v2.models.srs_form import (
     StenosisPercentageOptions,
     OSASeverityOptions,
     CADTypeOptions,
-    PhysicalInactivityLevelOptions,
-    LDLLevelOptions,
-    HDLLevelOptions,
-    TriglyceridesLevelOptions,
+    GenderOptions,
     )
+from syntrillo.stroke_risk_score_v2.constants import UNKNOWN
 from syntrillo.stroke_risk_score_v2.models.treatment_compliance import TreatmentCompliance, TreatmentComplianceOptions
 from syntrillo.system.logger import logger
 
+LAB_CATEGORICAL_FIELDS = [
+    ("LDLLevel", "LDL"),
+    ("HDLLevel", "HDL"),
+    ("TriglyceridesLevel", "Triglycerides")
+]
+
+RISK_VALUE_MAPPING = {
+    "LDL": "ldl",
+    "HDL": "hdl",
+    "Triglycerides": "triglycerides",
+    "PhysicalInactivityHours": "physical_inactivity",
+    "PhysicalActivityMinutes": "physical_activity",
+    "Creatinine": "creatinine",
+    "HemoglobinA1c": "hemoglobin_a1c",
+}
+
+OTHER_CATEGORICAL_FIELDS = [
+    ("PhysicalInactivityLevel", "PhysicalInactivityHours"),
+]
 
 def get_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list[SRSFormResponse], dict]:
     """
@@ -59,6 +76,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
     """
     try:
         logger.info(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
+        print(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key_patient)
 
         # Insert SRS form responses
@@ -75,6 +93,30 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
             logger.warning(f"BMI is None for patient {syntrillo_internal_key_patient} because weight or height was not provided...")
         srs_form_response.BMI = bmi
 
+        # Calculate Categorical values for needed fields
+        for categorical_field, value_field in LAB_CATEGORICAL_FIELDS:
+            if getattr(srs_form_response, value_field):
+                categorical_value = db_manager.get_categorical_value(
+                    value=getattr(srs_form_response, value_field),
+                    category=RISK_VALUE_MAPPING[value_field],
+                    gender=srs_form_response.Gender
+                )
+                if categorical_value:
+                    srs_form_response.HistoryOfHyperlipidemia = True
+                setattr(srs_form_response, categorical_field, categorical_value)
+            else:
+                setattr(srs_form_response, categorical_field, UNKNOWN)
+
+        for categorical_field, value_field in OTHER_CATEGORICAL_FIELDS:
+            if getattr(srs_form_response, value_field):
+                categorical_value = db_manager.get_categorical_value(
+                    value=getattr(srs_form_response, value_field),
+                    category=RISK_VALUE_MAPPING[value_field],
+                    gender=srs_form_response.Gender
+                )
+                setattr(srs_form_response, categorical_field, categorical_value)
+
+
         # Insert SRS form response
         srs_form_response_id, log = db_manager.insert_srs_form_response(srs_form_response)
 
@@ -83,12 +125,8 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
 
     except Exception as e:
         logger.error(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
+        print(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
         return None, {"success": False, "error": str(e)}
-
-
-
-
-
 
 
 
@@ -190,61 +228,22 @@ if __name__ == "__main__":
     syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
 
     srs_data = {
+        "Gender": GenderOptions.MAN,
+        "Height": 72.0,
+        "Weight": 186.0,
         "HasPreviousStroke": True,
-        "ScreenedForTIA": True,
-        "HasPriorHeadCT": True,
-        "ChronicInfarctPresent": True,
-        "HistoryOfAtrialFibrillation": True,
-        "HistoryOfIronDeficiencyAnemia": True,
-        "HistoryOfArterialClots": True,
-        "HistoryOfVenousClots": True,
-        "HistoryOfCHF": True,
-        "HistoryOfCarotidStenosis": True,
-        "HistoryOfOSA": True,
-        "HistoryOfCAD": True,
-        "HistoryOfValvularHeartDisease": True,
-        "HistoryOfCKD": True,
-        "NumberOfStrokes": NumberOfStrokesOptions.MULTIPLE,
-        "LatestStrokeMechanism": StrokeMechanismOptions.LARGE_VESSEL,
-        "LikelihoodOfTIA": LikelihoodOfTIAOptions.HIGH_LIKELIHOOD,
-        "TIAMechanism": StrokeMechanismOptions.LARGE_VESSEL,
-        "ChronicInfarctMechanism": StrokeMechanismOptions.LARGE_VESSEL,
-        "AnemiaSeverity": AnemiaSeverityOptions.MILD,
-        "ArterialClotOccurrences": ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT,
-        "PFOPresence": PFOPresenceOptions.POSITIVE,
-        "VenousClotOccurrences": VenousClotOccurrencesOptions.SINGLE,
-        "EjectionFraction": EjectionFractionOptions.LESS_THAN_OR_EQUAL_40,
-        "StenosisPercentage": StenosisPercentageOptions.FIFTY_TO_SEVENTY,
-        "OSASeverity": OSASeverityOptions.MILD,
-        "CADType": CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL,
-        "PhysicalInactivityLevel": PhysicalInactivityLevelOptions.MILD,
-        "LDLLevel": LDLLevelOptions.BORDERLINE,
-        "HDLLevel": HDLLevelOptions.LOW,
-        "TriglyceridesLevel": TriglyceridesLevelOptions.MODERATE,
-        "CreatineLevel": 1.0,
-        "AvgSBP": 120,
-        "RHR": 60,
-        "Height": 71.0,
-        "Weight": 175.5,
-        "HemoglobinA1c": 5.0,
+        "NumberOfStrokes": NumberOfStrokesOptions.ONE,
+        "LatestStrokeMechanism": StrokeMechanismOptions.CARDIOEMBOLIC,
+        "LDL": 83.0,
+        "HDL": 54.0,
         "compliance": TreatmentCompliance(
             strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            tiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            chronicInfarctCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            atrialFibrillationCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            ironDeficiencyAnemiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            arterialClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            venousClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            chfCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            carotidStenosisCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            osaCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            cadCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            valvularHeartDiseaseCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            ckdCompliance=TreatmentComplianceOptions.OPTIMIZED,
-            pfoCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
         )
     }
 
     # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
     srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
     print(srs_form_responses)
+
+    insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
