@@ -102,7 +102,7 @@ class GenderOptions(str, Enum):
 class SRSFormResponse(BaseModel):
     # Required fields (NOT NULL in database)
     syntrillo_internal_key_patient: str
-    syntrillo_internal_key_clinician: str
+    syntrillo_internal_key_clinician: Optional[str] = None
     created_at: datetime
     Gender: GenderOptions
 

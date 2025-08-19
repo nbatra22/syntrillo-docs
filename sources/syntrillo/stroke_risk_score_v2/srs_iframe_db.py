@@ -76,6 +76,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
     """
     try:
         logger.info(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
+        print(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key_patient)
 
         # Insert SRS form responses
@@ -124,6 +125,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
 
     except Exception as e:
         logger.error(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
+        print(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
         return None, {"success": False, "error": str(e)}
 
 
@@ -238,5 +240,9 @@ if __name__ == "__main__":
             triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
         )
     }
+
+    # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
+    srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    print(srs_form_responses)
 
     insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)

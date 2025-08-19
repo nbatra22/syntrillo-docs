@@ -74,6 +74,10 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – tenovi_hr_data = get_tenovi_hr_data(db_manager)
 
+        print(f"tenovi_bp_data: {tenovi_bp_data}")
+        print(f"healthie_srs_data: {healthie_srs_data}")
+        print(f"srs_response_data: {srs_response_data}")
+
         return {
             "tenovi_bp_data": tenovi_bp_data,
             "healthie_srs_data": healthie_srs_data,
