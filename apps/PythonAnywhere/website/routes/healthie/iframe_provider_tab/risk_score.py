@@ -160,7 +160,14 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['LikelihoodOfTIA'] = request.form.get('LikelihoodOfTIA') or None
         form_data['TIAMechanism'] = request.form.get('TIAMechanism') or None
         form_data['HasPriorHeadCT'] = request.form.get('HasPriorHeadCT') == 'yes'
-        form_data['PriorCTDate'] = request.form.get('PriorCTDate') or None
+        prior_ct_date_str = request.form.get('PriorCTDate')
+        if prior_ct_date_str:
+            try:
+                form_data['PriorCTDate'] = datetime.strptime(prior_ct_date_str, '%Y-%m-%d')
+            except ValueError:
+                form_data['PriorCTDate'] = None
+        else:
+            form_data['PriorCTDate'] = None
         form_data['ChronicInfarctPresent'] = request.form.get('ChronicInfarctPresent') == 'yes'
         form_data['HistoryOfAtrialFibrillation'] = request.form.get('HistoryOfAtrialFibrillation') == 'true'
         form_data['HistoryOfIronDeficiencyAnemia'] = request.form.get('HistoryOfIronDeficiencyAnemia') == 'true'
@@ -183,16 +190,16 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['StenosisPercentage'] = request.form.get('StenosisPercentage') or None
         form_data['OSASeverity'] = request.form.get('OSASeverity') or None
         form_data['CADType'] = request.form.get('CADType') or None
-        form_data['PhysicalInactivityHours'] = request.form.get('PhysicalInactivityHours') or None
-        form_data['HemoglobinA1c'] = request.form.get('HemoglobinA1c') or None
+        form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) or None
+        form_data['HemoglobinA1c'] = float(request.form.get('HemoglobinA1c')) or None
         # form_data['LDLLevel'] = request.form.get('LDLLevel') or None
         # form_data['HDLLevel'] = request.form.get('HDLLevel') or None
-        form_data['LDL'] = request.form.get('LDL') or None
+        form_data['LDL'] = float(request.form.get('LDL')) or None
         form_data['LDLCompliance'] = request.form.get('LDLCompliance') or None
-        form_data['HDL'] = request.form.get('HDL') or None
-        form_data['Triglycerides'] = request.form.get('Triglycerides') or None
+        form_data['HDL'] = float(request.form.get('HDL')) or None
+        form_data['Triglycerides'] = float(request.form.get('Triglycerides')) or None
         # form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
-        form_data['Creatinine'] = request.form.get('Creatinine') or None
+        form_data['Creatinine'] = float(request.form.get('Creatinine')) or None
         form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism') or None
         # form_data['Height'] = request.form.get('Height') or None
         # form_data['Weight'] = request.form.get('Weight') or None
