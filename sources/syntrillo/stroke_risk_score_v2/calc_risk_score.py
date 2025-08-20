@@ -184,7 +184,7 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
             elif most_recent_srs_form_response.TIAMechanism == StrokeMechanismOptions.CRYPTOGENIC:
                 dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
-                dependent_efficacy_values += weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
             elif most_recent_srs_form_response.TIAMechanism == StrokeMechanismOptions.HYPERCOAGULABLE:
                 dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]

@@ -2500,25 +2500,24 @@
                             strokeHistoryContainer.style.display = 'none';
                             tiaMechanismContainer.style.display = 'none';
                             chronicInfarctMechanismContainer.style.display = 'none';
+                        } else {
+                            historyOfIschemiaContainer.style.display = 'none';
                         }
 
                         if (srs.HasPreviousStroke) {
-                            historyOfIschemiaContainer.style.display = 'none';
                             strokeHistoryContainer.style.display = 'flex';
                             strokeHistory.textContent = srs.HasPreviousStroke ? `Yes (${srs.NumberOfStrokes})` : 'No';
                             strokeEtiologyContainer.style.display = 'flex';
                             strokeEtiology.textContent = srs.LatestStrokeMechanism || '-';
                             tiaMechanismContainer.style.display = 'none';
                             chronicInfarctMechanismContainer.style.display = 'none';
-                        } else if (srs.ScreenedForTIA && srs.LikelihoodOfTIA === 'High likelihood') {
-                            historyOfIschemiaContainer.style.display = 'none';
-                            tiaMechanismContainer.style.display = 'block';
+                        } else if (srs.ScreenedForTIA) {
+                            tiaMechanismContainer.style.display = 'flex';
                             tiaMechanism.textContent = srs.TIAMechanism || '-';
                             strokeHistoryContainer.style.display = 'none';
                             chronicInfarctMechanismContainer.style.display = 'none';
                         } else if (srs.ChronicInfarctPresent) {
-                            historyOfIschemiaContainer.style.display = 'none';
-                            chronicInfarctMechanismContainer.style.display = 'block';
+                            chronicInfarctMechanismContainer.style.display = 'flex';
                             chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
                             strokeHistoryContainer.style.display = 'none';
                             tiaMechanismContainer.style.display = 'none';
