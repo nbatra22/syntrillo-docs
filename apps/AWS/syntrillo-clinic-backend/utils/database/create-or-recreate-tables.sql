@@ -228,6 +228,7 @@ CREATE TABLE IF NOT EXISTS srs_independent_risk_values (
   risk_value_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   category VARCHAR(50) NOT NULL,
   risk_value FLOAT NOT NULL,
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
   min_value FLOAT,
   max_value FLOAT,
   categorical_value VARCHAR(100),
