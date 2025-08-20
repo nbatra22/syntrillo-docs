@@ -95,7 +95,19 @@ def iframe_healthie_provider_tab_risk_score_data():
 
         risk_score, metrics, stroke_priority_score = calculate_risk_score(syntrillo_internal_key_patient)
 
-        metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
+        if risk_score is None and stroke_priority_score is None:
+            return jsonify({
+                'success': True,
+                'message': 'No data available',
+                'data': {
+                    'risk_score': risk_score,
+                    'metrics': metrics,
+                    'priority_score': stroke_priority_score
+                }
+            })
+
+        if metrics['srs_response_data'] is not None:
+            metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
 
         # Return success response
         return jsonify({

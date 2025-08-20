@@ -37,7 +37,8 @@
         margin: 0;
     }
 
-    .rs-tab-left-header h2, .rs-modal-subtitle {
+    .rs-tab-left-header h2,
+    .rs-modal-subtitle {
         font-size: small;
         /* font-weight: lighter; */
         color: #6B7280;
@@ -597,12 +598,6 @@
                     <h1 id="" class="">
                         Stroke Risk Score
                     </h1>
-                    <div id="rs-error-message" class="rs-error-message" style="display: none;">
-                        <div class="rs-error-content">
-                            <i class="fa-solid fa-exclamation-triangle"></i>
-                            <span id="rs-error-message-text" class="rs-error-text"></span>
-                        </div>
-                    </div>
                 </div>
                 <h2 id="" class="">
                     Charting notes encompass all factors included in the stroke risk score calculation. To update
@@ -649,6 +644,12 @@
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+                <div id="rs-error-message" class="rs-error-message" style="display: none;">
+                    <div class="rs-error-content">
+                        <i class="fa-solid fa-exclamation-triangle"></i>
+                        <span id="rs-error-message-text" class="rs-error-text"></span>
                     </div>
                 </div>
             </div>
@@ -2320,6 +2321,116 @@
                 console.log('Risk score data received:', data);
 
                 if (data.success && data.data) {
+                    const metrics = data.data.metrics;
+
+                    // Handle Tenovi BP Data
+                    if (metrics.tenovi_bp_data) {
+                        const bp = metrics.tenovi_bp_data;
+                        const sbpBaselineCircle = document.getElementById('rs-bp-baseline-sbp-circle');
+                        const dbpBaselineCircle = document.getElementById('rs-bp-baseline-dbp-circle');
+                        const sbpTrailingCircle = document.getElementById('rs-bp-trailing-sbp-circle');
+                        const dbpTrailingCircle = document.getElementById('rs-bp-trailing-dbp-circle');
+                        const sbpPeakCircle = document.getElementById('rs-bp-peak-circle');
+
+                        const thresholds = {
+                            'sbp': {
+                                'yellow': 130,
+                                'red': 140
+                            },
+                            'dbp': {
+                                'yellow': 90,
+                                'red': 100
+                            },
+                            'peak_sbp': {
+                                'yellow': 170,
+                                'red': 180
+                            }
+                        }
+
+                        const sbpValue = bp.systolic.trailing.average;
+                        const dbpValue = bp.diastolic.trailing.average;
+                        const sbpPeakValue = bp.systolic.trailing['Peak AVG SBP'];
+                        const sbpBaselineValue = bp.systolic.baseline.average;
+                        const dbpBaselineValue = bp.diastolic.baseline.average;
+
+                        // Update BP values
+                        if (sbpTrailing) sbpTrailing.textContent = sbpValue || '-';
+                        if (sbpVariability) sbpVariability.textContent = bp.systolic.trailing.variability || '-';
+                        if (sbpPeak) sbpPeak.textContent = sbpPeakValue || '-';
+                        if (dbpTrailing) dbpTrailing.textContent = dbpValue || '-';
+                        if (sbpBaseline) sbpBaseline.textContent = sbpBaselineValue || '-';
+                        if (dbpBaseline) dbpBaseline.textContent = dbpBaselineValue || '-';
+
+                        // Update color based on thresholds
+                        if (sbpValue >= thresholds.sbp.red) {
+                            sbpTrailingCircle.style.color = 'red';
+                        } else if (sbpValue >= thresholds.sbp.yellow) {
+                            sbpTrailingCircle.style.color = 'yellow';
+                        }
+                        sbpTrailingCircle.style.display = 'block';
+
+                        if (dbpValue >= thresholds.dbp.red) {
+                            dbpTrailingCircle.style.color = 'red';
+                        } else if (dbpValue >= thresholds.dbp.yellow) {
+                            dbpTrailingCircle.style.color = 'yellow';
+                        }
+                        dbpTrailingCircle.style.display = 'block';
+
+                        if (sbpPeakValue >= thresholds.peak_sbp.red) {
+                            sbpPeakCircle.style.color = 'red';
+                        } else if (sbpPeakValue >= thresholds.peak_sbp.yellow) {
+                            sbpPeakCircle.style.color = 'yellow';
+                        }
+                        sbpPeakCircle.style.display = 'block';
+
+                        if (sbpBaselineValue >= thresholds.sbp.red) {
+                            sbpBaselineCircle.style.color = 'red';
+                        } else if (sbpBaselineValue >= thresholds.sbp.yellow) {
+                            sbpBaselineCircle.style.color = 'yellow';
+                        }
+                        sbpBaselineCircle.style.display = 'block';
+
+                        if (dbpBaselineValue >= thresholds.dbp.red) {
+                            dbpBaselineCircle.style.color = 'red';
+                        } else if (dbpBaselineValue >= thresholds.dbp.yellow) {
+                            dbpBaselineCircle.style.color = 'yellow';
+                        }
+                        dbpBaselineCircle.style.display = 'block';
+                    }
+
+                    // Update Healthie SRS Data
+                    if (metrics.healthie_srs_data) {
+                        const healthie = metrics.healthie_srs_data;
+
+                        // Update RHR if SRS data doesn't have it
+                        if (healthie.average_rhr_baseline && hrBaseline && hrBaseline.textContent === '-') {
+                            hrBaseline.textContent = healthie.average_rhr_baseline || '-';
+                        }
+                        if (healthie.average_rhr_trailing && hrTrailing) {
+                            hrTrailing.textContent = healthie.average_rhr_trailing || '-';
+                        }
+
+                        // Update Physical Activity data
+                        if (healthie.activity_minutes_answer && moderateVigorousActivity) {
+                            moderateVigorousActivity.textContent = healthie.activity_minutes_answer || '-';
+                        }
+                        if (healthie.inactivity_hours_answer && physicalInactivity) {
+                            physicalInactivity.textContent = healthie.inactivity_hours_answer || '-';
+                        }
+                    }
+
+                    if (data.data.risk_score === null || data.data.priority_score === null) {
+                        errorMessage.style.display = 'block';
+                        errorMessageText.textContent = `No charting note data available`;
+                        hideSpinner(riskScore);
+                        hideSpinner(priorityScore);
+                        riskScore.textContent = 'NA';
+                        priorityScore.textContent = 'NA';
+                        riskScoreClassification.textContent = 'Insufficient Data';
+                        priorityScoreClassification.textContent = 'Insufficient Data';
+                        return;
+                    }
+
                     srsData = data.data.metrics.srs_response_data;
 
                     // Update total score
@@ -2359,352 +2470,253 @@
                         }
                     }
 
-                    const metrics = data.data.metrics;
-                    if (metrics) {
-                        // Update Tenovi BP Data
-                        if (metrics.tenovi_bp_data) {
-                            const bp = metrics.tenovi_bp_data;
-                            const sbpBaselineCircle = document.getElementById('rs-bp-baseline-sbp-circle');
-                            const dbpBaselineCircle = document.getElementById('rs-bp-baseline-dbp-circle');
-                            const sbpTrailingCircle = document.getElementById('rs-bp-trailing-sbp-circle');
-                            const dbpTrailingCircle = document.getElementById('rs-bp-trailing-dbp-circle');
-                            const sbpPeakCircle = document.getElementById('rs-bp-peak-circle');
+                    // Update SRS Response Data (Charting Note data)
+                    if (metrics.srs_response_data) {
+                        const srs = metrics.srs_response_data;
 
-                            const thresholds = {
-                                'sbp': {
-                                    'yellow': 130,
-                                    'red': 140
-                                },
-                                'dbp': {
-                                    'yellow': 90,
-                                    'red': 100
-                                },
-                                'peak_sbp': {
-                                    'yellow': 170,
-                                    'red': 180
-                                }
-                            }
+                        // Biometrics
+                        if (height) height.textContent = srs.Height || '-';
+                        if (weight) weight.textContent = srs.Weight || '-';
+                        if (bmi) bmi.textContent = Math.round(srs.BMI, 2) || '-';
 
-                            const sbpValue = bp.systolic.trailing.average;
-                            const dbpValue = bp.diastolic.trailing.average;
-                            const sbpPeakValue = bp.systolic.trailing['Peak AVG SBP'];
-                            const sbpBaselineValue = bp.systolic.baseline.average;
-                            const dbpBaselineValue = bp.diastolic.baseline.average;
+                        // Heart Rate (from SRS data)
+                        if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
 
-                            // Update BP values
-                            if (sbpTrailing) sbpTrailing.textContent = sbpValue || '-';
-                            if (sbpVariability) sbpVariability.textContent = bp.systolic.trailing.variability || '-';
-                            if (sbpPeak) sbpPeak.textContent = sbpPeakValue || '-';
-                            if (dbpTrailing) dbpTrailing.textContent = dbpValue || '-';
-                            if (sbpBaseline) sbpBaseline.textContent = sbpBaselineValue || '-';
-                            if (dbpBaseline) dbpBaseline.textContent = dbpBaselineValue || '-';
+                        // Physical Activity
+                        if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityHours || '-';
+                        if (physicalInactivityLevel) physicalInactivityLevel.textContent = srs.PhysicalInactivityLevel || '-';
 
-                            // Update color based on thresholds
-                            if (sbpValue >= thresholds.sbp.red) {
-                                sbpTrailingCircle.style.color = 'red';
-                            } else if (sbpValue >= thresholds.sbp.yellow) {
-                                sbpTrailingCircle.style.color = 'yellow';
-                            }
-                            sbpTrailingCircle.style.display = 'block';
+                        // Lab Values
+                        if (ha1c) ha1c.textContent = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : '-';
+                        if (ldl) ldl.textContent = srs.LDL ? Math.round(srs.LDL * 10) / 10 : '-';
+                        if (hdl) hdl.textContent = srs.HDL ? Math.round(srs.HDL * 10) / 10 : '-';
+                        if (triglycerides) triglycerides.textContent = srs.Triglycerides ? Math.round(srs.Triglycerides * 10) / 10 : '-';
+                        if (creatinine) creatinine.textContent = srs.Creatinine ? Math.round(srs.Creatinine * 10) / 10 : '-';
 
-                            if (dbpValue >= thresholds.dbp.red) {
-                                dbpTrailingCircle.style.color = 'red';
-                            } else if (dbpValue >= thresholds.dbp.yellow) {
-                                dbpTrailingCircle.style.color = 'yellow';
-                            }
-                            dbpTrailingCircle.style.display = 'block';
-
-                            if (sbpPeakValue >= thresholds.peak_sbp.red) {
-                                sbpPeakCircle.style.color = 'red';
-                            } else if (sbpPeakValue >= thresholds.peak_sbp.yellow) {
-                                sbpPeakCircle.style.color = 'yellow';
-                            }
-                            sbpPeakCircle.style.display = 'block';
-
-                            if (sbpBaselineValue >= thresholds.sbp.red) {
-                                sbpBaselineCircle.style.color = 'red';
-                            } else if (sbpBaselineValue >= thresholds.sbp.yellow) {
-                                sbpBaselineCircle.style.color = 'yellow';
-                            }
-                            sbpBaselineCircle.style.display = 'block';
-
-                            if (dbpBaselineValue >= thresholds.dbp.red) {
-                                dbpBaselineCircle.style.color = 'red';
-                            } else if (dbpBaselineValue >= thresholds.dbp.yellow) {
-                                dbpBaselineCircle.style.color = 'yellow';
-                            }
-                            dbpBaselineCircle.style.display = 'block';
+                        // Patient History
+                        if (!srs.HasPreviousStroke && !srs.ScreenedForTIA && !srs.ChronicInfarctPresent) {
+                            historyOfIschemiaContainer.style.display = 'block';
+                            historyOfIschemia.textContent = 'No';
+                            strokeHistoryContainer.style.display = 'none';
+                            tiaMechanismContainer.style.display = 'none';
+                            chronicInfarctMechanismContainer.style.display = 'none';
                         }
 
-                        // Update SRS Response Data (Charting Note data)
-                        if (metrics.srs_response_data) {
-                            const srs = metrics.srs_response_data;
-
-                            // Biometrics
-                            if (height) height.textContent = srs.Height || '-';
-                            if (weight) weight.textContent = srs.Weight || '-';
-                            if (bmi) bmi.textContent = Math.round(srs.BMI, 2) || '-';
-
-                            // Heart Rate (from SRS data)
-                            if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
-
-                            // Physical Activity
-                            if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityHours || '-';
-                            if (physicalInactivityLevel) physicalInactivityLevel.textContent = srs.PhysicalInactivityLevel || '-';
-
-                            // Lab Values
-                            if (ha1c) ha1c.textContent = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : '-';
-                            if (ldl) ldl.textContent = srs.LDL ? Math.round(srs.LDL * 10) / 10 : '-';
-                            if (hdl) hdl.textContent = srs.HDL ? Math.round(srs.HDL * 10) / 10 : '-';
-                            if (triglycerides) triglycerides.textContent = srs.Triglycerides ? Math.round(srs.Triglycerides * 10) / 10 : '-';
-                            if (creatinine) creatinine.textContent = srs.Creatinine ? Math.round(srs.Creatinine * 10) / 10 : '-';
-
-                            // Patient History
-                            if (!srs.HasPreviousStroke && !srs.ScreenedForTIA && !srs.ChronicInfarctPresent) {
-                                historyOfIschemiaContainer.style.display = 'block';
-                                historyOfIschemia.textContent = 'No';
-                                strokeHistoryContainer.style.display = 'none';
-                                tiaMechanismContainer.style.display = 'none';
-                                chronicInfarctMechanismContainer.style.display = 'none';
-                            }
-
-                            if (srs.HasPreviousStroke) {
-                                historyOfIschemiaContainer.style.display = 'none';
-                                strokeHistoryContainer.style.display = 'flex';
-                                strokeHistory.textContent = srs.HasPreviousStroke ? `Yes (${srs.NumberOfStrokes})` : 'No';
-                                strokeEtiologyContainer.style.display = 'flex';
-                                strokeEtiology.textContent = srs.LatestStrokeMechanism || '-';
-                                tiaMechanismContainer.style.display = 'none';
-                                chronicInfarctMechanismContainer.style.display = 'none';
-                            } else if (srs.ScreenedForTIA && srs.LikelihoodOfTIA === 'High likelihood') {
-                                historyOfIschemiaContainer.style.display = 'none';
-                                tiaMechanismContainer.style.display = 'block';
-                                tiaMechanism.textContent = srs.TIAMechanism || '-';
-                                strokeHistoryContainer.style.display = 'none';
-                                chronicInfarctMechanismContainer.style.display = 'none';
-                            } else if (srs.ChronicInfarctPresent) {
-                                historyOfIschemiaContainer.style.display = 'none';
-                                chronicInfarctMechanismContainer.style.display = 'block';
-                                chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
-                                strokeHistoryContainer.style.display = 'none';
-                                tiaMechanismContainer.style.display = 'none';
-                            }
-
-                            // History of Atrial Fibrillation
-                            if (afib) afib.textContent = srs.HistoryOfAtrialFibrillation ? 'Yes' : 'No';
-                            if (ironDeficiencyAnemia) ironDeficiencyAnemia.textContent = srs.HistoryOfIronDeficiencyAnemia ? 'Yes' : 'No';
-
-                            // History of Arterial Clots
-                            if (arterialClots) {
-                                arterialClots.textContent = srs.HistoryOfArterialClots ? `Yes (${srs.ArterialClotsOccurrences})` : 'No';
-                            }
-
-                            // History of Venous Clots
-                            if (venousClots) {
-                                venousClots.textContent = srs.HistoryOfVenousClots ? `Yes (${srs.VenousClotOccurrences})` : 'No';
-                            }
-
-                            // History of CHF
-                            if (chf) chf.textContent = srs.HistoryOfCHF ? 'Yes' : 'No';
-                            if (srs.HistoryOfCHF === true) {
-                                ejectionFractionContainer.style.display = 'flex';
-                                ejectionFraction.textContent = srs.EjectionFraction || '-';
-                            }
-
-                            // History of Carotid Stenosis
-                            if (srs.HistoryOfCarotidStenosis) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
-                            if (srs.HistoryOfCarotidStenosis === true) {
-                                carotidStenosisDegreeContainer.style.display = 'flex';
-                                carotidStenosisDegree.textContent = srs.StenosisPercentage || '-';
-                            }
-
-                            // History of OSA
-                            if (osa) osa.textContent = srs.HistoryOfOSA ? 'Yes' : 'No';
-                            if (srs.HistoryOfOSA === true) {
-                                osaSeverityContainer.style.display = 'flex';
-                                osaSeverity.textContent = srs.OSASeverity || '-';
-                            }
-
-                            // History of CAD
-                            if (cad) cad.textContent = srs.HistoryOfCAD ? 'Yes' : 'No';
-                            if (srs.HistoryOfCAD === true) {
-                                cadTypeContainer.style.display = 'flex';
-                                cadType.textContent = srs.ValvularHeartDisease || '-';
-                            }
-
-                            // History of Valvular Heart Disease
-                            if (valvularHeartDisease) valvularHeartDisease.textContent = srs.HistoryOfValvularHeartDisease ? 'Yes' : 'No';
-                            if (ckd) ckd.textContent = srs.HistoryOfCKD ? 'Yes' : 'No';
-
-                            // History of Hyperlipidemia
-                            if (srs.HistoryOfHyperlipidemia) {
-                                hyperlipidemiaContainer.style.display = 'flex';
-                                hyperlipidemia.textContent = srs.HistoryOfHyperlipidemia ? 'Yes' : 'No';
-                            }
-
-                            // LDL Level
-                            if (srs.LDLLevel) {
-                                ldlLevelContainer.style.display = 'flex';
-                                ldlLevel.textContent = srs.LDLLevel || '-';
-                            }
-
-                            // HDL Level
-                            if (srs.HDLLevel) {
-                                hdlLevelContainer.style.display = 'flex';
-                                hdlLevel.textContent = srs.HDLLevel || '-';
-                            }
-
-                            // Triglycerides Level
-                            if (srs.TriglyceridesLevel) {
-                                triglyceridesLevelContainer.style.display = 'flex';
-                                triglyceridesLevel.textContent = srs.TriglyceridesLevel || '-';
-                            }
-
-                            // Diabetes
-                            if (diabetes) diabetes.textContent = srs.HistoryOfDiabetes ? 'Yes' : 'No';
-
-                            // Obesity
-                            if (obesity) obesity.textContent = srs.BMI >= 30 ? 'Yes' : 'No';
-
-                            // Physical Activity Minutes
-                            if (srs.PhysicalActivityMinutes) {
-                                moderateVigorousActivity.textContent = srs.PhysicalActivityMinutes;
-                            }
-
-                            // Tests/Orders
-                            if (tiaScreening) tiaScreening.textContent = srs.ScreenedForTIA ? 'Yes' : 'No';
-                            if (tiaLikelihood) tiaLikelihood.textContent = srs.LikelihoodOfTIA || '-';
-                            if (tiaMechanism) tiaMechanism.textContent = srs.TIAMechanism || '-';
-                            if (priorCT) priorCT.textContent = srs.HasPriorHeadCT ? 'Yes' : 'No';
-                            if (priorCTDate) priorCTDate.textContent = srs.PriorCTDate || '-';
-                            if (chronicInfarct) chronicInfarct.textContent = srs.ChronicInfarctPresent ? 'Yes' : 'No';
-                            if (chronicInfarctMechanism) chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
-
-                            // Update Treatment Optimization/Compliance Badges
-                            if (srs.compliance) {
-                                const compliance = srs.compliance;
-
-                                // Update stroke compliance badge
-                                if (strokeHistoryTreatmentOptimization && compliance.strokeCompliance) {
-                                    strokeHistoryTreatmentOptimization.textContent = compliance.strokeCompliance.toUpperCase();
-                                    strokeHistoryTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update TIA compliance badge
-                                if (tiaLikelihoodTreatmentOptimization && compliance.tiaCompliance) {
-                                    tiaLikelihoodTreatmentOptimization.textContent = compliance.tiaCompliance.toUpperCase();
-                                    tiaLikelihoodTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update chronic infarct compliance badge
-                                if (chronicInfarctTreatmentOptimization && compliance.chronicInfarctCompliance) {
-                                    chronicInfarctTreatmentOptimization.textContent = compliance.chronicInfarctCompliance.toUpperCase();
-                                    chronicInfarctTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update atrial fibrillation compliance badge
-                                if (afibTreatmentOptimization && compliance.atrialFibrillationCompliance) {
-                                    afibTreatmentOptimization.textContent = compliance.atrialFibrillationCompliance.toUpperCase();
-                                    afibTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update iron deficiency anemia compliance badge
-                                if (ironDeficiencyAnemiaTreatmentOptimization && compliance.ironDeficiencyAnemiaCompliance) {
-                                    ironDeficiencyAnemiaTreatmentOptimization.textContent = compliance.ironDeficiencyAnemiaCompliance.toUpperCase();
-                                    ironDeficiencyAnemiaTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update arterial clots compliance badge
-                                if (arterialClotsTreatmentOptimization && compliance.arterialClotsCompliance) {
-                                    arterialClotsTreatmentOptimization.textContent = compliance.arterialClotsCompliance.toUpperCase();
-                                    arterialClotsTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update venous clots compliance badge
-                                if (venousClotsTreatmentOptimization && compliance.venousClotsCompliance) {
-                                    venousClotsTreatmentOptimization.textContent = compliance.venousClotsCompliance.toUpperCase();
-                                    venousClotsTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update CHF compliance badge
-                                if (chfTreatmentOptimization && compliance.chfCompliance) {
-                                    chfTreatmentOptimization.textContent = compliance.chfCompliance.toUpperCase();
-                                    chfTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update carotid stenosis compliance badge
-                                if (carotidStenosisTreatmentOptimization && compliance.carotidStenosisCompliance) {
-                                    carotidStenosisTreatmentOptimization.textContent = compliance.carotidStenosisCompliance.toUpperCase();
-                                    carotidStenosisTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update OSA compliance badge
-                                if (osaTreatmentOptimization && compliance.osaCompliance) {
-                                    osaTreatmentOptimization.textContent = compliance.osaCompliance.toUpperCase();
-                                    osaTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update CAD compliance badge
-                                if (cadTreatmentOptimization && compliance.cadCompliance) {
-                                    cadTreatmentOptimization.textContent = compliance.cadCompliance.toUpperCase();
-                                    cadTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update valvular heart disease compliance badge
-                                if (valvularHeartDiseaseTreatmentOptimization && compliance.valvularHeartDiseaseCompliance) {
-                                    valvularHeartDiseaseTreatmentOptimization.textContent = compliance.valvularHeartDiseaseCompliance.toUpperCase();
-                                    valvularHeartDiseaseTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update hyperlipidemia compliance badge
-                                // if (hyperlipidemiaTreatmentOptimization && compliance.hyperlipidemiaCompliance) {
-                                //     hyperlipidemiaTreatmentOptimization.textContent = compliance.hyperlipidemiaCompliance.toUpperCase();
-                                //     hyperlipidemiaTreatmentOptimization.style.display = 'block';
-                                // }
-
-                                // Update LDL compliance badge
-                                if (ldlTreatmentOptimization && compliance.ldlCompliance) {
-                                    ldlTreatmentOptimization.style.display = 'flex';
-                                    ldlTreatmentOptimization.textContent = compliance.ldlCompliance.toUpperCase();
-                                }
-
-                                // Update HDL compliance badge
-                                if (hdlTreatmentOptimization && compliance.hdlCompliance) {
-                                    hdlTreatmentOptimization.textContent = compliance.hdlCompliance.toUpperCase();
-                                    hdlTreatmentOptimization.style.display = 'flex';
-                                }
-
-                                // Update triglycerides compliance badge
-                                if (triglyceridesTreatmentOptimization && compliance.triglyceridesCompliance) {
-                                    triglyceridesTreatmentOptimization.textContent = compliance.triglyceridesCompliance.toUpperCase();
-                                    triglyceridesTreatmentOptimization.style.display = 'flex';
-                                }
-                            }
-
+                        if (srs.HasPreviousStroke) {
+                            historyOfIschemiaContainer.style.display = 'none';
+                            strokeHistoryContainer.style.display = 'flex';
+                            strokeHistory.textContent = srs.HasPreviousStroke ? `Yes (${srs.NumberOfStrokes})` : 'No';
+                            strokeEtiologyContainer.style.display = 'flex';
+                            strokeEtiology.textContent = srs.LatestStrokeMechanism || '-';
+                            tiaMechanismContainer.style.display = 'none';
+                            chronicInfarctMechanismContainer.style.display = 'none';
+                        } else if (srs.ScreenedForTIA && srs.LikelihoodOfTIA === 'High likelihood') {
+                            historyOfIschemiaContainer.style.display = 'none';
+                            tiaMechanismContainer.style.display = 'block';
+                            tiaMechanism.textContent = srs.TIAMechanism || '-';
+                            strokeHistoryContainer.style.display = 'none';
+                            chronicInfarctMechanismContainer.style.display = 'none';
+                        } else if (srs.ChronicInfarctPresent) {
+                            historyOfIschemiaContainer.style.display = 'none';
+                            chronicInfarctMechanismContainer.style.display = 'block';
+                            chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
+                            strokeHistoryContainer.style.display = 'none';
+                            tiaMechanismContainer.style.display = 'none';
                         }
 
-                        // Update Healthie SRS Data
-                        if (metrics.healthie_srs_data) {
-                            const healthie = metrics.healthie_srs_data;
+                        // History of Atrial Fibrillation
+                        if (afib) afib.textContent = srs.HistoryOfAtrialFibrillation ? 'Yes' : 'No';
+                        if (ironDeficiencyAnemia) ironDeficiencyAnemia.textContent = srs.HistoryOfIronDeficiencyAnemia ? 'Yes' : 'No';
 
-                            // Update RHR if SRS data doesn't have it
-                            if (healthie.average_rhr_baseline && hrBaseline && hrBaseline.textContent === '-') {
-                                hrBaseline.textContent = healthie.average_rhr_baseline || '-';
-                            }
-                            if (healthie.average_rhr_trailing && hrTrailing) {
-                                hrTrailing.textContent = healthie.average_rhr_trailing || '-';
+                        // History of Arterial Clots
+                        if (arterialClots) {
+                            arterialClots.textContent = srs.HistoryOfArterialClots ? `Yes (${srs.ArterialClotsOccurrences})` : 'No';
+                        }
+
+                        // History of Venous Clots
+                        if (venousClots) {
+                            venousClots.textContent = srs.HistoryOfVenousClots ? `Yes (${srs.VenousClotOccurrences})` : 'No';
+                        }
+
+                        // History of CHF
+                        if (chf) chf.textContent = srs.HistoryOfCHF ? 'Yes' : 'No';
+                        if (srs.HistoryOfCHF === true) {
+                            ejectionFractionContainer.style.display = 'flex';
+                            ejectionFraction.textContent = srs.EjectionFraction || '-';
+                        }
+
+                        // History of Carotid Stenosis
+                        if (srs.HistoryOfCarotidStenosis) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
+                        if (srs.HistoryOfCarotidStenosis === true) {
+                            carotidStenosisDegreeContainer.style.display = 'flex';
+                            carotidStenosisDegree.textContent = srs.StenosisPercentage || '-';
+                        }
+
+                        // History of OSA
+                        if (osa) osa.textContent = srs.HistoryOfOSA ? 'Yes' : 'No';
+                        if (srs.HistoryOfOSA === true) {
+                            osaSeverityContainer.style.display = 'flex';
+                            osaSeverity.textContent = srs.OSASeverity || '-';
+                        }
+
+                        // History of CAD
+                        if (cad) cad.textContent = srs.HistoryOfCAD ? 'Yes' : 'No';
+                        if (srs.HistoryOfCAD === true) {
+                            cadTypeContainer.style.display = 'flex';
+                            cadType.textContent = srs.ValvularHeartDisease || '-';
+                        }
+
+                        // History of Valvular Heart Disease
+                        if (valvularHeartDisease) valvularHeartDisease.textContent = srs.HistoryOfValvularHeartDisease ? 'Yes' : 'No';
+                        if (ckd) ckd.textContent = srs.HistoryOfCKD ? 'Yes' : 'No';
+
+                        // History of Hyperlipidemia
+                        if (srs.HistoryOfHyperlipidemia) {
+                            hyperlipidemiaContainer.style.display = 'flex';
+                            hyperlipidemia.textContent = srs.HistoryOfHyperlipidemia ? 'Yes' : 'No';
+                        }
+
+                        // LDL Level
+                        if (srs.LDLLevel) {
+                            ldlLevelContainer.style.display = 'flex';
+                            ldlLevel.textContent = srs.LDLLevel || '-';
+                        }
+
+                        // HDL Level
+                        if (srs.HDLLevel) {
+                            hdlLevelContainer.style.display = 'flex';
+                            hdlLevel.textContent = srs.HDLLevel || '-';
+                        }
+
+                        // Triglycerides Level
+                        if (srs.TriglyceridesLevel) {
+                            triglyceridesLevelContainer.style.display = 'flex';
+                            triglyceridesLevel.textContent = srs.TriglyceridesLevel || '-';
+                        }
+
+                        // Diabetes
+                        if (diabetes) diabetes.textContent = srs.HistoryOfDiabetes ? 'Yes' : 'No';
+
+                        // Obesity
+                        if (obesity) obesity.textContent = srs.BMI >= 30 ? 'Yes' : 'No';
+
+                        // Physical Activity Minutes
+                        if (srs.PhysicalActivityMinutes) {
+                            moderateVigorousActivity.textContent = srs.PhysicalActivityMinutes;
+                        }
+
+                        // Tests/Orders
+                        if (tiaScreening) tiaScreening.textContent = srs.ScreenedForTIA ? 'Yes' : 'No';
+                        if (tiaLikelihood) tiaLikelihood.textContent = srs.LikelihoodOfTIA || '-';
+                        if (tiaMechanism) tiaMechanism.textContent = srs.TIAMechanism || '-';
+                        if (priorCT) priorCT.textContent = srs.HasPriorHeadCT ? 'Yes' : 'No';
+                        if (priorCTDate) priorCTDate.textContent = srs.PriorCTDate || '-';
+                        if (chronicInfarct) chronicInfarct.textContent = srs.ChronicInfarctPresent ? 'Yes' : 'No';
+                        if (chronicInfarctMechanism) chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
+
+                        // Update Treatment Optimization/Compliance Badges
+                        if (srs.compliance) {
+                            const compliance = srs.compliance;
+
+                            // Update stroke compliance badge
+                            if (strokeHistoryTreatmentOptimization && compliance.strokeCompliance) {
+                                strokeHistoryTreatmentOptimization.textContent = compliance.strokeCompliance.toUpperCase();
+                                strokeHistoryTreatmentOptimization.style.display = 'flex';
                             }
 
-                            // Update Physical Activity data
-                            if (healthie.activity_minutes_answer && moderateVigorousActivity) {
-                                moderateVigorousActivity.textContent = healthie.activity_minutes_answer || '-';
+                            // Update TIA compliance badge
+                            if (tiaLikelihoodTreatmentOptimization && compliance.tiaCompliance) {
+                                tiaLikelihoodTreatmentOptimization.textContent = compliance.tiaCompliance.toUpperCase();
+                                tiaLikelihoodTreatmentOptimization.style.display = 'flex';
                             }
-                            if (healthie.inactivity_hours_answer && physicalInactivity) {
-                                physicalInactivity.textContent = healthie.inactivity_hours_answer || '-';
+
+                            // Update chronic infarct compliance badge
+                            if (chronicInfarctTreatmentOptimization && compliance.chronicInfarctCompliance) {
+                                chronicInfarctTreatmentOptimization.textContent = compliance.chronicInfarctCompliance.toUpperCase();
+                                chronicInfarctTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update atrial fibrillation compliance badge
+                            if (afibTreatmentOptimization && compliance.atrialFibrillationCompliance) {
+                                afibTreatmentOptimization.textContent = compliance.atrialFibrillationCompliance.toUpperCase();
+                                afibTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update iron deficiency anemia compliance badge
+                            if (ironDeficiencyAnemiaTreatmentOptimization && compliance.ironDeficiencyAnemiaCompliance) {
+                                ironDeficiencyAnemiaTreatmentOptimization.textContent = compliance.ironDeficiencyAnemiaCompliance.toUpperCase();
+                                ironDeficiencyAnemiaTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update arterial clots compliance badge
+                            if (arterialClotsTreatmentOptimization && compliance.arterialClotsCompliance) {
+                                arterialClotsTreatmentOptimization.textContent = compliance.arterialClotsCompliance.toUpperCase();
+                                arterialClotsTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update venous clots compliance badge
+                            if (venousClotsTreatmentOptimization && compliance.venousClotsCompliance) {
+                                venousClotsTreatmentOptimization.textContent = compliance.venousClotsCompliance.toUpperCase();
+                                venousClotsTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update CHF compliance badge
+                            if (chfTreatmentOptimization && compliance.chfCompliance) {
+                                chfTreatmentOptimization.textContent = compliance.chfCompliance.toUpperCase();
+                                chfTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update carotid stenosis compliance badge
+                            if (carotidStenosisTreatmentOptimization && compliance.carotidStenosisCompliance) {
+                                carotidStenosisTreatmentOptimization.textContent = compliance.carotidStenosisCompliance.toUpperCase();
+                                carotidStenosisTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update OSA compliance badge
+                            if (osaTreatmentOptimization && compliance.osaCompliance) {
+                                osaTreatmentOptimization.textContent = compliance.osaCompliance.toUpperCase();
+                                osaTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update CAD compliance badge
+                            if (cadTreatmentOptimization && compliance.cadCompliance) {
+                                cadTreatmentOptimization.textContent = compliance.cadCompliance.toUpperCase();
+                                cadTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update valvular heart disease compliance badge
+                            if (valvularHeartDiseaseTreatmentOptimization && compliance.valvularHeartDiseaseCompliance) {
+                                valvularHeartDiseaseTreatmentOptimization.textContent = compliance.valvularHeartDiseaseCompliance.toUpperCase();
+                                valvularHeartDiseaseTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update hyperlipidemia compliance badge
+                            // if (hyperlipidemiaTreatmentOptimization && compliance.hyperlipidemiaCompliance) {
+                            //     hyperlipidemiaTreatmentOptimization.textContent = compliance.hyperlipidemiaCompliance.toUpperCase();
+                            //     hyperlipidemiaTreatmentOptimization.style.display = 'block';
+                            // }
+
+                            // Update LDL compliance badge
+                            if (ldlTreatmentOptimization && compliance.ldlCompliance) {
+                                ldlTreatmentOptimization.style.display = 'flex';
+                                ldlTreatmentOptimization.textContent = compliance.ldlCompliance.toUpperCase();
+                            }
+
+                            // Update HDL compliance badge
+                            if (hdlTreatmentOptimization && compliance.hdlCompliance) {
+                                hdlTreatmentOptimization.textContent = compliance.hdlCompliance.toUpperCase();
+                                hdlTreatmentOptimization.style.display = 'flex';
+                            }
+
+                            // Update triglycerides compliance badge
+                            if (triglyceridesTreatmentOptimization && compliance.triglyceridesCompliance) {
+                                triglyceridesTreatmentOptimization.textContent = compliance.triglyceridesCompliance.toUpperCase();
+                                triglyceridesTreatmentOptimization.style.display = 'flex';
                             }
                         }
 
                     }
+
                 }
             })
             .catch(error => {
