@@ -22,7 +22,10 @@ from syntrillo.bp_analysis.constants import (
     AVG_DBP,
     AVERAGE,
     VARIABILITY,
-    TRAILING
+    TRAILING,
+    PEAK_SBP_2,
+    PEAK_SBP,
+    BASELINE
 )
 from syntrillo.stroke_risk_score_v2.constants import (
     CREATED_AT,
@@ -539,6 +542,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         # Calculate the metadata for the trailing dataframe
         trailing_bp_metadata = bp_analysis.calculate_metadata_v2(trailing_bp_dataframe)
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
+        baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
 
         # Trim the metadata to only include the necessary data for SRS calculation
         trimmed_bp_metadata = {
@@ -547,11 +551,18 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]), # Considered the "PEAK" BP value for SRS
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                }
+                    PEAK_SBP_2: trailing_bp_metadata[PEAK_SBP],
+                },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_SBP],
+                },
             },
             DIASTOLIC: {
                 TRAILING: {
                     AVERAGE: trailing_bp_metadata[AVG_DBP],
+                },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_DBP],
                 },
             },
         }

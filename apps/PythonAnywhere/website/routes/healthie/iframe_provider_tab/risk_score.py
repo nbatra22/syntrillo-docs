@@ -95,7 +95,7 @@ def iframe_healthie_provider_tab_risk_score_data():
 
         risk_score, metrics, stroke_priority_score = calculate_risk_score(syntrillo_internal_key_patient)
 
-        metrics['srs_response_data'] = metrics['srs_response_data'].model_dump()
+        metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
 
         # Return success response
         return jsonify({
@@ -134,20 +134,22 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
     post_manager.get_pseudonyms_from_tab_post(request)
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
 
+    print(f"request.form: {request.form}")
+
     try:
         # Get the form data from the request (FormData instead of JSON)
         form_data = {}
         # Extract form fields manually from request.form
         form_data['Gender'] = request.form.get('Gender') or None
-        form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'true'
+        form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'
         form_data['NumberOfStrokes'] = request.form.get('NumberOfStrokes') or None
         form_data['LatestStrokeMechanism'] = request.form.get('LatestStrokeMechanism') or None
-        form_data['ScreenedForTIA'] = request.form.get('ScreenedForTIA') == 'true'
+        form_data['ScreenedForTIA'] = request.form.get('ScreenedForTIA') == 'yes'
         form_data['LikelihoodOfTIA'] = request.form.get('LikelihoodOfTIA') or None
         form_data['TIAMechanism'] = request.form.get('TIAMechanism') or None
-        form_data['HasPriorHeadCT'] = request.form.get('HasPriorHeadCT') == 'true'
+        form_data['HasPriorHeadCT'] = request.form.get('HasPriorHeadCT') == 'yes'
         form_data['PriorCTDate'] = request.form.get('PriorCTDate') or None
-        form_data['ChronicInfarctPresent'] = request.form.get('ChronicInfarctPresent') == 'true'
+        form_data['ChronicInfarctPresent'] = request.form.get('ChronicInfarctPresent') == 'yes'
         form_data['HistoryOfAtrialFibrillation'] = request.form.get('HistoryOfAtrialFibrillation') == 'true'
         form_data['HistoryOfIronDeficiencyAnemia'] = request.form.get('HistoryOfIronDeficiencyAnemia') == 'true'
         form_data['HistoryOfArterialClots'] = request.form.get('HistoryOfArterialClots') == 'true'
@@ -169,17 +171,16 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['StenosisPercentage'] = request.form.get('StenosisPercentage') or None
         form_data['OSASeverity'] = request.form.get('OSASeverity') or None
         form_data['CADType'] = request.form.get('CADType') or None
-        form_data['PhysicalInactivityLevel'] = request.form.get('PhysicalInactivityLevel') or None
+        form_data['PhysicalInactivityHours'] = request.form.get('PhysicalInactivityHours') or None
         form_data['HemoglobinA1c'] = request.form.get('HemoglobinA1c') or None
         # form_data['LDLLevel'] = request.form.get('LDLLevel') or None
         # form_data['HDLLevel'] = request.form.get('HDLLevel') or None
-        form_data['LDLValue'] = request.form.get('LDLValue') or None
+        form_data['LDL'] = request.form.get('LDL') or None
         form_data['LDLCompliance'] = request.form.get('LDLCompliance') or None
-        form_data['HDLValue'] = request.form.get('HDLValue') or None
-        form_data['TriglyceridesValue'] = request.form.get('TriglyceridesValue') or None
+        form_data['HDL'] = request.form.get('HDL') or None
+        form_data['Triglycerides'] = request.form.get('Triglycerides') or None
         form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
-        # form_data['TriglyceridesLevel'] = request.form.get('TriglyceridesLevel') or None
-        form_data['CreatineLevel'] = request.form.get('CreatineLevel') or None
+        form_data['Creatinine'] = request.form.get('Creatinine') or None
         form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism') or None
         # form_data['Height'] = request.form.get('Height') or None
         # form_data['Weight'] = request.form.get('Weight') or None

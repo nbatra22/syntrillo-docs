@@ -163,6 +163,13 @@
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-cardioembolic" name="LatestStrokeMechanism"
+                        value="Cardioembolic">
+                    <label for="previous-stroke-mechanism-cardioembolic">
+                        Cardioembolic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
                     <input type="radio" id="previous-stroke-mechanism-small-vessel" name="LatestStrokeMechanism"
                         value="Small Vessel">
                     <label for="previous-stroke-mechanism-small-vessel">
@@ -197,32 +204,31 @@
                         Structural
                     </label>
                 </div>
-
             </div>
         </div>
 
         <!-- Stroke Compliance Question -->
-        <div id="stroke-compliance-dependent" class="form-group dependent-question" data-parent="previous-stroke-container">
-            <label for="stroke-compliance">
-                (Previous stroke) Treatment compliance?
+        <div id="stroke-treatment-dependent" class="form-group dependent-question" data-parent="previous-stroke-container">
+            <label for="stroke-treatment">
+                (Previous stroke) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="stroke-compliance-yes" name="stroke_compliance" value="yes">
-                    <label for="stroke-compliance-yes">
-                        Compliant
+                    <input type="radio" id="stroke-treatment-none" name="strokeCompliance" value="not optimized">
+                    <label for="stroke-treatment-none">
+                        Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="stroke-compliance-no" name="stroke_compliance" value="no">
-                    <label for="stroke-compliance-no">
-                        Non-compliant
+                    <input type="radio" id="stroke-treatment-partial" name="strokeCompliance" value="partially optimized">
+                    <label for="stroke-treatment-partial">
+                        Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="stroke-compliance-unknown" name="stroke_compliance" value="unknown">
-                    <label for="stroke-compliance-unknown">
-                        Unknown
+                    <input type="radio" id="stroke-treatment-optimized" name="strokeCompliance" value="optimized">
+                    <label for="stroke-treatment-optimized">
+                        Optimized
                     </label>
                 </div>
             </div>
@@ -306,28 +312,27 @@
             </div>
         </div>
 
-        <!-- TIA Compliance Question -->
-        <div id="tia-compliance-dependent" class="form-group dependent-question" data-parent="tia-screening">
-            <label for="tia-compliance">
-                (TIA screening) Treatment compliance?
+        <div id="tia-treatment-dependent" class="form-group dependent-question" data-parent="tia-screening">
+            <label for="tia-treatment">
+                (TIA screening) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-compliance-yes" name="tia_compliance" value="yes">
-                    <label for="tia-compliance-yes">
-                        Compliant
+                    <input type="radio" id="tia-treatment-none" name="tiaTreatment" value="not optimized">
+                    <label for="tia-treatment-none">
+                        Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-compliance-no" name="tia_compliance" value="no">
-                    <label for="tia-compliance-no">
-                        Non-compliant
+                    <input type="radio" id="tia-treatment-partial" name="tiaTreatment" value="partially optimized">
+                    <label for="tia-treatment-partial">
+                        Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="tia-compliance-unknown" name="tia_compliance" value="unknown">
-                    <label for="tia-compliance-unknown">
-                        Unknown
+                    <input type="radio" id="tia-treatment-optimized" name="tiaTreatment" value="optimized">
+                    <label for="tia-treatment-optimized">
+                        Optimized
                     </label>
                 </div>
             </div>
@@ -385,7 +390,7 @@
         <!-- Chronic Infarct Compliance Question -->
         <div id="chronic-infarct-compliance-dependent" class="form-group dependent-question" data-parent="prior-head-ct">
             <label for="chronic-infarct-compliance">
-                (Prior head CT) Chronic infarct treatment compliance?
+                (Prior head CT - Chronic infarct) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -415,55 +420,55 @@
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-a-fib" name="HistoryOfAtrialFibrillation">
+                    <input type="checkbox" id="history-of-a-fib" name="HistoryOfAtrialFibrillation" value="true">
                     <label for="history-of-a-fib">
                         Atrial fibrillation
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-iron-deficiency-anemia" name="HistoryOfIronDeficiencyAnemia">
+                    <input type="checkbox" id="history-of-iron-deficiency-anemia" name="HistoryOfIronDeficiencyAnemia" value="true">
                     <label for="iron_deficiency_anemia">
                         Iron deficiency anemia
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-arterial-clots" name="HistoryOfArterialClots">
+                    <input type="checkbox" id="history-of-arterial-clots" name="HistoryOfArterialClots" value="true">
                     <label for="history-of-arterial-clots">
                         Arterial clots
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-venous-clots" name="HistoryOfVenousClots">
+                    <input type="checkbox" id="history-of-venous-clots" name="HistoryOfVenousClots" value="true">
                     <label for="history-of-venous-clots">
                         Venous clots
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-chf" name="HistoryOfCHF">
+                    <input type="checkbox" id="history-of-chf" name="HistoryOfCHF" value="true">
                     <label for="history-of-chf">
                         Congestive heart failure (CHF)
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-carotid-stenosis" name="HistoryOfCarotidStenosis">
+                    <input type="checkbox" id="history-of-carotid-stenosis" name="HistoryOfCarotidStenosis" value="true">
                     <label for="history-of-carotid-stenosis">
                         Carotid stenosis
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-osa" name="HistoryOfOSA">
+                    <input type="checkbox" id="history-of-osa" name="HistoryOfOSA" value="true">
                     <label for="history-of-osa">
                         Obstructive sleep apnea (OSA)
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-cad" name="HistoryOfCAD">
+                    <input type="checkbox" id="history-of-cad" name="HistoryOfCAD" value="true">
                     <label for="history-of-cad">
                         Coronary artery disease (CAD)
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-valvular-heart-disease" name="HistoryOfValvularHeartDisease">
+                    <input type="checkbox" id="history-of-valvular-heart-disease" name="HistoryOfValvularHeartDisease" value="true">
                     <label for="history-of-valvular-heart-disease">
                         Valvular heart disease
                     </label>
@@ -474,12 +479,12 @@
                         Chronic kidney disease (CKD)
                     </label>
                 </div> -->
-                <div class="input-button-group-item">
+                <!-- <div class="input-button-group-item">
                     <input type="checkbox" id="history-of-hyperlipidemia" name="HistoryOfHyperlipidemia">
                     <label for="history-of-hyperlipidemia">
                         Hyperlipidemia
                     </label>
-                </div>
+                </div> -->
                 <div class="input-button-group-item">
                     <input type="checkbox" id="history-of-diabetes" name="HistoryOfDiabetes">
                     <label for="history-of-diabetes">
@@ -999,80 +1004,6 @@
             </div>
         </div> -->
 
-        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
-            <label for="ldl">
-                (Hyperlipidemia) Last known LDL level?
-            </label>
-            <input type="number" id="ldl" name="LDLValue" step="0.1">
-        </div>
-
-        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
-            <label for="ldl-treatment">
-                (Hyperlipidemia - LDL) Treatment optimization?
-            </label>
-            <div class="input-button-group">
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-treatment-none" name="ldlCompliance" value="not optimized">
-                    <label for="ldl-treatment-none">
-                        Not optimized
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-treatment-partial" name="ldlCompliance" value="partially optimized">
-                    <label for="ldl-treatment-partial">
-                        Partially optimized
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-treatment-optimized" name="ldlCompliance" value="optimized">
-                    <label for="ldl-treatment-optimized">
-                        Optimized
-                    </label>
-                </div>
-            </div>
-        </div>
-
-
-        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
-            <label for="hyperlipidemia-treatment">
-                (Hyperlipidemia) Last known HDL level?
-            </label>
-            <input type="number" id="hdl" name="HDLValue" step="0.1">
-        </div>
-
-        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
-            <label for="hyperlipidemia-treatment">
-                (Hyperlipidemia) Last known triglycerides level?
-            </label>
-            <input type="number" id="triglycerides" name="TriglyceridesValue" step="0.1">
-        </div>
-
-        <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
-            <label for="triglycerides-treatment">
-                (Hyperlipidemia - Triglycerides) Treatment optimization?
-            </label>
-            <div class="input-button-group">
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance" value="not optimized">
-                    <label for="triglycerides-treatment-none">
-                        Not optimized
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance" value="partially optimized">
-                    <label for="triglycerides-treatment-partial">
-                        Partially optimized
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance" value="optimized">
-                    <label for="triglycerides-treatment-optimized">
-                        Optimized
-                    </label>
-                </div>
-            </div>
-        </div>
-
         <!-- <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
             <label for="hyperlipidemia-treatment">
                 (Hyperlipidemia) Treatment optimization?
@@ -1151,7 +1082,7 @@
             </div>
         </div> -->
 
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="physical-inactivity">
                 6. What's the patient's physical inactivity level?
             </label>
@@ -1175,6 +1106,13 @@
                     </label>
                 </div>
             </div>
+        </div> -->
+
+        <div class="form-group">
+            <label for="physical-inactivity-treatment">
+                6. What is the patient's physical inactivity level (hours/day)?
+            </label>
+            <input type="number" id="physical-inactivity" name="PhysicalInactivityHours" step="0.25">
         </div>
 
         <div class="form-group">
@@ -1184,90 +1122,110 @@
             <input type="number" id="ha1c" name="HemoglobinA1c" step="0.1">
         </div>
 
-        <!-- LDL -->
-        <!-- <div class="form-group">
-            <label for="ldl-level">
-                7. What's the patient's LDL level?
+        <div class="form-group">
+            <label for="ldl">
+                8. Last known LDL level?
             </label>
-            <div class="input-button-group">
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-level-borderline" name="LDLLevel" value="Borderline">
-                    <label for="ldl-level-borderline">
-                        Borderline
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-level-high" name="LDLLevel" value="High">
-                    <label for="ldl-level-high">
-                        High
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-level-very-high" name="LDLLevel" value="Very High">
-                    <label for="ldl-level-very-high">
-                        Very High
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="ldl-level-unknown" name="LDLLevel" value="Unknown">
-                    <label for="ldl-level-unknown">
-                        Unknown
-                    </label>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- HDL -->
-        <!-- <div class="form-group">
-            <label for="hdl-level">
-                8. What's the patient's HDL level?
-            </label>
-            <div class="input-button-group">
-                <div class="input-button-group-item">
-                    <input type="radio" id="hdl-level-low" name="HDLLevel" value="Low">
-                    <label for="hdl-level-low">
-                        Low
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="hdl-level-unknown" name="HDLLevel" value="Unknown">
-                    <label for="hdl-level-unknown">
-                        Unknown
-                    </label>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- Triglycerides -->
-        <!-- <div class="form-group">
-            <label for="triglycerides-level">
-                9. What's the patient's triglycerides level?
-            </label>
-            <div class="input-button-group">
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-level-moderate" name="TriglyceridesLevel" value="Moderate">
-                    <label for="triglycerides-level-moderate">
-                        Moderate
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-level-high" name="TriglyceridesLevel" value="High">
-                    <label for="triglycerides-level-high">
-                        High
-                    </label>
-                </div>
-                <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-level-unknown" name="TriglyceridesLevel" value="Unknown">
-                    <label for="triglycerides-level-unknown">
-                        Unknown
-                    </label>
-                </div>
-            </div>
-        </div> -->
+            <input type="number" id="ldl" name="LDL" step="0.1">
+        </div>
 
         <div class="form-group">
+            <label for="ldl-treatment">
+                (LDL) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-none" name="ldlCompliance" value="not optimized">
+                    <label for="ldl-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-partial" name="ldlCompliance" value="partially optimized">
+                    <label for="ldl-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-optimized" name="ldlCompliance" value="optimized">
+                    <label for="ldl-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label for="hdl">
+                9. Last known HDL level?
+            </label>
+            <input type="number" id="hdl" name="HDL" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="hdl-treatment">
+                (HDL) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-none" name="hdlCompliance" value="not optimized">
+                    <label for="hdl-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-partial" name="hdlCompliance" value="partially optimized">
+                    <label for="hdl-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-optimized" name="hdlCompliance" value="optimized">
+                    <label for="hdl-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label for="hyperlipidemia-treatment">
+                10. Last known triglycerides level?
+            </label>
+            <input type="number" id="triglycerides" name="Triglycerides" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="triglycerides-treatment">
+                (Triglycerides) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance" value="not optimized">
+                    <label for="triglycerides-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance" value="partially optimized">
+                    <label for="triglycerides-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance" value="optimized">
+                    <label for="triglycerides-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+<!--
+        <div class="form-group">
             <label for="creatine-level">
-                8. What's the patient's creatinine level?
+                11. What's the patient's creatinine level?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -1289,6 +1247,13 @@
                     </label>
                 </div>
             </div>
+        </div> -->
+
+        <div class="form-group">
+            <label for="creatinine">
+                11. Last known creatinine level?
+            </label>
+            <input type="number" id="creatinine" name="Creatinine" step="0.1">
         </div>
 
     </div>
@@ -1367,7 +1332,7 @@
         };
         formDataObj.append('compliance', JSON.stringify(complianceData));
 
-                // Validate required fields
+        // Validate required fields
         const hasPreviousStroke = formDataObj.get('HasPreviousStroke') === 'yes';
         const hasTIAScreening = formDataObj.get('ScreenedForTIA') === 'yes';
 
@@ -1448,9 +1413,9 @@
                    statusElement.className = 'error';
                })
                 .finally(() => {
-                   // Reset button state
-                   submitButton.textContent = originalText;
-                   submitButton.disabled = false;
+                //    // Reset button state
+                //    submitButton.textContent = originalText;
+                //    submitButton.disabled = false;
 
                    // Hide loading overlay
                 //    const loadingOverlay = document.getElementById('loading-overlay');
@@ -1498,9 +1463,7 @@
                 question.style.display = shouldShow ? 'block' : 'none';
 
                 // Debug logging
-                console.log(`Question ${question.id}: ${shouldShow ? 'SHOW' : 'HIDE'} (${reason})`);
-            } else {
-                console.warn(`Parent element with ID '${parentId}' not found for question ${question.id}`);
+                // console.log(`Question ${question.id}: ${shouldShow ? 'SHOW' : 'HIDE'} (${reason})`);
             }
         });
     }
@@ -1523,11 +1486,11 @@
         });
 
         // Debug: Log all dependent questions and their parents
-        console.log('Dependent questions found:', document.querySelectorAll('.dependent-question').length);
+        // console.log('Dependent questions found:', document.querySelectorAll('.dependent-question').length);
         document.querySelectorAll('.dependent-question').forEach(q => {
             const parentId = q.getAttribute('data-parent');
             const parent = document.getElementById(parentId);
-            console.log(`Question: ${q.id}, Parent: ${parentId}, Parent found: ${!!parent}, Parent type: ${parent ? parent.type || 'container' : 'N/A'}`);
+            // console.log(`Question: ${q.id}, Parent: ${parentId}, Parent found: ${!!parent}, Parent type: ${parent ? parent.type || 'container' : 'N/A'}`);
         });
     });
 

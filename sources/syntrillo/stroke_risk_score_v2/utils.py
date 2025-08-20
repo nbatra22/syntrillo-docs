@@ -19,7 +19,8 @@ def calculate_bmi(weight, height):
     if weight is None or height is None:
         return None
     # BMI = Weight (lb) / Height (in)² x 703
-    return round(weight / math.pow(height, 2) * 703, 2)
+    bmi = weight / math.pow(height, 2) * 703
+    return round(bmi, 2)
 
 
 
