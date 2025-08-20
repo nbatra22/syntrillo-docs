@@ -179,7 +179,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['LDLCompliance'] = request.form.get('LDLCompliance') or None
         form_data['HDL'] = request.form.get('HDL') or None
         form_data['Triglycerides'] = request.form.get('Triglycerides') or None
-        form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
+        # form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
         form_data['Creatinine'] = request.form.get('Creatinine') or None
         form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism') or None
         # form_data['Height'] = request.form.get('Height') or None
