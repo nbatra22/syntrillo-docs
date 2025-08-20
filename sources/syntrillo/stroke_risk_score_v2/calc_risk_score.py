@@ -72,7 +72,7 @@ weighting = {
         TreatmentComplianceOptions.OPTIMIZED: 1.0,
         TreatmentComplianceOptions.PARTIALLY_OPTIMIZED: 0.5,
         TreatmentComplianceOptions.NOT_OPTIMIZED: 0.0,
-        # None: 0.0,
+        None: 0.0,
     }
 }
 
@@ -333,7 +333,6 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.cadCompliance]
             final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
-
 
         # ========================================================================
         # TODO: Make this section based on the lab values and NOT the enum values

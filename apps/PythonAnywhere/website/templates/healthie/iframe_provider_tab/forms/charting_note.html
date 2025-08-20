@@ -637,7 +637,7 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="venous-clots-multiple" name="VenousClotsOccurrences" value="Multiple">
+                    <input type="radio" id="venous-clots-multiple" name="VenousClotOccurrences" value="Multiple">
                     <label for="venous-clots-multiple">
                         Multiple
                     </label>
@@ -1319,15 +1319,16 @@
             ironDeficiencyAnemiaCompliance: document.querySelector('input[name="ironDeficiencyAnemiaCompliance"]:checked')?.value || null,
             arterialClotsCompliance: document.querySelector('input[name="arterialClotsCompliance"]:checked')?.value || null,
             venousClotsCompliance: document.querySelector('input[name="venousClotsCompliance"]:checked')?.value || null,
+            // pfoCompliance: document.querySelector('input[name="pfoCompliance"]:checked')?.value || null,
             chfCompliance: document.querySelector('input[name="chfCompliance"]:checked')?.value || null,
             carotidStenosisCompliance: document.querySelector('input[name="carotidStenosisCompliance"]:checked')?.value || null,
             osaCompliance: document.querySelector('input[name="osaCompliance"]:checked')?.value || null,
             cadCompliance: document.querySelector('input[name="cadCompliance"]:checked')?.value || null,
             valvularHeartDiseaseCompliance: document.querySelector('input[name="valvularHeartDiseaseCompliance"]:checked')?.value || null,
             ckdCompliance: document.querySelector('input[name="ckdCompliance"]:checked')?.value || null,
-            pfoCompliance: document.querySelector('input[name="pfoCompliance"]:checked')?.value || null,
-            // hyperlipidemiaCompliance: document.querySelector('input[name="hyperlipidemiaCompliance"]:checked')?.value || null,
+
             ldlCompliance: document.querySelector('input[name="ldlCompliance"]:checked')?.value || null,
+            hdlCompliance: document.querySelector('input[name="hdlCompliance"]:checked')?.value || null,
             triglyceridesCompliance: document.querySelector('input[name="triglyceridesCompliance"]:checked')?.value || null,
         };
         formDataObj.append('compliance', JSON.stringify(complianceData));

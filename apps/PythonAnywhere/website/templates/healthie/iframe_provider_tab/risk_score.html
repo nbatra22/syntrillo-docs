@@ -2136,7 +2136,7 @@
 
         iframe.src = iframeSrc;
         header.textContent = title;
-        if (srsData.created_at) {
+        if (srsData && srsData.created_at) {
             const date = new Date(srsData.created_at);
             const month = (date.getMonth() + 1).toString();
             const day = date.getDate().toString();
@@ -2496,12 +2496,12 @@
 
                             // History of Arterial Clots
                             if (arterialClots) {
-                                arterialClots.textContent = srs.HistoryOfArterialClots ? `Yes (${srs.NumberOfArterialClots})` : 'No';
+                                arterialClots.textContent = srs.HistoryOfArterialClots ? `Yes (${srs.ArterialClotsOccurrences})` : 'No';
                             }
 
                             // History of Venous Clots
                             if (venousClots) {
-                                venousClots.textContent = srs.HistoryOfVenousClots ? `Yes (${srs.NumberOfVenousClots})` : 'No';
+                                venousClots.textContent = srs.HistoryOfVenousClots ? `Yes (${srs.VenousClotOccurrences})` : 'No';
                             }
 
                             // History of CHF

@@ -160,7 +160,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['HistoryOfCAD'] = request.form.get('HistoryOfCAD') == 'true'
         form_data['HistoryOfValvularHeartDisease'] = request.form.get('HistoryOfValvularHeartDisease') == 'true'
         form_data['HistoryOfCKD'] = request.form.get('HistoryOfCKD') == 'true'
-        form_data['HistoryOfHyperlipidemia'] = request.form.get('HistoryOfHyperlipidemia') == 'true'
+        # form_data['HistoryOfHyperlipidemia'] = request.form.get('HistoryOfHyperlipidemia') == 'true'
         form_data['HistoryOfDiabetes'] = request.form.get('HistoryOfDiabetes') == 'true'
         form_data['HistoryOfObesity'] = request.form.get('HistoryOfObesity') == 'true'
         form_data['AnemiaSeverity'] = request.form.get('AnemiaSeverity') or None
