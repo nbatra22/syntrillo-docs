@@ -1067,6 +1067,28 @@
                         </h4>
                     </div>
                 </div>
+
+                <div id="rs-physical-inactivity-level-container" class="rs-metric-container">
+                    <div class="rs-metric-info">
+                        <div class="rs-metric-title-container">
+                            <h3 class="rs-metric-title">
+                                Physical Inactivity Level
+                            </h3>
+                            <i class="fa-solid fa-circle" style="display: none;"></i>
+                        </div>
+                        <h4 class="rs-metric-subtitle">
+                            Syntrillo - Charting Note
+                        </h4>
+                    </div>
+                    <div class="rs-metric-value-container">
+                        <h3 id="rs-physical-inactivity-level" class="rs-metric-value">
+                            -
+                        </h3>
+                        <h4 class="rs-metric-value-unit">
+                            hrs/day
+                        </h4>
+                    </div>
+                </div>
             </section>
 
         </div>
@@ -2180,6 +2202,7 @@
         // Physical Activity
         const moderateVigorousActivity = document.getElementById("rs-moderate-vigorous-activity");
         const physicalInactivity = document.getElementById("rs-physical-inactivity");
+        const physicalInactivityLevel = document.getElementById("rs-physical-inactivity-level");
 
         // Lab Values
         const ha1c = document.getElementById("rs-ha1c");
@@ -2427,6 +2450,7 @@
 
                             // Physical Activity
                             if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityHours || '-';
+                            if (physicalInactivityLevel) physicalInactivityLevel.textContent = srs.PhysicalInactivityLevel || '-';
 
                             // Lab Values
                             if (ha1c) ha1c.textContent = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : '-';
@@ -2488,7 +2512,7 @@
                             }
 
                             // History of Carotid Stenosis
-                            if (srs.History) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
+                            if (srs.HistoryOfCarotidStenosis) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
                             if (srs.HistoryOfCarotidStenosis === true) {
                                 carotidStenosisDegreeContainer.style.display = 'flex';
                                 carotidStenosisDegree.textContent = srs.StenosisPercentage || '-';
@@ -2573,7 +2597,6 @@
                                 }
 
                                 // Update chronic infarct compliance badge
-                                const chronicInfarctTreatmentOptimization = document.getElementById('rs-chronic-infarct-treatment-optimization');
                                 if (chronicInfarctTreatmentOptimization && compliance.chronicInfarctCompliance) {
                                     chronicInfarctTreatmentOptimization.textContent = compliance.chronicInfarctCompliance.toUpperCase();
                                     chronicInfarctTreatmentOptimization.style.display = 'flex';
@@ -2641,8 +2664,8 @@
 
                                 // Update LDL compliance badge
                                 if (ldlTreatmentOptimization && compliance.ldlCompliance) {
-                                    ldlTreatmentOptimization.textContent = compliance.ldlCompliance.toUpperCase();
                                     ldlTreatmentOptimization.style.display = 'flex';
+                                    ldlTreatmentOptimization.textContent = compliance.ldlCompliance.toUpperCase();
                                 }
 
                                 // Update HDL compliance badge

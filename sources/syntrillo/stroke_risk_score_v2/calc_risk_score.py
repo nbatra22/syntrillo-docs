@@ -72,7 +72,7 @@ weighting = {
         TreatmentComplianceOptions.OPTIMIZED: 1.0,
         TreatmentComplianceOptions.PARTIALLY_OPTIMIZED: 0.5,
         TreatmentComplianceOptions.NOT_OPTIMIZED: 0.0,
-        # None: 0.0,
+        None: 0.0,
     }
 }
 
