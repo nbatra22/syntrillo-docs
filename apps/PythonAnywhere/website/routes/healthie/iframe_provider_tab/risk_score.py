@@ -137,10 +137,10 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
 
     """
     # Check if the request origin/referer is allowed
-    iframe_validator = IframeValidator()
-    iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
-    if not iframe_valid:
-        abort(403, description="Access Denied")
+    # iframe_validator = IframeValidator()
+    # iframe_valid, iframe_log = iframe_validator.is_request_allowed(request)
+    # if not iframe_valid:
+    #     abort(403, description="Access Denied")
 
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
@@ -190,7 +190,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data['StenosisPercentage'] = request.form.get('StenosisPercentage') or None
         form_data['OSASeverity'] = request.form.get('OSASeverity') or None
         form_data['CADType'] = request.form.get('CADType') or None
-        form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) or None
+        # form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) or None
         form_data['HemoglobinA1c'] = float(request.form.get('HemoglobinA1c')) or None
         # form_data['LDLLevel'] = request.form.get('LDLLevel') or None
         # form_data['HDLLevel'] = request.form.get('HDLLevel') or None

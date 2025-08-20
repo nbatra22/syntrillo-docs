@@ -51,6 +51,7 @@
     .rs-modal-title-container {
         display: flex;
         flex-direction: column;
+        justify-content: center;
         gap: 0.25rem;
     }
 
@@ -600,15 +601,15 @@
                     </h1>
                 </div>
                 <h2 id="" class="">
-                    Charting notes encompass all factors included in the stroke risk score calculation. To update
+                    <!-- Charting notes encompass all factors included in the stroke risk score calculation. To update
                     specific sections of the patient's health information only, click on the plus (+) icon in the
-                    respective category.
+                    respective category. -->
                 </h2>
             </div>
             <div id="" class="rs-header-btns-container">
                 <button id="rs-create-charting-note-btn" class="rs-btn"
                     onclick="openModal('/healthie/iframe_provider_tab/forms/charting_note', 'Charting Note')">
-                    <i class="fa-solid fa-plus"></i> Charting Note
+                    <i class="fa-solid fa-plus"></i> Update Data
                 </button>
                 <div class="rs-legend-dropdown-container">
                     <button id="rs-legend-dropdown-btn" class="rs-btn" onclick="toggleLegendDropdown()">
@@ -662,9 +663,9 @@
                 <h2 id="rs-risk-score-value" class="rs-total-score">
                     NA
                 </h2>
-                <h3 id="rs-risk-score-classification" class="rs-max-score">
+                <!-- <h3 id="rs-risk-score-classification" class="rs-max-score">
                     Calculating...
-                </h3>
+                </h3> -->
             </div>
             <div id="" class="rs-score-container">
                 <h3 id="rs-priority-score-title" class="rs-score-title">
@@ -673,9 +674,9 @@
                 <h2 id="rs-priority-score-value" class="rs-total-score">
                     NA
                 </h2>
-                <h3 id="rs-priority-score-classification" class="rs-max-score">
+                <!-- <h3 id="rs-priority-score-classification" class="rs-max-score">
                     Calculating...
-                </h3>
+                </h3> -->
             </div>
         </div>
     </div>
@@ -903,7 +904,7 @@
                                 <h3 class="rs-metric-title">
                                     Systolic BP - Variability (1mo. Trailing)
                                 </h3>
-                                <!-- <i id="rs-bp-variability-circle" class="fa-solid fa-circle" style="display: none; color: green;"></i> -->
+                                <i id="rs-bp-variability-circle" class="fa-solid fa-circle" style="display: none; color: green;"></i>
                             </div>
                             <h4 class="rs-metric-subtitle">
                                 Tenovi BPM
@@ -2179,8 +2180,8 @@
         // Get all the HTML elements we need to update
         const riskScore = document.getElementById("rs-risk-score-value");
         const priorityScore = document.getElementById("rs-priority-score-value");
-        const riskScoreClassification = document.getElementById("rs-risk-score-classification");
-        const priorityScoreClassification = document.getElementById("rs-priority-score-classification");
+        // const riskScoreClassification = document.getElementById("rs-risk-score-classification");
+        // const priorityScoreClassification = document.getElementById("rs-priority-score-classification");
 
         // Biometrics
         const height = document.getElementById("rs-height");
@@ -2292,15 +2293,15 @@
         showSpinner(priorityScore);
         errorMessage.style.display = 'none';
         errorMessageText.textContent = '';
-        riskScoreClassification.textContent = 'Calculating...';
-        priorityScoreClassification.textContent = 'Calculating...';
+        // riskScoreClassification.textContent = 'Calculating...';
+        // priorityScoreClassification.textContent = 'Calculating...';
 
         const formData = new FormData();
         formData.append('healthie_provider_id', healthieProviderId);
         formData.append('healthie_user_id', healthieUserId);
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
-
+        // console.log("Fetching risk score data...");
         fetch("{{ url_for('iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_data') }}", {
             method: "POST",
             body: formData
@@ -2310,8 +2311,8 @@
                 if (!response.ok) {
                     riskScore.textContent = 'NA';
                     priorityScore.textContent = 'NA';
-                    riskScoreClassification.textContent = 'Insufficient Data';
-                    priorityScoreClassification.textContent = 'Insufficient Data';
+                    // riskScoreClassification.textContent = 'Insufficient Data';
+                    // priorityScoreClassification.textContent = 'Insufficient Data';
                     errorMessage.style.display = 'block';
                     errorMessageText.textContent = `Error ${statusCode}: Unable to retrieve risk score data`;
                 }
@@ -2331,6 +2332,7 @@
                         const sbpTrailingCircle = document.getElementById('rs-bp-trailing-sbp-circle');
                         const dbpTrailingCircle = document.getElementById('rs-bp-trailing-dbp-circle');
                         const sbpPeakCircle = document.getElementById('rs-bp-peak-circle');
+                        const sbpVariabilityCircle = document.getElementById('rs-bp-variability-circle');
 
                         const thresholds = {
                             'sbp': {
@@ -2344,6 +2346,10 @@
                             'peak_sbp': {
                                 'yellow': 170,
                                 'red': 180
+                            },
+                            'variability': {
+                                'yellow': 7.5**2,
+                                'red': 15**2
                             }
                         }
 
@@ -2396,6 +2402,13 @@
                             dbpBaselineCircle.style.color = 'yellow';
                         }
                         dbpBaselineCircle.style.display = 'block';
+
+                        if (bp.systolic.trailing.variability >= thresholds.variability.red) {
+                            sbpVariabilityCircle.style.color = 'red';
+                        } else if (bp.systolic.trailing.variability >= thresholds.variability.yellow) {
+                            sbpVariabilityCircle.style.color = 'yellow';
+                        }
+                        sbpVariabilityCircle.style.display = 'block';
                     }
 
                     // Update Healthie SRS Data
@@ -2403,18 +2416,18 @@
                         const healthie = metrics.healthie_srs_data;
 
                         // Update RHR if SRS data doesn't have it
-                        if (healthie.average_rhr_baseline && hrBaseline && hrBaseline.textContent === '-') {
+                        if (healthie.average_rhr_baseline) {
                             hrBaseline.textContent = healthie.average_rhr_baseline || '-';
                         }
-                        if (healthie.average_rhr_trailing && hrTrailing) {
+                        if (healthie.average_rhr_trailing) {
                             hrTrailing.textContent = healthie.average_rhr_trailing || '-';
                         }
 
                         // Update Physical Activity data
-                        if (healthie.activity_minutes_answer && moderateVigorousActivity) {
+                        if (healthie.activity_minutes_answer) {
                             moderateVigorousActivity.textContent = healthie.activity_minutes_answer || '-';
                         }
-                        if (healthie.inactivity_hours_answer && physicalInactivity) {
+                        if (healthie.inactivity_hours_answer) {
                             physicalInactivity.textContent = healthie.inactivity_hours_answer || '-';
                         }
                     }
@@ -2426,8 +2439,8 @@
                         hideSpinner(priorityScore);
                         riskScore.textContent = 'NA';
                         priorityScore.textContent = 'NA';
-                        riskScoreClassification.textContent = 'Insufficient Data';
-                        priorityScoreClassification.textContent = 'Insufficient Data';
+                        // riskScoreClassification.textContent = 'Insufficient Data';
+                        // priorityScoreClassification.textContent = 'Insufficient Data';
                         return;
                     }
 
@@ -2444,31 +2457,31 @@
                     }
 
                     // Update score classification based on total score
-                    if (riskScoreClassification) {
-                        const score = data.data.risk_score;
-                        if (score === null || score === undefined) {
-                            riskScoreClassification.textContent = 'Insufficient Data';
-                        } else if (score < 7) {
-                            riskScoreClassification.textContent = 'LOW RISK';
-                        } else if (score < 14) {
-                            riskScoreClassification.textContent = 'MEDIUM RISK';
-                        } else {
-                            riskScoreClassification.textContent = 'HIGH RISK';
-                        }
-                    }
+                    // if (riskScoreClassification) {
+                    //     const score = data.data.risk_score;
+                    //     if (score === null || score === undefined) {
+                    //         riskScoreClassification.textContent = 'Insufficient Data';
+                    //     } else if (score < 7) {
+                    //         riskScoreClassification.textContent = 'LOW RISK';
+                    //     } else if (score < 14) {
+                    //         riskScoreClassification.textContent = 'MEDIUM RISK';
+                    //     } else {
+                    //         riskScoreClassification.textContent = 'HIGH RISK';
+                    //     }
+                    // }
 
-                    if (priorityScoreClassification) {
-                        const score = data.data.priority_score;
-                        if (score === null || score === undefined) {
-                            priorityScoreClassification.textContent = 'Insufficient Data';
-                        } else if (score < 7) {
-                            priorityScoreClassification.textContent = 'LOW RISK';
-                        } else if (score < 14) {
-                            priorityScoreClassification.textContent = 'MEDIUM RISK';
-                        } else {
-                            priorityScoreClassification.textContent = 'HIGH RISK';
-                        }
-                    }
+                    // if (priorityScoreClassification) {
+                    //     const score = data.data.priority_score;
+                    //     if (score === null || score === undefined) {
+                    //         priorityScoreClassification.textContent = 'Insufficient Data';
+                    //     } else if (score < 7) {
+                    //         priorityScoreClassification.textContent = 'LOW RISK';
+                    //     } else if (score < 14) {
+                    //         priorityScoreClassification.textContent = 'MEDIUM RISK';
+                    //     } else {
+                    //         priorityScoreClassification.textContent = 'HIGH RISK';
+                    //     }
+                    // }
 
                     // Update SRS Response Data (Charting Note data)
                     if (metrics.srs_response_data) {
@@ -2480,7 +2493,7 @@
                         if (bmi) bmi.textContent = Math.round(srs.BMI, 2) || '-';
 
                         // Heart Rate (from SRS data)
-                        if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
+                        // if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
 
                         // Physical Activity
                         if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityHours || '-';
@@ -2719,7 +2732,7 @@
                 }
             })
             .catch(error => {
-                console.error("Error fetching risk score:", error);
+                // console.error("Error fetching risk score:", error);
                 errorMessage.style.display = 'block';
 
                 // Extract status code from error message if it's an HTTP error
