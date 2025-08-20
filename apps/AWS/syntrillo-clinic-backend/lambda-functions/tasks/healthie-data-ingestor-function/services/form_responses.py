@@ -436,6 +436,9 @@ class FormResponseService:
                         created_at
                     )
                     VALUES (%s, %s, %s,REPLACE(%s, '\n', '|'), %s)
+                    ON DUPLICATE KEY UPDATE
+                        answer=VALUES(answer),
+                        created_at=VALUES(created_at);
                 """
 
                 # Convert to list of tuples for executemany
