@@ -74,7 +74,6 @@ class DatabaseConnection:
 
             # select database to use
             self.database_server = os.getenv('DATABASE_SERVER')
-
             if self.database_server == 'AWS':
 
                 self.AWS_DB_CONFIG = {

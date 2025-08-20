@@ -181,9 +181,11 @@ class LookUpCodesManagement:
                 'syntrillo_internal_key': syntrillo_internal_key
             }
             add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY', json_data=str(result), comment=f"Entry retrieved for syntrillo_internal_key {syntrillo_internal_key}")
+            logger.info(f"Healthie user id successfully retrieved for syntrillo_internal_key {syntrillo_internal_key}...")
             return result
         else:
             add_log_entry(event='RETRIEVE_ENTRY_BY_INTERNAL_KEY_FAILED', json_data=str(syntrillo_internal_key), comment="No entry found.")
+            logger.info(f"No entry found for syntrillo_internal_key {syntrillo_internal_key}...")
             return None
 
     def retrieve_entry_by_pseudo_code(self, pseudo_code_for_tenovi_phi_access: uuid.UUID):

@@ -1,0 +1,241 @@
+<!-- MAIN CONTENT -->
+<div id="f-container" class="f-container">
+
+    <div id="f-l-col" class="f-col">
+        <h2 id="forms-title-l" class="forms-title">
+            Forms
+        </h2>
+
+        <!-- Table Header -->
+        <div class="f-form-list-header">
+            <div>Date of Service</div>
+            <div>Form Type</div>
+            <div>Created By</div>
+        </div>
+
+        <!-- Forms List -->
+        <div id="f-forms-list" class="f-list">
+            <div class="f-form" onclick="openModal('/healthie/iframe_provider_tab/form_response', 'Follow-Up Visit')">
+                <div class="f-form-date">3/14/2025</div>
+                <div class="f-form-type">Follow-Up Visit</div>
+                <div class="f-form-author">Fake Clinician</div>
+            </div>
+
+            <!-- Additional entries -->
+            <div class="f-form">
+                <div class="f-form-date">3/02/2025</div>
+                <div class="f-form-type">Medication Review</div>
+                <div class="f-form-author">Dr. Sample</div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="f-r-col" class="f-col">
+        <h2 id="forms-title-r" class="forms-title">
+            Create New Form
+        </h2>
+        <div id="f-new-forms-list" class="f-list">
+            <!-- <button id="medications-btn" class="f-new-form-btn"
+                onclick="openModal('/healthie/iframe_provider_tab/forms/medication_form', 'Medication Form')">
+                <i class="fa-solid fa-pills"></i> Add Medication
+            </button> -->
+            <button id="medications-btn" class="f-new-form-btn"
+                onclick="openModal('/healthie/iframe_provider_tab/forms/follow_up_form', 'Follow-Up Visit')">
+                <i class="fa-solid fa-notes-medical"></i> Follow-Up Visit
+            </button>
+            <button id="medications-btn" class="f-new-form-btn"
+                onclick="openModal('/healthie/iframe_provider_tab/forms/monthly_visit', 'Monthly Visit')">
+                <i class="fa-solid fa-notes-medical"></i> Monthly Visit
+            </button>
+            <button id="charting-note-btn" class="f-new-form-btn"
+                onclick="openModal('/healthie/iframe_provider_tab/forms/charting_note', 'Charting Note')">
+                <i class="fa-solid fa-file-medical"></i> Charting Note
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL CONTENT (placed outside main content) -->
+<div id="f-modal" class="f-modal" style="display: none;">
+    <div class="f-modal-content">
+        <div class="f-modal-header">
+            <h2 id="f-modal-title" class="f-modal-title"></h2>
+            <button class="close-btn" onclick="closeModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <iframe id="modalIframe" src="" width="100%" height="600" style="border: none;"></iframe>
+    </div>
+</div>
+
+<!-- STYLING -->
+<style>
+    .f-container {
+        display: flex;
+        gap: 2rem;
+        width: 100%;
+    }
+
+    .forms-title {
+        font-weight: bold;
+        font-size: large;
+    }
+
+    .f-col {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    #f-l-col {
+        flex: 2;
+    }
+
+    #f-r-col {
+        flex: 1;
+    }
+
+    /* .form-section {
+        padding: 1rem;
+        max-width: 700px;
+    } */
+
+    .f-form-list-header {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        padding: 0.75rem 1rem;
+        /* color: #6b7280; */
+        color: #16284a;
+        /* border-bottom: 1px solid #9ca3af; */
+        border-bottom: 1px solid;
+        font-size: small;
+        font-weight: bold;
+    }
+
+    .f-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .f-form {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .f-form:hover {
+        background-color: #e5e7eb;
+    }
+
+    .f-form-date, .f-form-author {
+        /* font-size: small; */
+        color: #6b7280;
+    }
+
+    /* .f-form-type {
+        font-weight: 500;
+    } */
+
+
+    .f-new-form-btn {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        border: none;
+        cursor: pointer;
+    }
+
+    .f-new-form-btn:hover {
+        background-color: #d1d5db;
+    }
+
+    .f-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .f-modal-title {
+        font-weight: bold;
+        font-size: large;
+    }
+
+    .f-modal-content {
+        background: #fff;
+        /* padding: 1rem; */
+        width: 600px;
+        max-width: 90%;
+        /* height: 800px; */
+        /* max-height: 90%; */
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .f-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #d1d5db;
+    }
+
+    .close-btn {
+        cursor: pointer;
+        padding: 0.5rem;
+        border: none;
+        outline: none;
+        background: transparent;
+        border-radius: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn:hover {
+        color: red;
+    }
+
+    .close-btn:active {
+        outline: none !important;
+    }
+</style>
+
+<!-- SCRIPTS -->
+<script>
+
+    function openModal(src, title) {
+        const modal = document.getElementById('f-modal');
+        const iframe = document.getElementById('modalIframe');
+        const header = document.getElementById('f-modal-title');
+
+        iframe.src = src;
+        header.textContent = title;
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('f-modal');
+        const iframe = document.getElementById('modalIframe');
+        const header = document.getElementById('f-modal-title');
+
+        iframe.src = '';
+        header.textContent = '';
+        modal.style.display = 'none';
+    }
+
+</script>

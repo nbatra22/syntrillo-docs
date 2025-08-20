@@ -414,7 +414,7 @@ class HealthieMetrics():
         return all_entries, combined_log
 
 
-    def get_metric_data__with_cursor(
+    def get_metric_data_with_cursor(
         self,
         user_id: str,
         category: str,

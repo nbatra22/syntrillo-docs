@@ -1,4 +1,3 @@
-from flask import jsonify
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.billing.models import BillingEligibility
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager

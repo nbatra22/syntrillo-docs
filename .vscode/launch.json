@@ -27,6 +27,27 @@
             ],
             "jinja": true,
             "autoStartBrowser": false
+        },
+        {
+          "name": "Python Debugger: SRS Data Aggregator",
+          "type": "debugpy",
+          "request": "launch",
+          "module": "sources.syntrillo.stroke_risk_score_v2.agg_data",
+          "console": "integratedTerminal"
+        },
+        {
+          "name": "Python Debugger: SRS Iframe DB",
+          "type": "debugpy",
+          "request": "launch",
+          "module": "sources.syntrillo.stroke_risk_score_v2.srs_iframe_db",
+          "console": "integratedTerminal"
+        },
+        {
+          "name": "Python Debugger: SRS Risk Score Calculator",
+          "type": "debugpy",
+          "request": "launch",
+          "module": "sources.syntrillo.stroke_risk_score_v2.calc_risk_score",
+          "console": "integratedTerminal"
         }
     ]
 }

@@ -1,7 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, abort, Response, send_file
 import pandas as pd
-import json
-import base64
 import io
 from datetime import datetime
 import uuid
@@ -9,7 +7,6 @@ import uuid
 from .post_management import PostManager
 
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
 from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
@@ -19,7 +16,6 @@ from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_bp_analysis_bp = Blueprint('iframe_healthie_provider_tab_bp_analysis_bp', __name__)
 
-from syntrillo.system.logger import logger
 
 # @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure', methods=['POST'])
 # def iframe_healthie_provider_tab_blood_pressure():
@@ -230,16 +226,7 @@ def iframe_healthie_provider_tab_get_metrics():
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    hr_measurements, log = db_manager.get_latest_measurements(metric='pulse', count=3)
-
-    # Calculate average heart rate from the first value of each tuple
-    hr_values = [float(measurement[0]) for measurement in hr_measurements]
-    average_hr = round(sum(hr_values) / len(hr_values), 1)
-
-    hr_measurements_cleaned = {
-        'latest_date': datetime.fromisoformat(hr_measurements[0][2]).strftime('%-m/%-d/%y'),
-        'avg_hr': average_hr
-    }
+    hr_measurements, log = db_manager.get_latest_measurements(metric_name='pulse', count=3)
 
     forms_manager = HealthieForms()
     autoscored_sections  = forms_manager.get_autoscored_sections(
