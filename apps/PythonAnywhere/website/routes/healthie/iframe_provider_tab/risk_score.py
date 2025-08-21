@@ -284,8 +284,26 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         # Handle compliance fields - only include if they exist
         compliance_data = {}
         compliance_fields = [
-            'strokeCompliance', 'arterialClotsCompliance', 'carotidStenosisCompliance',
-            'ldlCompliance', 'hdlCompliance', 'triglyceridesCompliance'
+            'strokeCompliance',
+            'tiaCompliance',
+            'chronicInfarctCompliance',
+            'atrialFibrillationCompliance',
+            'ironDeficiencyAnemiaCompliance',
+            'arterialClotsCompliance',
+            'venousClotsCompliance',
+            'chfCompliance',
+            'carotidStenosisCompliance',
+            'osaCompliance',
+            'cadCompliance',
+            'valvularHeartDiseaseCompliance',
+            # 'ckdCompliance',
+            # 'diabetesCompliance',
+            # 'obesityCompliance',
+            'hemoglobinA1cCompliance',
+            'ldlCompliance',
+            'hdlCompliance',
+            'triglyceridesCompliance',
+            'creatinineCompliance'
         ]
 
         for field in compliance_fields:
