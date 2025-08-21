@@ -69,6 +69,12 @@
         border: 1px solid #bbf7d0;
     }
 
+    #form-status-message.pending {
+        color: #3b82f6;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
     #form-status-message.error {
         color: #ef4444;
         background-color: #fef2f2;
@@ -79,6 +85,11 @@
         color: #3b82f6;
         background-color: #eff6ff;
         border: 1px solid #bfdbfe;
+    }
+
+    .form-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     h2 {
@@ -93,7 +104,7 @@
 
     <div id="charting-note-form-content" class="form-content">
 
-        <div id="patient-information-container" class="form-group">
+        <!-- <div id="patient-information-container" class="form-group">
             <label for="patient-information-container">
                 1. Gender?
             </label>
@@ -113,11 +124,11 @@
                     </label>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div id="previous-stroke-container" class="form-group">
             <label for="previous-stroke-container">
-                2. Has the patient had a previous stroke?
+                1. Has the patient had a previous stroke?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -235,7 +246,7 @@
 
         <div id="tia-screening" class="form-group">
             <label for="tia-screening">
-                3. For neurologist: Has the patient been screened for TIA?
+                2. For neurologist: Has the patient been screened for TIA?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -339,7 +350,7 @@
 
         <div id="prior-head-ct" class="form-group">
             <label for="prior-head-ct">
-                4. Has the patient had a prior head CT?
+                3. Has the patient had a prior head CT?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -384,6 +395,44 @@
             </div>
         </div>
 
+        <div id="prior-head-ct-chronic-infarct-mechanism" class="form-group" style="display: none;">
+            <label for="prior-head-ct-chronic-infarct-mechanism">
+                (Prior head CT - Chronic infarct) What was the chronic infarct mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-small-vessel" name="ChronicInfarctMechanism" value="Small Vessel">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-large-vessel" name="ChronicInfarctMechanism" value="Large Vessel">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-cryptogenic" name="ChronicInfarctMechanism" value="Cryptogenic">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-hypercoagulable" name="ChronicInfarctMechanism" value="Hypercoagulable">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-hypercoagulable">
+                        Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-structural" name="ChronicInfarctMechanism" value="Structural">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-structural">
+                        Structural
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Chronic Infarct Compliance Question -->
         <div id="chronic-infarct-compliance-dependent" class="form-group" style="display: none;">
             <label for="chronic-infarct-compliance">
@@ -416,7 +465,7 @@
 
         <div id="history-select" class="form-group">
             <label for="history-select">
-                5. History of any of the following:
+                4. History of any of the following:
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
@@ -488,18 +537,18 @@
                         Hyperlipidemia
                     </label>
                 </div> -->
-                <div class="input-button-group-item">
+                <!-- <div class="input-button-group-item">
                     <input type="checkbox" id="history-of-diabetes" name="HistoryOfDiabetes">
                     <label for="history-of-diabetes">
                         Diabetes
                     </label>
-                </div>
-                <div class="input-button-group-item">
+                </div> -->
+                <!-- <div class="input-button-group-item">
                     <input type="checkbox" id="history-of-obesity" name="HistoryOfObesity">
                     <label for="history-of-obesity">
                         Obesity
                     </label>
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -1125,14 +1174,14 @@
 
         <div class="form-group">
             <label for="ha1c">
-                6. What's the patient's last known Hemoglobin A1c (HA1c)?
+                5. What's the patient's last known Hemoglobin A1c (HA1c)?
             </label>
             <input type="number" id="ha1c" name="HemoglobinA1c" step="0.1">
         </div>
 
         <div class="form-group">
             <label for="ldl">
-                7. Last known LDL level?
+                6. Last known LDL level?
             </label>
             <input type="number" id="ldl" name="LDL" step="0.1">
         </div>
@@ -1166,7 +1215,7 @@
 
         <div class="form-group">
             <label for="hdl">
-                8. Last known HDL level?
+                7. Last known HDL level?
             </label>
             <input type="number" id="hdl" name="HDL" step="0.1">
         </div>
@@ -1200,7 +1249,7 @@
 
         <div class="form-group">
             <label for="hyperlipidemia-treatment">
-                9. Last known triglycerides level?
+                8. Last known triglycerides level?
             </label>
             <input type="number" id="triglycerides" name="Triglycerides" step="0.1">
         </div>
@@ -1269,21 +1318,11 @@
 
     </div>
 
-
-
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay" style="display: none;">
-        <div class="loading-spinner">
-            <i class="fa fa-spinner fa-spin"></i>
-            <p>Submitting form...</p>
-        </div>
-    </div>
-
     <div class="form-submit-footer">
         <h3 id="form-status-message">
 
         </h3>
-        <button type="submit" id="monthly-visit-submit-btn" class="form-submit-btn" onclick="submitChartingNoteForm()">
+        <button type="submit" id="charting-note-submit-btn" class="form-submit-btn" onclick="submitChartingNoteForm()">
             Save
         </button>
     </div>

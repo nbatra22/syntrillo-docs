@@ -154,8 +154,9 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data = {}
 
         # Only extract fields that are actually present in the form
-        if request.form.get('Gender'):
-            form_data['Gender'] = request.form.get('Gender')
+        # if request.form.get('Gender'):
+        #     form_data['Gender'] = request.form.get('Gender')
+        form_data['Gender'] = 'man'
 
         if request.form.get('HasPreviousStroke'):
             form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'
