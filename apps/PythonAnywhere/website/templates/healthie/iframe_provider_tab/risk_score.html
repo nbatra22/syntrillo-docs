@@ -2950,9 +2950,29 @@
     });
 
     // Function to toggle dependent questions in the charting note form
-    // Function to toggle dependent questions in the charting note form
     function toggleChartingNoteDependencies() {
         console.log('=== toggleChartingNoteDependencies function called ===');
+
+        // Helper function to clear all inputs in a container
+        function clearContainerInputs(container) {
+            if (!container) return;
+
+            // Clear radio buttons
+            const radioButtons = container.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => radio.checked = false);
+
+            // Clear checkboxes
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+
+            // Clear text inputs
+            const textInputs = container.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+            textInputs.forEach(input => input.value = '');
+
+            // Clear select dropdowns
+            const selects = container.querySelectorAll('select');
+            selects.forEach(select => select.selectedIndex = 0);
+        }
 
         // 1. Stroke History Dependencies
         const hasPreviousStroke = document.querySelector('input[name="HasPreviousStroke"]:checked')?.value === 'yes';
@@ -2963,14 +2983,28 @@
         const strokeTreatmentDependent = document.getElementById('stroke-treatment-dependent');
 
         if (previousStrokeCountContainer) {
-            previousStrokeCountContainer.style.display = hasPreviousStroke ? 'block' : 'none';
-            console.log('Set previousStrokeCountContainer display to:', hasPreviousStroke ? 'block' : 'none');
+            if (hasPreviousStroke) {
+                previousStrokeCountContainer.style.display = 'block';
+            } else {
+                previousStrokeCountContainer.style.display = 'none';
+                clearContainerInputs(previousStrokeCountContainer);
+            }
         }
         if (previousStrokeMechanism) {
-            previousStrokeMechanism.style.display = hasPreviousStroke ? 'block' : 'none';
+            if (hasPreviousStroke) {
+                previousStrokeMechanism.style.display = 'block';
+            } else {
+                previousStrokeMechanism.style.display = 'none';
+                clearContainerInputs(previousStrokeMechanism);
+            }
         }
         if (strokeTreatmentDependent) {
-            strokeTreatmentDependent.style.display = hasPreviousStroke ? 'block' : 'none';
+            if (hasPreviousStroke) {
+                strokeTreatmentDependent.style.display = 'block';
+            } else {
+                strokeTreatmentDependent.style.display = 'none';
+                clearContainerInputs(strokeTreatmentDependent);
+            }
         }
 
         // 2. TIA Dependencies
@@ -2979,21 +3013,51 @@
         const tiaMechanism = document.getElementById('tia-mechanism');
         const tiaTreatmentDependent = document.getElementById('tia-treatment-dependent');
 
-        if (tiaLikelihood) tiaLikelihood.style.display = screenedForTIA ? 'block' : 'none';
-        if (tiaMechanism) tiaMechanism.style.display = screenedForTIA ? 'block' : 'none';
-        if (tiaTreatmentDependent) tiaTreatmentDependent.style.display = screenedForTIA ? 'block' : 'none';
+        if (tiaLikelihood) {
+            if (screenedForTIA) {
+                tiaLikelihood.style.display = 'block';
+            } else {
+                tiaLikelihood.style.display = 'none';
+                clearContainerInputs(tiaLikelihood);
+            }
+        }
+        if (tiaMechanism) {
+            if (screenedForTIA) {
+                tiaMechanism.style.display = 'block';
+            } else {
+                tiaMechanism.style.display = 'none';
+                clearContainerInputs(tiaMechanism);
+            }
+        }
+        if (tiaTreatmentDependent) {
+            if (screenedForTIA) {
+                tiaTreatmentDependent.style.display = 'block';
+            } else {
+                tiaTreatmentDependent.style.display = 'none';
+                clearContainerInputs(tiaTreatmentDependent);
+            }
+        }
 
         // 3. Prior Head CT Dependencies
         const hasPriorHeadCT = document.querySelector('input[name="HasPriorHeadCT"]:checked')?.value === 'yes';
         const priorHeadCTDate = document.getElementById('prior-head-ct-date');
         const priorHeadCTChronicInfarct = document.getElementById('prior-head-ct-chronic-infarct');
 
-        if (hasPriorHeadCT) {
-            priorHeadCTDate.style.display = 'block';
-            priorHeadCTChronicInfarct.style.display = 'block';
-        } else {
-            priorHeadCTDate.style.display = 'none';
-            priorHeadCTChronicInfarct.style.display = 'none';
+        if (priorHeadCTDate) {
+            if (hasPriorHeadCT) {
+                priorHeadCTDate.style.display = 'block';
+            } else {
+                priorHeadCTDate.style.display = 'none';
+                clearContainerInputs(priorHeadCTDate);
+            }
+        }
+        if (priorHeadCTChronicInfarct) {
+            if (hasPriorHeadCT) {
+                priorHeadCTChronicInfarct.style.display = 'block';
+            } else {
+                priorHeadCTChronicInfarct.style.display = 'none';
+                clearContainerInputs(priorHeadCTChronicInfarct);
+            }
         }
 
         // 4. Chronic Infarct Dependencies
@@ -3001,35 +3065,79 @@
         const priorHeadCTChronicInfarctMechanism = document.getElementById('prior-head-ct-chronic-infarct-mechanism');
         const chronicInfarctComplianceDependent = document.getElementById('chronic-infarct-compliance-dependent');
 
-        if (chronicInfarctPresent) {
-            priorHeadCTChronicInfarctMechanism.style.display = 'block';
-            chronicInfarctComplianceDependent.style.display = 'block';
-        } else {
-            priorHeadCTChronicInfarctMechanism.style.display = 'none';
-            chronicInfarctComplianceDependent.style.display = 'none';
+        if (priorHeadCTChronicInfarctMechanism) {
+            if (chronicInfarctPresent) {
+                priorHeadCTChronicInfarctMechanism.style.display = 'block';
+            } else {
+                priorHeadCTChronicInfarctMechanism.style.display = 'none';
+                clearContainerInputs(priorHeadCTChronicInfarctMechanism);
+            }
+        }
+        if (chronicInfarctComplianceDependent) {
+            if (chronicInfarctPresent) {
+                chronicInfarctComplianceDependent.style.display = 'block';
+            } else {
+                chronicInfarctComplianceDependent.style.display = 'none';
+                clearContainerInputs(chronicInfarctComplianceDependent);
+            }
         }
 
         // 5. Atrial Fibrillation Dependencies
         const historyOfAFib = document.getElementById('history-of-a-fib')?.checked;
         const aFibTreatmentDependent = document.getElementById('a-fib-treatment-dependent');
 
-        if (aFibTreatmentDependent) aFibTreatmentDependent.style.display = historyOfAFib ? 'block' : 'none';
+        if (aFibTreatmentDependent) {
+            if (historyOfAFib) {
+                aFibTreatmentDependent.style.display = 'block';
+            } else {
+                aFibTreatmentDependent.style.display = 'none';
+                clearContainerInputs(aFibTreatmentDependent);
+            }
+        }
 
         // 6. Iron Deficiency Anemia Dependencies
         const historyOfIronDeficiencyAnemia = document.getElementById('history-of-iron-deficiency-anemia')?.checked;
         const ironDeficiencyAnemiaDependent = document.getElementById('iron-deficiency-anemia-dependent');
         const ironDeficiencyAnemiaTreatmentDependent = document.getElementById('iron-deficiency-anemia-treatment-dependent');
 
-        if (ironDeficiencyAnemiaDependent) ironDeficiencyAnemiaDependent.style.display = historyOfIronDeficiencyAnemia ? 'block' : 'none';
-        if (ironDeficiencyAnemiaTreatmentDependent) ironDeficiencyAnemiaTreatmentDependent.style.display = historyOfIronDeficiencyAnemia ? 'block' : 'none';
+        if (ironDeficiencyAnemiaDependent) {
+            if (historyOfIronDeficiencyAnemia) {
+                ironDeficiencyAnemiaDependent.style.display = 'block';
+            } else {
+                ironDeficiencyAnemiaDependent.style.display = 'none';
+                clearContainerInputs(ironDeficiencyAnemiaDependent);
+            }
+        }
+        if (ironDeficiencyAnemiaTreatmentDependent) {
+            if (historyOfIronDeficiencyAnemia) {
+                ironDeficiencyAnemiaTreatmentDependent.style.display = 'block';
+            } else {
+                ironDeficiencyAnemiaTreatmentDependent.style.display = 'none';
+                clearContainerInputs(ironDeficiencyAnemiaTreatmentDependent);
+            }
+        }
 
         // 7. Arterial Clots Dependencies
         const historyOfArterialClots = document.getElementById('history-of-arterial-clots')?.checked;
         const arterialClotsDependent = document.getElementById('arterial-clots-dependent');
         const arterialClotsTreatmentDependent = document.getElementById('arterial-clots-treatment-dependent');
 
-        if (arterialClotsDependent) arterialClotsDependent.style.display = historyOfArterialClots ? 'block' : 'none';
-        if (arterialClotsTreatmentDependent) arterialClotsTreatmentDependent.style.display = historyOfArterialClots ? 'block' : 'none';
+        if (arterialClotsDependent) {
+            if (historyOfArterialClots) {
+                arterialClotsDependent.style.display = 'block';
+            } else {
+                arterialClotsDependent.style.display = 'none';
+                clearContainerInputs(arterialClotsDependent);
+            }
+        }
+        if (arterialClotsTreatmentDependent) {
+            if (historyOfArterialClots) {
+                arterialClotsTreatmentDependent.style.display = 'block';
+            } else {
+                arterialClotsTreatmentDependent.style.display = 'none';
+                clearContainerInputs(arterialClotsTreatmentDependent);
+            }
+        }
 
         // 8. Venous Clots Dependencies
         const historyOfVenousClots = document.getElementById('history-of-venous-clots')?.checked;
@@ -3037,52 +3145,136 @@
         const venousClotsPFODependent = document.getElementById('venous-clots-pfo-dependent');
         const venousClotsPFOTreatmentDependent = document.getElementById('venous-clots-pfo-treatment-dependent');
 
-        if (venousClotsDependent) venousClotsDependent.style.display = historyOfVenousClots ? 'block' : 'none';
-        if (venousClotsPFODependent) venousClotsPFODependent.style.display = historyOfVenousClots ? 'block' : 'none';
-        if (venousClotsPFOTreatmentDependent) venousClotsPFOTreatmentDependent.style.display = historyOfVenousClots ? 'block' : 'none';
+        if (venousClotsDependent) {
+            if (historyOfVenousClots) {
+                venousClotsDependent.style.display = 'block';
+            } else {
+                venousClotsDependent.style.display = 'none';
+                clearContainerInputs(venousClotsDependent);
+            }
+        }
+        if (venousClotsPFODependent) {
+            if (historyOfVenousClots) {
+                venousClotsPFODependent.style.display = 'block';
+            } else {
+                venousClotsPFODependent.style.display = 'none';
+                clearContainerInputs(venousClotsPFODependent);
+            }
+        }
+        if (venousClotsPFOTreatmentDependent) {
+            if (historyOfVenousClots) {
+                venousClotsPFOTreatmentDependent.style.display = 'block';
+            } else {
+                venousClotsPFOTreatmentDependent.style.display = 'none';
+                clearContainerInputs(venousClotsPFOTreatmentDependent);
+            }
+        }
 
         // 9. CHF Dependencies
         const historyOfCHF = document.getElementById('history-of-chf')?.checked;
         const chfEjectionFraction = document.getElementById('chf-ejection-fraction');
         const chfTreatmentDependent = document.getElementById('chf-treatment-dependent');
 
-        if (chfEjectionFraction) chfEjectionFraction.style.display = historyOfCHF ? 'block' : 'none';
-        if (chfTreatmentDependent) chfTreatmentDependent.style.display = historyOfCHF ? 'block' : 'none';
+        if (chfEjectionFraction) {
+            if (historyOfCHF) {
+                chfEjectionFraction.style.display = 'block';
+            } else {
+                chfEjectionFraction.style.display = 'none';
+                clearContainerInputs(chfEjectionFraction);
+            }
+        }
+        if (chfTreatmentDependent) {
+            if (historyOfCHF) {
+                chfTreatmentDependent.style.display = 'block';
+            } else {
+                chfTreatmentDependent.style.display = 'none';
+                clearContainerInputs(chfTreatmentDependent);
+            }
+        }
 
         // 10. Carotid Stenosis Dependencies
         const historyOfCarotidStenosis = document.getElementById('history-of-carotid-stenosis')?.checked;
         const carotidStenosisPercent = document.getElementById('carotid-stenosis-percent');
         const carotidStenosisTreatmentDependent = document.getElementById('carotid-stenosis-treatment-dependent');
 
-        if (carotidStenosisPercent) carotidStenosisPercent.style.display = historyOfCarotidStenosis ? 'block' : 'none';
-        if (carotidStenosisTreatmentDependent) carotidStenosisTreatmentDependent.style.display = historyOfCarotidStenosis ? 'block' : 'none';
+        if (carotidStenosisPercent) {
+            if (historyOfCarotidStenosis) {
+                carotidStenosisPercent.style.display = 'block';
+            } else {
+                carotidStenosisPercent.style.display = 'none';
+                clearContainerInputs(carotidStenosisPercent);
+            }
+        }
+        if (carotidStenosisTreatmentDependent) {
+            if (historyOfCarotidStenosis) {
+                carotidStenosisTreatmentDependent.style.display = 'block';
+            } else {
+                carotidStenosisTreatmentDependent.style.display = 'none';
+                clearContainerInputs(carotidStenosisTreatmentDependent);
+            }
+        }
 
         // 11. OSA Dependencies
         const historyOfOSA = document.getElementById('history-of-osa')?.checked;
         const osaSeverity = document.getElementById('osa-severity');
         const osaTreatmentDependent = document.getElementById('osa-treatment-dependent');
 
-        if (osaSeverity) osaSeverity.style.display = historyOfOSA ? 'block' : 'none';
-        if (osaTreatmentDependent) osaTreatmentDependent.style.display = historyOfOSA ? 'block' : 'none';
+        if (osaSeverity) {
+            if (historyOfOSA) {
+                osaSeverity.style.display = 'block';
+            } else {
+                osaSeverity.style.display = 'none';
+                clearContainerInputs(osaSeverity);
+            }
+        }
+        if (osaTreatmentDependent) {
+            if (historyOfOSA) {
+                osaTreatmentDependent.style.display = 'block';
+            } else {
+                osaTreatmentDependent.style.display = 'none';
+                clearContainerInputs(osaTreatmentDependent);
+            }
+        }
 
         // 12. CAD Dependencies
         const historyOfCAD = document.getElementById('history-of-cad')?.checked;
         const cadType = document.getElementById('cad-type');
         const cadTreatmentDependent = document.getElementById('cad-treatment-dependent');
 
-        if (cadType) cadType.style.display = historyOfCAD ? 'block' : 'none';
-        if (cadTreatmentDependent) cadTreatmentDependent.style.display = historyOfCAD ? 'block' : 'none';
+        if (cadType) {
+            if (historyOfCAD) {
+                cadType.style.display = 'block';
+            } else {
+                cadType.style.display = 'none';
+                clearContainerInputs(cadType);
+            }
+        }
+        if (cadTreatmentDependent) {
+            if (historyOfCAD) {
+                cadTreatmentDependent.style.display = 'block';
+            } else {
+                cadTreatmentDependent.style.display = 'none';
+                clearContainerInputs(cadTreatmentDependent);
+            }
+        }
 
         // 13. Valvular Heart Disease Dependencies
         const historyOfValvularHeartDisease = document.getElementById('history-of-valvular-heart-disease')?.checked;
         const valvularHeartDiseaseTreatmentDependent = document.getElementById('valvular-heart-disease-treatment-dependent');
 
-        if (valvularHeartDiseaseTreatmentDependent) valvularHeartDiseaseTreatmentDependent.style.display = historyOfValvularHeartDisease ? 'block' : 'none';
+        if (valvularHeartDiseaseTreatmentDependent) {
+            if (historyOfValvularHeartDisease) {
+                valvularHeartDiseaseTreatmentDependent.style.display = 'block';
+            } else {
+                valvularHeartDiseaseTreatmentDependent.style.display = 'none';
+                clearContainerInputs(valvularHeartDiseaseTreatmentDependent);
+            }
+        }
 
-        console.log('All dependencies toggled');
+        console.log('All dependencies toggled and dependent values cleared when appropriate');
     }
-
     // Add event listeners when modal opens
+    // Update the setupChartingNoteForm function
     function setupChartingNoteForm() {
         console.log('Setting up charting note form event listeners');
 
@@ -3096,8 +3288,469 @@
             });
         });
 
+        // Prepopulate the form with existing data
+        prepopulateChartingNoteForm();
+
         // Run once to set initial state
         toggleChartingNoteDependencies();
+    }
+
+    // Add this function to prepopulate the charting note form
+    function prepopulateChartingNoteForm() {
+        if (!srsData) {
+            console.log('No SRS data available for prepopulation');
+            return;
+        }
+
+        console.log('Prepopulating charting note form with:', srsData);
+
+        // 1. Previous Stroke Section
+        if (srsData.HasPreviousStroke) {
+            const hasPreviousStrokeRadio = document.querySelector('input[name="HasPreviousStroke"][value="yes"]');
+            if (hasPreviousStrokeRadio) {
+                hasPreviousStrokeRadio.checked = true;
+            }
+
+            if (srsData.NumberOfStrokes) {
+                const strokeCountRadio = document.querySelector(`input[name="NumberOfStrokes"][value="${srsData.NumberOfStrokes}"]`);
+                if (strokeCountRadio) {
+                    strokeCountRadio.checked = true;
+                }
+            }
+
+            if (srsData.LatestStrokeMechanism) {
+                const strokeMechanismRadio = document.querySelector(`input[name="LatestStrokeMechanism"][value="${srsData.LatestStrokeMechanism}"]`);
+                if (strokeMechanismRadio) {
+                    strokeMechanismRadio.checked = true;
+                }
+            }
+
+            if (srsData.strokeCompliance) {
+                const strokeComplianceRadio = document.querySelector(`input[name="strokeCompliance"][value="${srsData.strokeCompliance}"]`);
+                if (strokeComplianceRadio) {
+                    strokeComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        // 2. TIA Screening Section
+        if (srsData.ScreenedForTIA) {
+            const screenedForTIARadio = document.querySelector('input[name="ScreenedForTIA"][value="yes"]');
+            if (screenedForTIARadio) {
+                screenedForTIARadio.checked = true;
+            }
+
+            if (srsData.LikelihoodOfTIA) {
+                const tiaLikelihoodRadio = document.querySelector(`input[name="LikelihoodOfTIA"][value="${srsData.LikelihoodOfTIA}"]`);
+                if (tiaLikelihoodRadio) {
+                    tiaLikelihoodRadio.checked = true;
+                }
+            }
+
+            if (srsData.TIAMechanism) {
+                const tiaMechanismRadio = document.querySelector(`input[name="TIAMechanism"][value="${srsData.TIAMechanism}"]`);
+                if (tiaMechanismRadio) {
+                    tiaMechanismRadio.checked = true;
+                }
+            }
+
+            if (srsData.tiaCompliance) {
+                const tiaComplianceRadio = document.querySelector(`input[name="tiaCompliance"][value="${srsData.tiaCompliance}"]`);
+                if (tiaComplianceRadio) {
+                    tiaComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        // 3. Prior Head CT Section
+        if (srsData.HasPriorHeadCT) {
+            const hasPriorHeadCTRadio = document.querySelector('input[name="HasPriorHeadCT"][value="yes"]');
+            if (hasPriorHeadCTRadio) {
+                hasPriorHeadCTRadio.checked = true;
+            }
+
+            if (srsData.PriorCTDate) {
+                const priorCTDateInput = document.querySelector('input[name="PriorCTDate"]');
+                if (priorCTDateInput) {
+                    // Convert to YYYY-MM-DD format for input[type="date"]
+                    const date = new Date(srsData.PriorCTDate);
+                    const formattedDate = date.toISOString().split('T')[0];
+                    priorCTDateInput.value = formattedDate;
+                }
+            }
+
+            if (srsData.ChronicInfarctPresent) {
+                const chronicInfarctRadio = document.querySelector(`input[name="ChronicInfarctPresent"][value="${srsData.ChronicInfarctPresent}"]`);
+                if (chronicInfarctRadio) {
+                    chronicInfarctRadio.checked = true;
+                }
+
+                if (srsData.ChronicInfarctMechanism) {
+                    const chronicInfarctMechanismRadio = document.querySelector(`input[name="ChronicInfarctMechanism"][value="${srsData.ChronicInfarctMechanism}"]`);
+                    if (chronicInfarctMechanismRadio) {
+                        chronicInfarctMechanismRadio.checked = true;
+                    }
+                }
+
+                if (srsData.chronicInfarctCompliance) {
+                    const chronicInfarctComplianceRadio = document.querySelector(`input[name="chronicInfarctCompliance"][value="${srsData.chronicInfarctCompliance}"]`);
+                    if (chronicInfarctComplianceRadio) {
+                        chronicInfarctComplianceRadio.checked = true;
+                    }
+                }
+            }
+        }
+
+        // 4. Medical History Section
+        if (srsData.HistoryOfAtrialFibrillation) {
+            const afibCheckbox = document.querySelector('input[name="HistoryOfAtrialFibrillation"]');
+            if (afibCheckbox) {
+                afibCheckbox.checked = true;
+            }
+
+            if (srsData.atrialFibrillationCompliance) {
+                const afibComplianceRadio = document.querySelector(`input[name="atrialFibrillationCompliance"][value="${srsData.atrialFibrillationCompliance}"]`);
+                if (afibComplianceRadio) {
+                    afibComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfIronDeficiencyAnemia) {
+            const anemiaCheckbox = document.querySelector('input[name="HistoryOfIronDeficiencyAnemia"]');
+            if (anemiaCheckbox) {
+                anemiaCheckbox.checked = true;
+            }
+
+            if (srsData.AnemiaSeverity) {
+                const anemiaSeverityRadio = document.querySelector(`input[name="AnemiaSeverity"][value="${srsData.AnemiaSeverity}"]`);
+                if (anemiaSeverityRadio) {
+                    anemiaSeverityRadio.checked = true;
+                }
+            }
+
+            if (srsData.ironDeficiencyAnemiaCompliance) {
+                const anemiaComplianceRadio = document.querySelector(`input[name="ironDeficiencyAnemiaCompliance"][value="${srsData.ironDeficiencyAnemiaCompliance}"]`);
+                if (anemiaComplianceRadio) {
+                    anemiaComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfArterialClots) {
+            const arterialClotsCheckbox = document.querySelector('input[name="HistoryOfArterialClots"]');
+            if (arterialClotsCheckbox) {
+                arterialClotsCheckbox.checked = true;
+            }
+
+            if (srsData.ArterialClotOccurrences) {
+                const arterialClotsRadio = document.querySelector(`input[name="ArterialClotOccurrences"][value="${srsData.ArterialClotOccurrences}"]`);
+                if (arterialClotsRadio) {
+                    arterialClotsRadio.checked = true;
+                }
+            }
+
+            if (srsData.arterialClotsCompliance) {
+                const arterialClotsComplianceRadio = document.querySelector(`input[name="arterialClotsCompliance"][value="${srsData.arterialClotsCompliance}"]`);
+                if (arterialClotsComplianceRadio) {
+                    arterialClotsComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfVenousClots) {
+            const venousClotsCheckbox = document.querySelector('input[name="HistoryOfVenousClots"]');
+            if (venousClotsCheckbox) {
+                venousClotsCheckbox.checked = true;
+            }
+
+            if (srsData.VenousClotOccurrences) {
+                const venousClotsRadio = document.querySelector(`input[name="VenousClotOccurrences"][value="${srsData.VenousClotOccurrences}"]`);
+                if (venousClotsRadio) {
+                    venousClotsRadio.checked = true;
+                }
+            }
+
+            if (srsData.PFOPresence) {
+                const pfoRadio = document.querySelector(`input[name="PFOPresence"][value="${srsData.PFOPresence}"]`);
+                if (pfoRadio) {
+                    pfoRadio.checked = true;
+                }
+            }
+
+            if (srsData.venousClotsCompliance) {
+                const venousClotsComplianceRadio = document.querySelector(`input[name="venousClotsCompliance"][value="${srsData.venousClotsCompliance}"]`);
+                if (venousClotsComplianceRadio) {
+                    venousClotsComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfCHF) {
+            const chfCheckbox = document.querySelector('input[name="HistoryOfCHF"]');
+            if (chfCheckbox) {
+                chfCheckbox.checked = true;
+            }
+
+            if (srsData.EjectionFraction) {
+                const ejectionFractionRadio = document.querySelector(`input[name="EjectionFraction"][value="${srsData.EjectionFraction}"]`);
+                if (ejectionFractionRadio) {
+                    ejectionFractionRadio.checked = true;
+                }
+            }
+
+            if (srsData.chfCompliance) {
+                const chfComplianceRadio = document.querySelector(`input[name="chfCompliance"][value="${srsData.chfCompliance}"]`);
+                if (chfComplianceRadio) {
+                    chfComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfCarotidStenosis) {
+            const carotidStenosisCheckbox = document.querySelector('input[name="HistoryOfCarotidStenosis"]');
+            if (carotidStenosisCheckbox) {
+                carotidStenosisCheckbox.checked = true;
+            }
+
+            if (srsData.StenosisPercentage) {
+                const stenosisRadio = document.querySelector(`input[name="StenosisPercentage"][value="${srsData.StenosisPercentage}"]`);
+                if (stenosisRadio) {
+                    stenosisRadio.checked = true;
+                }
+            }
+
+            if (srsData.carotidStenosisCompliance) {
+                const carotidStenosisComplianceRadio = document.querySelector(`input[name="carotidStenosisCompliance"][value="${srsData.carotidStenosisCompliance}"]`);
+                if (carotidStenosisComplianceRadio) {
+                    carotidStenosisComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfOSA) {
+            const osaCheckbox = document.querySelector('input[name="HistoryOfOSA"]');
+            if (osaCheckbox) {
+                osaCheckbox.checked = true;
+            }
+
+            if (srsData.OSASeverity) {
+                const osaSeverityRadio = document.querySelector(`input[name="OSASeverity"][value="${srsData.OSASeverity}"]`);
+                if (osaSeverityRadio) {
+                    osaSeverityRadio.checked = true;
+                }
+            }
+
+            if (srsData.osaCompliance) {
+                const osaComplianceRadio = document.querySelector(`input[name="osaCompliance"][value="${srsData.osaCompliance}"]`);
+                if (osaComplianceRadio) {
+                    osaComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfCAD) {
+            const cadCheckbox = document.querySelector('input[name="HistoryOfCAD"]');
+            if (cadCheckbox) {
+                cadCheckbox.checked = true;
+            }
+
+            if (srsData.CADType) {
+                const cadTypeRadio = document.querySelector(`input[name="CADType"][value="${srsData.CADType}"]`);
+                if (cadTypeRadio) {
+                    cadTypeRadio.checked = true;
+                }
+            }
+
+            if (srsData.cadCompliance) {
+                const cadComplianceRadio = document.querySelector(`input[name="cadCompliance"][value="${srsData.cadCompliance}"]`);
+                if (cadComplianceRadio) {
+                    cadComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        if (srsData.HistoryOfValvularHeartDisease) {
+            const valvularHeartDiseaseCheckbox = document.querySelector('input[name="HistoryOfValvularHeartDisease"]');
+            if (valvularHeartDiseaseCheckbox) {
+                valvularHeartDiseaseCheckbox.checked = true;
+            }
+
+            if (srsData.valvularHeartDiseaseCompliance) {
+                const valvularHeartDiseaseComplianceRadio = document.querySelector(`input[name="valvularHeartDiseaseCompliance"][value="${srsData.valvularHeartDiseaseCompliance}"]`);
+                if (valvularHeartDiseaseComplianceRadio) {
+                    valvularHeartDiseaseComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        // 5. Lab Values Section
+        if (srsData.HemoglobinA1c) {
+            const ha1cInput = document.querySelector('input[name="HemoglobinA1c"]');
+            if (ha1cInput) {
+                ha1cInput.value = srsData.HemoglobinA1c;
+            }
+        }
+
+        if (srsData.LDL) {
+            const ldlInput = document.querySelector('input[name="LDL"]');
+            if (ldlInput) {
+                ldlInput.value = srsData.LDL;
+            }
+        }
+
+        if (srsData.HDL) {
+            const hdlInput = document.querySelector('input[name="HDL"]');
+            if (hdlInput) {
+                hdlInput.value = srsData.HDL;
+            }
+        }
+
+        if (srsData.Triglycerides) {
+            const triglyceridesInput = document.querySelector('input[name="Triglycerides"]');
+            if (triglyceridesInput) {
+                triglyceridesInput.value = srsData.Triglycerides;
+            }
+        }
+
+        if (srsData.Creatinine) {
+            const creatinineInput = document.querySelector('input[name="Creatinine"]');
+            if (creatinineInput) {
+                creatinineInput.value = srsData.Creatinine;
+            }
+        }
+
+        // 6. Treatment Optimization Section
+        if (srsData.compliance) {
+            const compliance = srsData.compliance;
+
+            // Stroke Compliance
+            if (compliance.strokeCompliance) {
+                const strokeComplianceRadio = document.querySelector(`input[name="strokeCompliance"][value="${compliance.strokeCompliance}"]`);
+                if (strokeComplianceRadio) {
+                    strokeComplianceRadio.checked = true;
+                }
+            }
+
+            // TIA Compliance
+            if (compliance.tiaCompliance) {
+                const tiaComplianceRadio = document.querySelector(`input[name="tiaCompliance"][value="${compliance.tiaCompliance}"]`);
+                if (tiaComplianceRadio) {
+                    tiaComplianceRadio.checked = true;
+                }
+            }
+
+            // Chronic Infarct Compliance
+            if (compliance.chronicInfarctCompliance) {
+                const chronicInfarctComplianceRadio = document.querySelector(`input[name="chronicInfarctCompliance"][value="${compliance.chronicInfarctCompliance}"]`);
+                if (chronicInfarctComplianceRadio) {
+                    chronicInfarctComplianceRadio.checked = true;
+                }
+            }
+
+            // Atrial Fibrillation Compliance
+            if (compliance.atrialFibrillationCompliance) {
+                const atrialFibrillationComplianceRadio = document.querySelector(`input[name="atrialFibrillationCompliance"][value="${compliance.atrialFibrillationCompliance}"]`);
+                if (atrialFibrillationComplianceRadio) {
+                    atrialFibrillationComplianceRadio.checked = true;
+                }
+            }
+
+            // Iron Deficiency Anemia Compliance
+            if (compliance.ironDeficiencyAnemiaCompliance) {
+                const ironDeficiencyAnemiaComplianceRadio = document.querySelector(`input[name="ironDeficiencyAnemiaCompliance"][value="${compliance.ironDeficiencyAnemiaCompliance}"]`);
+                if (ironDeficiencyAnemiaComplianceRadio) {
+                    ironDeficiencyAnemiaComplianceRadio.checked = true;
+                }
+            }
+
+            // Arterial Clots Compliance
+            if (compliance.arterialClotsCompliance) {
+                const arterialClotsComplianceRadio = document.querySelector(`input[name="arterialClotsCompliance"][value="${compliance.arterialClotsCompliance}"]`);
+                if (arterialClotsComplianceRadio) {
+                    arterialClotsComplianceRadio.checked = true;
+                }
+            }
+
+            // Venous Clots Compliance
+            if (compliance.venousClotsCompliance) {
+                const venousClotsComplianceRadio = document.querySelector(`input[name="venousClotsCompliance"][value="${compliance.venousClotsCompliance}"]`);
+                if (venousClotsComplianceRadio) {
+                    venousClotsComplianceRadio.checked = true;
+                }
+            }
+
+            // CHF Compliance
+            if (compliance.chfCompliance) {
+                const chfComplianceRadio = document.querySelector(`input[name="chfCompliance"][value="${compliance.chfCompliance}"]`);
+                if (chfComplianceRadio) {
+                    chfComplianceRadio.checked = true;
+                }
+            }
+
+            // Carotid Stenosis Compliance
+            if (compliance.carotidStenosisCompliance) {
+                const carotidStenosisComplianceRadio = document.querySelector(`input[name="carotidStenosisCompliance"][value="${compliance.carotidStenosisCompliance}"]`);
+                if (carotidStenosisComplianceRadio) {
+                    carotidStenosisComplianceRadio.checked = true;
+                }
+            }
+
+            // OSA Compliance
+            if (compliance.osaCompliance) {
+                const osaComplianceRadio = document.querySelector(`input[name="osaCompliance"][value="${compliance.osaCompliance}"]`);
+                if (osaComplianceRadio) {
+                    osaComplianceRadio.checked = true;
+                }
+            }
+
+            // CAD Compliance
+            if (compliance.cadCompliance) {
+                const cadComplianceRadio = document.querySelector(`input[name="cadCompliance"][value="${compliance.cadCompliance}"]`);
+                if (cadComplianceRadio) {
+                    cadComplianceRadio.checked = true;
+                }
+            }
+
+            // Valvular Heart Disease Compliance
+            if (compliance.valvularHeartDiseaseCompliance) {
+                const valvularHeartDiseaseComplianceRadio = document.querySelector(`input[name="valvularHeartDiseaseCompliance"][value="${compliance.valvularHeartDiseaseCompliance}"]`);
+                if (valvularHeartDiseaseComplianceRadio) {
+                    valvularHeartDiseaseComplianceRadio.checked = true;
+                }
+            }
+
+            // LDL Compliance
+            if (compliance.ldlCompliance) {
+                const ldlComplianceRadio = document.querySelector(`input[name="ldlCompliance"][value="${compliance.ldlCompliance}"]`);
+                if (ldlComplianceRadio) {
+                    ldlComplianceRadio.checked = true;
+                }
+            }
+
+            // HDL Compliance
+            if (compliance.hdlCompliance) {
+                const hdlComplianceRadio = document.querySelector(`input[name="hdlCompliance"][value="${compliance.hdlCompliance}"]`);
+                if (hdlComplianceRadio) {
+                    hdlComplianceRadio.checked = true;
+                }
+            }
+
+            // Triglycerides Compliance
+            if (compliance.triglyceridesCompliance) {
+                const triglyceridesComplianceRadio = document.querySelector(`input[name="triglyceridesCompliance"][value="${compliance.triglyceridesCompliance}"]`);
+                if (triglyceridesComplianceRadio) {
+                    triglyceridesComplianceRadio.checked = true;
+                }
+            }
+        }
+
+        // 7. Trigger dependent questions after prepopulation
+        setTimeout(() => {
+            toggleChartingNoteDependencies();
+        }, 100);
+
+        console.log('Charting note form prepopulation complete');
     }
 
 
