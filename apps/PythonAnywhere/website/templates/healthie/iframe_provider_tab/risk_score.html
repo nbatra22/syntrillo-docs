@@ -1,5 +1,10 @@
 <!-- Styling -->
 <style>
+    h3,
+    h4 {
+        margin: 0 !important;
+    }
+
     .rs-tab-container {
         display: flex;
         flex-direction: column;
@@ -568,6 +573,11 @@
         border-bottom: 1px solid #d1d5db;
     }
 
+    .rs-modal-body {
+        height: 500px;
+        border-radius: 0 0 8px 8px;
+    }
+
     .close-btn {
         cursor: pointer;
         padding: 0.5rem;
@@ -607,8 +617,8 @@
                 </h2>
             </div>
             <div id="" class="rs-header-btns-container">
-                <button id="rs-create-charting-note-btn" class="rs-btn"
-                    onclick="openModal('/healthie/iframe_provider_tab/forms/charting_note', 'Charting Note')">
+                <button id="rs-create-charting-note-btn" class="rs-btn" onclick="openModal('Charting Note')">
+                    <!-- onclick="openModal('/healthie/iframe_provider_tab/forms/charting_note', 'Charting Note')"> -->
                     <i class="fa-solid fa-plus"></i> Update Data
                 </button>
                 <div class="rs-legend-dropdown-container">
@@ -904,7 +914,8 @@
                                 <h3 class="rs-metric-title">
                                     Systolic BP - Variability (1mo. Trailing)
                                 </h3>
-                                <i id="rs-bp-variability-circle" class="fa-solid fa-circle" style="display: none; color: green;"></i>
+                                <i id="rs-bp-variability-circle" class="fa-solid fa-circle"
+                                    style="display: none; color: green;"></i>
                             </div>
                             <h4 class="rs-metric-subtitle">
                                 Tenovi BPM
@@ -1133,9 +1144,9 @@
             </section> -->
 
             <section id="rs-history-section" class="rs-section-container">
-                <h3 class="rs-section-header">
+                <h2 class="rs-section-header">
                     Medical History
-                </h3>
+                </h2>
 
                 <div class="rs-metrics-container">
 
@@ -1149,7 +1160,7 @@
                             </h4>
                         </div>
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-ischemia" class="rs-metric-value">
+                            <h3 id="rs-history-of-ischemia" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1772,9 +1783,9 @@
             </section>
 
             <section id="rs-lab-values-section" class="rs-section-container">
-                <h3 class="rs-section-header">
+                <h2 class="rs-section-header">
                     Lab Values
-                </h3>
+                </h2>
 
                 <div id="rs-lab-values-container" class="rs-metrics-container">
                     <div id="rs-ha1c-container" class="rs-metric-container">
@@ -1883,9 +1894,9 @@
             </section>
 
             <section id="rs-tests-orders-section" class="rs-section-container">
-                <h3 class="rs-section-header">
+                <h2 class="rs-section-header">
                     Tests/Orders
-                </h3>
+                </h2>
 
                 <div class="rs-metrics-container">
                     <!-- Existing Tests -->
@@ -2067,7 +2078,10 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <iframe id="modalIframe" src="" width="100%" height="600" style="border: none;"></iframe>
+        <div id="modal-body">
+            {% include 'healthie/iframe_provider_tab/forms/charting_note.html' %}
+        </div>
+        <!-- <script src="{{ url_for('static', filename='healthie/scripts/charting_note.js') }}"></script> -->
     </div>
 </div>
 
@@ -2115,28 +2129,11 @@
         targetElement.style.padding = "";
     }
 
-    function openModal(src, title) {
+    function openModal(title) {
         const modal = document.getElementById('rs-modal');
-        const iframe = document.getElementById('modalIframe');
         const header = document.getElementById('rs-modal-title');
         const subtitle = document.getElementById('rs-modal-subtitle');
 
-        // Store the source URL to track which form was opened
-        modal.dataset.formSrc = src;
-
-        // If opening the charting note form, append the required variables as query parameters
-        let iframeSrc = src;
-        if (src.includes('charting_note')) {
-            const params = new URLSearchParams({
-                healthie_provider_id: healthieProviderId,
-                healthie_user_id: healthieUserId,
-                temporary_lookup_code: temporaryLookupCode,
-                patient_not_registered_at_syntrillo: PatientNotRegisteredAtSyntrillo
-            });
-            iframeSrc = `${src}?${params.toString()}`;
-        }
-
-        iframe.src = iframeSrc;
         header.textContent = title;
         if (srsData && srsData.created_at) {
             const date = new Date(srsData.created_at);
@@ -2147,30 +2144,31 @@
         } else {
             subtitle.textContent = '';
         }
+
+        // Show the modal
         modal.style.display = 'flex';
+
+        // Setup charting note form dependencies after modal is visible
+        if (title.includes('Charting Note')) {
+            setTimeout(() => {
+                setupChartingNoteForm();
+            }, 100);
+        }
     }
 
+    // Function to close the modal
     function closeModal() {
         const modal = document.getElementById('rs-modal');
-        const iframe = document.getElementById('modalIframe');
-        const header = document.getElementById('rs-modal-title');
-
-        // Check if the charting note form was opened
-        const wasChartingNoteForm = modal.dataset.formSrc &&
-            modal.dataset.formSrc.includes('charting_note');
-
-        iframe.src = '';
-        header.textContent = '';
         modal.style.display = 'none';
 
-        // If the charting note form was opened, refresh the risk score data
-        if (wasChartingNoteForm) {
-            console.log('Charting note form closed - refreshing risk score data...');
-            getRiskScore();
+        // Reset form status message when modal closes
+        const statusMessage = document.getElementById('form-status-message');
+        if (statusMessage) {
+            statusMessage.textContent = '';
+            statusMessage.className = '';
         }
 
-        // Clear the stored form source
-        delete modal.dataset.formSrc;
+        getRiskScore();
     }
 
     function getRiskScore() {
@@ -2225,34 +2223,48 @@
         const chronicInfarct = document.getElementById("rs-chronic-infarct");
         const chronicInfarctMechanismContainer = document.getElementById("rs-chronic-infarct-mechanism-container");
         const chronicInfarctMechanism = document.getElementById("rs-chronic-infarct-mechanism");
+        const afibContainer = document.getElementById("rs-afib-container");
         const afib = document.getElementById("rs-afib");
+        const ironDeficiencyAnemiaContainer = document.getElementById("rs-iron-deficiency-anemia-container");
         const ironDeficiencyAnemia = document.getElementById("rs-iron-deficiency-anemia");
+        const arterialClotsContainer = document.getElementById("rs-arterial-clots-container");
         const arterialClots = document.getElementById("rs-arterial-clots");
+        const venousClotsContainer = document.getElementById("rs-venous-clots-container");
         const venousClots = document.getElementById("rs-venous-clots");
+        const pfoContainer = document.getElementById("rs-pfo-container");
         const pfo = document.getElementById("rs-pfo");
+        const chfContainer = document.getElementById("rs-chf-container");
         const chf = document.getElementById("rs-chf");
         const ejectionFractionContainer = document.getElementById("rs-ejection-fraction-container");
         const ejectionFraction = document.getElementById("rs-ejection-fraction");
+        const carotidStenosisContainer = document.getElementById("rs-carotid-stenosis-container");
         const carotidStenosis = document.getElementById("rs-carotid-stenosis");
         const carotidStenosisDegreeContainer = document.getElementById("rs-carotid-stenosis-degree-container");
         const carotidStenosisDegree = document.getElementById("rs-carotid-stenosis-degree");
+        const osaContainer = document.getElementById("rs-osa-container");
         const osa = document.getElementById("rs-osa");
         const osaSeverityContainer = document.getElementById("rs-osa-severity-container");
         const osaSeverity = document.getElementById("rs-osa-severity");
+        const cadContainer = document.getElementById("rs-cad-container");
         const cad = document.getElementById("rs-cad");
         const cadTypeContainer = document.getElementById("rs-cad-type-container");
         const cadType = document.getElementById("rs-cad-type");
+        const valvularHeartDiseaseContainer = document.getElementById("rs-valvular-heart-disease-container");
         const valvularHeartDisease = document.getElementById("rs-valvular-heart-disease");
         const hyperlipidemiaContainer = document.getElementById("rs-hyperlipidemia-container");
         const hyperlipidemia = document.getElementById("rs-hyperlipidemia");
+        const ldlContainer = document.getElementById("rs-ldl-container");
         const ldlLevelContainer = document.getElementById("rs-ldl-level-container");
         const ldlLevel = document.getElementById("rs-ldl-level");
+        const hdlContainer = document.getElementById("rs-hdl-container");
         const hdlLevelContainer = document.getElementById("rs-hdl-level-container");
         const hdlLevel = document.getElementById("rs-hdl-level");
         const triglyceridesLevelContainer = document.getElementById("rs-triglycerides-level-container");
         const triglyceridesLevel = document.getElementById("rs-triglycerides-level");
-        const ckd = document.getElementById("rs-ckd");
+        // const ckd = document.getElementById("rs-ckd");
+        const diabetesContainer = document.getElementById("rs-diabetes-container");
         const diabetes = document.getElementById("rs-diabetes");
+        const obesityContainer = document.getElementById("rs-obesity-container");
         const obesity = document.getElementById("rs-obesity");
 
         // Tests/Orders
@@ -2348,8 +2360,8 @@
                                 'red': 180
                             },
                             'variability': {
-                                'yellow': 7.5**2,
-                                'red': 15**2
+                                'yellow': 7.5 ** 2,
+                                'red': 15 ** 2
                             }
                         }
 
@@ -2444,7 +2456,7 @@
                         return;
                     }
 
-                    srsData = data.data.metrics.srs_response_data;
+                    srsData = metrics.srs_response_data;
 
                     // Update total score
                     if (riskScore) {
@@ -2508,7 +2520,7 @@
 
                         // Patient History
                         if (!srs.HasPreviousStroke && !srs.ScreenedForTIA && !srs.ChronicInfarctPresent) {
-                            historyOfIschemiaContainer.style.display = 'block';
+                            historyOfIschemiaContainer.style.display = 'flex';
                             historyOfIschemia.textContent = 'No';
                             strokeHistoryContainer.style.display = 'none';
                             tiaMechanismContainer.style.display = 'none';
@@ -2537,50 +2549,57 @@
                         }
 
                         // History of Atrial Fibrillation
-                        if (afib) afib.textContent = srs.HistoryOfAtrialFibrillation ? 'Yes' : 'No';
-                        if (ironDeficiencyAnemia) ironDeficiencyAnemia.textContent = srs.HistoryOfIronDeficiencyAnemia ? 'Yes' : 'No';
+                        srs.HistoryOfAtrialFibrillation ? afib.textContent = 'Yes' : afibContainer.style.display = 'none';
+
+                        // History of Iron Deficiency Anemia
+                        srs.HistoryOfIronDeficiencyAnemia ? ironDeficiencyAnemia.textContent = 'Yes' : ironDeficiencyAnemiaContainer.style.display = 'none';
 
                         // History of Arterial Clots
-                        if (arterialClots) {
-                            arterialClots.textContent = srs.HistoryOfArterialClots ? `Yes (${srs.ArterialClotsOccurrences})` : 'No';
-                        }
+                        srs.HistoryOfArterialClots ? arterialClots.textContent = `Yes (${srs.ArterialClotsOccurrences})` : arterialClotsContainer.style.display = 'none';
 
                         // History of Venous Clots
-                        if (venousClots) {
-                            venousClots.textContent = srs.HistoryOfVenousClots ? `Yes (${srs.VenousClotOccurrences})` : 'No';
-                        }
+                        srs.HistoryOfVenousClots ? venousClots.textContent = `Yes (${srs.VenousClotOccurrences})` : venousClotsContainer.style.display = 'none';
 
                         // History of CHF
-                        if (chf) chf.textContent = srs.HistoryOfCHF ? 'Yes' : 'No';
-                        if (srs.HistoryOfCHF === true) {
+                        if (srs.HistoryOfCHF) {
+                            chf.textContent = 'Yes';
                             ejectionFractionContainer.style.display = 'flex';
                             ejectionFraction.textContent = srs.EjectionFraction || '-';
+                        } else {
+                            chfContainer.style.display = 'none';
                         }
 
                         // History of Carotid Stenosis
-                        if (srs.HistoryOfCarotidStenosis) carotidStenosis.textContent = srs.HistoryOfCarotidStenosis ? 'Yes' : 'No';
-                        if (srs.HistoryOfCarotidStenosis === true) {
+                        if (srs.HistoryOfCarotidStenosis) {
+                            carotidStenosis.textContent = 'Yes';
                             carotidStenosisDegreeContainer.style.display = 'flex';
                             carotidStenosisDegree.textContent = srs.StenosisPercentage || '-';
+                        } else {
+                            carotidStenosisContainer.style.display = 'none';
                         }
 
                         // History of OSA
-                        if (osa) osa.textContent = srs.HistoryOfOSA ? 'Yes' : 'No';
-                        if (srs.HistoryOfOSA === true) {
+                        if (srs.HistoryOfOSA) {
+                            osa.textContent = 'Yes';
                             osaSeverityContainer.style.display = 'flex';
                             osaSeverity.textContent = srs.OSASeverity || '-';
+                        } else {
+                            osaContainer.style.display = 'none';
                         }
 
                         // History of CAD
-                        if (cad) cad.textContent = srs.HistoryOfCAD ? 'Yes' : 'No';
-                        if (srs.HistoryOfCAD === true) {
+                        if (srs.HistoryOfCAD) {
+                            cad.textContent = 'Yes';
                             cadTypeContainer.style.display = 'flex';
                             cadType.textContent = srs.ValvularHeartDisease || '-';
+                        } else {
+                            cadContainer.style.display = 'none';
                         }
 
                         // History of Valvular Heart Disease
-                        if (valvularHeartDisease) valvularHeartDisease.textContent = srs.HistoryOfValvularHeartDisease ? 'Yes' : 'No';
-                        if (ckd) ckd.textContent = srs.HistoryOfCKD ? 'Yes' : 'No';
+                        srs.HistoryOfValvularHeartDisease ? valvularHeartDisease.textContent = 'Yes' : valvularHeartDiseaseContainer.style.display = 'none';
+
+                        // if (ckd) ckd.textContent = srs.HistoryOfCKD ? 'Yes' : 'No';
 
                         // History of Hyperlipidemia
                         if (srs.HistoryOfHyperlipidemia) {
@@ -2607,10 +2626,10 @@
                         }
 
                         // Diabetes
-                        if (diabetes) diabetes.textContent = srs.HistoryOfDiabetes ? 'Yes' : 'No';
+                        srs.HistoryOfDiabetes ? diabetes.textContent = 'Yes' : diabetesContainer.style.display = 'none';
 
                         // Obesity
-                        if (obesity) obesity.textContent = srs.BMI >= 30 ? 'Yes' : 'No';
+                        srs.BMI >= 30 ? obesity.textContent = 'Yes' : obesityContainer.style.display = 'none';
 
                         // Physical Activity Minutes
                         if (srs.PhysicalActivityMinutes) {
@@ -2760,66 +2779,222 @@
         icon.className = `fa-solid fa-circle rs-category-${category}`;
         icon.style.display = 'inline-block'; // This should work regardless of initial state
     }
-    // Listen for messages from the iframe (form submission events)
-    window.addEventListener('message', function (event) {
-        // Verify the origin for security
-        if (event.origin !== window.location.origin) {
-            return;
-        }
-
-        // Check if the message is a form submission notification
-        if (event.data && event.data.type === 'formSubmitted') {
-            console.log('Form submitted successfully - refreshing risk score data...');
-            getRiskScore();
-        }
-
-        // Check if the message is a request to close the modal
-        if (event.data && event.data.type === 'closeModal') {
-            console.log('Closing modal from iframe request...');
-            closeModal();
-        }
-    });
 
     $(document).ready(function () {
         getRiskScore()
     })
 
-    let activeSection = null
+    // function submitForm() {
+    //     // Update status message
+    //     const statusElement = document.getElementById('form-status-message');
+    //     statusElement.textContent = 'Preparing form data...';
+    //     statusElement.className = 'loading';
 
-    document.querySelectorAll(".rs-section-select-container").forEach(header => {
-        header.addEventListener("click", (e) => {
-            e.stopPropagation();
+    //     // Get the form element and create FormData from it
+    //     const form = document.getElementById('charting-note-form');
+    //     const formDataObj = new FormData(form);
 
-            const sectionId = header.id;
-            const sectionKey = sectionId.split("-")[2]
+    //     // Add template variables
+    //     formDataObj.append('healthie_user_id', healthieUserId);
+    //     formDataObj.append('healthie_provider_id', healthieProviderId);
+    //     formDataObj.append('temporary_lookup_code', temporaryLookupCode);
+    //     formDataObj.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
 
-            // Update active header styles
-            document.querySelectorAll(".rs-section-select-container").forEach(h =>
-                h.classList.toggle("active", h.id == sectionId)
-            )
+    //     // Add compliance data as JSON string (since it's not a form field)
+    //     const complianceData = {
+    //         // Direct compliance questions (yes/no/unknown)
+    //         strokeCompliance: document.querySelector('input[name="strokeCompliance"]:checked')?.value || null,
+    //         tiaCompliance: document.querySelector('input[name="tiaCompliance"]:checked')?.value || null,
+    //         chronicInfarctCompliance: document.querySelector('input[name="chronicInfarctCompliance"]:checked')?.value || null,
 
-            // Remove 'active' class from all metrics
-            document.querySelectorAll(".rs-metric-container").forEach(m => m.classList.remove("active"))
+    //         // Treatment optimization questions (none/partial/optimized) - these ARE compliance
+    //         atrialFibrillationCompliance: document.querySelector('input[name="atrialFibrillationCompliance"]:checked')?.value || null,
+    //         ironDeficiencyAnemiaCompliance: document.querySelector('input[name="ironDeficiencyAnemiaCompliance"]:checked')?.value || null,
+    //         arterialClotsCompliance: document.querySelector('input[name="arterialClotsCompliance"]:checked')?.value || null,
+    //         venousClotsCompliance: document.querySelector('input[name="venousClotsCompliance"]:checked')?.value || null,
+    //         // pfoCompliance: document.querySelector('input[name="pfoCompliance"]:checked')?.value || null,
+    //         chfCompliance: document.querySelector('input[name="chfCompliance"]:checked')?.value || null,
+    //         carotidStenosisCompliance: document.querySelector('input[name="carotidStenosisCompliance"]:checked')?.value || null,
+    //         osaCompliance: document.querySelector('input[name="osaCompliance"]:checked')?.value || null,
+    //         cadCompliance: document.querySelector('input[name="cadCompliance"]:checked')?.value || null,
+    //         valvularHeartDiseaseCompliance: document.querySelector('input[name="valvularHeartDiseaseCompliance"]:checked')?.value || null,
+    //         ckdCompliance: document.querySelector('input[name="ckdCompliance"]:checked')?.value || null,
 
-            // Highlight section-specific metrics
-            document.querySelectorAll(`.rs-metric-container[id^="rs-${sectionKey}-"]`).forEach(m =>
-                m.classList.add("active")
-            )
-        })
-    })
+    //         ldlCompliance: document.querySelector('input[name="ldlCompliance"]:checked')?.value || null,
+    //         hdlCompliance: document.querySelector('input[name="hdlCompliance"]:checked')?.value || null,
+    //         triglyceridesCompliance: document.querySelector('input[name="triglyceridesCompliance"]:checked')?.value || null,
+    //     };
+    //     formDataObj.append('compliance', JSON.stringify(complianceData));
 
-    // Click anywhere else → clear highlights
-    document.body.addEventListener("click", () => {
-        activeSectionId = null;
+    //     // Validate required fields
+    //     const hasPreviousStroke = formDataObj.get('HasPreviousStroke') === 'yes';
+    //     const hasTIAScreening = formDataObj.get('ScreenedForTIA') === 'yes';
 
-        document.querySelectorAll(".rs-section-select-container").forEach(h =>
-            h.classList.remove("active")
-        );
+    //     if (!hasPreviousStroke && hasPreviousStroke !== false) {
+    //         statusElement.textContent = 'Validation failed: Please answer the previous stroke question.';
+    //         statusElement.className = 'error';
+    //         return;
+    //     }
 
-        document.querySelectorAll(".rs-metric-container").forEach(m =>
-            m.classList.remove("active")
-        );
-    });
+    //     if (!hasTIAScreening && hasTIAScreening !== false) {
+    //         statusElement.textContent = 'Validation failed: Please answer the TIA screening question.';
+    //         statusElement.className = 'error';
+    //         return;
+    //     }
+
+    //     // Update status
+    //     statusElement.textContent = 'Submitting form data...';
+
+    //     // // Show loading state
+    //     // const submitButton = document.querySelector('button[type="submit"]');
+    //     // const originalText = submitButton.textContent;
+    //     // submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+    //     // submitButton.disabled = true;
+
+    //     // // Show loading overlay
+    //     // const loadingOverlay = document.getElementById('loading-overlay');
+    //     // loadingOverlay.style.display = 'flex';
+
+    //     // Log the form data for debugging
+    //     console.log('Submitting to endpoint:', '{{ url_for("iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_charting_note") }}');
+
+    //     // Send data to server
+    //     fetch('{{ url_for("iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_charting_note") }}', {
+    //         method: 'POST',
+    //         body: formDataObj
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             if (data.success) {
+    //                 statusElement.textContent = 'Form submitted successfully!';
+    //                 statusElement.className = 'success';
+
+    //                 // Notify the parent page that the form was submitted
+    //                 if (window.parent && window.parent !== window) {
+    //                     window.parent.postMessage({
+    //                         type: 'formSubmitted',
+    //                         formType: 'charting_note',
+    //                         success: true
+    //                     }, window.location.origin);
+    //                 }
+
+    //                 // Show success feedback and optionally close modal after delay
+    //                 setTimeout(() => {
+    //                     // Reset the form
+    //                     document.getElementById('charting-note-form').reset();
+
+    //                     // Close the modal if we're in one
+    //                     if (window.parent && window.parent !== window) {
+    //                         // Try to call closeModal if it exists in parent
+    //                         try {
+    //                             window.parent.closeModal();
+    //                         } catch (e) {
+    //                             // If closeModal doesn't exist, just close the iframe
+    //                             window.parent.postMessage({
+    //                                 type: 'closeModal'
+    //                             }, window.location.origin);
+    //                         }
+    //                     }
+    //                 }, 1500); // Wait 1.5 seconds to show success message
+    //             } else {
+    //                 statusElement.textContent = 'Submission failed: ' + (data.error || 'Unknown error');
+    //                 statusElement.className = 'error';
+    //             }
+    //         })
+    //         .catch(error => {
+    //             console.error('Error:', error);
+    //             statusElement.textContent = 'Network error: Please try again.';
+    //             statusElement.className = 'error';
+    //         })
+    //         .finally(() => {
+    //             //    // Reset button state
+    //             //    submitButton.textContent = originalText;
+    //             //    submitButton.disabled = false;
+
+    //             // Hide loading overlay
+    //             //    const loadingOverlay = document.getElementById('loading-overlay');
+    //             //    loadingOverlay.style.display = 'none';
+
+    //             // Reset status message if not successful
+    //             if (statusElement.textContent.includes('Submitting')) {
+    //                 statusElement.textContent = '';
+    //                 statusElement.className = '';
+    //             }
+    //         });
+    // }
+
+    // Function to submit the charting note form
+
+    async function submitChartingNoteForm() {
+        console.log('Submitting charting note form...');
+
+        const form = document.getElementById('charting-note-form');
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        formData.append('healthie_user_id', healthieUserId);
+        formData.append('healthie_provider_id', healthieProviderId);
+        formData.append('temporary_lookup_code', temporaryLookupCode);
+        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+
+        // Log the form data for debugging
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        try {
+            const response = await fetch('/healthie/iframe_provider_tab/risk_score/charting_note', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Form submitted successfully:', result);
+
+                // Show success message in the modal
+                const statusMessage = document.getElementById('form-status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = 'Form submitted successfully!';
+                    statusMessage.className = 'success';
+
+                    // Clear the form after successful submission
+                    form.reset();
+
+                    // Hide all dependent questions since form is reset
+                    toggleChartingNoteDependencies();
+
+                    // Auto-close modal after 2 seconds
+                    setTimeout(() => {
+                        closeModal();
+                    }, 2000);
+                }
+            } else {
+                const errorText = await response.text();
+                console.error('Form submission failed:', response.status, errorText);
+
+                // Show error message in the modal
+                const statusMessage = document.getElementById('form-status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = `Submission failed: ${errorText}`;
+                    statusMessage.className = 'error';
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+
+            // Show error message in the modal
+            const statusMessage = document.getElementById('form-status-message');
+            if (statusMessage) {
+                statusMessage.textContent = `Network error: ${error.message}`;
+                statusMessage.className = 'error';
+            }
+        }
+    }
 
     // Legend Dropdown Functionality
     function toggleLegendDropdown() {
@@ -2843,5 +3018,147 @@
             dropdown.style.display = 'none';
         }
     });
+
+    // Function to toggle dependent questions in the charting note form
+    // Function to toggle dependent questions in the charting note form
+    function toggleChartingNoteDependencies() {
+        console.log('=== toggleChartingNoteDependencies function called ===');
+
+        // 1. Stroke History Dependencies
+        const hasPreviousStroke = document.querySelector('input[name="HasPreviousStroke"]:checked')?.value === 'yes';
+        console.log('HasPreviousStroke checked:', hasPreviousStroke);
+
+        const previousStrokeCountContainer = document.getElementById('previous-stroke-count-container');
+        const previousStrokeMechanism = document.getElementById('previous-stroke-mechanism');
+        const strokeTreatmentDependent = document.getElementById('stroke-treatment-dependent');
+
+        if (previousStrokeCountContainer) {
+            previousStrokeCountContainer.style.display = hasPreviousStroke ? 'block' : 'none';
+            console.log('Set previousStrokeCountContainer display to:', hasPreviousStroke ? 'block' : 'none');
+        }
+        if (previousStrokeMechanism) {
+            previousStrokeMechanism.style.display = hasPreviousStroke ? 'block' : 'none';
+        }
+        if (strokeTreatmentDependent) {
+            strokeTreatmentDependent.style.display = hasPreviousStroke ? 'block' : 'none';
+        }
+
+        // 2. TIA Dependencies
+        const screenedForTIA = document.querySelector('input[name="ScreenedForTIA"]:checked')?.value === 'yes';
+        const tiaLikelihood = document.getElementById('tia-likelihood');
+        const tiaMechanism = document.getElementById('tia-mechanism');
+        const tiaTreatmentDependent = document.getElementById('tia-treatment-dependent');
+
+        if (tiaLikelihood) tiaLikelihood.style.display = screenedForTIA ? 'block' : 'none';
+        if (tiaMechanism) tiaMechanism.style.display = screenedForTIA ? 'block' : 'none';
+        if (tiaTreatmentDependent) tiaTreatmentDependent.style.display = screenedForTIA ? 'block' : 'none';
+
+        // 3. Prior Head CT Dependencies
+        const hasPriorHeadCT = document.querySelector('input[name="HasPriorHeadCT"]:checked')?.value === 'yes';
+        const priorHeadCTDate = document.getElementById('prior-head-ct-date');
+        const priorHeadCTChronicInfarct = document.getElementById('prior-head-ct-chronic-infarct');
+
+        if (priorHeadCTDate) priorHeadCTDate.style.display = hasPriorHeadCT ? 'block' : 'none';
+        if (priorHeadCTChronicInfarct) priorHeadCTChronicInfarct.style.display = hasPriorHeadCT ? 'block' : 'none';
+
+        // 4. Chronic Infarct Dependencies
+        const chronicInfarctPresent = document.querySelector('input[name="ChronicInfarctPresent"]:checked')?.value === 'yes';
+        const chronicInfarctComplianceDependent = document.getElementById('chronic-infarct-compliance-dependent');
+
+        if (chronicInfarctComplianceDependent) {
+            chronicInfarctComplianceDependent.style.display = (hasPriorHeadCT && chronicInfarctPresent) ? 'block' : 'none';
+        }
+
+        // 5. Atrial Fibrillation Dependencies
+        const historyOfAFib = document.getElementById('history-of-a-fib')?.checked;
+        const aFibTreatmentDependent = document.getElementById('a-fib-treatment-dependent');
+
+        if (aFibTreatmentDependent) aFibTreatmentDependent.style.display = historyOfAFib ? 'block' : 'none';
+
+        // 6. Iron Deficiency Anemia Dependencies
+        const historyOfIronDeficiencyAnemia = document.getElementById('history-of-iron-deficiency-anemia')?.checked;
+        const ironDeficiencyAnemiaDependent = document.getElementById('iron-deficiency-anemia-dependent');
+        const ironDeficiencyAnemiaTreatmentDependent = document.getElementById('iron-deficiency-anemia-treatment-dependent');
+
+        if (ironDeficiencyAnemiaDependent) ironDeficiencyAnemiaDependent.style.display = historyOfIronDeficiencyAnemia ? 'block' : 'none';
+        if (ironDeficiencyAnemiaTreatmentDependent) ironDeficiencyAnemiaTreatmentDependent.style.display = historyOfIronDeficiencyAnemia ? 'block' : 'none';
+
+        // 7. Arterial Clots Dependencies
+        const historyOfArterialClots = document.getElementById('history-of-arterial-clots')?.checked;
+        const arterialClotsDependent = document.getElementById('arterial-clots-dependent');
+        const arterialClotsTreatmentDependent = document.getElementById('arterial-clots-treatment-dependent');
+
+        if (arterialClotsDependent) arterialClotsDependent.style.display = historyOfArterialClots ? 'block' : 'none';
+        if (arterialClotsTreatmentDependent) arterialClotsTreatmentDependent.style.display = historyOfArterialClots ? 'block' : 'none';
+
+        // 8. Venous Clots Dependencies
+        const historyOfVenousClots = document.getElementById('history-of-venous-clots')?.checked;
+        const venousClotsDependent = document.getElementById('venous-clots-dependent');
+        const venousClotsPFODependent = document.getElementById('venous-clots-pfo-dependent');
+        const venousClotsPFOTreatmentDependent = document.getElementById('venous-clots-pfo-treatment-dependent');
+
+        if (venousClotsDependent) venousClotsDependent.style.display = historyOfVenousClots ? 'block' : 'none';
+        if (venousClotsPFODependent) venousClotsPFODependent.style.display = historyOfVenousClots ? 'block' : 'none';
+        if (venousClotsPFOTreatmentDependent) venousClotsPFOTreatmentDependent.style.display = historyOfVenousClots ? 'block' : 'none';
+
+        // 9. CHF Dependencies
+        const historyOfCHF = document.getElementById('history-of-chf')?.checked;
+        const chfEjectionFraction = document.getElementById('chf-ejection-fraction');
+        const chfTreatmentDependent = document.getElementById('chf-treatment-dependent');
+
+        if (chfEjectionFraction) chfEjectionFraction.style.display = historyOfCHF ? 'block' : 'none';
+        if (chfTreatmentDependent) chfTreatmentDependent.style.display = historyOfCHF ? 'block' : 'none';
+
+        // 10. Carotid Stenosis Dependencies
+        const historyOfCarotidStenosis = document.getElementById('history-of-carotid-stenosis')?.checked;
+        const carotidStenosisPercent = document.getElementById('carotid-stenosis-percent');
+        const carotidStenosisTreatmentDependent = document.getElementById('carotid-stenosis-treatment-dependent');
+
+        if (carotidStenosisPercent) carotidStenosisPercent.style.display = historyOfCarotidStenosis ? 'block' : 'none';
+        if (carotidStenosisTreatmentDependent) carotidStenosisTreatmentDependent.style.display = historyOfCarotidStenosis ? 'block' : 'none';
+
+        // 11. OSA Dependencies
+        const historyOfOSA = document.getElementById('history-of-osa')?.checked;
+        const osaSeverity = document.getElementById('osa-severity');
+        const osaTreatmentDependent = document.getElementById('osa-treatment-dependent');
+
+        if (osaSeverity) osaSeverity.style.display = historyOfOSA ? 'block' : 'none';
+        if (osaTreatmentDependent) osaTreatmentDependent.style.display = historyOfOSA ? 'block' : 'none';
+
+        // 12. CAD Dependencies
+        const historyOfCAD = document.getElementById('history-of-cad')?.checked;
+        const cadType = document.getElementById('cad-type');
+        const cadTreatmentDependent = document.getElementById('cad-treatment-dependent');
+
+        if (cadType) cadType.style.display = historyOfCAD ? 'block' : 'none';
+        if (cadTreatmentDependent) cadTreatmentDependent.style.display = historyOfCAD ? 'block' : 'none';
+
+        // 13. Valvular Heart Disease Dependencies
+        const historyOfValvularHeartDisease = document.getElementById('history-of-valvular-heart-disease')?.checked;
+        const valvularHeartDiseaseTreatmentDependent = document.getElementById('valvular-heart-disease-treatment-dependent');
+
+        if (valvularHeartDiseaseTreatmentDependent) valvularHeartDiseaseTreatmentDependent.style.display = historyOfValvularHeartDisease ? 'block' : 'none';
+
+        console.log('All dependencies toggled');
+    }
+
+    // Add event listeners when modal opens
+    function setupChartingNoteForm() {
+        console.log('Setting up charting note form event listeners');
+
+        const formInputs = document.querySelectorAll('#modal-body input[type="checkbox"], #modal-body input[type="radio"], #modal-body select');
+        console.log('Found form inputs:', formInputs.length);
+
+        formInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                console.log('Input changed:', this.name, this.type, this.value, this.checked);
+                toggleChartingNoteDependencies();
+            });
+        });
+
+        // Run once to set initial state
+        toggleChartingNoteDependencies();
+    }
+
 
 </script>

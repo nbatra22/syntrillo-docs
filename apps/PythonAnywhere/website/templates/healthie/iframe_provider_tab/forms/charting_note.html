@@ -2,7 +2,10 @@
 
 {% block extra_head %}
 <style>
-
+    #charting-note-form-content {
+        max-height: 600px;
+        overflow: scroll;
+    }
 
     /* Loading Overlay */
     .loading-overlay {
@@ -77,6 +80,7 @@
         background-color: #eff6ff;
         border: 1px solid #bfdbfe;
     }
+
     h2 {
         margin: 0 !important;
     }
@@ -85,12 +89,6 @@
 
 
 {% block content %}
-<!--
-    Note: Treatment optimization questions (none/partial/optimized)
-    map to the compliance object in the form data.
-    Direct compliance questions (compliant/non-compliant/unknown)
-    also map to the compliance object.
--->
 <form id="charting-note-form" class="form-subcontainer" onsubmit="return false;">
 
     <div id="charting-note-form-content" class="form-content">
@@ -137,7 +135,7 @@
             </div>
         </div>
 
-        <div id="previous-stroke-count-container" class="form-group dependent-question" data-parent="previous-stroke-container">
+        <div id="previous-stroke-count-container" class="form-group" style="display: none;">
             <label for="previous-stroke-count-container">
                 (Previous stroke) How many strokes has the patient had?
             </label>
@@ -157,7 +155,7 @@
             </div>
         </div>
 
-        <div id="previous-stroke-mechanism" class="form-group dependent-question" data-parent="previous-stroke-container">
+        <div id="previous-stroke-mechanism" class="form-group" style="display: none;">
             <label for="previous-stroke-count">
                 (Previous stroke) What was the latest stroke's mechanism?
             </label>
@@ -208,7 +206,7 @@
         </div>
 
         <!-- Stroke Compliance Question -->
-        <div id="stroke-treatment-dependent" class="form-group dependent-question" data-parent="previous-stroke-container">
+        <div id="stroke-treatment-dependent" class="form-group" style="display: none;">
             <label for="stroke-treatment">
                 (Previous stroke) Treatment optimization?
             </label>
@@ -220,7 +218,8 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="stroke-treatment-partial" name="strokeCompliance" value="partially optimized">
+                    <input type="radio" id="stroke-treatment-partial" name="strokeCompliance"
+                        value="partially optimized">
                     <label for="stroke-treatment-partial">
                         Partially optimized
                     </label>
@@ -254,7 +253,7 @@
             </div>
         </div>
 
-        <div id="tia-likelihood" class="form-group dependent-question" data-parent="tia-screening">
+        <div id="tia-likelihood" class="form-group" style="display: none;">
             <label for="tia-likelihood">
                 (TIA screening) What is the likelihood of TIA?
             </label>
@@ -274,7 +273,7 @@
             </div>
         </div>
 
-        <div id="tia-mechanism" class="form-group dependent-question" data-parent="tia-screening">
+        <div id="tia-mechanism" class="form-group" style="display: none;">
             <label for="tia-mechanism">
                 (TIA screening) What was the TIA mechanism? If 'other', what other mechanism?
             </label>
@@ -312,7 +311,7 @@
             </div>
         </div>
 
-        <div id="tia-treatment-dependent" class="form-group dependent-question" data-parent="tia-screening">
+        <div id="tia-treatment-dependent" class="form-group" style="display: none;">
             <label for="tia-treatment">
                 (TIA screening) Treatment optimization?
             </label>
@@ -358,28 +357,26 @@
             </div>
         </div>
 
-        <div id="prior-head-ct-date" class="form-group dependent-question" data-parent="prior-head-ct">
+        <div id="prior-head-ct-date" class="form-group" style="display: none;">
             <label for="prior-head-ct-date">
                 (Prior head CT) When was the most recent CT?
             </label>
             <input type="date" id="prior-head-ct-date" name="PriorCTDate" value="" />
         </div>
 
-        <div id="prior-head-ct-chronic-infarct" class="form-group dependent-question" data-parent="prior-head-ct">
+        <div id="prior-head-ct-chronic-infarct" class="form-group" style="display: none;">
             <label for="prior-head-ct-chronic-infarct">
                 (Prior head CT) Was a chronic infarct present?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="prior-head-ct-chronic-infarct-yes" name="ChronicInfarctPresent"
-                        value="yes">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-yes" name="ChronicInfarctPresent" value="yes">
                     <label for="prior-head-ct-chronic-infarct-yes">
                         Yes
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="prior-head-ct-chronic-infarct-no" name="ChronicInfarctPresent"
-                        value="no">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-no" name="ChronicInfarctPresent" value="no">
                     <label for="prior-head-ct-chronic-infarct-no">
                         No
                     </label>
@@ -388,25 +385,28 @@
         </div>
 
         <!-- Chronic Infarct Compliance Question -->
-        <div id="chronic-infarct-compliance-dependent" class="form-group dependent-question" data-parent="prior-head-ct">
+        <div id="chronic-infarct-compliance-dependent" class="form-group" style="display: none;">
             <label for="chronic-infarct-compliance">
                 (Prior head CT - Chronic infarct) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="chronic-infarct-treatment-none" name="chronicInfarctCompliance" value="not optimized">
+                    <input type="radio" id="chronic-infarct-treatment-none" name="chronicInfarctCompliance"
+                        value="not optimized">
                     <label for="chronic-infarct-treatment-none">
                         Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="chronic-infarct-treatment-partial" name="chronicInfarctCompliance" value="partially optimized">
+                    <input type="radio" id="chronic-infarct-treatment-partial" name="chronicInfarctCompliance"
+                        value="partially optimized">
                     <label for="chronic-infarct-treatment-partial">
                         Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="chronic-infarct-treatment-optimized" name="chronicInfarctCompliance" value="optimized">
+                    <input type="radio" id="chronic-infarct-treatment-optimized" name="chronicInfarctCompliance"
+                        value="optimized">
                     <label for="chronic-infarct-treatment-optimized">
                         Optimized
                     </label>
@@ -426,7 +426,8 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-iron-deficiency-anemia" name="HistoryOfIronDeficiencyAnemia" value="true">
+                    <input type="checkbox" id="history-of-iron-deficiency-anemia" name="HistoryOfIronDeficiencyAnemia"
+                        value="true">
                     <label for="iron_deficiency_anemia">
                         Iron deficiency anemia
                     </label>
@@ -450,7 +451,8 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-carotid-stenosis" name="HistoryOfCarotidStenosis" value="true">
+                    <input type="checkbox" id="history-of-carotid-stenosis" name="HistoryOfCarotidStenosis"
+                        value="true">
                     <label for="history-of-carotid-stenosis">
                         Carotid stenosis
                     </label>
@@ -468,7 +470,8 @@
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="checkbox" id="history-of-valvular-heart-disease" name="HistoryOfValvularHeartDisease" value="true">
+                    <input type="checkbox" id="history-of-valvular-heart-disease" name="HistoryOfValvularHeartDisease"
+                        value="true">
                     <label for="history-of-valvular-heart-disease">
                         Valvular heart disease
                     </label>
@@ -500,25 +503,28 @@
             </div>
         </div>
 
-        <div id="a-fib-treatment-dependent" class="form-group dependent-question" data-parent="history-of-a-fib">
+        <div id="a-fib-treatment-dependent" class="form-group" style="display: none;">
             <label for="a-fib-treatment">
                 (Atrial Fibrillation) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="a-fib-treatment-none" name="atrialFibrillationCompliance" value="not optimized">
+                    <input type="radio" id="a-fib-treatment-none" name="atrialFibrillationCompliance"
+                        value="not optimized">
                     <label for="a-fib-treatment-none">
                         Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="a-fib-treatment-partial" name="atrialFibrillationCompliance" value="partially optimized">
+                    <input type="radio" id="a-fib-treatment-partial" name="atrialFibrillationCompliance"
+                        value="partially optimized">
                     <label for="a-fib-treatment-partial">
                         Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="a-fib-treatment-optimized" name="atrialFibrillationCompliance" value="optimized">
+                    <input type="radio" id="a-fib-treatment-optimized" name="atrialFibrillationCompliance"
+                        value="optimized">
                     <label for="a-fib-treatment-optimized">
                         Optimized
                     </label>
@@ -526,21 +532,19 @@
             </div>
         </div>
 
-        <div id="iron-deficiency-anemia-dependent" class="form-group dependent-question" data-parent="history-of-iron-deficiency-anemia">
+        <div id="iron-deficiency-anemia-dependent" class="form-group" style="display: none;">
             <label for="iron-deficiency-anemia-severity">
                 (Iron Deficiency Anemia) Severity?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="iron-deficiency-anemia-mild" name="AnemiaSeverity"
-                        value="Mild">
+                    <input type="radio" id="iron-deficiency-anemia-mild" name="AnemiaSeverity" value="Mild">
                     <label for="iron-deficiency-anemia-mild">
                         Mild
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="iron-deficiency-anemia-severe" name="AnemiaSeverity"
-                        value="Severe">
+                    <input type="radio" id="iron-deficiency-anemia-severe" name="AnemiaSeverity" value="Severe">
                     <label for="iron-deficiency-anemia-severe">
                         Severe
                     </label>
@@ -548,14 +552,14 @@
             </div>
         </div>
 
-        <div id="iron-deficiency-anemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-iron-deficiency-anemia">
+        <div id="iron-deficiency-anemia-treatment-dependent" class="form-group" style="display: none;">
             <label for="iron-deficiency-anemia-treatment">
                 (Iron Deficiency Anemia) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="iron-deficiency-anemia-treatment-none"
-                        name="ironDeficiencyAnemiaCompliance" value="not optimized">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-none" name="ironDeficiencyAnemiaCompliance"
+                        value="not optimized">
                     <label for="iron-deficiency-anemia-treatment-none">
                         Not optimized
                     </label>
@@ -577,19 +581,21 @@
             </div>
         </div>
 
-        <div id="arterial-clots-dependent" class="form-group dependent-question" data-parent="history-of-arterial-clots">
+        <div id="arterial-clots-dependent" class="form-group" style="display: none;">
             <label for="arterial-clots-num-occurences">
                 (Arterial clots) Number of occurences?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="arterial-clots-once" name="ArterialClotOccurrences" value="Single prior event">
+                    <input type="radio" id="arterial-clots-once" name="ArterialClotOccurrences"
+                        value="Single prior event">
                     <label for="arterial-clots-once">
                         Single prior event
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="arterial-clots-multiple" name="ArterialClotOccurrences" value="Multiple prior events">
+                    <input type="radio" id="arterial-clots-multiple" name="ArterialClotOccurrences"
+                        value="Multiple prior events">
                     <label for="arterial-clots-multiple">
                         Multiple prior events
                     </label>
@@ -597,13 +603,14 @@
             </div>
         </div>
 
-        <div id="arterial-clots-treatment-dependent" class="form-group dependent-question" data-parent="history-of-arterial-clots">
+        <div id="arterial-clots-treatment-dependent" class="form-group" style="display: none;">
             <label for="arterial-clots-treatment">
                 (Arterial clots) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="arterial-clots-treatment-none" name="arterialClotsCompliance" value="not optimized">
+                    <input type="radio" id="arterial-clots-treatment-none" name="arterialClotsCompliance"
+                        value="not optimized">
                     <label for="arterial-clots-treatment-none">
                         Not optimized
                     </label>
@@ -625,7 +632,7 @@
             </div>
         </div>
 
-        <div id="venous-clots-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
+        <div id="venous-clots-dependent" class="form-group" style="display: none;">
             <label for="venous-clots-occurences">
                 (Venous clots) Number of occurences?
             </label>
@@ -673,7 +680,7 @@
             </div>
         </div> -->
 
-        <div id="venous-clots-pfo-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
+        <div id="venous-clots-pfo-dependent" class="form-group" style="display: none;">
             <label for="pfo-presence">
                 (Venous clots) Presence of PFO?
             </label>
@@ -700,7 +707,7 @@
         </div>
 
         <!-- PFO treatment optimization question -->
-        <div id="venous-clots-pfo-treatment-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
+        <div id="venous-clots-pfo-treatment-dependent" class="form-group" style="display: none;">
             <label for="pfo-treatment">
                 (Venous clots / PFO) Treatment optimization?
             </label>
@@ -726,7 +733,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group dependent-question" data-parent="history-of-chf">
+        <div id="chf-ejection-fraction" class="form-group" style="display: none;">
             <label for="ejection-fraction">
                 (CHF) What was the patient's ejection fraction (EF)?
             </label>
@@ -751,7 +758,7 @@
             </div>
         </div>
 
-        <div id="chf-treatment-dependent" class="form-group dependent-question" data-parent="history-of-chf">
+        <div id="chf-treatment-dependent" class="form-group" style="display: none;">
             <label for="chf-treatment">
                 (CHF) Treatment optimization?
             </label>
@@ -777,28 +784,25 @@
             </div>
         </div>
 
-        <div id="" class="form-group dependent-question" data-parent="history-of-carotid-stenosis">
+        <div id="carotid-stenosis-percent" class="form-group" style="display: none;">
             <label for="carotid-stenosis-percent">
                 (Carotid Stenosis) What was the patient's percent/degree of stenosis?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="carotid-stenosis-percent-50-70" name="StenosisPercentage"
-                        value="50-70%">
+                    <input type="radio" id="carotid-stenosis-percent-50-70" name="StenosisPercentage" value="50-70%">
                     <label for="carotid-stenosis-percent-less">
                         50 - 70%
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="carotid-stenosis-percent-70-plus" name="StenosisPercentage"
-                        value=">70%">
+                    <input type="radio" id="carotid-stenosis-percent-70-plus" name="StenosisPercentage" value=">70%">
                     <label for="carotid-stenosis-percent-more">
                         > 70%
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="carotid-stenosis-percent-unknown" name="StenosisPercentage"
-                        value="Unknown">
+                    <input type="radio" id="carotid-stenosis-percent-unknown" name="StenosisPercentage" value="Unknown">
                     <label for="carotid-stenosis-percent-unknown">
                         Unknown
                     </label>
@@ -806,7 +810,7 @@
             </div>
         </div>
 
-        <div id="carotid-stenosis-treatment-dependent" class="form-group dependent-question" data-parent="history-of-carotid-stenosis">
+        <div id="carotid-stenosis-treatment-dependent" class="form-group" style="display: none;">
             <label for="carotid-stenosis-treatment">
                 (Carotid stenosis) Treatment optimization?
             </label>
@@ -835,7 +839,7 @@
             </div>
         </div>
 
-        <div id="" class="form-group dependent-question" data-parent="history-of-osa">
+        <div id="osa-severity" class="form-group" style="display: none;">
             <label for="osa-severity">
                 (OSA) Severity?
             </label>
@@ -867,7 +871,7 @@
             </div>
         </div>
 
-        <div id="osa-treatment-dependent" class="form-group dependent-question" data-parent="history-of-osa">
+        <div id="osa-treatment-dependent" class="form-group" style="display: none;">
             <label for="osa-treatment">
                 (OSA) Treatment optimization?
             </label>
@@ -893,13 +897,14 @@
             </div>
         </div>
 
-        <div id="" class="form-group dependent-question" data-parent="history-of-cad">
+        <div id="cad-type" class="form-group" style="display: none;">
             <label for="cad-type">
                 (CAD) Type of CAD?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="cad-type-symptomatic" name="CADType" value="Symptomatic multi or single vessel">
+                    <input type="radio" id="cad-type-symptomatic" name="CADType"
+                        value="Symptomatic multi or single vessel">
                     <label for="cad-type-symptomatic">
                         Symptomatic multi or single vessel
                     </label>
@@ -925,7 +930,7 @@
             </div>
         </div>
 
-        <div id="cad-treatment-dependent" class="form-group dependent-question" data-parent="history-of-cad">
+        <div id="cad-treatment-dependent" class="form-group" style="display: none;">
             <label for="cad-treatment">
                 (CAD) Treatment optimization?
             </label>
@@ -952,25 +957,28 @@
         </div>
 
         <!-- Additional treatment optimization questions for missing compliance fields -->
-        <div id="valvular-heart-disease-treatment-dependent" class="form-group dependent-question" data-parent="history-of-valvular-heart-disease">
+        <div id="valvular-heart-disease-treatment-dependent" class="form-group" style="display: none;">
             <label for="valvular-heart-disease-treatment">
                 (Valvular Heart Disease) Treatment optimization?
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="valvular-heart-disease-treatment-none" name="valvularHeartDiseaseCompliance" value="not optimized">
+                    <input type="radio" id="valvular-heart-disease-treatment-none" name="valvularHeartDiseaseCompliance"
+                        value="not optimized">
                     <label for="valvular-heart-disease-treatment-none">
                         Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="valvular-heart-disease-treatment-partial" name="valvularHeartDiseaseCompliance" value="partially optimized">
+                    <input type="radio" id="valvular-heart-disease-treatment-partial"
+                        name="valvularHeartDiseaseCompliance" value="partially optimized">
                     <label for="valvular-heart-disease-treatment-partial">
                         Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="valvular-heart-disease-treatment-optimized" name="valvularHeartDiseaseCompliance" value="optimized">
+                    <input type="radio" id="valvular-heart-disease-treatment-optimized"
+                        name="valvularHeartDiseaseCompliance" value="optimized">
                     <label for="valvular-heart-disease-treatment-optimized">
                         Optimized
                     </label>
@@ -1203,26 +1211,29 @@
             </label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance" value="not optimized">
+                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance"
+                        value="not optimized">
                     <label for="triglycerides-treatment-none">
                         Not optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance" value="partially optimized">
+                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance"
+                        value="partially optimized">
                     <label for="triglycerides-treatment-partial">
                         Partially optimized
                     </label>
                 </div>
                 <div class="input-button-group-item">
-                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance" value="optimized">
+                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance"
+                        value="optimized">
                     <label for="triglycerides-treatment-optimized">
                         Optimized
                     </label>
                 </div>
             </div>
         </div>
-<!--
+        <!--
         <div class="form-group">
             <label for="creatine-level">
                 11. What's the patient's creatinine level?
@@ -1272,7 +1283,7 @@
         <h3 id="form-status-message">
 
         </h3>
-        <button type="submit" id="monthly-visit-submit-btn" class="form-submit-btn" onclick="submitForm()">
+        <button type="submit" id="monthly-visit-submit-btn" class="form-submit-btn" onclick="submitChartingNoteForm()">
             Save
         </button>
     </div>
@@ -1282,14 +1293,16 @@
 
 
 {% block scripts %}
-<script>
+<!-- <script>
 
-    const healthieProviderId = "{{ healthie_provider_id }}";
-    const healthieUserId = "{{ healthie_user_id }}";
-    const temporaryLookupCode = "{{ temporary_lookup_code }}";
-    const PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+    console.log('charting_note.html loaded');
 
-    console.log(healthieProviderId, healthieUserId, temporaryLookupCode, PatientNotRegisteredAtSyntrillo);
+    // const healthieProviderId = "{{ healthie_provider_id }}";
+    // const healthieUserId = "{{ healthie_user_id }}";
+    // const temporaryLookupCode = "{{ temporary_lookup_code }}";
+    // const PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+
+    // console.log(healthieProviderId, healthieUserId, temporaryLookupCode, PatientNotRegisteredAtSyntrillo);
 
     function submitForm() {
         // Update status message
@@ -1372,128 +1385,195 @@
         })
             .then(response => response.json())
             .then(data => {
-                   if (data.success) {
-                       statusElement.textContent = 'Form submitted successfully!';
-                       statusElement.className = 'success';
+                if (data.success) {
+                    statusElement.textContent = 'Form submitted successfully!';
+                    statusElement.className = 'success';
 
-                       // Notify the parent page that the form was submitted
-                       if (window.parent && window.parent !== window) {
-                           window.parent.postMessage({
-                               type: 'formSubmitted',
-                               formType: 'charting_note',
-                               success: true
-                           }, window.location.origin);
-                       }
+                    // Notify the parent page that the form was submitted
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({
+                            type: 'formSubmitted',
+                            formType: 'charting_note',
+                            success: true
+                        }, window.location.origin);
+                    }
 
-                       // Show success feedback and optionally close modal after delay
-                       setTimeout(() => {
-                           // Reset the form
-                           document.getElementById('charting-note-form').reset();
+                    // Show success feedback and optionally close modal after delay
+                    setTimeout(() => {
+                        // Reset the form
+                        document.getElementById('charting-note-form').reset();
 
-                           // Close the modal if we're in one
-                           if (window.parent && window.parent !== window) {
-                               // Try to call closeModal if it exists in parent
-                               try {
-                                   window.parent.closeModal();
-                               } catch (e) {
-                                   // If closeModal doesn't exist, just close the iframe
-                                   window.parent.postMessage({
-                                       type: 'closeModal'
-                                   }, window.location.origin);
-                               }
-                           }
-                       }, 1500); // Wait 1.5 seconds to show success message
-                   } else {
-                       statusElement.textContent = 'Submission failed: ' + (data.error || 'Unknown error');
-                       statusElement.className = 'error';
-                   }
-               })
-                .catch(error => {
-                   console.error('Error:', error);
-                   statusElement.textContent = 'Network error: Please try again.';
-                   statusElement.className = 'error';
-               })
-                .finally(() => {
+                        // Close the modal if we're in one
+                        if (window.parent && window.parent !== window) {
+                            // Try to call closeModal if it exists in parent
+                            try {
+                                window.parent.closeModal();
+                            } catch (e) {
+                                // If closeModal doesn't exist, just close the iframe
+                                window.parent.postMessage({
+                                    type: 'closeModal'
+                                }, window.location.origin);
+                            }
+                        }
+                    }, 1500); // Wait 1.5 seconds to show success message
+                } else {
+                    statusElement.textContent = 'Submission failed: ' + (data.error || 'Unknown error');
+                    statusElement.className = 'error';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusElement.textContent = 'Network error: Please try again.';
+                statusElement.className = 'error';
+            })
+            .finally(() => {
                 //    // Reset button state
                 //    submitButton.textContent = originalText;
                 //    submitButton.disabled = false;
 
-                   // Hide loading overlay
+                // Hide loading overlay
                 //    const loadingOverlay = document.getElementById('loading-overlay');
                 //    loadingOverlay.style.display = 'none';
 
-                   // Reset status message if not successful
-                   if (statusElement.textContent.includes('Submitting')) {
-                       statusElement.textContent = '';
-                       statusElement.className = '';
-                   }
-               });
+                // Reset status message if not successful
+                if (statusElement.textContent.includes('Submitting')) {
+                    statusElement.textContent = '';
+                    statusElement.className = '';
+                }
+            });
     }
 
-    // Function to show/hide conditional questions based on checkbox and radio button selections
-    function toggleConditionalQuestions() {
-        // Get all dependent questions
-        const dependentQuestions = document.querySelectorAll('.dependent-question');
+    // Function to toggle dependent questions
+    function toggleDependentQuestions() {
+        console.log('=== toggleDependentQuestions function called ===');
 
-        dependentQuestions.forEach(question => {
-            const parentId = question.getAttribute('data-parent');
-            const parentElement = document.getElementById(parentId);
+        // Test with a simple case first
+        const testElement = document.getElementById('previous-stroke-count-container');
+        console.log('Test element found:', !!testElement);
+        if (testElement) {
+            console.log('Test element current display:', testElement.style.display);
+        }
 
-            if (parentElement) {
-                let shouldShow = false;
-                let reason = '';
+        // Stroke History Dependencies
+        const hasPreviousStroke = document.querySelector('input[name="HasPreviousStroke"]:checked')?.value === 'yes';
+        console.log('HasPreviousStroke checked:', hasPreviousStroke);
+        console.log('HasPreviousStroke element:', document.querySelector('input[name="HasPreviousStroke"]:checked'));
 
-                // Check if parent is a checkbox
-                if (parentElement.type === 'checkbox') {
-                    shouldShow = parentElement.checked;
-                    reason = `checkbox ${parentElement.checked ? 'checked' : 'unchecked'}`;
-                }
-                // Check if parent is a radio button group (container)
-                else if (parentElement.classList.contains('form-group')) {
-                    // Look for the "yes" radio button within this group
-                    const yesRadio = parentElement.querySelector('input[value="yes"]:checked');
-                    shouldShow = yesRadio !== null;
-                    reason = `radio group ${shouldShow ? 'yes selected' : 'no/not selected'}`;
-                }
-                // Check if parent is a radio button input
-                else if (parentElement.type === 'radio') {
-                    shouldShow = parentElement.checked && parentElement.value === 'yes';
-                    reason = `radio button ${shouldShow ? 'yes selected' : 'no/not selected'}`;
-                }
+        const previousStrokeCountContainer = document.getElementById('previous-stroke-count-container');
+        const previousStrokeMechanism = document.getElementById('previous-stroke-mechanism');
+        const strokeTreatmentDependent = document.getElementById('stroke-treatment-dependent');
 
-                question.style.display = shouldShow ? 'block' : 'none';
-
-                // Debug logging
-                // console.log(`Question ${question.id}: ${shouldShow ? 'SHOW' : 'HIDE'} (${reason})`);
-            }
+        console.log('Found elements:', {
+            previousStrokeCountContainer: !!previousStrokeCountContainer,
+            previousStrokeMechanism: !!previousStrokeMechanism,
+            strokeTreatmentDependent: !!strokeTreatmentDependent
         });
+
+        if (previousStrokeCountContainer) {
+            const newDisplay = hasPreviousStroke ? 'block' : 'none';
+            previousStrokeCountContainer.style.display = newDisplay;
+            console.log('Set previousStrokeCountContainer display to:', newDisplay);
+            console.log('After setting, display is:', previousStrokeCountContainer.style.display);
+        }
+
+        // ... rest of your function
     }
 
-    // Add event listeners to checkboxes and radio buttons to trigger show/hide logic
+    // Add event listeners to all checkbox/radio inputs
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial state - hide all conditional questions
-        toggleConditionalQuestions();
+        console.log('=== DOMContentLoaded event fired ===');
 
-        // Add event listeners to all checkboxes
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', toggleConditionalQuestions);
+        const formInputs = document.querySelectorAll('input[type="checkbox"], input[type="radio"], select');
+        console.log('Found form inputs:', formInputs.length);
+
+        // Test if we can find the specific input
+        const testInput = document.querySelector('input[name="HasPreviousStroke"]');
+        console.log('Test input found:', !!testInput);
+        if (testInput) {
+            console.log('Test input type:', testInput.type);
+            console.log('Test input value:', testInput.value);
+        }
+
+        formInputs.forEach(input => {
+            console.log('Adding event listener to:', input.name, input.type, input.value);
+            input.addEventListener('change', function () {
+                console.log('=== Input changed ===');
+                console.log('Input name:', this.name);
+                console.log('Input type:', this.type);
+                console.log('Input value:', this.value);
+                console.log('Input checked:', this.checked);
+                toggleDependentQuestions();
+            });
         });
 
-        // Add event listeners to all radio buttons
-        const radioButtons = document.querySelectorAll('input[type="radio"]');
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', toggleConditionalQuestions);
-        });
-
-        // Debug: Log all dependent questions and their parents
-        // console.log('Dependent questions found:', document.querySelectorAll('.dependent-question').length);
-        document.querySelectorAll('.dependent-question').forEach(q => {
-            const parentId = q.getAttribute('data-parent');
-            const parent = document.getElementById(parentId);
-            // console.log(`Question: ${q.id}, Parent: ${parentId}, Parent found: ${!!parent}, Parent type: ${parent ? parent.type || 'container' : 'N/A'}`);
-        });
+        // Run once on page load to set initial state
+        console.log('Running toggleDependentQuestions on page load');
+        toggleDependentQuestions();
     });
 
-</script>
+    // Function to show/hide conditional questions based on checkbox and radio button selections
+    // function toggleConditionalQuestions() {
+    //     // Get all dependent questions
+    //     const dependentQuestions = document.querySelectorAll('.dependent-question');
+
+    //     dependentQuestions.forEach(question => {
+    //         const parentId = question.getAttribute('data-parent');
+    //         const parentElement = document.getElementById(parentId);
+
+    //         if (parentElement) {
+    //             let shouldShow = false;
+    //             let reason = '';
+
+    //             // Check if parent is a checkbox
+    //             if (parentElement.type === 'checkbox') {
+    //                 shouldShow = parentElement.checked;
+    //                 reason = `checkbox ${parentElement.checked ? 'checked' : 'unchecked'}`;
+    //             }
+    //             // Check if parent is a radio button group (container)
+    //             else if (parentElement.classList.contains('form-group')) {
+    //                 // Look for the "yes" radio button within this group
+    //                 const yesRadio = parentElement.querySelector('input[value="yes"]:checked');
+    //                 shouldShow = yesRadio !== null;
+    //                 reason = `radio group ${shouldShow ? 'yes selected' : 'no/not selected'}`;
+    //             }
+    //             // Check if parent is a radio button input
+    //             else if (parentElement.type === 'radio') {
+    //                 shouldShow = parentElement.checked && parentElement.value === 'yes';
+    //                 reason = `radio button ${shouldShow ? 'yes selected' : 'no/not selected'}`;
+    //             }
+
+    //             question.style.display = shouldShow ? 'block' : 'none';
+
+    //             // Debug logging
+    //             // console.log(`Question ${question.id}: ${shouldShow ? 'SHOW' : 'HIDE'} (${reason})`);
+    //         }
+    //     });
+    // }
+
+    // Add event listeners to checkboxes and radio buttons to trigger show/hide logic
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     // Initial state - hide all conditional questions
+    //     toggleConditionalQuestions();
+
+    //     // Add event listeners to all checkboxes
+    //     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    //     checkboxes.forEach(checkbox => {
+    //         checkbox.addEventListener('change', toggleConditionalQuestions);
+    //     });
+
+    //     // Add event listeners to all radio buttons
+    //     const radioButtons = document.querySelectorAll('input[type="radio"]');
+    //     radioButtons.forEach(radio => {
+    //         radio.addEventListener('change', toggleConditionalQuestions);
+    //     });
+
+    //     // Debug: Log all dependent questions and their parents
+    //     // console.log('Dependent questions found:', document.querySelectorAll('.dependent-question').length);
+    //     document.querySelectorAll('.dependent-question').forEach(q => {
+    //         const parentId = q.getAttribute('data-parent');
+    //         const parent = document.getElementById(parentId);
+    //         // console.log(`Question: ${q.id}, Parent: ${parentId}, Parent found: ${!!parent}, Parent type: ${parent ? parent.type || 'container' : 'N/A'}`);
+    //     });
+    // });
+</script> -->
 {% endblock %}

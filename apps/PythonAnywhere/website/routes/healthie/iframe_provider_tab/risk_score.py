@@ -147,77 +147,157 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
 
     print(f"request.form: {request.form}")
+    logger.info(f"request.form: {request.form}")
 
     try:
         # Get the form data from the request (FormData instead of JSON)
         form_data = {}
-        # Extract form fields manually from request.form
-        form_data['Gender'] = request.form.get('Gender') or None
-        form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'
-        form_data['NumberOfStrokes'] = request.form.get('NumberOfStrokes') or None
-        form_data['LatestStrokeMechanism'] = request.form.get('LatestStrokeMechanism') or None
-        form_data['ScreenedForTIA'] = request.form.get('ScreenedForTIA') == 'yes'
-        form_data['LikelihoodOfTIA'] = request.form.get('LikelihoodOfTIA') or None
-        form_data['TIAMechanism'] = request.form.get('TIAMechanism') or None
-        form_data['HasPriorHeadCT'] = request.form.get('HasPriorHeadCT') == 'yes'
-        prior_ct_date_str = request.form.get('PriorCTDate')
-        if prior_ct_date_str:
+
+        # Only extract fields that are actually present in the form
+        if request.form.get('Gender'):
+            form_data['Gender'] = request.form.get('Gender')
+
+        if request.form.get('HasPreviousStroke'):
+            form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'
+
+        if request.form.get('NumberOfStrokes'):
+            form_data['NumberOfStrokes'] = request.form.get('NumberOfStrokes')
+
+        if request.form.get('LatestStrokeMechanism'):
+            form_data['LatestStrokeMechanism'] = request.form.get('LatestStrokeMechanism')
+
+        if request.form.get('ScreenedForTIA'):
+            form_data['ScreenedForTIA'] = request.form.get('ScreenedForTIA') == 'yes'
+
+        if request.form.get('LikelihoodOfTIA'):
+            form_data['LikelihoodOfTIA'] = request.form.get('LikelihoodOfTIA')
+
+        if request.form.get('TIAMechanism'):
+            form_data['TIAMechanism'] = request.form.get('TIAMechanism')
+
+        if request.form.get('HasPriorHeadCT'):
+            form_data['HasPriorHeadCT'] = request.form.get('HasPriorHeadCT') == 'yes'
+
+        if request.form.get('PriorCTDate'):
             try:
-                form_data['PriorCTDate'] = datetime.strptime(prior_ct_date_str, '%Y-%m-%d')
+                form_data['PriorCTDate'] = datetime.strptime(request.form.get('PriorCTDate'), '%Y-%m-%d')
             except ValueError:
                 form_data['PriorCTDate'] = None
-        else:
-            form_data['PriorCTDate'] = None
-        form_data['ChronicInfarctPresent'] = request.form.get('ChronicInfarctPresent') == 'yes'
-        form_data['HistoryOfAtrialFibrillation'] = request.form.get('HistoryOfAtrialFibrillation') == 'true'
-        form_data['HistoryOfIronDeficiencyAnemia'] = request.form.get('HistoryOfIronDeficiencyAnemia') == 'true'
-        form_data['HistoryOfArterialClots'] = request.form.get('HistoryOfArterialClots') == 'true'
-        form_data['HistoryOfVenousClots'] = request.form.get('HistoryOfVenousClots') == 'true'
-        form_data['HistoryOfCHF'] = request.form.get('HistoryOfCHF') == 'true'
-        form_data['HistoryOfCarotidStenosis'] = request.form.get('HistoryOfCarotidStenosis') == 'true'
-        form_data['HistoryOfOSA'] = request.form.get('HistoryOfOSA') == 'true'
-        form_data['HistoryOfCAD'] = request.form.get('HistoryOfCAD') == 'true'
-        form_data['HistoryOfValvularHeartDisease'] = request.form.get('HistoryOfValvularHeartDisease') == 'true'
-        form_data['HistoryOfCKD'] = request.form.get('HistoryOfCKD') == 'true'
-        # form_data['HistoryOfHyperlipidemia'] = request.form.get('HistoryOfHyperlipidemia') == 'true'
-        form_data['HistoryOfDiabetes'] = request.form.get('HistoryOfDiabetes') == 'true'
-        form_data['HistoryOfObesity'] = request.form.get('HistoryOfObesity') == 'true'
-        form_data['AnemiaSeverity'] = request.form.get('AnemiaSeverity') or None
-        form_data['ArterialClotOccurrences'] = request.form.get('ArterialClotOccurrences') or None
-        form_data['VenousClotOccurrences'] = request.form.get('VenousClotOccurrences') or None
-        form_data['PFOPresence'] = request.form.get('PFOPresence') or None
-        form_data['EjectionFraction'] = request.form.get('EjectionFraction') or None
-        form_data['StenosisPercentage'] = request.form.get('StenosisPercentage') or None
-        form_data['OSASeverity'] = request.form.get('OSASeverity') or None
-        form_data['CADType'] = request.form.get('CADType') or None
-        # form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) or None
-        form_data['HemoglobinA1c'] = float(request.form.get('HemoglobinA1c')) or None
-        # form_data['LDLLevel'] = request.form.get('LDLLevel') or None
-        # form_data['HDLLevel'] = request.form.get('HDLLevel') or None
-        form_data['LDL'] = float(request.form.get('LDL')) or None
-        form_data['LDLCompliance'] = request.form.get('LDLCompliance') or None
-        form_data['HDL'] = float(request.form.get('HDL')) or None
-        form_data['Triglycerides'] = float(request.form.get('Triglycerides')) or None
-        # form_data['TriglyceridesCompliance'] = request.form.get('TriglyceridesCompliance') or None
-        form_data['Creatinine'] = float(request.form.get('Creatinine')) or None
-        form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism') or None
-        # form_data['Height'] = request.form.get('Height') or None
-        # form_data['Weight'] = request.form.get('Weight') or None
-        # form_data['AvgSBP'] = request.form.get('AvgSBP') or None
-        # form_data['RHR'] = request.form.get('RHR') or None
-        # form_data['BMI'] = request.form.get('BMI') or None
 
-        # Parse compliance data from JSON string
-        compliance_json = request.form.get('compliance')
-        if compliance_json:
+        if request.form.get('ChronicInfarctPresent'):
+            form_data['ChronicInfarctPresent'] = request.form.get('ChronicInfarctPresent') == 'yes'
+
+        if request.form.get('ChronicInfarctMechanism'):
+            form_data['ChronicInfarctMechanism'] = request.form.get('ChronicInfarctMechanism')
+
+        if request.form.get('HistoryOfAtrialFibrillation'):
+            form_data['HistoryOfAtrialFibrillation'] = request.form.get('HistoryOfAtrialFibrillation') == 'true'
+
+        if request.form.get('HistoryOfIronDeficiencyAnemia'):
+            form_data['HistoryOfIronDeficiencyAnemia'] = request.form.get('HistoryOfIronDeficiencyAnemia') == 'true'
+
+        if request.form.get('AnemiaSeverity'):
+            form_data['AnemiaSeverity'] = request.form.get('AnemiaSeverity')
+
+        if request.form.get('HistoryOfArterialClots'):
+            form_data['HistoryOfArterialClots'] = request.form.get('HistoryOfArterialClots') == 'true'
+
+        if request.form.get('ArterialClotOccurrences'):
+            form_data['ArterialClotOccurrences'] = request.form.get('ArterialClotOccurrences')
+
+        if request.form.get('HistoryOfVenousClots'):
+            form_data['HistoryOfVenousClots'] = request.form.get('HistoryOfVenousClots') == 'true'
+
+        if request.form.get('VenousClotOccurrences'):
+            form_data['VenousClotOccurrences'] = request.form.get('VenousClotOccurrences')
+
+        if request.form.get('PFOPresence'):
+            form_data['PFOPresence'] = request.form.get('PFOPresence')
+
+        if request.form.get('HistoryOfCHF'):
+            form_data['HistoryOfCHF'] = request.form.get('HistoryOfCHF') == 'true'
+
+        if request.form.get('EjectionFraction'):
+            form_data['EjectionFraction'] = request.form.get('EjectionFraction')
+
+        if request.form.get('HistoryOfCarotidStenosis'):
+            form_data['HistoryOfCarotidStenosis'] = request.form.get('HistoryOfCarotidStenosis') == 'true'
+
+        if request.form.get('StenosisPercentage'):
+            form_data['StenosisPercentage'] = request.form.get('StenosisPercentage')
+
+        if request.form.get('HistoryOfOSA'):
+            form_data['HistoryOfOSA'] = request.form.get('HistoryOfOSA') == 'true'
+
+        if request.form.get('OSASeverity'):
+            form_data['OSASeverity'] = request.form.get('OSASeverity')
+
+        if request.form.get('HistoryOfCAD'):
+            form_data['HistoryOfCAD'] = request.form.get('HistoryOfCAD') == 'true'
+
+        if request.form.get('CADType'):
+            form_data['CADType'] = request.form.get('CADType')
+
+        if request.form.get('HistoryOfValvularHeartDisease'):
+            form_data['HistoryOfValvularHeartDisease'] = request.form.get('HistoryOfValvularHeartDisease') == 'true'
+
+        if request.form.get('HistoryOfCKD'):
+            form_data['HistoryOfCKD'] = request.form.get('HistoryOfCKD') == 'true'
+
+        if request.form.get('HistoryOfDiabetes'):
+            form_data['HistoryOfDiabetes'] = request.form.get('HistoryOfDiabetes') == 'true'
+
+        if request.form.get('HistoryOfObesity'):
+            form_data['HistoryOfObesity'] = request.form.get('HistoryOfObesity') == 'true'
+
+        if request.form.get('HemoglobinA1c'):
             try:
-                form_data['compliance'] = json.loads(compliance_json)
-            except json.JSONDecodeError:
-                form_data['compliance'] = {}
+                form_data['HemoglobinA1c'] = float(request.form.get('HemoglobinA1c'))
+            except (ValueError, TypeError):
+                form_data['HemoglobinA1c'] = None
+
+        if request.form.get('LDL'):
+            try:
+                form_data['LDL'] = float(request.form.get('LDL'))
+            except (ValueError, TypeError):
+                form_data['LDL'] = None
+
+        if request.form.get('HDL'):
+            try:
+                form_data['HDL'] = float(request.form.get('HDL'))
+            except (ValueError, TypeError):
+                form_data['HDL'] = None
+
+        if request.form.get('Triglycerides'):
+            try:
+                form_data['Triglycerides'] = float(request.form.get('Triglycerides'))
+            except (ValueError, TypeError):
+                form_data['Triglycerides'] = None
+
+        if request.form.get('Creatinine'):
+            try:
+                form_data['Creatinine'] = float(request.form.get('Creatinine'))
+            except (ValueError, TypeError):
+                form_data['Creatinine'] = None
+
+        # Handle compliance fields - only include if they exist
+        compliance_data = {}
+        compliance_fields = [
+            'strokeCompliance', 'arterialClotsCompliance', 'carotidStenosisCompliance',
+            'ldlCompliance', 'hdlCompliance', 'triglyceridesCompliance'
+        ]
+
+        for field in compliance_fields:
+            if request.form.get(field):
+                compliance_data[field] = request.form.get(field)
+
+        if compliance_data:
+            form_data['compliance'] = compliance_data
         else:
             form_data['compliance'] = {}
 
         print(f"form_data: {form_data}")
+        logger.info(f"form_data: {form_data}")
 
         if not form_data:
             return jsonify({
@@ -228,40 +308,15 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         # Log the received data for debugging
         current_app.logger.info(f"Received charting note data: {form_data}")
 
-        # Convert form data to proper types before passing to insert_srs_iframe_data
-        processed_data = {}
-
-        omit_fields = ['healthie_user_id', 'healthie_provider_id', 'temporary_lookup_code', 'patient_not_registered_at_syntrillo']
-        # Copy all fields from form_data (booleans are already handled in frontend)
-        for key, value in form_data.items():
-            if key not in omit_fields:
-                processed_data[key] = value
-
-        # Handle numeric fields (ensure they're floats)
-        numeric_fields = ['Height', 'Weight', 'AvgSBP', 'RHR', 'HemoglobinA1c', 'CreatineLevel']
-        for field in numeric_fields:
-            if field in processed_data and processed_data[field] is not None:
-                try:
-                    processed_data[field] = float(processed_data[field]) if processed_data[field] != "" else None
-                except (ValueError, TypeError):
-                    processed_data[field] = None
-
-        # Handle date field
-        if 'PriorCTDate' in processed_data and processed_data['PriorCTDate']:
-            try:
-                processed_data['PriorCTDate'] = datetime.fromisoformat(processed_data['PriorCTDate'])
-            except (ValueError, TypeError):
-                processed_data['PriorCTDate'] = None
+        # Remove internal fields before processing
+        # omit_fields = ['healthie_user_id', 'healthie_provider_id', 'temporary_lookup_code', 'patient_not_registered_at_syntrillo']
+        # processed_data = {k: v for k, v in form_data.items() if k not in omit_fields}
 
         # Log the processed data for debugging
-        current_app.logger.info(f"Processed charting note data: {processed_data}")
-
-
-        # Add breakpoint to debug the exact issue
-        # breakpoint()
+        # current_app.logger.info(f"Processed charting note data: {processed_data}")
 
         # Insert the SRS form response into the database
-        response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="", data=processed_data)
+        response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="", data=form_data)
 
         if log['success'] == True:
             return jsonify({

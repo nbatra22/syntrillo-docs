@@ -240,5 +240,5 @@ def iframe_healthie_provider_tab_get_metrics():
         'ssq_score': ssq_score,
         'exercise': exercise,
         'bmi': bmi,
-        'hr_measurements': hr_measurements_cleaned,
+        # 'hr_measurements': hr_measurements_cleaned,
     })

@@ -1039,6 +1039,8 @@ class SyntrilloDatabaseManager:
         # Extract the compliance data from the SRS form response.
         compliance_data = srs_form_response.compliance
 
+        logger.info(f"form_data: {form_data}")
+
         try:
             self.conn.begin()  # Start a transaction
 
@@ -1046,6 +1048,7 @@ class SyntrilloDatabaseManager:
                 # 1. Insert into srs_form_responses
                 form_columns = ', '.join(form_data.keys())
                 form_placeholders = ', '.join(['%s'] * len(form_data))
+
                 form_query = f"""
                     INSERT INTO srs_form_responses ({form_columns})
                     VALUES ({form_placeholders});
