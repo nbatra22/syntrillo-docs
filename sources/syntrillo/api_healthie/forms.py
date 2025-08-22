@@ -1169,13 +1169,10 @@ class HealthieForms():
 
     def get_autoscored_sections(self, custom_module_form_id: str, user_id: str):
         query = """
-            query getAutoscoredSections($custom_module_form_id: String!, $user_id: String!) {query formAnswerGroups(
-                $custom_module_form_id: ID,
-                $user_id: String,
-            ) {
+            query formAnswerGroups($custom_module_form_id: ID!, $user_id: String!) {
                 formAnswerGroups(
                     custom_module_form_id: $custom_module_form_id,
-                    user_id: $user_id,
+                    user_id: $user_id
                 ) {
                     custom_module_form {    # The form template that was filled out
                         id
@@ -1196,6 +1193,9 @@ class HealthieForms():
 
         response, log = self.auth.send_query(query, variables)
 
+        print(f"-------- response: {response}")
+        print(f"-------- log: {log}")
+
         return response
 
 
@@ -1205,8 +1205,8 @@ if __name__ == "__main__":
 
     if True:
         response = forms.get_autoscored_sections(
-            custom_module_form_id="2455490",
-            user_id="1035117",
+            custom_module_form_id="1056973",
+            user_id="1525423",
         )
         HealthieAuth.print_pretty_json(response)
 

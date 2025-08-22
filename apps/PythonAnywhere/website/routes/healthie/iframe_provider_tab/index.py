@@ -62,8 +62,8 @@ def iframe_healthie_provider_tab_index():
             # healthie_user_id = '-1'
             # healthie_user_id = "1035117" # with onboarding forms
             # healthie_user_id = "1209727" # with syntrillo_internal_key
-            healthie_user_id = "1525423" # Patient AWS Test
-            # healthie_user_id = "2062692" # Patient AWS Test 5
+            # healthie_user_id = "1525423" # Patient AWS Test
+            healthie_user_id = "2062692" # Patient AWS Test 5
             # healthie_user_id = "2062877" # Patient AWS Test 6 (hypertensive)
             # healthie_user_id = "1562903" # Crispy Bacon
             # healthie_user_id = "2315391" # Bob Barker
