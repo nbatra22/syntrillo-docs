@@ -1,6 +1,7 @@
 import uuid
 import numpy as np
 
+from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.agg_data import aggregate_data
@@ -89,8 +90,8 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
         tuple[float, dict]: The risk score and the aggregated data
     """
     try:
-        agg_data = aggregate_data(syntrillo_internal_key)
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        agg_data = aggregate_data(syntrillo_internal_key)
 
         if agg_data.get("srs_response_data", None) is None:
             logger.warning(f"No SRS response data found, returning agg_data objectand None for risk score...")
@@ -500,8 +501,9 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
 if __name__ == "__main__":
     # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
     # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36") # 3.33 / 5.05
-    syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160") # 3.33 / 5.05
-    # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77
+    # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160") # 3.33 / 5.05
+    syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77 / ID: 1562903
+    # syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") #
     srs, agg_data, stroke_priority_score = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
