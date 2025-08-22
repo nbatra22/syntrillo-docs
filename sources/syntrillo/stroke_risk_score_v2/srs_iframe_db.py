@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, Tuple
-from syntrillo.stroke_risk_score_v2.utils import calculate_bmi
+from syntrillo.stroke_risk_score_v2.utils import calculate_bmi, get_biometric_data
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.models.srs_form import (
     SRSFormResponse,
@@ -42,6 +42,11 @@ OTHER_CATEGORICAL_FIELDS = [
     ("PhysicalInactivityLevel", "PhysicalInactivityHours"),
 ]
 
+GENDER_MAPPING = {
+    "male": GenderOptions.MAN,
+    "female": GenderOptions.WOMAN,
+}
+
 def get_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list[SRSFormResponse], dict]:
     """
     Given a patients syntrillo_internal_key, retireve all the srs form responses and compliance data
@@ -79,6 +84,13 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
         print(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key_patient)
 
+        # Get biometric data
+        biometric_data = get_biometric_data(syntrillo_internal_key_patient)
+        data["Height"] = biometric_data.get("height", None)
+        data["Gender"] = GENDER_MAPPING[biometric_data["gender"].lower() if biometric_data["gender"] else "male"]
+        data["Weight"] = biometric_data.get("weight", None)
+        data["BMI"] = biometric_data.get("bmi", None)
+
         # Insert SRS form responses
         srs_form_response = SRSFormResponse(
             syntrillo_internal_key_patient=str(syntrillo_internal_key_patient),
@@ -86,12 +98,6 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
             created_at=datetime.now(),
             **data
         )
-
-        # Calculate BMI
-        bmi = calculate_bmi(srs_form_response.Weight, srs_form_response.Height)
-        if bmi is None:
-            logger.warning(f"BMI is None for patient {syntrillo_internal_key_patient} because weight or height was not provided...")
-        srs_form_response.BMI = bmi
 
         # Calculate Categorical values for needed fields
         for categorical_field, value_field in LAB_CATEGORICAL_FIELDS:
@@ -224,26 +230,26 @@ if __name__ == "__main__":
     #     )
     # }
 
-    syntrillo_internal_key_patient = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94")
+    syntrillo_internal_key_patient = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # Cris P. Bacon
+    # syntrillo_internal_key_patient = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") #
     syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
 
     srs_data = {
-        "Gender": GenderOptions.MAN,
-        "Height": 72.0,
-        "Weight": 186.0,
         "HasPreviousStroke": True,
         "NumberOfStrokes": NumberOfStrokesOptions.ONE,
-        "LatestStrokeMechanism": StrokeMechanismOptions.CARDIOEMBOLIC,
+        "LatestStrokeMechanism": StrokeMechanismOptions.HYPERCOAGULABLE,
         "LDL": 83.0,
         "HDL": 54.0,
         "compliance": TreatmentCompliance(
             strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
             triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
         )
     }
 
     # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
-    srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
-    print(srs_form_responses)
+    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    # print(srs_form_responses)
 
     insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)

@@ -72,10 +72,9 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         healthie_user_id = entry['healthie_user_id']
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
+        tenovi_hr_data = get_tenovi_hr_data(db_manager)
         healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager)
         srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
-
-        # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – tenovi_hr_data = get_tenovi_hr_data(db_manager)
 
         print(f"tenovi_bp_data: {tenovi_bp_data}")
         print(f"healthie_srs_data: {healthie_srs_data}")
@@ -83,6 +82,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
         return {
             "tenovi_bp_data": tenovi_bp_data,
+            "tenovi_hr_data": tenovi_hr_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
             "lab_data": {},
@@ -312,22 +312,20 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
 
         # TRAILING DATAFRAME
         # Determine the trailing start and end dates
-        trailing_start = rhr_df[CREATED_AT].max() - pd.Timedelta(weeks=TRAILING_NUM_WEEKS)
+        trailing_end = pd.Timestamp.now().tz_localize('UTC').tz_convert('America/New_York')
+        trailing_start = trailing_end - pd.Timedelta(weeks=TRAILING_NUM_WEEKS)
         trailing_average = None
         if is_valid_trailing_timeframe_dates(trailing_start, baseline_end):
-            trailing_end = rhr_df[CREATED_AT].max()
             trailing_df = get_timeframed_data(rhr_df, trailing_start, trailing_end, TYPE_RHR)
-
-            # Calculate the average trailing for the rhr_data
-            trailing_average = trailing_df[METRIC_STAT].mean() if not trailing_df.empty else None
+            trailing_average = trailing_df[METRIC_STAT].mean() if not trailing_df.empty else None # Calculate the average trailing for the rhr_data
         else:
-            logger.error("Not enough data to calculate trailing average...")
+            logger.warning("Not enough data to calculate trailing average...")
 
         logger.info(f"Successfully calculated RHR metadata...")
         # Return the metadata
         return {
-            "average_rhr_baseline": baseline_average,
-            "average_rhr_trailing": trailing_average,
+            "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
+            "average_rhr_trailing": round(trailing_average, 2) if trailing_average else None,
         }
 
     except Exception as e:
@@ -371,6 +369,10 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         db_manager (SyntrilloDatabaseManager): The syntrillo database manager
     Returns:
         dict: The trailing variability for the hr data
+        {
+            "trailing_hr_variability": trailing_hr_variability,
+            "trailing_hr_average": trailing_hr_average,
+        }
     Raises:
         ValueError: If the hr data is not valid
     """
@@ -386,14 +388,18 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
 
         # Calculate variability for trailing 4 weeks HR data
         # Calculate the trailing start and end dates
-        trailing_start = hr_df[TIMESTAMP].max() - pd.Timedelta(weeks=4)
-        trailing_end = hr_df[TIMESTAMP].max()
+        trailing_end = pd.Timestamp.now().tz_localize('UTC').tz_convert('America/New_York')
+        trailing_start = trailing_end - pd.Timedelta(weeks=TRAILING_NUM_WEEKS)
 
         trailing_df = get_timeframed_data(hr_df, trailing_start, trailing_end, TYPE_HR)
-        trailing_variability = trailing_df[VALUE_1].std() if not trailing_df.empty else None
+        trailing_hr_average = trailing_df[VALUE_1].mean() if not trailing_df.empty else None
+        trailing_hr_variability = trailing_df[VALUE_1].std() if not trailing_df.empty else None
 
         logger.info(f"Successfully fetched Tenovi HR data...")
-        return trailing_variability
+        return {
+            "trailing_hr_variability": round(trailing_hr_variability, 2) if trailing_hr_variability else None,
+            "trailing_hr_average": round(trailing_hr_average, 2) if trailing_hr_average else None,
+        }
 
     except Exception as e:
         logger.error(f"Error getting Tenovi HR data: {e}")
@@ -574,13 +580,14 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         raise ValueError("Error calculating bp metadata")
 
 
-def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, timeframe_end: datetime, type: str) -> pd.DataFrame:
+def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, timeframe_end: datetime, measurement_type: str) -> pd.DataFrame:
     """
     Get the timeframed data from the dataframe
     Args:
         dataframe (pd.DataFrame): The dataframe
         timeframe_start (datetime): The start date of the timeframe
         timeframe_end (datetime): The end date of the timeframe
+        measurement_type (str): The type of measurement
 
     Returns:
         pd.DataFrame: The timeframed data
@@ -588,18 +595,18 @@ def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, time
         ValueError: If the timeframed data is not valid
     """
     try:
-        if type == TYPE_BP:
+        if measurement_type == TYPE_BP:
             timeframe_df = dataframe[(dataframe[TIMESTAMP_LOCAL] >= timeframe_start) & (dataframe[TIMESTAMP_LOCAL] < timeframe_end)]
-        elif type == TYPE_RHR:
+        elif measurement_type == TYPE_RHR:
             timeframe_df = dataframe[(dataframe[CREATED_AT] >= timeframe_start) & (dataframe[CREATED_AT] < timeframe_end)]
-        elif type == TYPE_HR:
+        elif measurement_type == TYPE_HR:
             timeframe_df = dataframe[(dataframe[TIMESTAMP] >= timeframe_start) & (dataframe[TIMESTAMP] < timeframe_end)]
         else:
-            logger.error(f"Invalid type: {type}")
-            raise ValueError(f"Invalid type: {type}")
+            logger.error(f"Invalid type: {measurement_type}")
+            raise ValueError(f"Invalid type: {measurement_type}")
 
         if not is_valid_timeframe_num_measurements(timeframe_df):
-            logger.error("Timeframed data is not valid")
+            logger.warning(f"Timeframed data is not valid for {measurement_type}...")
             return pd.DataFrame()
 
         return timeframe_df
