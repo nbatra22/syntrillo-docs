@@ -2424,6 +2424,12 @@
                         sbpVariabilityCircle.style.display = 'block';
                     }
 
+                    // Handle Tenovi HR Data
+                    if (metrics.tenovi_hr_data) {
+                        const hrData = metrics.tenovi_hr_data;
+                        if (hrData.trailing_hr_average) hrAvg.textContent = hrData.trailing_hr_average || '-';
+                    }
+
                     // Update Healthie SRS Data
                     if (metrics.healthie_srs_data) {
                         const healthie = metrics.healthie_srs_data;
