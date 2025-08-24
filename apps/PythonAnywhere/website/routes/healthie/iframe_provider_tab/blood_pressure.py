@@ -234,6 +234,8 @@ def iframe_healthie_provider_tab_get_metrics():
     biometrics = get_biometric_data(post_manager.syntrillo_internal_key)
     bmi = calculate_bmi(biometrics['weight'], biometrics['height'])
 
+    print(f"-------- biometrics: {biometrics}")
+
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
