@@ -667,8 +667,8 @@
                     exerciseHTML = `<h4>As of 8/9/2025:</h4><ul><li>Low</li></ul>`
                 }
 
-                if (data.bmi && data.bmi.date) {
-                    bmiHTML = `<h4>As of ${data.bmi.date}:</h4><ul><li>${data.bmi.value.bmi}</li></ul>`
+                if (data.bm) {
+                    bmiHTML = `<ul><li>${data.bmi}</li></ul>`
                 } else {
                     // bmiHTML = "<h3>No BMI data found</h3>"
                     // Generate random date (within last 30 days)
@@ -686,8 +686,8 @@
                     bmiHTML = `<h4>As of ${formattedDate}:</h4><ul><li>41</li></ul>`;
                 }
 
-                if (data.hr_measurements && data.hr_measurements.avg_hr) {
-                    hrHTML = `<h4>Latest measurement recorded on ${data.hr_measurements.latest_date}:</h4><ul><li>${data.hr_measurements.avg_hr} bpm (avg of 3 latest measurements)</li></ul>`;
+                if (data.hr_measurements && data.hr_measurements.baseline_rhr && data.hr_measurements.trailing_rhr) {
+                    hrHTML = `<ul><li><span style="text-decoration: underline;">Baseline</span>: ${data.hr_measurements.baseline_rhr} bpm</li><li><span style="text-decoration: underline;">Trailing</span>: ${data.hr_measurements.trailing_rhr} bpm</li></ul>`;
                 } else {
                     hrHTML = "<h3>No resting heart rate data found</h3>";
                 }
@@ -695,7 +695,7 @@
                 if (data.ssq_score) {
                     ssqHTML += "<ul>"
                     data.ssq_score.forEach(section => {
-                        ssqHTML += `<li><span style="text-decoration: underline;">${section.section_title}:</span> ${section.value}</li>`
+                        ssqHTML += `<li><span style="text-decoration: underline;">${section.section_title}</span>: ${section.value}</li>`
                     })
                     ssqHTML += "</ul>"
                 } else {

@@ -15,6 +15,8 @@ from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, calculate_bmi
+from syntrillo.stroke_risk_score_v2.agg_data import get_srs_healthie_data
 
 from syntrillo.system.logger import logger
 
@@ -224,16 +226,23 @@ def iframe_healthie_provider_tab_get_metrics():
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # Establish connection to PatientResponses class
-    patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
+    # patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
 
     # Retrieve exercise and bmi data
-    exercise = patient_responses.get_exercise()
-    bmi = patient_responses.get_bmi()
+    # exercise = patient_responses.get_exercise()
+
+    biometrics = get_biometric_data(post_manager.syntrillo_internal_key)
+    bmi = calculate_bmi(biometrics['weight'], biometrics['height'])
 
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    hr_measurements, log = db_manager.get_latest_measurements(metric_name='pulse', count=3)
+    healthie_data = get_srs_healthie_data(entry['healthie_user_id'], db_manager)
+    hr_measurements = {
+        'baseline_rhr': healthie_data['average_rhr_baseline'],
+        'trailing_rhr': healthie_data['average_rhr_trailing'],
+    }
+
 
     print(f"-------- hr_measurements: {hr_measurements}")
 
@@ -258,7 +267,7 @@ def iframe_healthie_provider_tab_get_metrics():
 
     return jsonify({
         'ssq_score': ssq_score,
-        'exercise': exercise,
+        # 'exercise': exercise,
         'bmi': bmi,
-        # 'hr_measurements': hr_measurements_cleaned,
+        'hr_measurements': hr_measurements,
     })
