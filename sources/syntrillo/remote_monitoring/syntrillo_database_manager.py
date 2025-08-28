@@ -816,9 +816,7 @@ class SyntrilloDatabaseManager:
 
                 rows = cursor.fetchall()
                 # Convert to list of dicts
-                measurements = [
-                    {'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows
-                ]
+                measurements = [{'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows]
                 log = {"success": True}
 
         except pymysql.MySQLError as e:

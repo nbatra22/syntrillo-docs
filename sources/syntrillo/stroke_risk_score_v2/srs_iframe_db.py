@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, Tuple
-from syntrillo.stroke_risk_score_v2.utils import calculate_bmi, get_biometric_data
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.models.srs_form import (
     SRSFormResponse,

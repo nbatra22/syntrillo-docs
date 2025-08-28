@@ -714,7 +714,6 @@
                 metricsContent.style.display = "table";
             })
             .catch(error => {
-                console.error("Error fetching data:", error);
                 // Show table and hide spinners on error
                 hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
                 metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";

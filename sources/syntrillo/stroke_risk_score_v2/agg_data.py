@@ -381,6 +381,12 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
     try:
         logger.info(f"Fetching Tenovi HR data...")
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
+        if len(hr_measurements) == 0:
+            logger.warning("No Tenovi HR data found for the patient ...")
+            return {
+                "trailing_hr_variability": None,
+                "trailing_hr_average": None,
+            }
         hr_df = pd.DataFrame(hr_measurements)
 
         # Convert timestamp to datetime
@@ -439,6 +445,22 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
         logger.info(f"Beginning Tenovi BP data aggregation...")
         bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
         bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
+        if bp_df is None or bp_df.empty:
+            return {
+                SYSTOLIC: {
+                    TRAILING: {
+                        SBP_COUNT_175: None,
+                        VARIABILITY: None,
+                        AVERAGE: None,
+                        PEAK_SBP_2: None,
+                    },
+                },
+                DIASTOLIC: {
+                    TRAILING: {
+                        AVERAGE: None,
+                        },
+                    },
+                }
         logger.info(f"Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
@@ -534,6 +556,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
+                    PEAK_SBP_2: trailing_bp_metadata[PEAK_SBP],
                 },
             },
             DIASTOLIC: {
