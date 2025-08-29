@@ -816,9 +816,7 @@ class SyntrilloDatabaseManager:
 
                 rows = cursor.fetchall()
                 # Convert to list of dicts
-                measurements = [
-                    {'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows
-                ]
+                measurements = [{'value_1': row[0], 'value_2': row[1], 'timestamp': row[2]} for row in rows]
                 log = {"success": True}
 
         except pymysql.MySQLError as e:
@@ -1138,7 +1136,7 @@ class SyntrilloDatabaseManager:
             syntrillo_internal_key (str): The syntrillo internal key to query by.
         Returns:
             answer (str): The answer to the question.
-            created_at (str): The timestamp of the answer.
+            updated_at (str): The timestamp of the answer.
         Raises:
             pymysql.MySQLError: If there is an error retrieving the form and module ids.
             Exception: If there is an unexpected error during the retrieval.
@@ -1148,16 +1146,16 @@ class SyntrilloDatabaseManager:
                 query = """
                     SELECT
                         answer,
-                        created_at
+                        updated_at
                     FROM
                         healthie_form_responses
                     WHERE module_id = %s AND syntrillo_internal_key = %s
-                    ORDER BY created_at DESC;
+                    ORDER BY updated_at DESC;
                 """
                 cursor.execute(query, (module_id, syntrillo_internal_key))
-                answer, created_at = cursor.fetchone()
+                answer, updated_at = cursor.fetchone()
 
-                return answer, created_at
+                return answer, updated_at
 
         except pymysql.MySQLError as e:
             log = {

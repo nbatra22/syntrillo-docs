@@ -168,6 +168,7 @@ class BloodPressureAnalysis:
         # ---
         # exit if no data : None or empty dataframe
         if bpm_df is None or bpm_df.empty or log['success'] == False:
+            logger.warning(f"No blood pressure data found for patient {self.syntrillo_internal_key}")
             overall_log = {
                 'success': False,
                 'error': 'No blood pressure data found.',

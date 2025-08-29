@@ -23,7 +23,7 @@ from syntrillo.bp_analysis.constants import (
     AVERAGE,
     VARIABILITY,
     TRAILING,
-    PEAK_SBP_2,
+    PEAK_AVG_SBP,
     PEAK_SBP,
     BASELINE
 )
@@ -73,7 +73,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
         tenovi_hr_data = get_tenovi_hr_data(db_manager)
-        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager)
+        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key)
         srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
 
         print(f"tenovi_bp_data: {tenovi_bp_data}")
@@ -100,7 +100,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
 
 # Get records using syntrillo_internal_key from srs_form_responses table
-def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager) -> dict:
+def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
     """
     Get the data needed for SRS calculations that is stored in healthie from the healthie user id
     Args:
@@ -126,7 +126,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else None
 
         # Retreive the activity data
-        activity_data = get_healthie_activity_data(healthie_user_id, db_manager)
+        activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key)
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
@@ -143,7 +143,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         raise ValueError("Error fetching RHR data from healthie")
 
 
-def get_healthie_activity_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager) -> Union[int, None]:
+def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> Union[int, None]:
     """
     Get the activity data from healthie
     Args:
@@ -166,11 +166,11 @@ def get_healthie_activity_data(healthie_user_id: str, db_manager: SyntrilloDatab
         _, module_id_activity_charting = db_manager.get_form_module_ids_by_module_label(ACTIVITY_CHARTING_MODULE_LABEL)
 
         # Retreive the intake & charting inactivity value based on the module id and healthie user id
-        intake_inactivity_hours_answer, intake_created_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, healthie_user_id)
-        charting_inactivity_hours_answer, charting_created_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, healthie_user_id)
+        intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
+        charting_inactivity_hours_answer, charting_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, syntrillo_internal_key)
 
-        intake_activity_minutes_answer, intake_activity_created_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, healthie_user_id)
-        charting_activity_minutes_answer, charting_activity_created_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, healthie_user_id)
+        intake_activity_minutes_answer, intake_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, syntrillo_internal_key)
+        charting_activity_minutes_answer, charting_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, syntrillo_internal_key)
 
         # Use the most recent answer from the intake or charting responses
         if not intake_inactivity_hours_answer and not charting_inactivity_hours_answer:
@@ -178,17 +178,19 @@ def get_healthie_activity_data(healthie_user_id: str, db_manager: SyntrilloDatab
                 "inactivity_hours_answer": None,
                 "activity_minutes_answer": None,
             }
-        # TODO: use updated_at instead of created_at
-        elif (not charting_inactivity_hours_answer) or intake_created_at > charting_created_at:
+        elif not intake_inactivity_hours_answer:
+            inactivity_hours_answer = charting_inactivity_hours_answer
+            activity_minutes_answer = charting_activity_minutes_answer
+        elif not charting_inactivity_hours_answer:
             inactivity_hours_answer = intake_inactivity_hours_answer
             activity_minutes_answer = intake_activity_minutes_answer
         else:
-            inactivity_hours_answer = charting_inactivity_hours_answer
-            activity_minutes_answer = charting_activity_minutes_answer
+            inactivity_hours_answer = intake_inactivity_hours_answer if intake_updated_at > charting_updated_at else charting_inactivity_hours_answer
+            activity_minutes_answer = intake_activity_minutes_answer if intake_updated_at > charting_updated_at else charting_activity_minutes_answer
 
         # Convert to int for DB range comparison
-        inactivity_hours_answer = int(inactivity_hours_answer)
-        activity_minutes_answer = int(activity_minutes_answer)
+        inactivity_hours_answer = float(inactivity_hours_answer)
+        activity_minutes_answer = float(activity_minutes_answer)
 
         logger.info(f"Successfully fetched activity data from healthie...")
         return {
@@ -251,6 +253,7 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
                 "client_id": healthie_user_id,
                 "category": RHR_CATEGORY,
                 "type": ENTRY_TYPE,
+                "page_size": page_size,
                 "sort_by": "created_at::asc"
             }
             if cursor:
@@ -264,9 +267,8 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
             all_rhr_data.extend(current_page_data)
 
             # Check if there are more pages to fetch
-            if len(current_page_data) == page_size and current_page_data[-1].get("cursor"):
+            if len(current_page_data) == page_size and current_page_data[-1].get("cursor", None):
                 cursor = current_page_data[-1]["cursor"]
-                logger.info(f"Fetched {len(current_page_data)} records. Getting next page with cursor.")
             else:
                 has_more_pages = False
                 logger.info("No more pages to fetch.")
@@ -379,6 +381,12 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
     try:
         logger.info(f"Fetching Tenovi HR data...")
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
+        if len(hr_measurements) == 0:
+            logger.warning("No Tenovi HR data found for the patient ...")
+            return {
+                "trailing_hr_variability": None,
+                "trailing_hr_average": None,
+            }
         hr_df = pd.DataFrame(hr_measurements)
 
         # Convert timestamp to datetime
@@ -422,6 +430,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
+                    PEAK_AVG_SBP: None,
                 }
             },
             DIASTOLIC: {
@@ -437,6 +446,22 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
         logger.info(f"Beginning Tenovi BP data aggregation...")
         bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
         bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
+        if bp_df is None or bp_df.empty:
+            return {
+                SYSTOLIC: {
+                    TRAILING: {
+                        SBP_COUNT_175: None,
+                        VARIABILITY: None,
+                        AVERAGE: None,
+                        PEAK_AVG_SBP: None,
+                    },
+                },
+                DIASTOLIC: {
+                    TRAILING: {
+                        AVERAGE: None,
+                        },
+                    },
+                }
         logger.info(f"Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
@@ -532,6 +557,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
             },
             DIASTOLIC: {
@@ -557,7 +583,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]), # Considered the "PEAK" BP value for SRS
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                    PEAK_SBP_2: trailing_bp_metadata[PEAK_SBP],
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_SBP],

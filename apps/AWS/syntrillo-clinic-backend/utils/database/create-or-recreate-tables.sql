@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS healthie_form_responses (
     syntrillo_internal_key VARCHAR(255) NOT NULL,
     answer TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (module_id, form_id, syntrillo_internal_key)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY KEY (module_id, form_id, syntrillo_internal_key, updated_at)
 );
 
 -- DROP TABLE IF EXISTS module_label_look_up;
