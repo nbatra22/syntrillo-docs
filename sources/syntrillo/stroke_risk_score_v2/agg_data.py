@@ -23,7 +23,7 @@ from syntrillo.bp_analysis.constants import (
     AVERAGE,
     VARIABILITY,
     TRAILING,
-    PEAK_SBP_2,
+    PEAK_AVG_SBP,
     PEAK_SBP,
     BASELINE
 )
@@ -430,6 +430,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
+                    PEAK_AVG_SBP: None,
                 }
             },
             DIASTOLIC: {
@@ -452,7 +453,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                         SBP_COUNT_175: None,
                         VARIABILITY: None,
                         AVERAGE: None,
-                        PEAK_SBP_2: None,
+                        PEAK_AVG_SBP: None,
                     },
                 },
                 DIASTOLIC: {
@@ -556,7 +557,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                    PEAK_SBP_2: trailing_bp_metadata[PEAK_SBP],
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
             },
             DIASTOLIC: {
@@ -582,7 +583,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]), # Considered the "PEAK" BP value for SRS
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                    PEAK_SBP_2: trailing_bp_metadata[PEAK_SBP],
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
