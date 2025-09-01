@@ -73,6 +73,7 @@ class FormResponseService:
                         label
                         displayed_answer
                         created_at
+                        updated_at
                         user_id
                         custom_module {
                             id
@@ -180,10 +181,16 @@ class FormResponseService:
                     displayed_answer = clean_text(answer.get("displayed_answer", None))
 
                     created_at_str = answer.get("created_at", None)
+                    updated_at_str = answer.get("updated_at", None)
                     try:
                         created_at = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S %z")
                     except (ValueError, TypeError):
                         created_at = datetime.now()
+
+                    try:
+                        updated_at = datetime.strptime(updated_at_str, "%Y-%m-%dT%H:%M:%S%z")
+                    except (ValueError, TypeError):
+                        updated_at = datetime.now()
 
                     if all([module_id, form_id, healthie_user_id]):
                         temp_data = {
@@ -191,7 +198,8 @@ class FormResponseService:
                             'module_id': module_id,
                             'healthie_user_id': healthie_user_id,
                             'answer': displayed_answer,
-                            'created_at': created_at
+                            'created_at': created_at,
+                            'updated_at': updated_at
                         }
                         temp_responses.append(temp_data)
                         self.unique_user_ids.add(healthie_user_id)
@@ -216,7 +224,8 @@ class FormResponseService:
                         module_id=response['module_id'],
                         syntrillo_internal_key=syntrillo_internal_key,
                         answer=response['answer'],
-                        created_at=response['created_at']
+                        created_at=response['created_at'],
+                        updated_at=response['updated_at']
                     )
                     flattened_responses.append(flattened_response)
                 else:
@@ -433,12 +442,13 @@ class FormResponseService:
                         module_id,
                         syntrillo_internal_key,
                         answer,
-                        created_at
+                        created_at,
+                        updated_at
                     )
-                    VALUES (%s, %s, %s,REPLACE(%s, '\n', '|'), %s)
+                    VALUES (%s, %s, %s,REPLACE(%s, '\n', '|'), %s, %s)
                     ON DUPLICATE KEY UPDATE
                         answer=VALUES(answer),
-                        created_at=VALUES(created_at);
+                        updated_at=VALUES(updated_at);
                 """
 
                 # Convert to list of tuples for executemany
@@ -448,7 +458,8 @@ class FormResponseService:
                         response.module_id,
                         response.syntrillo_internal_key,
                         response.answer,
-                        response.created_at
+                        response.created_at,
+                        response.updated_at
                     )
                     for response in flattened_responses
                 ]

@@ -1098,9 +1098,6 @@
                         <h3 id="rs-physical-inactivity-level" class="rs-metric-value">
                             -
                         </h3>
-                        <h4 class="rs-metric-value-unit">
-                            hrs/day
-                        </h4>
                     </div>
                 </div>
             </section>
@@ -2332,7 +2329,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Risk score data received:', data);
+                // console.log('Risk score data received:', data);
 
                 if (data.success && data.data) {
                     const metrics = data.data.metrics;
@@ -2515,7 +2512,6 @@
                         // if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
 
                         // Physical Activity
-                        if (physicalInactivity) physicalInactivity.textContent = srs.PhysicalInactivityHours || '-';
                         if (physicalInactivityLevel) physicalInactivityLevel.textContent = srs.PhysicalInactivityLevel || '-';
 
                         // Lab Values
@@ -2692,11 +2688,6 @@
                             obesityContainer.style.display = 'none';
                         }
 
-                        // Physical Activity Minutes
-                        if (srs.PhysicalActivityMinutes) {
-                            moderateVigorousActivity.textContent = srs.PhysicalActivityMinutes;
-                        }
-
                         // Tests/Orders
                         if (tiaScreening) tiaScreening.textContent = srs.ScreenedForTIA ? 'Yes' : 'No';
                         if (tiaLikelihood) tiaLikelihood.textContent = srs.LikelihoodOfTIA || '-';
@@ -2824,7 +2815,8 @@
             .catch(error => {
                 // console.error("Error fetching risk score:", error);
                 errorMessage.style.display = 'block';
-
+                riskScore.textContent = 'NA';
+                priorityScore.textContent = 'NA';
                 // Extract status code from error message if it's an HTTP error
                 if (error.message && error.message.includes('HTTP')) {
                     errorMessageText.textContent = error.message;
@@ -2856,7 +2848,7 @@
     })
 
     async function submitChartingNoteForm() {
-        console.log('Submitting charting note form...');
+        // console.log('Submitting charting note form...');
         const statusMessage = document.getElementById('form-status-message');
         statusMessage.textContent = 'Submitting form data...';
         statusMessage.className = 'pending';
@@ -2865,7 +2857,7 @@
 
         const form = document.getElementById('charting-note-form');
         if (!form) {
-            console.error('Form not found');
+            // console.log('Form not found');
             return;
         }
 
@@ -2875,6 +2867,18 @@
         formData.append('healthie_provider_id', healthieProviderId);
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+
+        // Get the physical activity minutes and inactivity hours from the UI to be saved in the DB
+        if (document.getElementById('rs-moderate-vigorous-activity')) {
+            const physicalActivityMinutes = document.getElementById('rs-moderate-vigorous-activity').textContent;
+            formData.append('PhysicalActivityMinutes', parseFloat(physicalActivityMinutes));
+        }
+
+        if (document.getElementById('rs-physical-inactivity')) {
+            const physicalInactivityHours = document.getElementById('rs-physical-inactivity').textContent;
+            formData.append('PhysicalInactivityHours', parseFloat(physicalInactivityHours));
+        }
+
 
         // Log the form data for debugging
         // for (let [key, value] of formData.entries()) {
@@ -2909,7 +2913,7 @@
                 }
             } else {
                 const errorText = await response.text();
-                console.error('Form submission failed:', response.status, errorText);
+                // console.log('Form submission failed:', response.status, errorText);
 
                 // Show error message in the modal
                 const statusMessage = document.getElementById('form-status-message');
@@ -2919,7 +2923,7 @@
                 }
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
+            // console.log('Error submitting form:', error);
 
             // Show error message in the modal
             const statusMessage = document.getElementById('form-status-message');
@@ -2957,7 +2961,7 @@
 
     // Function to toggle dependent questions in the charting note form
     function toggleChartingNoteDependencies() {
-        console.log('=== toggleChartingNoteDependencies function called ===');
+        // console.log('=== toggleChartingNoteDependencies function called ===');
 
         // Helper function to clear all inputs in a container
         function clearContainerInputs(container) {
@@ -2982,7 +2986,7 @@
 
         // 1. Stroke History Dependencies
         const hasPreviousStroke = document.querySelector('input[name="HasPreviousStroke"]:checked')?.value === 'yes';
-        console.log('HasPreviousStroke checked:', hasPreviousStroke);
+        // console.log('HasPreviousStroke checked:', hasPreviousStroke);
 
         const previousStrokeCountContainer = document.getElementById('previous-stroke-count-container');
         const previousStrokeMechanism = document.getElementById('previous-stroke-mechanism');

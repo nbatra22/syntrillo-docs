@@ -154,9 +154,12 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         form_data = {}
 
         # Only extract fields that are actually present in the form
-        # if request.form.get('Gender'):
-        #     form_data['Gender'] = request.form.get('Gender')
-        form_data['Gender'] = 'man'
+        if request.form.get('Gender'):
+            form_data['Gender'] = request.form.get('Gender')
+
+        # if request.form.get('PhysicalInactivityHours'):
+        form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) if (request.form.get('PhysicalInactivityHours') != 'Nan') else None
+        form_data['PhysicalActivityMinutes'] = float(request.form.get('PhysicalActivityMinutes')) if (request.form.get('PhysicalActivityMinutes') != 'Nan') else None
 
         if request.form.get('HasPreviousStroke'):
             form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'
