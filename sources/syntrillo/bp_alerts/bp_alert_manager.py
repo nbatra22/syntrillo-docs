@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Tuple
 from datetime import datetime, timedelta, timezone
 import pytz
 import pandas as pd
@@ -20,6 +20,8 @@ from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.bp_alerts.constants import (
     SYSTOLIC_BP_HIGH_THRESHOLD,
     SYSTOLIC_BP_LOW_THRESHOLD,
+    AVERAGE_SYSTOLIC_BP_DAYS,
+    AVERAGE_SYSTOLIC_BP_THRESHOLD,
 )
 
 class BloodPressureAlertManager:
@@ -27,14 +29,16 @@ class BloodPressureAlertManager:
     Handles blood pressure alert system.
     """
 
-    bpm_df = None
-    timeframed_data = None
-    analysis_df = None
+    bpm_df = None # Raw BP dataframe
+    calculate_timeframed_data = None # Whether to calculate timeframed data
+    timeframed_data = None # Timeframe dict
+    analysis_df = None # Analysis dataframe
 
     def __init__(
         self,
         syntrillo_internal_key,
         healthie_user_id: str,
+        calculate_timeframed_data: bool = True,
     ):
         # Convert the syntrillo_internal_key to a UUID object for serialization issues
         if isinstance(syntrillo_internal_key, str):
@@ -43,6 +47,8 @@ class BloodPressureAlertManager:
             self.syntrillo_internal_key = syntrillo_internal_key
 
         self.healthie_user_id = healthie_user_id
+
+        self.calculate_timeframed_data = calculate_timeframed_data
 
         self.initialize_bp_data()
 
@@ -55,18 +61,19 @@ class BloodPressureAlertManager:
             bpm_df, log = analysis_manager.get_blood_pressure_dataframe(start_date=None, end_date=None)
             self.bpm_df = bpm_df
 
-            # Separate BP dataframe into timeframes
-            timeframed_data = analysis_manager.calculate_timeframes()
-            metadata = {}
+            if self.calculate_timeframed_data:
+                # Separate BP dataframe into timeframes
+                timeframed_data = analysis_manager.calculate_timeframes()
+                metadata = {}
 
-            for name, (date_range, df) in timeframed_data.items():
-                metadata[name] = analysis_manager.calculate_metadata(date_range=date_range, df=df)
+                for timeframe, (date_range, df) in timeframed_data.items():
+                    metadata[timeframe] = analysis_manager.calculate_metadata(date_range=date_range, df=df)
 
-            self.timeframed_data = metadata
+                self.timeframed_data = metadata
 
-            # Retrieve timeframed data + overall rows + progress cols
-            analysis_df = analysis_manager.get_analysis_table()
-            self.analysis_df = analysis_df
+                # Retrieve timeframed data + overall rows + progress cols
+                analysis_df = analysis_manager.get_analysis_table()
+                self.analysis_df = analysis_df
 
         except Exception as e:
             logger.error(f"Error retrieving BP data for patient {self.syntrillo_internal_key}: {e}")
@@ -124,7 +131,9 @@ class BloodPressureAlertManager:
                     f"diastolic BP: {diastolic_bp}, timestamp: {formatted_date}")
 
         # Get syntrillo_internal_key from the user_look_up_codes table using tenovi patient_id
-        syntrillo_internal_key = self.get_syntrillo_internal_key_id_from_patient_id(patient_id)
+        lookup_codes = LookUpCodesManagement()
+        entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient_id)
+        syntrillo_internal_key = entry['syntrillo_internal_key']
 
         if not syntrillo_internal_key:
             logger.error(f"No syntrillo_internal_key found for tenovi_patient_id: {patient_id}")
@@ -133,16 +142,28 @@ class BloodPressureAlertManager:
                 'body': 'No syntrillo_internal_key found for tenovi_patient_id'
             }
 
-        # 3. Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
+
+        # Check the systolic and diastolic BP values from Tenovi Webhook event to see if they are extreme and notify clinicians
         systolic_is_extreme = (
             systolic_bp is not None and
             (systolic_bp > SYSTOLIC_BP_HIGH_THRESHOLD or systolic_bp < SYSTOLIC_BP_LOW_THRESHOLD)
         )
         # diastolic_is_extreme = diastolic_bp > DIASTOLIC_BP_THRESHOLD if diastolic_bp is not None else False
 
+        content = f"<p><span style='text-decoration: underline;'>{formatted_date}</span>:</p>\n<ul><li>Systolic BP: {systolic_bp}</li>\n<li>Diastolic BP: {diastolic_bp}</li></ul>"
+
+        # Check if the patient has been experiencing extreme BP for a streak of days
+        average_systolic_bp, total_measurements, log = self.get_average_systolic_bp_over_time_period()
+
+        # If the number of days extreme BP detected is -1, then there was an error retrieving the number of days
+        if average_systolic_bp == -1:
+            logger.warning(f"Could not retrieve average systolic BP over time period for {self.syntrillo_internal_key}. Log: {log}")
+        elif average_systolic_bp >= AVERAGE_SYSTOLIC_BP_THRESHOLD:
+            content = content + f"<p></p><b>⚠️ PATIENT HAS BEEN EXPERIENCING EXTREME BP FOR {AVERAGE_SYSTOLIC_BP_DAYS} DAYS. AVERAGE SYSTOLIC BP: {round(average_systolic_bp, 1)} (BASED ON {total_measurements} MEASUREMENTS)</b>"
+
         if systolic_is_extreme:
             # Send chat message notification to clinicians when extreme blood pressure is detected
-            self.notify_clinicians(syntrillo_internal_key, systolic_bp, diastolic_bp, formatted_date)
+            self.notify_clinicians(content)
             body = "Alert sent thru Healthie."
         else:
             body = "No alert created."
@@ -184,7 +205,7 @@ class BloodPressureAlertManager:
         # Check if days > 28 and divisible by 14
         if days_since_first > 28 and days_since_first % 14 == 0:
             self.handle_two_week_avg_sbp()
-            self.handle_two_week_status()
+            # self.handle_two_week_status()
             return {
                 'statusCode': 200,
                 'body': f"Successfully processed 2-week BP analysis for patient {self.syntrillo_internal_key}."
@@ -197,7 +218,7 @@ class BloodPressureAlertManager:
 
     def handle_two_week_avg_sbp(self) -> bool:
         """
-        Sends notification if current timeframe's SBP is greater than prior period's
+        Sends notification if current timeframe's SBP is greater than prior period's or baseline period's
 
         """
         logger.info(f"Comparing current vs. prior average SBP for patient {self.syntrillo_internal_key}...")
@@ -210,13 +231,16 @@ class BloodPressureAlertManager:
             logger.info(f"Insufficient SBP data to analyze for patient {self.syntrillo_internal_key}.")
             return False
 
+        baseline_avg_sbp = self.timeframed_data['Baseline']['Avg SBP (mmHg)']
         prior_avg_sbp = self.timeframed_data['Prior']['Avg SBP (mmHg)']
         current_avg_sbp = self.timeframed_data['Current']['Avg SBP (mmHg)']
 
+        baseline_date_range = self.timeframed_data['Baseline']['Date Range']
         prior_date_range = self.timeframed_data['Prior']['Date Range']
         current_date_range = self.timeframed_data['Current']['Date Range']
 
-        if current_avg_sbp > prior_avg_sbp:
+        # Notify clincians if the current 2-week average SBP exceeds the prior 2-week average SBP by more than 5mmHg
+        if (current_avg_sbp - prior_avg_sbp) > 5:
             logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
             content = (
                 f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
@@ -224,10 +248,19 @@ class BloodPressureAlertManager:
                 f"<li>Prior ({prior_date_range}): {prior_avg_sbp}</li></ul>"
             )
             self.notify_clinicians(content)
-            return True
-        else:
-            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
-            return False
+
+        # Notify clinicians if the current 2-week average SBP exceeds the baseline 2-week average SBP by more than 3mmHg
+        if (current_avg_sbp - baseline_avg_sbp) > 3:
+            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than baseline ({baseline_avg_sbp}). Sending notification...")
+            content = (
+                f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS BASELINE.</b></p>\n"
+                f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
+                f"<li>Baseline ({baseline_date_range}): {baseline_avg_sbp}</li></ul>"
+            )
+            self.notify_clinicians(content)
+
+        return True
+
 
     def handle_two_week_status(self) -> bool:
         """
@@ -419,6 +452,26 @@ class BloodPressureAlertManager:
 
         except Exception as e:
             logger.error(f"Error creating conversation in Healthie: {e}")
+
+    def get_average_systolic_bp_over_time_period(self) -> Tuple[float, int, dict]:
+        """
+        Get the average systolic BP over a time period for a patient
+        Args:
+            syntrillo_internal_key (str): The Syntrillo internal key
+        Returns:
+            Tuple[float, int, dict]: The average systolic BP, total number of measurements, and log
+        """
+        # BP API Docs: https://api2.tenovi.com/hwi-redoc/#tag/hwi-patient-measurements
+        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=self.syntrillo_internal_key)
+        average_systolic_bp, total_measurements, log = db_manager.get_average_systolic_bp_over_time_period(
+            number_of_days=AVERAGE_SYSTOLIC_BP_DAYS
+        )
+
+        if not log.get('success', False) or not average_systolic_bp:
+            logger.warning(f"Could not retrieve average systolic BP over time period for {self.syntrillo_internal_key}. Log: {log}")
+            return -1, 0, log
+
+        return average_systolic_bp, total_measurements, log
 
 
     # OLD CODE / TO BE DELETED

@@ -33,7 +33,7 @@ def handler(event, context):
             raise ValueError(f"No syntrillo_internal_key or healthie_user_id provided")
 
         logger.info(f"Building BloodPressureAlertManager for patient {syntrillo_internal_key}...")
-        alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
+        alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id, calculate_timeframed_data=True)
 
         if action == 'analyze_patient_blood_pressure':
 
