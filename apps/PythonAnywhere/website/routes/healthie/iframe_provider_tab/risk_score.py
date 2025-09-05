@@ -1,30 +1,10 @@
-from flask import Blueprint, render_template, request, jsonify, current_app, abort, Response, send_file
-import pandas as pd
-import json
-import base64
-import io
 from datetime import datetime
-import uuid
-
+from flask import Blueprint, render_template, request, jsonify, current_app, abort
 
 from .post_management import PostManager
-from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
-from syntrillo.remote_monitoring.data_reporting_medication_adherence import DataReportingMedicationAdherence
-from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReportingBloodPressure
-from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
-from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
-from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
-from syntrillo.stroke_risk_score.risk_score import StrokeRiskScore
-from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-
-from syntrillo.api_healthie.medications import HealthieMedications
 
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
-from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
-from syntrillo.stroke_risk_score_v2.agg_data import aggregate_data
 from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
 
 iframe_healthie_provider_tab_risk_score_bp = Blueprint('iframe_healthie_provider_tab_risk_score_bp', __name__)
@@ -158,8 +138,8 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
             form_data['Gender'] = request.form.get('Gender')
 
         # if request.form.get('PhysicalInactivityHours'):
-        form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) if (request.form.get('PhysicalInactivityHours') != 'Nan') else None
-        form_data['PhysicalActivityMinutes'] = float(request.form.get('PhysicalActivityMinutes')) if (request.form.get('PhysicalActivityMinutes') != 'Nan') else None
+        form_data['PhysicalInactivityHours'] = float(request.form.get('PhysicalInactivityHours')) if (request.form.get('PhysicalInactivityHours') != 'NaN') else None
+        form_data['PhysicalActivityMinutes'] = float(request.form.get('PhysicalActivityMinutes')) if (request.form.get('PhysicalActivityMinutes') != 'NaN') else None
 
         if request.form.get('HasPreviousStroke'):
             form_data['HasPreviousStroke'] = request.form.get('HasPreviousStroke') == 'yes'

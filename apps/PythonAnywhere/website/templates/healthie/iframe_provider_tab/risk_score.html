@@ -3289,11 +3289,11 @@
         console.log('Setting up charting note form event listeners');
 
         const formInputs = document.querySelectorAll('#modal-body input[type="checkbox"], #modal-body input[type="radio"], #modal-body select');
-        console.log('Found form inputs:', formInputs.length);
+        // console.log('Found form inputs:', formInputs.length);
 
         formInputs.forEach(input => {
             input.addEventListener('change', function () {
-                console.log('Input changed:', this.name, this.type, this.value, this.checked);
+                // console.log('Input changed:', this.name, this.type, this.value, this.checked);
                 toggleChartingNoteDependencies();
             });
         });
@@ -3308,11 +3308,11 @@
     // Add this function to prepopulate the charting note form
     function prepopulateChartingNoteForm() {
         if (!srsData) {
-            console.log('No SRS data available for prepopulation');
+            // console.log('No SRS data available for prepopulation');
             return;
         }
 
-        console.log('Prepopulating charting note form with:', srsData);
+        // console.log('Prepopulating charting note form with:', srsData);
 
         // 1. Previous Stroke Section
         if (srsData.HasPreviousStroke) {
@@ -3760,7 +3760,7 @@
             toggleChartingNoteDependencies();
         }, 100);
 
-        console.log('Charting note form prepopulation complete');
+        // console.log('Charting note form prepopulation complete');
     }
 
 
