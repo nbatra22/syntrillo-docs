@@ -1,16 +1,13 @@
-from flask import Blueprint, render_template, request, jsonify, current_app, abort, Response, send_file
+from flask import Blueprint, render_template, request, jsonify, abort, send_file
 import pandas as pd
 import io
 from datetime import datetime
-import uuid
 
 from .post_management import PostManager
 
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
-from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
@@ -239,7 +236,7 @@ def iframe_healthie_provider_tab_get_metrics():
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    healthie_data = get_srs_healthie_data(entry['healthie_user_id'], db_manager)
+    healthie_data = get_srs_healthie_data(entry['healthie_user_id'], db_manager, post_manager.syntrillo_internal_key)
     hr_measurements = {
         'baseline_rhr': healthie_data['average_rhr_baseline'],
         'trailing_rhr': healthie_data['average_rhr_trailing'],

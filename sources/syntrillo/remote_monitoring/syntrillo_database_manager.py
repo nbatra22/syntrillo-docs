@@ -1153,7 +1153,11 @@ class SyntrilloDatabaseManager:
                     ORDER BY updated_at DESC;
                 """
                 cursor.execute(query, (module_id, syntrillo_internal_key))
-                answer, updated_at = cursor.fetchone()
+                db_response = cursor.fetchone()
+                if db_response:
+                    answer, updated_at = db_response
+                else:
+                    answer, updated_at = None, None
 
                 return answer, updated_at
 

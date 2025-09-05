@@ -76,10 +76,6 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key)
         srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
 
-        print(f"tenovi_bp_data: {tenovi_bp_data}")
-        print(f"healthie_srs_data: {healthie_srs_data}")
-        print(f"srs_response_data: {srs_response_data}")
-
         return {
             "tenovi_bp_data": tenovi_bp_data,
             "tenovi_hr_data": tenovi_hr_data,
@@ -430,12 +426,18 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     PEAK: trailing_bp_metadata[PEAK_SBP],
                     VARIABILITY: trailing_bp_metadata[SBP_SD],
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
-                    PEAK_AVG_SBP: None,
-                }
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
+                },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_SBP],
+                },
             },
             DIASTOLIC: {
                 TRAILING: {
                     AVERAGE: trailing_bp_metadata[AVG_DBP],
+                },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_DBP],
                 },
             },
         }
@@ -455,13 +457,19 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                         AVERAGE: None,
                         PEAK_AVG_SBP: None,
                     },
+                    BASELINE: {
+                        AVERAGE: None,
+                    },
                 },
                 DIASTOLIC: {
                     TRAILING: {
                         AVERAGE: None,
-                        },
+                    },
+                    BASELINE: {
+                        AVERAGE: None,
                     },
                 }
+            }
         logger.info(f"Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
@@ -559,10 +567,16 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     AVERAGE: trailing_bp_metadata[AVG_SBP],
                     PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_SBP],
+                },
             },
             DIASTOLIC: {
                 TRAILING: {
                     AVERAGE: trailing_bp_metadata[AVG_DBP],
+                },
+                BASELINE: {
+                    AVERAGE: baseline_bp_metadata[AVG_DBP],
                 },
             },
         }
