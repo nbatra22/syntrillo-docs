@@ -134,17 +134,18 @@ class SyntrilloClinicTaskSchedulingStack(Stack):
         # BLOOD PRESSURE ANALYSIS
         # ---------------------------------------------------------------------
 
-        if self.aws_environment == "staging" or self.aws_environment == "sandbox" :
-            self.blood_pressure_analysis = BloodPressureAnalysis(
-                self, "BloodPressureAnalysis",
-                aws_environment=self.aws_environment,
-                network=self.network,
-                database=self.database,
-                storage=self.storage,
-                secrets=self.secrets,
-            )
+        # if self.aws_environment == "staging" or self.aws_environment == "sandbox" :
+        
+        self.blood_pressure_analysis = BloodPressureAnalysis(
+            self, "BloodPressureAnalysis",
+            aws_environment=self.aws_environment,
+            network=self.network,
+            database=self.database,
+            storage=self.storage,
+            secrets=self.secrets,
+        )
 
-            self.blood_pressure_analysis_worflow = BloodPressureAnalysisWorkFlow(
-                self, "BloodPressureAnalysisWorkFlow",
-                lambda_function=self.blood_pressure_analysis.function,
-            )
+        self.blood_pressure_analysis_worflow = BloodPressureAnalysisWorkFlow(
+            self, "BloodPressureAnalysisWorkFlow",
+            lambda_function=self.blood_pressure_analysis.function,
+        )

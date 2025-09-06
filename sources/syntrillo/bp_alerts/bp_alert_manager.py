@@ -22,6 +22,11 @@ from syntrillo.bp_alerts.constants import (
     SYSTOLIC_BP_LOW_THRESHOLD,
     AVERAGE_SYSTOLIC_BP_DAYS,
     AVERAGE_SYSTOLIC_BP_THRESHOLD,
+    BASELINE_KEY,
+    PRIOR_KEY,
+    CURRENT_KEY,
+    SYSTOLIC_BP_KEY,
+    DATE_RANGE_KEY,
 )
 
 class BloodPressureAlertManager:
@@ -223,41 +228,47 @@ class BloodPressureAlertManager:
         """
         logger.info(f"Comparing current vs. prior average SBP for patient {self.syntrillo_internal_key}...")
 
-        if 'Latest' in self.timeframed_data.columns:
-            logger.info(f"Patient {self.syntrillo_internal_key} has not recorded a measurement in 5 days.")
-            return False
-
-        if not self.timeframed_data['Prior'] or self.timeframed_data['Current']:
+        if not self.timeframed_data[CURRENT_KEY]:
             logger.info(f"Insufficient SBP data to analyze for patient {self.syntrillo_internal_key}.")
             return False
 
-        baseline_avg_sbp = self.timeframed_data['Baseline']['Avg SBP (mmHg)']
-        prior_avg_sbp = self.timeframed_data['Prior']['Avg SBP (mmHg)']
-        current_avg_sbp = self.timeframed_data['Current']['Avg SBP (mmHg)']
+        baseline_avg_sbp = self.timeframed_data[BASELINE_KEY][SYSTOLIC_BP_KEY] if self.timeframed_data[BASELINE_KEY] else None
+        prior_avg_sbp = self.timeframed_data[PRIOR_KEY][SYSTOLIC_BP_KEY] if self.timeframed_data[PRIOR_KEY] else None
+        current_avg_sbp = self.timeframed_data[CURRENT_KEY][SYSTOLIC_BP_KEY]
 
-        baseline_date_range = self.timeframed_data['Baseline']['Date Range']
-        prior_date_range = self.timeframed_data['Prior']['Date Range']
-        current_date_range = self.timeframed_data['Current']['Date Range']
+        baseline_date_range = self.timeframed_data[BASELINE_KEY][DATE_RANGE_KEY] if self.timeframed_data[BASELINE_KEY] else None
+        prior_date_range = self.timeframed_data[PRIOR_KEY][DATE_RANGE_KEY] if self.timeframed_data[PRIOR_KEY] else None
+        current_date_range = self.timeframed_data[CURRENT_KEY][DATE_RANGE_KEY]
 
         # Notify clincians if the current 2-week average SBP exceeds the prior 2-week average SBP by more than 5mmHg
-        if (current_avg_sbp - prior_avg_sbp) > 5:
-            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
-            content = (
-                f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR 2-WEEK AVERAGE.</b></p>\n"
-                f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
-                f"<li>Prior ({prior_date_range}): {prior_avg_sbp}</li></ul>"
-            )
-            self.notify_clinicians(content)
+        if prior_avg_sbp:
+            if (current_avg_sbp - prior_avg_sbp) > 5:
+                logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). Sending notification...")
+                content = (
+                    f"<p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS PRIOR.</b></p>\n"
+                    f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
+                    f"<li>Prior ({prior_date_range}): {prior_avg_sbp}</li></ul>"
+                )
+                self.notify_clinicians(content)
+            else:
+                logger.info(f"Patient {self.syntrillo_internal_key} recorded a lower current 2-week average SBP ({current_avg_sbp}) than prior ({prior_avg_sbp}). No notification sent.")
+        else:
+            logger.info(f"Patient {self.syntrillo_internal_key} does not have prior 2-week average SBP. No notification sent.")
 
         # Notify clinicians if the current 2-week average SBP exceeds the baseline 2-week average SBP by more than 3mmHg
-        if (current_avg_sbp - baseline_avg_sbp) > 3:
-            logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than baseline ({baseline_avg_sbp}). Sending notification...")
-            content = (
-                f"<p></p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS BASELINE.</b></p>\n"
-                f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
-                f"<li>Baseline ({baseline_date_range}): {baseline_avg_sbp}</li></ul>"
-            )
-            self.notify_clinicians(content)
+        if baseline_avg_sbp:
+            if (current_avg_sbp - baseline_avg_sbp) > 3:
+                logger.info(f"Patient {self.syntrillo_internal_key} recorded a higher current 2-week average SBP ({current_avg_sbp}) than baseline ({baseline_avg_sbp}). Sending notification...")
+                content = (
+                    f"<p><b>⚠️ PATIENT'S CURRENT 2-WEEK AVERAGE SBP EXCEEDS BASELINE.</b></p>\n"
+                    f"<ul><li>Current ({current_date_range}): {current_avg_sbp}</li>\n"
+                        f"<li>Baseline ({baseline_date_range}): {baseline_avg_sbp}</li></ul>"
+                    )
+                self.notify_clinicians(content)
+            else:
+                logger.info(f"Patient {self.syntrillo_internal_key} recorded a lower current 2-week average SBP ({current_avg_sbp}) than baseline ({baseline_avg_sbp}). No notification sent.")
+        else:
+            logger.info(f"Patient {self.syntrillo_internal_key} does not have baseline 2-week average SBP. No notification sent.")
 
         return True
 
@@ -310,14 +321,16 @@ class BloodPressureAlertManager:
         Sends notification if patient has not recorded a measurement in 5 days.
         """
         try:
-            analysis_df = self.analysis_df
+            bpm_df = self.bpm_df
+            latest_measurement = bpm_df['timestamp_local'].max()
+            days_since_latest = (datetime.now(latest_measurement.tzinfo) - latest_measurement).days
             measurement_date = self.bpm_df['timestamp_local'].max().strftime('%-m/%-d/%y')
 
             # 'Latest' column will exist if no measurement recorded in latest 5 days, else 'Current'
-            if 'Latest' in analysis_df.columns:
+            if days_since_latest > 5:
                 logger.info(f"Patient {self.syntrillo_internal_key} has not recorded a measurement in 5 days. Sending notification...")
                 content = (
-                    f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 5 DAYS</b></p>\n"
+                    f"<p><b>⚠️ PATIENT HAS NOT TAKEN BP MEASUREMENTS IN 5 DAYS.</b></p>\n"
                     f"<p>Last measurement was taken on {measurement_date}."
                     # f"(systolic: {last_measurement_5_days_ago['value_1']}, "
                     # f"diastolic: {last_measurement_5_days_ago['value_2']}).</p>"
