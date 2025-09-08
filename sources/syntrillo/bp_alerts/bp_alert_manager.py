@@ -212,11 +212,15 @@ class BloodPressureAlertManager:
             self.handle_two_week_avg_sbp()
             # self.handle_two_week_status()
             return {
+                'success': True,
+                'error': None,
                 'statusCode': 200,
                 'body': f"Successfully processed 2-week BP analysis for patient {self.syntrillo_internal_key}."
             }
         else:
             return {
+                'success': True,
+                'error': None,
                 'statusCode': 200,
                 'body': f"2-week BP analysis was not ran for patient {self.syntrillo_internal_key}. Days until next 2-week analysis: {days_since_first % 14}"
             }
