@@ -33,7 +33,7 @@ def handler(event, context):
             raise ValueError(f"No syntrillo_internal_key or healthie_user_id provided")
 
         # Existing measurement validation
-        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        db_manager = SyntrilloDatabaseManager(uuid.UUID(syntrillo_internal_key))
         record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
         if log['success'] == False:
             return {
