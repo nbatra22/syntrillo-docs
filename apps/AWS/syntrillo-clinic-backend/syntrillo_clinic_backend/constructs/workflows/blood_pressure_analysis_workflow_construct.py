@@ -105,7 +105,7 @@ class BloodPressureAnalysisWorkFlow(Construct):
         event_rule = events.Rule(
             self, "BloodPressureAnalysisRule",
             schedule=schedule,
-            enabled=False,
+            enabled=True,
         )
 
         # Add the state machine as a target for the rule
