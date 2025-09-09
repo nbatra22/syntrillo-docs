@@ -102,9 +102,6 @@ class BloodPressureAlertManager:
         # Fix the parameters passed into notify_clinicians
         # Construct 'content' string for notify_clinicians (only part of the function)
 
-
-        logger.info(f"This function will fail because of incorrect parameters passed into notify_clinicians")
-
         payload = event
         # Check if the body is base64 (AWS API Gateway) encoded before decoding
         if payload.get('body', None) and self.is_base64(payload.get('body')):
