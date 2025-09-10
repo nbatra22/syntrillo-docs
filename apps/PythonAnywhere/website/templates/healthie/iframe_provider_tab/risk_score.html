@@ -306,14 +306,33 @@
         min-height: 6rem;
     }
 
-    .rs-section-header {
-        font-weight: bold;
-        padding-bottom: .5rem;
-        /* border-bottom: 1px solid #16284a; */
-        border-bottom: 1px solid #6b7280;
+    .rs-section-header-container {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 0 .5rem .5rem 0;
+        border-bottom: 1px solid #6b7280;
+        font-weight: bold;
+    }
+
+    .rs-section-header-labels-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .rs-section-header-value, .rs-section-header-srs, .rs-section-header-sps {
+        text-align: center;
+        font-size: 16px;
+        min-width: 5rem;
+    }
+
+    .rs-section-header {
+        font-weight: bold;
+        /* padding-bottom: .5rem; */
+        /* border-bottom: 1px solid #16284a; */
+        /* border-bottom: 1px solid #6b7280; */
     }
 
     .rs-max-score {
@@ -443,10 +462,27 @@
         color: #6b7280;
     }
 
+    .rs-metric-values-container {
+        display: flex;
+        gap: 0.5rem;
+    }
+
     .rs-metric-value-container {
         display: flex;
         flex-direction: column;
-        align-items: end;
+        align-items: center;
+    }
+
+    .rs-metric-srs-container, .rs-metric-sps-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .rs-metric-value-container, .rs-metric-srs-container, .rs-metric-sps-container {
+        width: 5rem;
     }
 
     #rs-forms-container .rs-metric-value {
@@ -734,12 +770,25 @@
         </section> -->
 
         <section id="rs-biometrics-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Biometrics
-            </h2>
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
+                    Biometrics
+                </h2>
+                <div class="rs-section-header-labels-container">
+                    <h2 class="rs-section-header-value">
+                        Value
+                    </h2>
+                    <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2>
+                </div>
+            </div>
 
             <div class="rs-metrics-container">
-                <div id="rs-v-height" class="rs-metric-container">
+                <div id="rs-height-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Height
@@ -748,16 +797,28 @@
                             Onboarding - Patient Information (v1.1)
                         </h4>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-height" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            in
-                        </h4>
+                    <div class="rs-metric-values-container">
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-height" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                in
+                            </h4>
+                        </div>
+                        <div class="rs-metric-srs-container">
+                            <h3 id="rs-height-srs" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                        <div class="rs-metric-sps-container">
+                            <h3 id="rs-height-sps" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
                 </div>
-                <div id="rs-v-weight" class="rs-metric-container">
+                <div id="rs-weight-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <h3 class="rs-metric-title">
                             Weight
@@ -766,16 +827,28 @@
                             Onboarding - Patient Information (v1.1)
                         </h4>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-weight" class="rs-metric-value">
-                            -
-                        </h3>
-                        <h4 class="rs-metric-value-unit">
-                            lbs
-                        </h4>
+                    <div class="rs-metric-values-container">
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-weight" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                lbs
+                            </h4>
+                        </div>
+                        <div class="rs-metric-srs-container">
+                            <h3 id="rs-weight-srs" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                        <div class="rs-metric-sps-container">
+                            <h3 id="rs-weight-sps" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
                 </div>
-                <div id="rs-v-bmi" class="rs-metric-container">
+                <div id="rs-bmi-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <div class="rs-metric-title-container">
                             <h3 class="rs-metric-title">
@@ -787,10 +860,22 @@
                             Onboarding - Patient Information (v1.1)
                         </h4>
                     </div>
-                    <div class="rs-metric-value-container">
-                        <h3 id="rs-bmi" class="rs-metric-value">
-                            -
-                        </h3>
+                    <div class="rs-metric-values-container">
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-bmi" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                        <div class="rs-metric-srs-container">
+                            <h3 id="rs-bmi-srs" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
+                        <div class="rs-metric-sps-container">
+                            <h3 id="rs-bmi-sps" class="rs-metric-value">
+                                -
+                            </h3>
+                        </div>
                     </div>
                 </div>
 
