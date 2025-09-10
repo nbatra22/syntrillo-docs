@@ -97,10 +97,11 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
             logger.warning(f"No SRS response data found, returning agg_data objectand None for risk score...")
             return None, agg_data, None
 
-        independent_risk_factor_value, stroke_priority_score_total = calculate_independent_srs_values(agg_data, db_manager)
-        dependent_risk_values = calculate_dependent_risk_factors(agg_data)
+        independent_risk_factor_value, stroke_priority_score_total, independent_risk_variable_scores = calculate_independent_srs_values(agg_data, db_manager)
 
+        dependent_risk_values = calculate_dependent_risk_factors(agg_data)
         final_dependent_score = dependent_risk_values["final_dependent_score"]
+        dependent_risk_variable_scores = dependent_risk_values["dependent_variable_values"]
 
         total_srs = final_dependent_score * independent_risk_factor_value
         final_srs = round(total_srs**0.70, 2)
@@ -108,11 +109,56 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
         total_stroke_priority_score = final_dependent_score * stroke_priority_score_total
         final_stroke_priority_score = round(total_stroke_priority_score**0.70, 2)
 
-        return final_srs, agg_data, final_stroke_priority_score
+        independent_risk_variable_scores, dependent_risk_variable_contributions = calc_risk_variable_contributions(
+            final_dependent_score=final_dependent_score,
+            independent_risk_factor_value=independent_risk_factor_value,
+            stroke_priority_score_total=stroke_priority_score_total,
+            independent_risk_variable_scores=independent_risk_variable_scores,
+            dependent_risk_variable_scores=dependent_risk_variable_scores
+        )
+
+        return final_srs, agg_data, final_stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions
+
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
         return None, None, None
 
+def calc_risk_variable_contributions(
+    final_dependent_score: float,
+    independent_risk_factor_value: float,
+    stroke_priority_score_total: float,
+    independent_risk_variable_scores: dict,
+    dependent_risk_variable_scores: dict
+    ) -> dict:
+
+    # get sums of the srs and sps
+    sum_total_srs = final_dependent_score + independent_risk_factor_value
+    sum_total_sps = final_dependent_score + stroke_priority_score_total
+
+    # compute contribution of indep. and dependent to sum totals
+    dependent_srs_contribution = final_dependent_score / sum_total_srs
+    dependent_sps_contribution = final_dependent_score / sum_total_sps
+    independent_srs_contribution = independent_risk_factor_value / sum_total_srs
+    independent_sps_contribution = stroke_priority_score_total / sum_total_sps
+
+    # compute independent contribution of individual factors to sum totals based on type of variable
+    score_types = ["srs", "sps"]
+    for cat in independent_risk_variable_scores[score_types[0]].keys():
+        for score_type in score_types:
+            if score_type == "srs":
+                independent_risk_variable_scores[score_type][cat] *= independent_srs_contribution
+            elif score_type == "sps":
+                independent_risk_variable_scores[score_type][cat] *= independent_sps_contribution
+
+    dependent_risk_variable_contributions = {
+        "srs": {},
+        "sps": {}
+    }
+    for dependent_variable, score in dependent_risk_variable_scores.items():
+        dependent_risk_variable_contributions["srs"][dependent_variable] = (score * dependent_srs_contribution)
+        dependent_risk_variable_contributions["sps"][dependent_variable] = (score * dependent_sps_contribution)
+
+    return independent_risk_variable_scores, dependent_risk_variable_contributions
 
 
 def calculate_dependent_risk_factors(agg_data: dict) -> dict:
@@ -133,6 +179,8 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
         compliance_data = most_recent_srs_form_response.compliance
 
         final_dependent_score = 1.0
+        dependent_score_sum = 0
+        dependent_variable_values = {}
 
         # History of ischemia
         if most_recent_srs_form_response.HasPreviousStroke:
@@ -174,7 +222,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.strokeCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["recent_stroke"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.ScreenedForTIA and most_recent_srs_form_response.LikelihoodOfTIA == LikelihoodOfTIAOptions.HIGH_LIKELIHOOD:
             if most_recent_srs_form_response.TIAMechanism == StrokeMechanismOptions.SMALL_VESSEL:
@@ -197,7 +249,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.tiaCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["tia"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HasPriorHeadCT and most_recent_srs_form_response.ChronicInfarctPresent:
             if most_recent_srs_form_response.ChronicInfarctMechanism == StrokeMechanismOptions.SMALL_VESSEL:
@@ -220,14 +276,22 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chronicInfarctCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["headCT"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfAtrialFibrillation:
             dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
             dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.atrialFibrillationCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["afib"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfIronDeficiencyAnemia:
             if most_recent_srs_form_response.AnemiaSeverity == AnemiaSeverityOptions.MILD:
@@ -238,7 +302,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ironDeficiencyAnemiaCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["anemia"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfArterialClots:
             if most_recent_srs_form_response.ArterialClotOccurrences == ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT:
@@ -249,7 +317,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.arterialClotsCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["arterialClots"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfVenousClots:
             if most_recent_srs_form_response.PFOPresence == PFOPresenceOptions.POSITIVE:
@@ -268,7 +340,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.venousClotsCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["venousClots"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfCHF:
             if most_recent_srs_form_response.EjectionFraction == EjectionFractionOptions.LESS_THAN_OR_EQUAL_40:
@@ -282,7 +358,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chfCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["chf"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfCarotidStenosis:
             if most_recent_srs_form_response.StenosisPercentage == StenosisPercentageOptions.FIFTY_TO_SEVENTY:
@@ -296,7 +376,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.carotidStenosisCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["stenosis"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfOSA:
             if most_recent_srs_form_response.OSASeverity == OSASeverityOptions.MILD:
@@ -313,14 +397,22 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.osaCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["osa"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfValvularHeartDisease:
             dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
             dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.valvularHeartDiseaseCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["heartDisease"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HistoryOfCAD:
             if most_recent_srs_form_response.CADType == CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL:
@@ -337,7 +429,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.cadCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["cad"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         # ========================================================================
         # TODO: Make this section based on the lab values and NOT the enum values
@@ -359,7 +455,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             # if compliance_data.ldlCompliance is not None:
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ldlCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["ldl"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.HDLLevel:
             if most_recent_srs_form_response.HDLLevel == HDLLevelOptions.LOW:
@@ -370,7 +470,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.hdlCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["hdl"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
 
         if most_recent_srs_form_response.TriglyceridesLevel:
             if most_recent_srs_form_response.TriglyceridesLevel == TriglyceridesLevelOptions.MODERATE:
@@ -384,11 +488,19 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
             dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.triglyceridesCompliance]
-            final_dependent_score *= ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
+            dependent_variable_values["triglycerides"] = dependent_section_score
+
+            dependent_score_sum += dependent_section_score
+            final_dependent_score *= dependent_section_score
+
+        for variable in dependent_variable_values.keys():
+            dependent_variable_values[variable] /= dependent_score_sum
 
         logger.info(f"Successfully calculated dependent risk factors...")
         return {
             "final_dependent_score": final_dependent_score,
+            "dependent_variable_values": dependent_variable_values
         }
 
     except Exception as e:
@@ -401,8 +513,8 @@ def calculate_independent_srs_values(agg_data: dict, db_manager: SyntrilloDataba
     Calculates the risk score values associated with objective metrics.
     """
     independent_risk_factor_values = get_independent_risk_factor_values(agg_data)
-    independent_risk_score_total, stroke_priority_score_total = get_independent_risk_score_value(independent_risk_factor_values, db_manager)
-    return independent_risk_score_total, stroke_priority_score_total
+    independent_risk_score_total, stroke_priority_score_total, independent_risk_variable_scores = get_independent_risk_score_value(independent_risk_factor_values, db_manager)
+    return independent_risk_score_total, stroke_priority_score_total, independent_risk_variable_scores
 
 
 # Independent Risk Factors
@@ -475,23 +587,44 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
         logger.info(f"Getting independent risk score value...")
         independent_risk_score_total = 1.0
         stroke_priority_score_total = 1.0
+        independent_risk_variable_srs_total, independent_risk_variable_sps_total = 0, 0
+        independent_risk_variable_scores = {
+            "srs": {},
+            "sps": {}
+        }
         for category, value in independent_risk_factors.items():
+            # Currently excluded categories (gender, physical *act*tivity) have no risk value associated to them.
             if category in EXCLUDED_CATEGORIES:
                 continue
             elif value is not None:
                 if type(value) == np.float64:
                     value = float(value)
                 risk_values = db_manager.get_srs_value_by_category_and_value(category, value, gender=independent_risk_factors.get(GENDER, None))
-                independent_risk_score_total *= risk_values["risk_value"]
-                stroke_priority_score_total *= risk_values["stroke_priority_value"]
             else:
                 # Get most likely risk value for the factor
                 risk_values = db_manager.get_srs_value_by_category_and_value(category, gender=independent_risk_factors.get(GENDER, None))
-                independent_risk_score_total *= risk_values["risk_value"]
-                stroke_priority_score_total *= risk_values["stroke_priority_value"]
+
+            srs_value = risk_values["risk_value"]
+            sps_value = risk_values["stroke_priority_value"]
+
+            independent_risk_variable_scores["srs"][category] = srs_value
+            independent_risk_variable_scores["sps"][category] = sps_value
+
+            independent_risk_score_total *= srs_value
+            independent_risk_variable_srs_total += srs_value
+            stroke_priority_score_total *= sps_value
+            independent_risk_variable_sps_total += sps_value
+
+        # Loop over categories and compute contribution to total of the score.
+        for cat in independent_risk_factors.keys():
+            if cat in EXCLUDED_CATEGORIES:
+                continue
+            independent_risk_variable_scores["srs"][cat] /= independent_risk_variable_srs_total
+            independent_risk_variable_scores["sps"][category] /= independent_risk_variable_srs_total
+
 
         logger.info(f"Successfully got independent risk score value...")
-        return independent_risk_score_total, stroke_priority_score_total
+        return independent_risk_score_total, stroke_priority_score_total, independent_risk_variable_scores
 
     except Exception as e:
         logger.error(f"Error getting independent risk score value: {e}")
