@@ -372,7 +372,13 @@ def calc_rhr_metadata(
         return {
             "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
             "average_rhr_trailing": round(trailing_average, 2) if trailing_average else None,
-            "average_rhr_prior": round(prior_average, 2) if prior_average else None
+            "average_rhr_prior": round(prior_average, 2) if prior_average else None,
+            "baseline_start_date": baseline_start if baseline_start else None,
+            "baseline_end_date": baseline_end if baseline_end else None,
+            "prior_start_date": prior_start if prior_start else None,
+            "prior_end_date": prior_end if prior_end else None,
+            "current_start_date": trailing_start if trailing_start else None,
+            "current_end_date": trailing_end if trailing_end else None,
         }
 
     except Exception as e:

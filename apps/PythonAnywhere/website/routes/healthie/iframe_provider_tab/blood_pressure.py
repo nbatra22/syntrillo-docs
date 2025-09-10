@@ -308,7 +308,13 @@ def iframe_healthie_provider_tab_get_hr_data():
     return jsonify({
         'average_rhr_baseline': rhr_metadata['average_rhr_baseline'],
         'average_rhr_trailing': rhr_metadata['average_rhr_trailing'],
-        'average_rhr_prior': rhr_metadata['average_rhr_prior']
+        'average_rhr_prior': rhr_metadata['average_rhr_prior'],
+        "baseline_start_date": rhr_metadata['baseline_start'],
+        "baseline_end_date": rhr_metadata['baseline_end'],
+        "prior_start_date": rhr_metadata['prior_start'],
+        "prior_end_date": rhr_metadata['prior_end'],
+        "current_start_date": rhr_metadata['trailing_start'],
+        "current_end_date": rhr_metadata['trailing_end'],
     })
 
 
