@@ -1169,12 +1169,15 @@ class HealthieForms():
 
     def get_autoscored_sections(self, custom_module_form_id: str, user_id: str):
         query = """
-            query formAnswerGroups($custom_module_form_id: ID!, $user_id: String!) {
+            query formAnswerGroups(
+                $custom_module_form_id: ID!,
+                $user_id: String!
+            ) {
                 formAnswerGroups(
                     custom_module_form_id: $custom_module_form_id,
                     user_id: $user_id
                 ) {
-                    custom_module_form {    # The form template that was filled out
+                    custom_module_form {
                         id
                     }
                     user_id

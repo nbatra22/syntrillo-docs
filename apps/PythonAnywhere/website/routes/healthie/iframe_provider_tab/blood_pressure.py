@@ -5,17 +5,22 @@ from datetime import datetime
 
 from .post_management import PostManager
 
+from syntrillo.api_healthie.constants import RHR_CATEGORY, WEIGHT_CATEGORY
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, calculate_bmi
-from syntrillo.stroke_risk_score_v2.agg_data import get_srs_healthie_data
-
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, calculate_bmi, get_patient_info
+from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.system.logger import logger
+from syntrillo.stroke_risk_score_v2.agg_data import (
+    get_srs_healthie_data,
+    get_healthie_metric_data,
+    calc_rhr_metadata,
+    get_healthie_activity_and_inactivity_module_ids
+)
 
 iframe_healthie_provider_tab_bp_analysis_bp = Blueprint('iframe_healthie_provider_tab_bp_analysis_bp', __name__)
 
@@ -231,7 +236,7 @@ def iframe_healthie_provider_tab_get_metrics():
     biometrics = get_biometric_data(post_manager.syntrillo_internal_key)
     bmi = calculate_bmi(biometrics['weight'], biometrics['height'])
 
-    print(f"-------- biometrics: {biometrics}")
+    # print(f"-------- biometrics: {biometrics}")
 
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
@@ -243,7 +248,7 @@ def iframe_healthie_provider_tab_get_metrics():
     }
 
 
-    print(f"-------- hr_measurements: {hr_measurements}")
+    # print(f"-------- hr_measurements: {hr_measurements}")
 
     secrets = LocalEnvironmentAndSecrets(
         load_healthie_secrets=True,
@@ -269,4 +274,176 @@ def iframe_healthie_provider_tab_get_metrics():
         # 'exercise': exercise,
         'bmi': bmi,
         'hr_measurements': hr_measurements,
+    })
+
+
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/hr', methods=['GET','POST'])
+def iframe_healthie_provider_tab_get_hr_data():
+    """
+    This endpoint is used to retrieve heart rate data for a patient.
+
+    NOTE: Currently this endpoint is only used for RHR data but should be expanded to include all heart rate data
+    when requested in a future feature.
+    """
+
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+    syntrillo_internal_key = post_manager.syntrillo_internal_key
+
+    lookup_codes_manager = LookUpCodesManagement()
+    entry = lookup_codes_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+
+    healthie_user_id = entry['healthie_user_id']
+
+    # Get baseline (first 2 weeks), prior (2 weeks before current), and current (latest 2 weeks) RHR data
+    healthie_utils = HealthieUtils()
+    rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
+    rhr_metadata = calc_rhr_metadata(
+        rhr_data=rhr_data,
+        baseline_num_weeks=2,
+        trailing_num_weeks=2,
+        prior_num_weeks= 2
+    ) if rhr_data else None
+
+    return jsonify({
+        'average_rhr_baseline': rhr_metadata['average_rhr_baseline'],
+        'average_rhr_trailing': rhr_metadata['average_rhr_trailing'],
+        'average_rhr_prior': rhr_metadata['average_rhr_prior']
+    })
+
+
+@iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/biometrics', methods=['GET','POST'])
+def iframe_healthie_provider_tab_get_biometrics_data():
+    """
+    This endpoint is used to retrieve biometrics data for a patient.
+
+    NOTE: Currently this endpoint is only used for BMI, Sodium, and Physical Activity data but should be expanded to include all biometrics data
+    when requested in a future feature.
+    """
+
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+    syntrillo_internal_key = post_manager.syntrillo_internal_key
+    lookup_codes_manager = LookUpCodesManagement()
+    entry = lookup_codes_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+    healthie_user_id = entry['healthie_user_id']
+    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+    healthie_utils = HealthieUtils()
+
+    # I believe that charting is no longer used for physical activity capture (9/8/25)
+    # module_id_inactivity_charting = physical_activity_module_ids["module_id_inactivity_charting"]
+    # module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
+
+    physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
+    module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
+    module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
+
+    inactivity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
+    activity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_activity_intake, syntrillo_internal_key)
+
+    inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
+    # Need minimum of 3 responses for baseline, prior, and current
+    if inactivity_data and len(inactivity_data) >= 3:
+        inactivity_baseline, inactivity_prior, inactivity_current = inactivity_data[-1], inactivity_data[1], inactivity_data[0]
+    elif inactivity_data and len(inactivity_data) == 2:
+        inactivity_baseline, inactivity_current = inactivity_data[-1], inactivity_data[0]
+    elif inactivity_data and len(inactivity_data) == 1:
+        inactivity_baseline = inactivity_data[0]
+    else:
+        logger.warning("Patient does not have at least 1 inactivity response...")
+
+
+    activity_baseline, activity_prior, activity_current = None, None, None
+    # Need minimum of 3 responses for baseline, prior, and current
+    if activity_data and len(activity_data) >= 3:
+        activity_baseline, activity_prior, activity_current = activity_data[-1], activity_data[1], activity_data[0]
+    elif activity_data and len(activity_data) == 2:
+        activity_baseline, activity_current = activity_data[-1], activity_data[0]
+    elif activity_data and len(activity_data) == 1:
+        activity_baseline = activity_data[0]
+    else:
+        logger.warning("Patient does not have at least 1 activity response...")
+
+    physical_activity_data = {
+        "inactive": {
+            "inactivity_baseline": inactivity_baseline,
+            "inactivity_prior": inactivity_prior,
+            "inactivity_current": inactivity_current
+        },
+        "active": {
+            "activity_baseline": activity_baseline,
+            "activity_prior": activity_prior,
+            "activity_current": activity_current
+        }
+    }
+
+    # Get BMI data
+    # 1.) get height (from patient info)
+    patient_data = get_patient_info(healthie_user_id=healthie_user_id)
+    height = patient_data.get("height", None)
+    # 2.) get historical weight (from healthie metrics)
+    weight_data_response = get_healthie_metric_data(healthie_utils, healthie_user_id, category=WEIGHT_CATEGORY)
+    bmis = []
+    for weight_data in weight_data_response:
+        # 3.) calc bmi similar to PA
+        bmis.append(calculate_bmi(weight_data["metric_stat"], height))
+        activity_baseline, activity_prior, activity_current = None, None, None
+
+    # Need minimum of 3 responses for baseline, prior, and current
+    # bmis are sorted in ascending order by date.
+    bmi_baseline, bmi_prior, bmi_current = None, None, None
+    if len(bmis) >= 3:
+        bmi_baseline, bmi_prior, bmi_current = bmis[0], bmis[-2], bmis[-1]
+    elif len(bmis) == 2:
+        bmi_baseline, bmi_current = bmis[0], bmis[-1]
+    elif len(bmis) == 1:
+        bmi_baseline = bmis[0]
+    else:
+        logger.warning("Patient does not have at least 1 bmi available...")
+
+    bmi_data = {
+        "bmi_current": bmi_current,
+        "bmi_prior": bmi_prior,
+        "bmi_baseline": bmi_baseline
+    }
+
+    # Get Sodium Data
+    secrets = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+    if secrets.is_production():
+        custom_module_form_id = "2455490"
+    else:
+        custom_module_form_id = "2203381"
+
+    forms_manager = HealthieForms()
+    autoscored_sections  = forms_manager.get_autoscored_sections(custom_module_form_id=custom_module_form_id,user_id=entry['healthie_user_id'])
+
+    ssq_baseline, ssq_prior, ssq_current = None, None, None
+    # Need minimum of 3 responses for baseline, prior, and current
+    is_valid_autosections = autoscored_sections and len(autoscored_sections['formAnswerGroups']) > 0
+    if is_valid_autosections:
+        # SSQ responses are sorted in descending order (first=newest, last=oldest)
+        ssq_responses = autoscored_sections['formAnswerGroups']
+        if len(ssq_responses) >= 3:
+            ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+            ssq_prior = ssq_responses[1]['autoscored_sections'][-1].get('value', None)
+            ssq_current = ssq_responses[0]['autoscored_sections'][-1].get('value', None)
+        elif len(ssq_responses) == 2:
+            ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+            ssq_current = ssq_responses[0]['autoscored_sections'][-1].get('value', None)
+        elif len(ssq_responses) == 1:
+            ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+        else:
+            logger.warning("Patient does not have at least 1 activity response...")
+
+    ssq_data = {
+        "ssq_current": ssq_current,
+        "ssq_prior": ssq_prior,
+        "ssq_baseline": ssq_baseline
+    }
+
+
+    return jsonify({
+        "physical_activity_data":physical_activity_data,
+        "bmi_data": bmi_data,
+        "ssq_data": ssq_data
     })
