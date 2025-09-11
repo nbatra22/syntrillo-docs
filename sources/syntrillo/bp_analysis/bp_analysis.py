@@ -4,23 +4,40 @@ from datetime import datetime, timezone
 from typing import Tuple
 import textwrap
 import io
-import base64
 import re
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-matplotlib.use('Agg')
 import pandas as pd
-import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+matplotlib.use('Agg')
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
-
+from syntrillo.bp_analysis.constants import (
+    DATE_RANGE,
+    MEASUREMENT_COUNT,
+    AVG_SBP,
+    AVG_DBP,
+    PEAK_SBP,
+    PEAK_DBP,
+    LOW_SBP,
+    LOW_DBP,
+    SBP_SD,
+    DBP_SD,
+    SBP_CV,
+    DBP_CV,
+    SBP_COUNT_170,
+    SBP_COUNT_175,
+    HYPOTENSIVE_COUNT,
+    SYSTOLIC,
+    DIASTOLIC,
+    TIMESTAMP_LOCAL,
+)
 from syntrillo.system.logger import logger
 
 class BloodPressureAnalysis:
@@ -56,13 +73,6 @@ class BloodPressureAnalysis:
     syntrillo_internal_key : uuid.UUID = None
     syntrillo_database_manager : SyntrilloDatabaseManager = None
     bpm_df : pd.DataFrame = None
-    """
-        bpf_df = {
-            "timestamp_local": timestamp
-            "systolic": int
-            "diastolic": int
-        }
-    """
     analysis_df : pd.DataFrame = None
     timeframed_data : dict = None
     HYPERTENSION_SBP_THRESHOLD = 170
@@ -70,20 +80,14 @@ class BloodPressureAnalysis:
     HYPOTENSION_SBP_THRESHOLD = 95
 
 
-    def __init__(self, syntrillo_internal_key : uuid.UUID) -> None:
-
+    def __init__(self, syntrillo_internal_key : uuid.UUID = None) -> None:
         self.syntrillo_internal_key = syntrillo_internal_key
-
-        # set up PHI database connection for this user
-        self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        self.syntrillo_database_manager = SyntrilloDatabaseManager(syntrillo_internal_key) # set up PHI database connection for this user
 
 
     def initialize_data(self) -> None:
         # Get all available blood pressure data
-        _, log = self.get_blood_pressure_dataframe(
-            start_date=None,
-            end_date=None,
-        )
+        _, _ = self.get_blood_pressure_dataframe(start_date=None, end_date=None)
 
         # Generate analysis + extremes table using BloodPressureAnalysis class methods
         self.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
@@ -100,12 +104,11 @@ class BloodPressureAnalysis:
         self,
         start_date : datetime = None,
         end_date : datetime = None,
-        ) -> Tuple[pd.DataFrame, dict]:
+    ) -> Tuple[pd.DataFrame, dict]:
         """
-        Get BPM report, only Blood Pressure data.
+        Get Blood Pressure data from Tenovi device in internal database.
 
         https://tenovi.com/hwi-device-overview/#tenovi-bpm
-
         https://tenovi.com/bpm/
 
         Available metrics:
@@ -165,6 +168,7 @@ class BloodPressureAnalysis:
         # ---
         # exit if no data : None or empty dataframe
         if bpm_df is None or bpm_df.empty or log['success'] == False:
+            logger.warning(f"No blood pressure data found for patient {self.syntrillo_internal_key}")
             overall_log = {
                 'success': False,
                 'error': 'No blood pressure data found.',
@@ -332,6 +336,61 @@ class BloodPressureAnalysis:
 
         return data
 
+    def calculate_metadata_v2(self, df: pd.DataFrame, date_range: str = None) -> dict:
+        """
+        Calculate blood pressure analysis metadata from dataframe.
+
+        Args:
+            df (pd.DataFrame): The dataframe to calculate the metadata from
+            date_range (str): The date range of the dataframe
+
+        Returns:
+            dict: The metadata
+        """
+
+        # Initialize default data structure
+        data = {
+            DATE_RANGE: date_range,
+            MEASUREMENT_COUNT: 0,
+            AVG_SBP: None,
+            AVG_DBP: None,
+            PEAK_SBP: None,
+            PEAK_DBP: None,
+            LOW_SBP: None,
+            LOW_DBP: None,
+            SBP_SD: None,
+            DBP_SD: None,
+            SBP_CV: None,
+            DBP_CV: None,
+            SBP_COUNT_170: 0,
+            SBP_COUNT_175: 0,
+            HYPOTENSIVE_COUNT: 0,
+        }
+
+        if df.empty:
+            return data
+
+        # Set values directly in the data dictionary
+        data[MEASUREMENT_COUNT] = len(df)
+        data[AVG_SBP] = round(df[SYSTOLIC].mean(), 2)
+        data[AVG_DBP] = round(df[DIASTOLIC].mean(), 2)
+        data[PEAK_SBP] = round(df[SYSTOLIC].nlargest(3).mean(), 2)
+        data[PEAK_DBP] = round(df[DIASTOLIC].nlargest(3).mean(), 2)
+        data[LOW_SBP] = round(df[SYSTOLIC].min(), 2)
+        data[LOW_DBP] = round(df[DIASTOLIC].min(), 2)
+        data[SBP_SD] = round(df[SYSTOLIC].std(), 2)
+        data[DBP_SD] = round(df[DIASTOLIC].std(), 2)
+
+        # Calculate coefficients of variation
+        data[SBP_CV] = round((data[SBP_SD] / data[AVG_SBP]) * 100, 2) if data[AVG_SBP] else None
+        data[DBP_CV] = round((data[DBP_SD] / data[AVG_DBP]) * 100, 2) if data[AVG_DBP] else None
+
+        # Calculate threshold counts
+        data[SBP_COUNT_170] = len(df[df[SYSTOLIC] >= 170])
+        data[SBP_COUNT_175] = len(df[df[SYSTOLIC] >= 175])
+        data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
+
+        return data
 
     def get_analysis_table(self) -> pd.DataFrame:
         """

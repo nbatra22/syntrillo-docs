@@ -23,6 +23,7 @@ class FormResponse(BaseModel):
     syntrillo_internal_key: str
     answer: str
     created_at: datetime
+    updated_at: datetime
 
 # Define the data model for Healthie medications
 class Medication(BaseModel):

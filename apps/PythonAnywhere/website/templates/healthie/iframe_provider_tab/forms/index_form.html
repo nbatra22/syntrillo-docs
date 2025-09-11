@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "Form" }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='healthie/forms.css') }}"> -->
+    <style>
+        h2 {
+            margin: 0 !important;
+        }
+
+        /* .form-container {
+            padding: 1rem;
+        } */
+
+        .form-subcontainer {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            height: 100%;
+            overflow: scroll;
+        }
+
+        .form-submit-footer {
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            align-items: center;
+            padding: 1rem;
+            border-top: 1px solid #d1d5db;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            font-size: 14px;
+        }
+
+        .form-group h2 {
+            font-size: medium;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-divider {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 1rem;
+            color: #9ca3af;
+            /* color: #2563EB; */
+            margin-bottom: 0.5rem;
+        }
+
+        .divider-title {
+            font-size: 0.875rem;
+            /* Small */
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .divider-line {
+            flex-grow: 1;
+            height: 1px;
+            /* background-color: #d1d5db; */
+            background-color: #3B82F6;
+            /* Tailwind gray-300, adjust if too light */
+        }
+
+        .form-section-info {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            padding: 0.5rem 0;
+        }
+
+        .form-submit-btn {
+            color: white;
+            background-color: #3B82F6;
+            border-radius: 0.25rem;
+            padding: 0.5rem 0.75rem;
+            border: none !important;
+            outline: none !important;
+        }
+
+        .form-submit-btn:hover {
+            background-color: #2563EB;
+        }
+
+        .input-button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .input-button-group-item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-button-group-item label {
+            font-size: 0.875rem;
+            font-weight: normal;
+            margin: 0 !important;
+        }
+
+        .input-button-group-item input {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="form-container">
+        {% block content %}{% endblock %}
+
+        {% block scripts %}{% endblock %}
+    </div>
+</body>
+
+</html>

@@ -72,6 +72,22 @@ class SecretsStack(Stack):
             encryption_key=custom_kms_key
         )
 
+        # Create developer readonly access secrets
+        self.database_readonly_dev_secrets = secretsmanager.Secret(
+            self, "DatabaseReadOnlyDevSecrets",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template=json.dumps({
+                    "username": "syntrillo_clinic_readonly_dev", # developer makes the user too long (i.e. >32)
+                    "host": db_host_param
+                }),
+                generate_string_key="password",
+                exclude_characters='/@"\\',
+                include_space=False,
+                password_length=32
+            ),
+            encryption_key=custom_kms_key
+        )
+
         # Create DMS access secrets
         self.database_dms_user_secrets = secretsmanager.Secret(
             self, "DatabaseDMSUserSecrets",

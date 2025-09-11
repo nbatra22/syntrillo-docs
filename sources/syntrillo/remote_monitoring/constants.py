@@ -1,0 +1,2 @@
+PULSE_METRIC_NAME = 'pulse'
+BLOOD_PRESSURE_METRIC_NAME = 'blood_pressure'

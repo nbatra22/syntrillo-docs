@@ -32,9 +32,30 @@ def handler(event, context):
         if syntrillo_internal_key is None or healthie_user_id is None:
             raise ValueError(f"No syntrillo_internal_key or healthie_user_id provided")
 
-        logger.info(f"Building BloodPressureAlertManager for patient {syntrillo_internal_key}...")
-        alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id)
+        # Existing measurement validation
+        db_manager = SyntrilloDatabaseManager(uuid.UUID(syntrillo_internal_key))
+        record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+        if log['success'] == False:
+            return {
+                'success': False,
+                'error': log['error'],
+                'statusCode': 500,
+                'body': json.dumps({'error': log['error']})
+            }
 
+        if record is None:
+            return {
+                'success': False,
+                'error': f"No recent measurement found for patient {syntrillo_internal_key}",
+                'statusCode': 500,
+                'body': json.dumps({'error': f"No recent measurement found for patient {syntrillo_internal_key}"})
+            }
+
+        # Initialize BloodPressureAlertManager
+        logger.info(f"Building BloodPressureAlertManager for patient {syntrillo_internal_key}...")
+        alert_manager = BloodPressureAlertManager(syntrillo_internal_key, healthie_user_id, calculate_timeframed_data=True)
+
+        # Analyze patient blood pressure
         if action == 'analyze_patient_blood_pressure':
 
             has_recent_measurement = alert_manager.handle_five_day_measurement_check()
@@ -43,23 +64,25 @@ def handler(event, context):
                 return alert_manager.handle_two_week_alerts()
             else:
                 return {
+                    'success': True,
+                    'error': None,
                     'statusCode': 200,
                     'body': f"2-week BP analysis was not run for patient {syntrillo_internal_key} because the patient has not recorded a measurement in the past 5 days."
                 }
 
-        # if action == 'check_measurement_consistancy':
-        #     alert_manager.handle_three_day_no_measurement()
-        #     return {
-        #         'statusCode': 200,
-        #         'body': f'Successfully checked patient {syntrillo_internal_key}"s trailing 3 day BP measurement taking consistentcy.'
-        #     }
-
         else:
-            raise ValueError(f"Unknown action: {action}")
+            return {
+                'success': False,
+                'error': f"Unknown action: {action}",
+                'statusCode': 500,
+                'body': json.dumps({'error': f"Unknown action: {action}"})
+            }
 
     except Exception as e:
         logger.exception(f"An unexpected error occurred: {e}")
         return {
+            'success': False,
+            'error': f'An internal server error occurred: {e}',
             'statusCode': 500,
             'body': json.dumps({'error': f'An internal server error occurred: {e}'})
         }

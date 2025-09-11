@@ -63,7 +63,7 @@ class PostManager:
 
         # get what's posted
         self.temporary_lookup_code = request.form.get('temporary_lookup_code')
-
+        
         # look up for syntrillo_internal_key
         if self.temporary_lookup_code is not None:
             temporary_lookup_codes_manager = TemporaryLookUpCodesManagement()

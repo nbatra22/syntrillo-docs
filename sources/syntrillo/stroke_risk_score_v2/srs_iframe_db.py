@@ -1,0 +1,255 @@
+import uuid
+from datetime import datetime
+from typing import Optional, Tuple
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.stroke_risk_score_v2.models.srs_form import (
+    SRSFormResponse,
+    NumberOfStrokesOptions,
+    StrokeMechanismOptions,
+    LikelihoodOfTIAOptions,
+    AnemiaSeverityOptions,
+    ArterialClotOccurrencesOptions,
+    PFOPresenceOptions,
+    VenousClotOccurrencesOptions,
+    EjectionFractionOptions,
+    StenosisPercentageOptions,
+    OSASeverityOptions,
+    CADTypeOptions,
+    GenderOptions,
+    )
+from syntrillo.stroke_risk_score_v2.constants import UNKNOWN
+from syntrillo.stroke_risk_score_v2.models.treatment_compliance import TreatmentCompliance, TreatmentComplianceOptions
+from syntrillo.system.logger import logger
+
+LAB_CATEGORICAL_FIELDS = [
+    ("LDLLevel", "LDL"),
+    ("HDLLevel", "HDL"),
+    ("TriglyceridesLevel", "Triglycerides")
+]
+
+RISK_VALUE_MAPPING = {
+    "LDL": "ldl",
+    "HDL": "hdl",
+    "Triglycerides": "triglycerides",
+    "PhysicalInactivityHours": "physical_inactivity",
+    "PhysicalActivityMinutes": "physical_activity",
+    "Creatinine": "creatinine",
+    "HemoglobinA1c": "hemoglobin_a1c",
+}
+
+OTHER_CATEGORICAL_FIELDS = [
+    ("PhysicalInactivityLevel", "PhysicalInactivityHours"),
+]
+
+GENDER_MAPPING = {
+    "male": GenderOptions.MAN,
+    "female": GenderOptions.WOMAN,
+}
+
+def get_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list[SRSFormResponse], dict]:
+    """
+    Given a patients syntrillo_internal_key, retireve all the srs form responses and compliance data
+
+    Args:
+        syntrillo_internal_key (uuid.UUID): The Syntrillo internal key
+
+    Returns:
+        srs_form_response (list[SRSFormResponse]): The SRS form responses
+        log (dict): The log
+    """
+
+    # Given a patients syntrillo_internal_key, retireve all the srs form responses and compliance data
+    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key_patient)
+    srs_form_responses, log = db_manager.get_srs_form_responses(syntrillo_internal_key_patient)
+
+    return srs_form_responses, log
+
+
+def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_internal_key_clinician: uuid.UUID, data: dict) -> Tuple[Optional[int], dict]:
+    """
+    Insert SRS form responses and compliance data into the database
+
+    Args:
+        syntrillo_internal_key_patient (uuid.UUID): The Syntrillo internal key of the patient who the SRS form is for
+        syntrillo_internal_key_clinician (uuid.UUID): The Syntrillo internal key of the clinician who created the SRS form is for
+        data (dict): The data to insert
+
+    Returns:
+        srs_form_response_id (Optional[int]): The SRS form response ID
+        log (dict): The log
+    """
+    try:
+        logger.info(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
+        print(f"Inserting SRS form response for patient {syntrillo_internal_key_patient} and clinician {syntrillo_internal_key_clinician}...")
+        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key=syntrillo_internal_key_patient)
+
+        # Get biometric data
+        biometric_data = get_biometric_data(syntrillo_internal_key_patient)
+        data["Height"] = biometric_data.get("height", None)
+        data["Gender"] = GENDER_MAPPING[biometric_data["gender"].lower() if biometric_data["gender"] else "male"]
+        data["Weight"] = biometric_data.get("weight", None)
+        data["BMI"] = biometric_data.get("bmi", None)
+
+        # Insert SRS form responses
+        srs_form_response = SRSFormResponse(
+            syntrillo_internal_key_patient=str(syntrillo_internal_key_patient),
+            syntrillo_internal_key_clinician=str(syntrillo_internal_key_clinician),
+            created_at=datetime.now(),
+            **data
+        )
+
+        # Calculate Categorical values for needed fields
+        for categorical_field, value_field in LAB_CATEGORICAL_FIELDS:
+            if getattr(srs_form_response, value_field):
+                categorical_value = db_manager.get_categorical_value(
+                    value=getattr(srs_form_response, value_field),
+                    category=RISK_VALUE_MAPPING[value_field],
+                    gender=srs_form_response.Gender
+                )
+                if categorical_value:
+                    srs_form_response.HistoryOfHyperlipidemia = True
+                setattr(srs_form_response, categorical_field, categorical_value)
+            else:
+                setattr(srs_form_response, categorical_field, UNKNOWN)
+
+        for categorical_field, value_field in OTHER_CATEGORICAL_FIELDS:
+            if getattr(srs_form_response, value_field):
+                categorical_value = db_manager.get_categorical_value(
+                    value=getattr(srs_form_response, value_field),
+                    category=RISK_VALUE_MAPPING[value_field],
+                    gender=srs_form_response.Gender
+                )
+                setattr(srs_form_response, categorical_field, categorical_value)
+
+
+        # Insert SRS form response
+        srs_form_response_id, log = db_manager.insert_srs_form_response(srs_form_response)
+
+        logger.info(f"Successfully inserted SRS form response for patient {syntrillo_internal_key_patient} with ID: {srs_form_response_id}")
+        return srs_form_response_id, log
+
+    except Exception as e:
+        logger.error(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
+        print(f"Error inserting SRS form response for patient {syntrillo_internal_key_patient}: {e}")
+        return None, {"success": False, "error": str(e)}
+
+
+
+if __name__ == "__main__":
+
+    # syntrillo_internal_key_patient = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
+    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    # print(srs_form_responses)
+
+    # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
+    # srs_data = {
+    #     "HasPreviousStroke": True,
+    #     "ScreenedForTIA": True,
+    #     "HasPriorHeadCT": True,
+    #     "ChronicInfarctPresent": True,
+    #     "HistoryOfAtrialFibrillation": True,
+    #     "HistoryOfIronDeficiencyAnemia": True,
+    #     "HistoryOfArterialClots": True,
+    #     "HistoryOfVenousClots": True,
+    #     "HistoryOfCHF": True,
+    #     "HistoryOfCarotidStenosis": True,
+    #     "HistoryOfOSA": True,
+    #     "HistoryOfCAD": True,
+    #     "HistoryOfValvularHeartDisease": True,
+    #     "HistoryOfCKD": True,
+    #     "NumberOfStrokes": NumberOfStrokesOptions.MULTIPLE,
+    #     "LatestStrokeMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "LikelihoodOfTIA": LikelihoodOfTIAOptions.HIGH_LIKELIHOOD,
+    #     "TIAMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "ChronicInfarctMechanism": StrokeMechanismOptions.LARGE_VESSEL,
+    #     "AnemiaSeverity": AnemiaSeverityOptions.MILD,
+    #     "ArterialClotOccurrences": ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT,
+    #     "PFOPresence": PFOPresenceOptions.POSITIVE,
+    #     "VenousClotOccurrences": VenousClotOccurrencesOptions.SINGLE,
+    #     "EjectionFraction": EjectionFractionOptions.LESS_THAN_OR_EQUAL_40,
+    #     "StenosisPercentage": StenosisPercentageOptions.FIFTY_TO_SEVENTY,
+    #     "OSASeverity": OSASeverityOptions.MILD,
+    #     "CADType": CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL,
+    #     "Gender": GenderOptions.MAN,
+    #     "Creatinine": 1.0,
+    #     "AvgSBP": 120,
+    #     "RHR": 60,
+    #     "Height": 71.0,
+    #     "Weight": 175.5,
+    #     "HemoglobinA1c": 5.0,
+    #     "PhysicalInactivityHours": 10.0,
+    #     "PhysicalActivityMinutes": 10.0,
+    #     "Triglycerides": 100.0,
+    #     "LDL": 99.0,
+    #     "HDL": 30.0,
+    #     "PriorCTDate": datetime.now(),
+    #     "compliance": TreatmentCompliance(
+    #         strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         tiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         chronicInfarctCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         atrialFibrillationCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         arterialClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         venousClotsCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         chfCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         carotidStenosisCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         osaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         cadCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ironDeficiencyAnemiaCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         valvularHeartDiseaseCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ckdCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #     )
+    # }
+    # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
+
+
+    # Staging Test Patient (modeled from Omar's Prod data)
+    # syntrillo_internal_key_patient = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
+
+    # srs_data = {
+    #     "HasPreviousStroke": True,
+    #     "NumberOfStrokes": NumberOfStrokesOptions.ONE,
+    #     "LatestStrokeMechanism": StrokeMechanismOptions.CARDIOEMBOLIC,
+    #     "Gender": GenderOptions.WOMAN,
+    #     "HistoryOfAtrialFibrillation": True,
+    #     "LDL": 140.0,
+    #     "HDL": 45.0,
+    #     "Height": 72.0,
+    #     "Weight": 255.0,
+    #     "compliance": TreatmentCompliance(
+    #         strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         atrialFibrillationCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #         triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+    #     )
+    # }
+
+    syntrillo_internal_key_patient = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # Cris P. Bacon
+    # syntrillo_internal_key_patient = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") #
+    syntrillo_internal_key_clinician = uuid.UUID("77f96276-c864-43b7-8baa-567b033472fc")
+
+    srs_data = {
+        "HasPreviousStroke": True,
+        "NumberOfStrokes": NumberOfStrokesOptions.ONE,
+        "LatestStrokeMechanism": StrokeMechanismOptions.HYPERCOAGULABLE,
+        "LDL": 83.0,
+        "HDL": 54.0,
+        "compliance": TreatmentCompliance(
+            strokeCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            triglyceridesCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            ldlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+            hdlCompliance=TreatmentComplianceOptions.OPTIMIZED,
+        )
+    }
+
+    # insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)
+    # srs_form_responses, log = get_srs_iframe_data(syntrillo_internal_key_patient)
+    # print(srs_form_responses)
+
+    insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician, srs_data)

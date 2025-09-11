@@ -2,7 +2,7 @@
 
 if [ "$1" == "" ]; then
   echo "usage: $0 <environment>"
-  echo "environments: sandbox, staging"
+  echo "environments: sandbox, staging, prod"
   exit
 fi
 
@@ -15,9 +15,19 @@ if [ "$ENVIRONMENT" == 'staging' ]; then
   SECRET_NAME='DatabaseAdminSecrets4B85717-uGKLcnzcSCua'
 fi
 
+if [ "$ENVIRONMENT" == 'prod' ]; then
+  SECRET_NAME='DatabaseReadOnlyDevSecretsD-penBQwc8Bqop'
+fi
+
 if [ "$(which jq)" == "" ]; then
   echo "!!!Please install jq"
   echo "example on ubuntu: sudo apt-get install jq"
+  exit
+fi
+
+if [ "$(which mysql)" == "" ]; then
+  echo "!!!Please install mysql client"
+  echo "example on ubuntu: sudo apt-get install mysql-client"
   exit
 fi
 
@@ -25,6 +35,12 @@ PROFILE="syntrillo-clinic-$ENVIRONMENT"
 if [ "$ENVIRONMENT" == "staging" ]; then
   if grep -q "syntrillo-clinic-staging-database" ~/.aws/config; then
     PROFILE="syntrillo-clinic-staging-database"
+  fi
+fi
+
+if [ "$ENVIRONMENT" == "prod" ]; then
+  if grep -q "syntrillo-clinic-prod-database" ~/.aws/config; then
+    PROFILE="syntrillo-clinic-prod-database"
   fi
 fi
 
@@ -51,13 +67,16 @@ echo "!!! N.B. : Using password is temporary, we should connect with IAM roles i
 echo '---'
 
 echo "If the connection 'hangs', make sure that you have started the ssm session in the right environment"
-echo "For example if you use did an ssm-start 'sanbox', and a mysql-connect 'staging' it will not work, and hang"
+echo "For example if you did an ssm-start 'sanbox', and a mysql-connect 'staging' it will not work, and hang"
 
 SSL_OPTION_FOR_MARIA_DB="--ssl"
 mysql --version | grep -q 'Ver 8' && SSL_OPTION_FOR_MARIA_DB=""
 
+# Handle authentication plugin issues
+AUTH_PLUGIN_OPTION="--enable-cleartext-plugin"
+
 echo "---"
-mysql -h 127.0.0.1 -P $local_port -u $username -p$password $SSL_OPTION_FOR_MARIA_DB
+mysql -h 127.0.0.1 -P $local_port -u $username -p$password $SSL_OPTION_FOR_MARIA_DB $AUTH_PLUGIN_OPTION
 if [ $? != 0 ]; then
   echo "!!!"
   echo "Make sure you have opened the sql-tunnel"

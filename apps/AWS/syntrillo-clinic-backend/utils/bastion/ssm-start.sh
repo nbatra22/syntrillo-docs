@@ -2,7 +2,7 @@
 
 if [ "$1" == "" -o "$2" == "" ]; then
   echo "usage: $0 <environment> <session-type>"
-  echo "environments: sandbox, staging"
+  echo "environments: sandbox, staging, prod"
   echo "session-types: session, ssh-tunnel, mysql-tunnel"
   exit
 fi
@@ -14,7 +14,7 @@ if [ "$(which session-manager-plugin)" == "" ]; then
   echo "!!!Please install session-manager-plugin"
   echo "Documentation link: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html"
   echo "Example on ubuntu or debian:"
-  echo '$> curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb'
+  echo '$> curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"'
   echo "$> sudo dpkg -i session-manager-plugin.deb"
   exit
 fi
@@ -23,6 +23,12 @@ PROFILE="syntrillo-clinic-$ENVIRONMENT"
 if [ "$ENVIRONMENT" == "staging" ]; then
   if grep -q "syntrillo-clinic-staging-database" ~/.aws/config; then
     PROFILE="syntrillo-clinic-staging-database"
+  fi
+fi
+
+if [ "$ENVIRONMENT" == "prod" ]; then
+  if grep -q "syntrillo-clinic-prod-database" ~/.aws/config; then
+    PROFILE="syntrillo-clinic-prod-database"
   fi
 fi
 
@@ -57,6 +63,9 @@ if [ "$SESSION_TYPE" == "mysql-tunnel" ]; then
     fi
     if [ $ENVIRONMENT == 'staging' ]; then
         hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-saiukm5mugdm.cv68uwgwk82p.us-east-1.rds.amazonaws.com"
+    fi
+    if [ $ENVIRONMENT == 'prod' ]; then
+        hostname="syntrilloclinicbackendsta-mysqldatabasefromsnapsho-kiqcjpf09qy6.c5i8owysoez9.us-east-1.rds.amazonaws.com"
     fi
 
     local_port=3307

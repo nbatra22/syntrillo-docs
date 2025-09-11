@@ -1,24 +1,24 @@
-from flask import Blueprint, render_template, request, jsonify, current_app, abort, Response, send_file
+from flask import Blueprint, render_template, request, jsonify, abort, send_file
 import pandas as pd
-import json
-import base64
 import io
 from datetime import datetime
 
 from .post_management import PostManager
 
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
-from syntrillo.stroke_risk_score.responses.patient_responses import PatientResponses
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 
-from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, calculate_bmi
+from syntrillo.stroke_risk_score_v2.agg_data import get_srs_healthie_data
+
+from syntrillo.system.logger import logger
 
 iframe_healthie_provider_tab_bp_analysis_bp = Blueprint('iframe_healthie_provider_tab_bp_analysis_bp', __name__)
 
-from syntrillo.system.logger import logger
 
 # @iframe_healthie_provider_tab_bp_analysis.route('/healthie/iframe_provider_tab/blood_pressure', methods=['POST'])
 # def iframe_healthie_provider_tab_blood_pressure():
@@ -215,33 +215,58 @@ def iframe_healthie_provider_tab_get_metrics():
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
+    lookup_codes_manager = LookUpCodesManagement()
+    entry = lookup_codes_manager.retrieve_entry_by_internal_key(post_manager.syntrillo_internal_key)
+
     # Deal with patients not registered at Syntrillo
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
     # Establish connection to PatientResponses class
-    patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
+    # patient_responses = PatientResponses(post_manager.syntrillo_internal_key)
 
     # Retrieve exercise and bmi data
-    exercise = patient_responses.get_exercise()
-    bmi = patient_responses.get_bmi()
+    # exercise = patient_responses.get_exercise()
+
+    biometrics = get_biometric_data(post_manager.syntrillo_internal_key)
+    bmi = calculate_bmi(biometrics['weight'], biometrics['height'])
+
+    print(f"-------- biometrics: {biometrics}")
 
     db_manager = SyntrilloDatabaseManager(post_manager.syntrillo_internal_key)
 
     # Retrieve heart rate measurements
-    hr_measurements, log = db_manager.get_latest_measurements(type='pulse', count=3)
+    healthie_data = get_srs_healthie_data(entry['healthie_user_id'], db_manager, post_manager.syntrillo_internal_key)
+    hr_measurements = {
+        'baseline_rhr': healthie_data['average_rhr_baseline'],
+        'trailing_rhr': healthie_data['average_rhr_trailing'],
+    }
+
+
+    print(f"-------- hr_measurements: {hr_measurements}")
+
+    secrets = LocalEnvironmentAndSecrets(
+        load_healthie_secrets=True,
+    )
+
+    if secrets.is_production():
+        custom_module_form_id = "2455490"
+    else:
+        custom_module_form_id = "2203381"
 
     forms_manager = HealthieForms()
     autoscored_sections  = forms_manager.get_autoscored_sections(
-        custom_module_form_id=2455490,
-        user_id=post_manager.posted_healthie_user_id,
+        custom_module_form_id=custom_module_form_id,
+        user_id=entry['healthie_user_id'],
     )
 
-    ssq_score = autoscored_sections.data['formAnswerGroups'][0]['autoscored_sections'] if autoscored_sections and len(autoscored_sections.data['formAnswerGroups']) > 0 else None
+    logger.info(f"autoscored_sections: {autoscored_sections}")
+
+    ssq_score = autoscored_sections['formAnswerGroups'][0]['autoscored_sections'] if autoscored_sections and len(autoscored_sections['formAnswerGroups']) > 0 else None
 
     return jsonify({
         'ssq_score': ssq_score,
-        'exercise': exercise,
+        # 'exercise': exercise,
         'bmi': bmi,
         'hr_measurements': hr_measurements,
     })

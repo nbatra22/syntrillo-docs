@@ -1,0 +1,1335 @@
+{% extends "healthie/iframe_provider_tab/forms/index_form.html" %}
+
+{% block extra_head %}
+<style>
+    #charting-note-form-content {
+        max-height: 600px;
+        overflow: scroll;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .loading-spinner i {
+        font-size: 2rem;
+        color: #3b82f6;
+        margin-bottom: 1rem;
+    }
+
+    .loading-spinner p {
+        margin: 0;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    /* Form Status Message Styling */
+    #form-status-message {
+        margin: 0;
+        padding: 0.5rem;
+        font-size: small;
+        font-weight: 500;
+        /* text-align: center; */
+        border-radius: 0.375rem;
+        transition: all 0.3s ease;
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* #form-status-message:empty::before {
+        content: "Ready to submit";
+        color: #6B7280;
+        font-style: italic;
+    } */
+
+    /* Status message states */
+    #form-status-message.success {
+        color: #10b981;
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    #form-status-message.pending {
+        color: #3b82f6;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    #form-status-message.error {
+        color: #ef4444;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    #form-status-message.loading {
+        color: #3b82f6;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    .form-submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    h2 {
+        margin: 0 !important;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<form id="charting-note-form" class="form-subcontainer" onsubmit="return false;">
+
+    <div id="charting-note-form-content" class="form-content">
+
+        <!-- <div id="patient-information-container" class="form-group">
+            <label for="patient-information-container">
+                1. Gender?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="gender-male" name="Gender" value="man">
+                    <label for="gender-male">
+                        Male
+                    </label>
+                </div>
+            </div>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="gender-female" name="Gender" value="woman">
+                    <label for="gender-female">
+                        Female
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <div id="previous-stroke-container" class="form-group">
+            <label for="previous-stroke-container">
+                1. Has the patient had a previous stroke?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-yes" name="HasPreviousStroke" value="yes">
+                    <label for="previous-stroke-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-no" name="HasPreviousStroke" value="no">
+                    <label for="previous-stroke-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="previous-stroke-count-container" class="form-group" style="display: none;">
+            <label for="previous-stroke-count-container">
+                (Previous stroke) How many strokes has the patient had?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-count-one" name="NumberOfStrokes" value="One">
+                    <label for="previous-stroke-count-one">
+                        One
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-multiple" name="NumberOfStrokes" value="Multiple">
+                    <label for="previous-stroke-multiple">
+                        Multiple
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="previous-stroke-mechanism" class="form-group" style="display: none;">
+            <label for="previous-stroke-count">
+                (Previous stroke) What was the latest stroke's mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-cardioembolic" name="LatestStrokeMechanism"
+                        value="Cardioembolic">
+                    <label for="previous-stroke-mechanism-cardioembolic">
+                        Cardioembolic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-small-vessel" name="LatestStrokeMechanism"
+                        value="Small Vessel">
+                    <label for="previous-stroke-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-large-vessel" name="LatestStrokeMechanism"
+                        value="Large Vessel">
+                    <label for="previous-stroke-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-cryptogenic" name="LatestStrokeMechanism"
+                        value="Cryptogenic">
+                    <label for="previous-stroke-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-hypercoagulable" name="LatestStrokeMechanism"
+                        value="Hypercoagulable">
+                    <label for="previous-stroke-mechanism-hypercoagulable">
+                        Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="previous-stroke-mechanism-structural" name="LatestStrokeMechanism"
+                        value="Structural">
+                    <label for="previous-stroke-mechanism-structural">
+                        Structural
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stroke Compliance Question -->
+        <div id="stroke-treatment-dependent" class="form-group" style="display: none;">
+            <label for="stroke-treatment">
+                (Previous stroke) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="stroke-treatment-none" name="strokeCompliance" value="not optimized">
+                    <label for="stroke-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="stroke-treatment-partial" name="strokeCompliance"
+                        value="partially optimized">
+                    <label for="stroke-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="stroke-treatment-optimized" name="strokeCompliance" value="optimized">
+                    <label for="stroke-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="tia-screening" class="form-group">
+            <label for="tia-screening">
+                2. For neurologist: Has the patient been screened for TIA?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-screening-yes" name="ScreenedForTIA" value="yes">
+                    <label for="tia-screening-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-screening-no" name="ScreenedForTIA" value="no">
+                    <label for="tia-screening-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="tia-likelihood" class="form-group" style="display: none;">
+            <label for="tia-likelihood">
+                (TIA screening) What is the likelihood of TIA?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-yes" name="LikelihoodOfTIA" value="High Likelihood">
+                    <label for="tia-likelihood-yes">
+                        High Likelihood
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-likelihood-no" name="LikelihoodOfTIA" value="TIA not likely">
+                    <label for="tia-likelihood-no">
+                        TIA not likely
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="tia-mechanism" class="form-group" style="display: none;">
+            <label for="tia-mechanism">
+                (TIA screening) What was the TIA mechanism? If 'other', what other mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-small-vessel" name="TIAMechanism" value="Small Vessel">
+                    <label for="tia-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-large-vessel" name="TIAMechanism" value="Large Vessel">
+                    <label for="tia-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-cryptogenic" name="TIAMechanism" value="Cryptogenic">
+                    <label for="tia-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-hypercoagulable" name="TIAMechanism" value="Hypercoagulable">
+                    <label for="tia-mechanism-hypercoagulable">
+                        Other - Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-mechanism-structural" name="TIAMechanism" value="Structural">
+                    <label for="tia-mechanism-structural">
+                        Other - Structural
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="tia-treatment-dependent" class="form-group" style="display: none;">
+            <label for="tia-treatment">
+                (TIA screening) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-treatment-none" name="tiaCompliance" value="not optimized">
+                    <label for="tia-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-treatment-partial" name="tiaCompliance" value="partially optimized">
+                    <label for="tia-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="tia-treatment-optimized" name="tiaCompliance" value="optimized">
+                    <label for="tia-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="prior-head-ct" class="form-group">
+            <label for="prior-head-ct">
+                3. Has the patient had a prior head CT?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-yes" name="HasPriorHeadCT" value="yes">
+                    <label for="prior-head-ct-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-no" name="HasPriorHeadCT" value="no">
+                    <label for="prior-head-ct-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="prior-head-ct-date" class="form-group" style="display: none;">
+            <label for="prior-head-ct-date">
+                (Prior head CT) When was the most recent CT?
+            </label>
+            <input type="date" id="prior-head-ct-date" name="PriorCTDate" value="" />
+        </div>
+
+        <div id="prior-head-ct-chronic-infarct" class="form-group" style="display: none;">
+            <label for="prior-head-ct-chronic-infarct">
+                (Prior head CT) Was a chronic infarct present?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-yes" name="ChronicInfarctPresent" value="yes">
+                    <label for="prior-head-ct-chronic-infarct-yes">
+                        Yes
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-no" name="ChronicInfarctPresent" value="no">
+                    <label for="prior-head-ct-chronic-infarct-no">
+                        No
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="prior-head-ct-chronic-infarct-mechanism" class="form-group" style="display: none;">
+            <label for="prior-head-ct-chronic-infarct-mechanism">
+                (Prior head CT - Chronic infarct) What was the chronic infarct mechanism?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-small-vessel" name="ChronicInfarctMechanism" value="Small Vessel">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-small-vessel">
+                        Small Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-large-vessel" name="ChronicInfarctMechanism" value="Large Vessel">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-large-vessel">
+                        Large Vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-cryptogenic" name="ChronicInfarctMechanism" value="Cryptogenic">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-cryptogenic">
+                        Cryptogenic
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-hypercoagulable" name="ChronicInfarctMechanism" value="Hypercoagulable">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-hypercoagulable">
+                        Hypercoagulable
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="prior-head-ct-chronic-infarct-mechanism-structural" name="ChronicInfarctMechanism" value="Structural">
+                    <label for="prior-head-ct-chronic-infarct-mechanism-structural">
+                        Structural
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chronic Infarct Compliance Question -->
+        <div id="chronic-infarct-compliance-dependent" class="form-group" style="display: none;">
+            <label for="chronic-infarct-compliance">
+                (Prior head CT - Chronic infarct) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="chronic-infarct-treatment-none" name="chronicInfarctCompliance"
+                        value="not optimized">
+                    <label for="chronic-infarct-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chronic-infarct-treatment-partial" name="chronicInfarctCompliance"
+                        value="partially optimized">
+                    <label for="chronic-infarct-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chronic-infarct-treatment-optimized" name="chronicInfarctCompliance"
+                        value="optimized">
+                    <label for="chronic-infarct-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="history-select" class="form-group">
+            <label for="history-select">
+                4. History of any of the following:
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-a-fib" name="HistoryOfAtrialFibrillation" value="true">
+                    <label for="history-of-a-fib">
+                        Atrial fibrillation
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-iron-deficiency-anemia" name="HistoryOfIronDeficiencyAnemia"
+                        value="true">
+                    <label for="iron_deficiency_anemia">
+                        Iron deficiency anemia
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-arterial-clots" name="HistoryOfArterialClots" value="true">
+                    <label for="history-of-arterial-clots">
+                        Arterial clots
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-venous-clots" name="HistoryOfVenousClots" value="true">
+                    <label for="history-of-venous-clots">
+                        Venous clots
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-chf" name="HistoryOfCHF" value="true">
+                    <label for="history-of-chf">
+                        Congestive heart failure (CHF)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-carotid-stenosis" name="HistoryOfCarotidStenosis"
+                        value="true">
+                    <label for="history-of-carotid-stenosis">
+                        Carotid stenosis
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-osa" name="HistoryOfOSA" value="true">
+                    <label for="history-of-osa">
+                        Obstructive sleep apnea (OSA)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-cad" name="HistoryOfCAD" value="true">
+                    <label for="history-of-cad">
+                        Coronary artery disease (CAD)
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-valvular-heart-disease" name="HistoryOfValvularHeartDisease"
+                        value="true">
+                    <label for="history-of-valvular-heart-disease">
+                        Valvular heart disease
+                    </label>
+                </div>
+                <!-- <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-ckd" name="HistoryOfCKD">
+                    <label for="history-of-ckd">
+                        Chronic kidney disease (CKD)
+                    </label>
+                </div> -->
+                <!-- <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-hyperlipidemia" name="HistoryOfHyperlipidemia">
+                    <label for="history-of-hyperlipidemia">
+                        Hyperlipidemia
+                    </label>
+                </div> -->
+                <!-- <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-diabetes" name="HistoryOfDiabetes">
+                    <label for="history-of-diabetes">
+                        Diabetes
+                    </label>
+                </div> -->
+                <!-- <div class="input-button-group-item">
+                    <input type="checkbox" id="history-of-obesity" name="HistoryOfObesity">
+                    <label for="history-of-obesity">
+                        Obesity
+                    </label>
+                </div> -->
+            </div>
+        </div>
+
+        <div id="a-fib-treatment-dependent" class="form-group" style="display: none;">
+            <label for="a-fib-treatment">
+                (Atrial Fibrillation) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="a-fib-treatment-none" name="atrialFibrillationCompliance"
+                        value="not optimized">
+                    <label for="a-fib-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="a-fib-treatment-partial" name="atrialFibrillationCompliance"
+                        value="partially optimized">
+                    <label for="a-fib-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="a-fib-treatment-optimized" name="atrialFibrillationCompliance"
+                        value="optimized">
+                    <label for="a-fib-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="iron-deficiency-anemia-dependent" class="form-group" style="display: none;">
+            <label for="iron-deficiency-anemia-severity">
+                (Iron Deficiency Anemia) Severity?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-mild" name="AnemiaSeverity" value="Mild">
+                    <label for="iron-deficiency-anemia-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-severe" name="AnemiaSeverity" value="Severe">
+                    <label for="iron-deficiency-anemia-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="iron-deficiency-anemia-treatment-dependent" class="form-group" style="display: none;">
+            <label for="iron-deficiency-anemia-treatment">
+                (Iron Deficiency Anemia) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-none" name="ironDeficiencyAnemiaCompliance"
+                        value="not optimized">
+                    <label for="iron-deficiency-anemia-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-partial"
+                        name="ironDeficiencyAnemiaCompliance" value="partially optimized">
+                    <label for="iron-deficiency-anemia-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="iron-deficiency-anemia-treatment-optimized"
+                        name="ironDeficiencyAnemiaCompliance" value="optimized">
+                    <label for="iron-deficiency-anemia-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="arterial-clots-dependent" class="form-group" style="display: none;">
+            <label for="arterial-clots-num-occurences">
+                (Arterial clots) Number of occurences?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-once" name="ArterialClotOccurrences"
+                        value="Single prior event">
+                    <label for="arterial-clots-once">
+                        Single prior event
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-multiple" name="ArterialClotOccurrences"
+                        value="Multiple prior events">
+                    <label for="arterial-clots-multiple">
+                        Multiple prior events
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="arterial-clots-treatment-dependent" class="form-group" style="display: none;">
+            <label for="arterial-clots-treatment">
+                (Arterial clots) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-none" name="arterialClotsCompliance"
+                        value="not optimized">
+                    <label for="arterial-clots-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-partial" name="arterialClotsCompliance"
+                        value="partially optimized">
+                    <label for="arterial-clots-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="arterial-clots-treatment-optimized" name="arterialClotsCompliance"
+                        value="optimized">
+                    <label for="arterial-clots-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="venous-clots-dependent" class="form-group" style="display: none;">
+            <label for="venous-clots-occurences">
+                (Venous clots) Number of occurences?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-once" name="VenousClotOccurrences" value="Single">
+                    <label for="venous-clots-once">
+                        Single
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-multiple" name="VenousClotOccurrences" value="Multiple">
+                    <label for="venous-clots-multiple">
+                        Multiple
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div id="venous-clots-treatment-dependent" class="form-group dependent-question" data-parent="history-of-venous-clots">
+            <label for="venous-clots-treatment">
+                (Venous clots) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-none" name="venousClotsCompliance" value="not optimized">
+                    <label for="venous-clots-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-partial" name="venousClotsCompliance"
+                        value="partially optimized">
+                    <label for="venous-clots-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="venous-clots-treatment-optimized" name="venousClotsCompliance"
+                        value="optimized">
+                    <label for="venous-clots-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <div id="venous-clots-pfo-dependent" class="form-group" style="display: none;">
+            <label for="pfo-presence">
+                (Venous clots) Presence of PFO?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-yes" name="PFOPresence" value="Positive">
+                    <label for="pfo-presence-yes">
+                        Positive
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-no" name="PFOPresence" value="Negative">
+                    <label for="pfo-presence-no">
+                        Negative
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-presence-unknown" name="PFOPresence" value="Unknown">
+                    <label for="pfo-presence-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- PFO treatment optimization question -->
+        <div id="venous-clots-pfo-treatment-dependent" class="form-group" style="display: none;">
+            <label for="pfo-treatment">
+                (Venous clots / PFO) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-treatment-none" name="pfoCompliance" value="not optimized">
+                    <label for="pfo-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-treatment-partial" name="pfoCompliance" value="partially optimized">
+                    <label for="pfo-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="pfo-treatment-optimized" name="pfoCompliance" value="optimized">
+                    <label for="pfo-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="chf-ejection-fraction" class="form-group" style="display: none;">
+            <label for="ejection-fraction">
+                (CHF) What was the patient's ejection fraction (EF)?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-less" name="EjectionFraction" value="<=40%">
+                    <label for="ejection-fraction-less">
+                        <= 40% </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-more" name="EjectionFraction" value=">40%">
+                    <label for="ejection-fraction-more">
+                        > 40%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ejection-fraction-unknown" name="EjectionFraction" value="Unknown">
+                    <label for="ejection-fraction-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="chf-treatment-dependent" class="form-group" style="display: none;">
+            <label for="chf-treatment">
+                (CHF) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-none" name="chfCompliance" value="not optimized">
+                    <label for="chf-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-partial" name="chfCompliance" value="partially optimized">
+                    <label for="chf-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="chf-treatment-optimized" name="chfCompliance" value="optimized">
+                    <label for="chf-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="carotid-stenosis-percent" class="form-group" style="display: none;">
+            <label for="carotid-stenosis-percent">
+                (Carotid Stenosis) What was the patient's percent/degree of stenosis?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-50-70" name="StenosisPercentage" value="50-70%">
+                    <label for="carotid-stenosis-percent-less">
+                        50 - 70%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-70-plus" name="StenosisPercentage" value=">70%">
+                    <label for="carotid-stenosis-percent-more">
+                        > 70%
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-percent-unknown" name="StenosisPercentage" value="Unknown">
+                    <label for="carotid-stenosis-percent-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="carotid-stenosis-treatment-dependent" class="form-group" style="display: none;">
+            <label for="carotid-stenosis-treatment">
+                (Carotid stenosis) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-none" name="carotidStenosisCompliance"
+                        value="not optimized">
+                    <label for="carotid-stenosis-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-partial" name="carotidStenosisCompliance"
+                        value="partially optimized">
+                    <label for="carotid-stenosis-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="carotid-stenosis-treatment-optimized" name="carotidStenosisCompliance"
+                        value="optimized">
+                    <label for="carotid-stenosis-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="osa-severity" class="form-group" style="display: none;">
+            <label for="osa-severity">
+                (OSA) Severity?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-mild" name="OSASeverity" value="Mild">
+                    <label for="osa-severity-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-moderate" name="OSASeverity" value="Moderate">
+                    <label for="osa-severity-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-severe" name="OSASeverity" value="Severe">
+                    <label for="osa-severity-severe">
+                        Severe
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-severity-unknown" name="OSASeverity" value="Unknown">
+                    <label for="osa-severity-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="osa-treatment-dependent" class="form-group" style="display: none;">
+            <label for="osa-treatment">
+                (OSA) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-none" name="osaCompliance" value="not optimized">
+                    <label for="osa-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-partial" name="osaCompliance" value="partially optimized">
+                    <label for="osa-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="osa-treatment-optimized" name="osaCompliance" value="optimized">
+                    <label for="osa-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="cad-type" class="form-group" style="display: none;">
+            <label for="cad-type">
+                (CAD) Type of CAD?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-symptomatic" name="CADType"
+                        value="Symptomatic multi or single vessel">
+                    <label for="cad-type-symptomatic">
+                        Symptomatic multi or single vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-asymp-multi" name="CADType" value="Asymptomatic multivessel">
+                    <label for="cad-type-asymp-multi">
+                        Asymptomatic multivessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-asymp-single" name="CADType" value="Asymptomatic single vessel">
+                    <label for="cad-type-asymp-single">
+                        Asymptomatic single vessel
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-type-unknown" name="CADType" value="Unknown">
+                    <label for="cad-type-unknown">
+                        Unknown
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="cad-treatment-dependent" class="form-group" style="display: none;">
+            <label for="cad-treatment">
+                (CAD) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-none" name="cadCompliance" value="not optimized">
+                    <label for="cad-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-partial" name="cadCompliance" value="partially optimized">
+                    <label for="cad-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="cad-treatment-optimized" name="cadCompliance" value="optimized">
+                    <label for="cad-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional treatment optimization questions for missing compliance fields -->
+        <div id="valvular-heart-disease-treatment-dependent" class="form-group" style="display: none;">
+            <label for="valvular-heart-disease-treatment">
+                (Valvular Heart Disease) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="valvular-heart-disease-treatment-none" name="valvularHeartDiseaseCompliance"
+                        value="not optimized">
+                    <label for="valvular-heart-disease-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="valvular-heart-disease-treatment-partial"
+                        name="valvularHeartDiseaseCompliance" value="partially optimized">
+                    <label for="valvular-heart-disease-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="valvular-heart-disease-treatment-optimized"
+                        name="valvularHeartDiseaseCompliance" value="optimized">
+                    <label for="valvular-heart-disease-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div id="ckd-treatment-dependent" class="form-group dependent-question" data-parent="history-of-ckd">
+            <label for="ckd-treatment">
+                (CKD) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ckd-treatment-none" name="ckdCompliance" value="not optimized">
+                    <label for="ckd-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ckd-treatment-partial" name="ckdCompliance" value="partially optimized">
+                    <label for="ckd-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ckd-treatment-optimized" name="ckdCompliance" value="optimized">
+                    <label for="ckd-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div id="hyperlipidemia-treatment-dependent" class="form-group dependent-question" data-parent="history-of-hyperlipidemia">
+            <label for="hyperlipidemia-treatment">
+                (Hyperlipidemia) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-none" name="hyperlipidemiaCompliance" value="not optimized">
+                    <label for="hyperlipidemia-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-partial" name="hyperlipidemiaCompliance" value="partially optimized">
+                    <label for="hyperlipidemia-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hyperlipidemia-treatment-optimized" name="hyperlipidemiaCompliance" value="optimized">
+                    <label for="hyperlipidemia-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div id="diabetes-treatment-dependent" class="form-group dependent-question" data-parent="history-of-diabetes">
+            <label for="diabetes-treatment">
+                (Diabetes) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="diabetes-treatment-none" name="diabetesCompliance" value="not optimized">
+                    <label for="diabetes-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="diabetes-treatment-partial" name="diabetesCompliance" value="partially optimized">
+                    <label for="diabetes-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="diabetes-treatment-optimized" name="diabetesCompliance" value="optimized">
+                    <label for="diabetes-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div id="obesity-treatment-dependent" class="form-group dependent-question" data-parent="history-of-obesity">
+            <label for="obesity-treatment">
+                (Obesity) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="obesity-treatment-none" name="obesityCompliance" value="not optimized">
+                    <label for="obesity-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="obesity-treatment-partial" name="obesityCompliance" value="partially optimized">
+                    <label for="obesity-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="obesity-treatment-optimized" name="obesityCompliance" value="optimized">
+                    <label for="obesity-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div class="form-group">
+            <label for="physical-inactivity">
+                6. What's the patient's physical inactivity level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-mild" name="PhysicalInactivityLevel" value="Mild">
+                    <label for="physical-inactivity-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-moderate" name="PhysicalInactivityLevel" value="Moderate">
+                    <label for="physical-inactivity-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="physical-inactivity-severe" name="PhysicalInactivityLevel" value="Severe">
+                    <label for="physical-inactivity-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- <div class="form-group">
+            <label for="physical-inactivity-treatment">
+                6. What is the patient's physical inactivity level (hours/day)?
+            </label>
+            <input type="number" id="physical-inactivity" name="PhysicalInactivityHours" step="0.25">
+        </div> -->
+
+        <div class="form-group">
+            <label for="ha1c">
+                5. What's the patient's last known Hemoglobin A1c (HA1c)?
+            </label>
+            <input type="number" id="ha1c" name="HemoglobinA1c" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="ldl">
+                6. Last known LDL level?
+            </label>
+            <input type="number" id="ldl" name="LDL" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="ldl-treatment">
+                (LDL) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-none" name="ldlCompliance" value="not optimized">
+                    <label for="ldl-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-partial" name="ldlCompliance" value="partially optimized">
+                    <label for="ldl-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="ldl-treatment-optimized" name="ldlCompliance" value="optimized">
+                    <label for="ldl-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label for="hdl">
+                7. Last known HDL level?
+            </label>
+            <input type="number" id="hdl" name="HDL" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="hdl-treatment">
+                (HDL) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-none" name="hdlCompliance" value="not optimized">
+                    <label for="hdl-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-partial" name="hdlCompliance" value="partially optimized">
+                    <label for="hdl-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="hdl-treatment-optimized" name="hdlCompliance" value="optimized">
+                    <label for="hdl-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label for="hyperlipidemia-treatment">
+                8. Last known triglycerides level?
+            </label>
+            <input type="number" id="triglycerides" name="Triglycerides" step="0.1">
+        </div>
+
+        <div class="form-group">
+            <label for="triglycerides-treatment">
+                (Triglycerides) Treatment optimization?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-none" name="triglyceridesCompliance"
+                        value="not optimized">
+                    <label for="triglycerides-treatment-none">
+                        Not optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-partial" name="triglyceridesCompliance"
+                        value="partially optimized">
+                    <label for="triglycerides-treatment-partial">
+                        Partially optimized
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="triglycerides-treatment-optimized" name="triglyceridesCompliance"
+                        value="optimized">
+                    <label for="triglycerides-treatment-optimized">
+                        Optimized
+                    </label>
+                </div>
+            </div>
+        </div>
+        <!--
+        <div class="form-group">
+            <label for="creatine-level">
+                11. What's the patient's creatinine level?
+            </label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="creatine-level-mild" name="CreatineLevel" value="Mild">
+                    <label for="creatine-level-mild">
+                        Mild
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="creatine-level-moderate" name="CreatineLevel" value="Moderate">
+                    <label for="creatine-level-moderate">
+                        Moderate
+                    </label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="creatine-level-severe" name="CreatineLevel" value="Severe">
+                    <label for="creatine-level-severe">
+                        Severe
+                    </label>
+                </div>
+            </div>
+        </div> -->
+
+        <div class="form-group">
+            <label for="creatinine">
+                10. Last known creatinine level?
+            </label>
+            <input type="number" id="creatinine" name="Creatinine" step="0.1">
+        </div>
+
+    </div>
+
+    <div class="form-submit-footer">
+        <h3 id="form-status-message">
+
+        </h3>
+        <button type="submit" id="charting-note-submit-btn" class="form-submit-btn" onclick="submitChartingNoteForm()">
+            Save
+        </button>
+    </div>
+
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+{% endblock %}
