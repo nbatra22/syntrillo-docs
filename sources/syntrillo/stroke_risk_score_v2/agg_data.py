@@ -1,7 +1,7 @@
 from typing import Union
 import uuid
 from datetime import datetime
-
+from typing import List
 import pandas as pd
 
 from syntrillo.system.logger import logger
@@ -107,6 +107,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         {
             "average_rhr_baseline": average_rhr_baseline,
             "average_rhr_trailing": average_rhr_trailing,
+            "average_rhr_prior": "average_rhr_prior",
             "inactivity_hours_answer": inactivity_hours_answer,
             "activity_minutes_answer": activity_minutes_answer,
         }
@@ -118,7 +119,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         # Retreive resting hr from healthie
         healthie_utils = HealthieUtils()
 
-        rhr_data = get_healthie_rhr_data(healthie_utils, healthie_user_id)
+        rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
         rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else None
 
         # Retreive the activity data
@@ -130,6 +131,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         return {
             "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
             "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
+            "average_rhr_prior": rhr_metadata["average_rhr_prior"] if rhr_metadata else None,
             "inactivity_hours_answer": activity_data["inactivity_hours_answer"],
             "activity_minutes_answer": activity_data["activity_minutes_answer"],
         }
@@ -137,6 +139,33 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
     except Exception as e:
         logger.error(f"Error fetching RHR data from healthie: {e}")
         raise ValueError("Error fetching RHR data from healthie")
+
+
+def get_healthie_activity_and_inactivity_module_ids(db_manager: SyntrilloDatabaseManager) -> dict:
+    """
+    This function retreives the module ids for the inactivity and activity questions answered
+    on the charting and intake healthie forms.
+
+    Args:
+        db_manager (SyntrilloDatabaseManager): The syntrillo database manager
+    Returns:
+
+    Raises:
+    """
+
+    _, module_id_inactivity_intake = db_manager.get_form_module_ids_by_module_label(INACTIVITY_INTAKE_MODULE_LABEL)
+    _, module_id_inactivity_charting = db_manager.get_form_module_ids_by_module_label(INACTIVITY_CHARTING_MODULE_LABEL)
+
+    _, module_id_activity_intake = db_manager.get_form_module_ids_by_module_label(ACTIVITY_INTAKE_MODULE_LABEL)
+    _, module_id_activity_charting = db_manager.get_form_module_ids_by_module_label(ACTIVITY_CHARTING_MODULE_LABEL)
+
+
+    return {
+        "module_id_inactivity_intake": module_id_inactivity_intake,
+        "module_id_inactivity_charting": module_id_inactivity_charting,
+        "module_id_activity_intake": module_id_activity_intake,
+        "module_id_activity_charting": module_id_activity_charting
+    }
 
 
 def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> Union[int, None]:
@@ -154,12 +183,13 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
 
     try:
         logger.info(f"Fetching activity data from healthie...")
-        # Get the module ids for the intake and charting modules
-        _, module_id_inactivity_intake = db_manager.get_form_module_ids_by_module_label(INACTIVITY_INTAKE_MODULE_LABEL)
-        _, module_id_inactivity_charting = db_manager.get_form_module_ids_by_module_label(INACTIVITY_CHARTING_MODULE_LABEL)
 
-        _, module_id_activity_intake = db_manager.get_form_module_ids_by_module_label(ACTIVITY_INTAKE_MODULE_LABEL)
-        _, module_id_activity_charting = db_manager.get_form_module_ids_by_module_label(ACTIVITY_CHARTING_MODULE_LABEL)
+        # Get the module ids for the intake and charting modules
+        physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
+        module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
+        module_id_inactivity_charting = physical_activity_module_ids["module_id_inactivity_charting"]
+        module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
+        module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
 
         # Retreive the intake & charting inactivity value based on the module id and healthie user id
         intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
@@ -199,20 +229,20 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         raise ValueError("Error fetching activity data from healthie")
 
 
-def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, page_size: int = 100) -> dict:
+def get_healthie_metric_data(healthie_utils: HealthieUtils, healthie_user_id: str, page_size: int = 100, category: str = RHR_CATEGORY) -> List[dict]:
     """
-    Get the resting hr data from healthie using the syntrillo_internal_key
+    Fetch all metric category data from healthie using the syntrillo_internal_key
 
     Args:
         healthie_utils (HealthieUtils): The healthie utils
         healthie_user_id (str): The healthie user id
-
+        category (str): The healthie metric category
     Returns:
-        dict: The resting hr data
+        all_metric_data (List[dict]): All metric data for the patient and
     """
     logger.info(f"Fetching RHR data from healthie...")
     try:
-        all_rhr_data = []
+        all_metric_data = []
         cursor = None
         has_more_pages = True
         # Continue fetching pages until no more results
@@ -247,7 +277,7 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
 
             variables = {
                 "client_id": healthie_user_id,
-                "category": RHR_CATEGORY,
+                "category": category,
                 "type": ENTRY_TYPE,
                 "page_size": page_size,
                 "sort_by": "created_at::asc"
@@ -260,7 +290,7 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
             current_page_data = response.get("entries", [])
 
             # Append the newest set of responses to output array
-            all_rhr_data.extend(current_page_data)
+            all_metric_data.extend(current_page_data)
 
             # Check if there are more pages to fetch
             if len(current_page_data) == page_size and current_page_data[-1].get("cursor", None):
@@ -269,21 +299,27 @@ def get_healthie_rhr_data(healthie_utils: HealthieUtils, healthie_user_id: str, 
                 has_more_pages = False
                 logger.info("No more pages to fetch.")
 
-        logger.info(f"Successfully fetched {len(all_rhr_data)} RHR data points from healthie.")
-        return all_rhr_data
+        logger.info(f"Successfully fetched {len(all_metric_data)} metric data points from healthie.")
+        return all_metric_data
 
     except Exception as e:
-        logger.error(f"Error fetching RHR data from healthie: {e}")
-        raise ValueError("Error fetching RHR data from healthie")
+        logger.error(f"Error fetching metric data from healthie: {e}")
+        raise ValueError("Error fetching metric data from healthie")
 
 
 
-def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
+def calc_rhr_metadata(
+    rhr_data: list[dict],
+    baseline_num_weeks: int = BASELINE_NUM_WEEKS,
+    trailing_num_weeks: int = TRAILING_NUM_WEEKS,
+    prior_num_weeks: int = 2
+    ) -> dict:
     """
     Calculate the RHR metadata from the rhr_data
     Args:
         rhr_data (list[dict]): The rhr data
-
+        baseline_start (datetime): The baseline start date
+        baseline_end (datetime): The baseline end date
     Returns:
         dict: The RHR metadata
     Raises:
@@ -301,7 +337,7 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
         # BASELINE DATAFRAME
         # Determine the baseline start and end dates
         baseline_start = rhr_df[CREATED_AT].min()
-        baseline_end = baseline_start + pd.Timedelta(weeks=BASELINE_NUM_WEEKS)
+        baseline_end = baseline_start + pd.Timedelta(weeks=baseline_num_weeks)
 
         # Ensure the baseline dataframe is valid
         baseline_df = get_timeframed_data(rhr_df, baseline_start, baseline_end, TYPE_RHR)
@@ -311,7 +347,7 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
         # TRAILING DATAFRAME
         # Determine the trailing start and end dates
         trailing_end = pd.Timestamp.now().tz_localize('UTC').tz_convert('America/New_York')
-        trailing_start = trailing_end - pd.Timedelta(weeks=TRAILING_NUM_WEEKS)
+        trailing_start = trailing_end - pd.Timedelta(weeks=trailing_num_weeks)
         trailing_average = None
         if is_valid_trailing_timeframe_dates(trailing_start, baseline_end):
             trailing_df = get_timeframed_data(rhr_df, trailing_start, trailing_end, TYPE_RHR)
@@ -319,11 +355,30 @@ def calc_rhr_metadata(rhr_data: list[dict]) -> dict:
         else:
             logger.warning("Not enough data to calculate trailing average...")
 
+        # PRIOR DATAFRAME
+        # Trailing > Prior > Baseline (this is an addition for the BP dashboard 9/8/25)
+        prior_end = trailing_start - pd.Timedelta(days=1) # Get day before start of trailing period
+        prior_start = prior_end - pd.Timedelta(weeks=prior_num_weeks)
+        prior_average = None
+        # Check if the baseline timeframe overlaps with the prior timeframe
+        if is_valid_trailing_timeframe_dates(prior_start, baseline_end):
+            prior_df = get_timeframed_data(rhr_df, prior_start, prior_end, TYPE_RHR)
+            prior_average = prior_df[METRIC_STAT].mean() if not prior_df.empty else None # Calculate the average prior for the rhr_data
+        else:
+            logger.warning("Not enough data to calculate prior average...")
+
         logger.info(f"Successfully calculated RHR metadata...")
         # Return the metadata
         return {
             "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
             "average_rhr_trailing": round(trailing_average, 2) if trailing_average else None,
+            "average_rhr_prior": round(prior_average, 2) if prior_average else None,
+            "baseline_start_date": baseline_start if baseline_start else None,
+            "baseline_end_date": baseline_end if baseline_end else None,
+            "prior_start_date": prior_start if prior_start else None,
+            "prior_end_date": prior_end if prior_end else None,
+            "current_start_date": trailing_start if trailing_start else None,
+            "current_end_date": trailing_end if trailing_end else None,
         }
 
     except Exception as e:
