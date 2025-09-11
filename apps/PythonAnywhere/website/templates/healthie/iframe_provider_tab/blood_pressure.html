@@ -446,6 +446,31 @@
         </ul>
     </section>
 
+    <!-- Heart Rate Header -->
+    <section id="bp-hr-header" class="hr-header">
+      <div class="flex flex-col gap-1">
+          <h2 class="text-lg font-bold">
+              Heart Rate Data
+          </h2>
+          <p class="text-sm text-gray-500">
+              Below are metrics regarding the patient's heart rate ("HR") and resting heart rate ("RHR").
+          </p>
+      </div>
+    </section>
+    <!-- Heart Rate Infographic as Table -->
+    <section id="bp-hr-section" class="bp-table-container">
+        <div id="bp-hr-spinner-container"></div>
+        <table id="bp-hr-table" class="bp-hr-table">
+            <tbody>
+                <tr>
+                    <td><strong>Average RHR</strong></td>
+                    <td id="bp-avg-rhr-value"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+
     <!-- Biometrics Header -->
     <section id="bp-biometrics-header" class="biometrics-header">
         <div class="flex flex-col gap-1">
@@ -457,7 +482,6 @@
             </p>
         </div>
     </section>
-
     <!-- Biometrics Infographic as Table -->
     <section id="bp-biometrics-section" class="bp-table-container">
         <div id="bp-biometrics-spinner-container"></div>
@@ -628,6 +652,80 @@
             })
     }
 
+    function getHRData() {
+        // Set up request (aka the form) to send to data fetching routes
+        let formData = new FormData()
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
+        formData.append('healthie_user_id', "{{ healthie_user_id }}")
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
+
+        const hrContent = document.getElementById("bp-biometrics-table");
+        const avgRhrContent = document.getElementById("bp-avg-rhr-value");
+
+        // Hide HR table and show spinner initially until data is successfully fetched
+        // const metricsContent = document.getElementById("bp-biometrics-table");
+        // const metricsContentContainer = document.getElementById("bp-biometrics-section");
+        // metricsContent.style.display = "none";
+        // showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+        // console.log("Fetching HR data")
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_hr_data') }}", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // console.log("HR Data (line 667):", data)
+                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+            })
+            .catch(e => {
+                // Show table and hide spinners on error
+                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+                // metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
+                // metricsContent.style.display = "table";
+                // console.log("Error fetching HR data for patient:", e)
+            })
+            .finally(() => { })
+
+    }
+
+    function getBiometricsData() {
+        // Set up request (aka the form) to send to data fetching routes
+        let formData = new FormData()
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
+        formData.append('healthie_user_id', "{{ healthie_user_id }}")
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
+
+        const hrContent = document.getElementById("bp-biometrics-table");
+        const avgRhrContent = document.getElementById("bp-avg-rhr-value");
+
+        // Hide HR table and show spinner initially until data is successfully fetched
+        // const metricsContent = document.getElementById("bp-biometrics-table");
+        // const metricsContentContainer = document.getElementById("bp-biometrics-section");
+        // metricsContent.style.display = "none";
+        // showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+        console.log("Fetching Biometric data")
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_biometrics_data') }}", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // console.log("Biometric Data (line 715):", data)
+                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+            })
+            .catch(e => {
+                // Show table and hide spinners on error
+                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+                // metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
+                // metricsContent.style.display = "table";
+                // console.log("Error fetching biometric data for patient:", e)
+            })
+            .finally(() => { })
+
+    }
+
     function getMetrics() {
         let formData = new FormData()
 
@@ -729,6 +827,8 @@
         // Fetch Blood Pressure data on first render
         getBloodPressureAnalysis();
         getMetrics();
+        getHRData();
+        getBiometricsData();
 
         // Set up event listeners for form elements
         const startDateInput = document.getElementById("start-date");
