@@ -278,6 +278,7 @@
         padding: 1rem;
         text-align: left;
         vertical-align: top;
+        border: 1px solid black;
     }
 
     .bp-biometric-table td:first-child {
@@ -288,9 +289,22 @@
         border-right: 1px solid black;
     }
 
-    .bp-biometric-table td:last-child {
-        width: 60%;
-        color: #6b7280;
+    /* Special styling for heart rate table with multiple columns */
+    .bp-biometric-table td:nth-child(2),
+    .bp-biometric-table td:nth-child(3),
+    .bp-biometric-table td:nth-child(4) {
+        width: 20%;
+        /* font-weight: bold; */
+        color: #374151;
+        /* color: #6b7280; */
+        text-align: center;
+    }
+
+    .bp-biometric-table th {
+        font-weight: bold;
+        color: #374151;
+        background-color: #f9fafb;
+        border-right: 1px solid black;
     }
 
     .bp-biometric-table h3 {
@@ -322,6 +336,21 @@
     .hidden {
         display: none;
     }
+
+    .bp-error-container {
+        width: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .bp-error-container i {
+        font-size: 1.5rem;
+        color: #dc2626;
+    }
+
 </style>
 
 <!-- Main Content -->
@@ -450,21 +479,42 @@
     <section id="bp-hr-header" class="hr-header">
       <div class="flex flex-col gap-1">
           <h2 class="text-lg font-bold">
-              Heart Rate Data
+              Resting Heart Rate
           </h2>
           <p class="text-sm text-gray-500">
               Below are metrics regarding the patient's heart rate ("HR") and resting heart rate ("RHR").
           </p>
       </div>
     </section>
+
     <!-- Heart Rate Infographic as Table -->
     <section id="bp-hr-section" class="bp-table-container">
         <div id="bp-hr-spinner-container"></div>
-        <table id="bp-hr-table" class="bp-hr-table">
+        <div id="bp-biometrics-error-container" class="bp-error-container">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h2 class="bp-hr-error"></h2>
+        </div>
+        <table id="bp-hr-table" class="bp-biometric-table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Baseline</td>
+                    <td>Prior</td>
+                    <td>Trailing</td>
+                </tr>
+            </thead>
             <tbody>
                 <tr>
+                    <td><strong>Date Range</strong></td>
+                    <td id="bp-rhr-date-baseline"></td>
+                    <td id="bp-rhr-date-prior"></td>
+                    <td id="bp-rhr-date-trailing"></td>
+                </tr>
+                <tr>
                     <td><strong>Average RHR</strong></td>
-                    <td id="bp-avg-rhr-value"></td>
+                    <td id="bp-avg-rhr-baseline"></td>
+                    <td id="bp-avg-rhr-prior"></td>
+                    <td id="bp-avg-rhr-trailing"></td>
                 </tr>
             </tbody>
         </table>
@@ -485,23 +535,43 @@
     <!-- Biometrics Infographic as Table -->
     <section id="bp-biometrics-section" class="bp-table-container">
         <div id="bp-biometrics-spinner-container"></div>
+        <div id="bp-biometrics-error-container" class="bp-error-container">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h2 class="bp-no-data-error"></h2>
+        </div>
         <table id="bp-biometrics-table" class="bp-biometric-table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Baseline</td>
+                    <td>Prior</td>
+                    <td>Current</td>
+                </tr>
+            </thead>
             <tbody>
                 <tr>
-                    <td><strong>Physical activity level</strong></td>
-                    <td id="bp-biometric-activity-value"></td>
-                </tr>
-                <tr>
-                    <td><strong>Heart rate</strong></td>
-                    <td id="bp-biometric-hr-value"></td>
-                </tr>
-                <tr>
                     <td><strong>Body mass index (BMI)</strong></td>
-                    <td id="bp-biometric-bmi-value"></td>
+                    <td id="bp-biometric-bmi-baseline"></td>
+                    <td id="bp-biometric-bmi-prior"></td>
+                    <td id="bp-biometric-bmi-current"></td>
+                </tr>
+                <tr>
+                    <td><strong>Physical Activity (min/week)</strong></td>
+                    <td id="bp-biometric-activity-baseline"></td>
+                    <td id="bp-biometric-activity-prior"></td>
+                    <td id="bp-biometric-activity-current"></td>
+                </tr>
+                <tr>
+                    <td><strong>Physical Inactivity (hours/day)</strong></td>
+                    <td id="bp-biometric-inactivity-baseline"></td>
+                    <td id="bp-biometric-inactivity-prior"></td>
+                    <td id="bp-biometric-inactivity-current"></td>
                 </tr>
                 <tr>
                     <td><strong>Sodium consumer status</strong></td>
-                    <td id="bp-biometric-sodium-value"></td>
+                    <td id="bp-biometric-sodium-baseline"></td>
+                    <td id="bp-biometric-sodium-prior"></td>
+                    <td id="bp-biometric-sodium-current"></td>
                 </tr>
             </tbody>
         </table>
@@ -660,164 +730,256 @@
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        const hrContent = document.getElementById("bp-biometrics-table");
-        const avgRhrContent = document.getElementById("bp-avg-rhr-value");
+        const hrSpinnerContainer = document.getElementById("bp-hr-spinner-container");
+        const hrErrorContainer = document.getElementById("bp-hr-error-container");
+        const hrContent = document.getElementById("bp-hr-table");
+        const rhrBaselineDate = document.getElementById("bp-rhr-date-baseline");
+        const rhrPriorDate = document.getElementById("bp-rhr-date-prior");
+        const rhrTrailingDate = document.getElementById("bp-rhr-date-trailing");
+        const rhrBaseline = document.getElementById("bp-avg-rhr-baseline");
+        const rhrPrior = document.getElementById("bp-avg-rhr-prior");
+        const rhrTrailing = document.getElementById("bp-avg-rhr-trailing");
 
         // Hide HR table and show spinner initially until data is successfully fetched
-        // const metricsContent = document.getElementById("bp-biometrics-table");
-        // const metricsContentContainer = document.getElementById("bp-biometrics-section");
-        // metricsContent.style.display = "none";
-        // showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-        // console.log("Fetching HR data")
+        hrContent.style.display = "none";
+        showSpinner(hrSpinnerContainer);
         fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_hr_data') }}", {
             method: "POST",
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                // console.log("HR Data (line 667):", data)
-                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+                console.log("HR Data:", data);
+
+                // Format dates for display
+                const formatDate = (dateString) => {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        month: 'numeric',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                };
+
+                // Populate date ranges
+                if (rhrBaselineDate) {
+                    rhrBaselineDate.textContent = data.baseline_start_date && data.baseline_end_date
+                        ? `${formatDate(data.baseline_start_date)} - ${formatDate(data.baseline_end_date)}`
+                        : '-';
+                }
+
+                if (rhrPriorDate) {
+                    rhrPriorDate.textContent = data.prior_start_date && data.prior_end_date
+                        ? `${formatDate(data.prior_start_date)} - ${formatDate(data.prior_end_date)}`
+                        : '-';
+                }
+
+                if (rhrTrailingDate) {
+                    rhrTrailingDate.textContent = data.current_start_date && data.current_end_date
+                        ? `${formatDate(data.current_start_date)} - ${formatDate(data.current_end_date)}`
+                        : '-';
+                }
+
+                // Populate average RHR values
+                if (rhrBaseline) {
+                    rhrBaseline.textContent = data.average_rhr_baseline ? `${data.average_rhr_baseline.toFixed(1)} bpm` : '-';
+                }
+
+                if (rhrPrior) {
+                    rhrPrior.textContent = data.average_rhr_prior ? `${data.average_rhr_prior.toFixed(1)} bpm` : '-';
+                }
+
+                if (rhrTrailing) {
+                    rhrTrailing.textContent = data.average_rhr_trailing ? `${data.average_rhr_trailing.toFixed(1)} bpm` : '-';
+                }
+
+                // Show table and hide spinner
+                hideSpinner(hrSpinnerContainer);
+                hrContent.style.display = "table";
             })
             .catch(e => {
+                console.log("Error fetching HR data for patient:", e);
+
                 // Show table and hide spinners on error
-                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                // metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                // metricsContent.style.display = "table";
-                // console.log("Error fetching HR data for patient:", e)
+                hideSpinner(hrSpinnerContainer);
+                hrErrorContainer.style.display = "flex";
+                hrErrorContainer.querySelector(".bp-hr-error").textContent = "Error fetching HR data for patient: " + e;
             })
-            .finally(() => { })
+            .finally(() => {
+                hideSpinner(hrSpinnerContainer);
+            })
 
     }
 
     function getBiometricsData() {
-        // Set up request (aka the form) to send to data fetching routes
         let formData = new FormData()
+
         formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
         formData.append('healthie_user_id', "{{ healthie_user_id }}")
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        const hrContent = document.getElementById("bp-biometrics-table");
-        const avgRhrContent = document.getElementById("bp-avg-rhr-value");
+        const metricsSpinnerContainer = document.getElementById("bp-biometrics-spinner-container");
+        const metricsErrorContainer = document.getElementById("bp-biometrics-error-container");
+        const metricsTable = document.getElementById("bp-biometrics-table");
 
-        // Hide HR table and show spinner initially until data is successfully fetched
-        // const metricsContent = document.getElementById("bp-biometrics-table");
-        // const metricsContentContainer = document.getElementById("bp-biometrics-section");
-        // metricsContent.style.display = "none";
-        // showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-        console.log("Fetching Biometric data")
+        // BMI content
+        const bmiBaseline = document.getElementById("bp-biometric-bmi-baseline");
+        const bmiPrior = document.getElementById("bp-biometric-bmi-prior");
+        const bmiCurrent = document.getElementById("bp-biometric-bmi-current");
+        // Activity content
+        const activityBaseline = document.getElementById("bp-biometric-activity-baseline");
+        const activityPrior = document.getElementById("bp-biometric-activity-prior");
+        const activityCurrent = document.getElementById("bp-biometric-activity-current");
+        // Inactivity content
+        const inactivityBaseline = document.getElementById("bp-biometric-inactivity-baseline");
+        const inactivityPrior = document.getElementById("bp-biometric-inactivity-prior");
+        const inactivityCurrent = document.getElementById("bp-biometric-inactivity-current");
+        // Sodium content
+        const sodiumBaseline = document.getElementById("bp-biometric-sodium-baseline");
+        const sodiumPrior = document.getElementById("bp-biometric-sodium-prior");
+        const sodiumCurrent = document.getElementById("bp-biometric-sodium-current");
+
+        // Hide table and show spinner initially
+        metricsTable.style.display = "none";
+        showSpinner(metricsSpinnerContainer);
+
         fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_biometrics_data') }}", {
             method: "POST",
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                // console.log("Biometric Data (line 715):", data)
-                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-            })
-            .catch(e => {
-                // Show table and hide spinners on error
-                // hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                // metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                // metricsContent.style.display = "table";
-                // console.log("Error fetching biometric data for patient:", e)
-            })
-            .finally(() => { })
+                console.log("Biometrics Data:", data);
 
-    }
-
-    function getMetrics() {
-        let formData = new FormData()
-
-        formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
-        formData.append('healthie_user_id', "{{ healthie_user_id }}")
-        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
-        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
-
-        const metricsContent = document.getElementById("bp-biometrics-table");
-        const metricsContentContainer = document.getElementById("bp-biometrics-section");
-        const exerciseContent = document.getElementById("bp-biometric-activity-value");
-        const bmiContent = document.getElementById("bp-biometric-bmi-value");
-        const hrContent = document.getElementById("bp-biometric-hr-value");
-        const sodiumContent = document.getElementById("bp-biometric-sodium-value");
-
-        // Hide table and show spinner initially
-        metricsContent.style.display = "none";
-        showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-
-        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_metrics') }}", {
-            method: "POST",
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                // console.log(data)
-
-                let exerciseHTML = "";
-                let bmiHTML = "";
-                let hrHTML = "";
-                let ssqHTML = "";
-
-                if (data.exercise && data.exercise.date) {
-                    exerciseHTML = `<h4>As of ${data.exercise.date}:</h4><ul><li>${data.exercise.value.mod_exercise} minutes of moderate exercise</li><li>${data.exercise.value.vig_exercise} minutes of vigorous exercise</li></ul>`
-                } else {
-                    // exerciseHTML = "<h3>No exercise data found</h3>"
-                    exerciseHTML = `<h4>As of 8/9/2025:</h4><ul><li>Low</li></ul>`
-                }
-
-                if (data.bmi) {
-                    bmiHTML = `<ul><li>${data.bmi}</li></ul>`
-                } else {
-                    // bmiHTML = "<h3>No BMI data found</h3>"
-                    // Generate random date (within last 30 days)
-                    const randomDate = new Date();
-                    randomDate.setDate(randomDate.getDate() - Math.floor(Math.random() * 30));
-                    const formattedDate = randomDate.toLocaleDateString('en-US', {
-                        month: 'short',
+                // Format dates for display
+                const formatDate = (dateString) => {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        month: 'numeric',
                         day: 'numeric',
                         year: 'numeric'
                     });
+                };
 
-                    // Generate random BMI number (18.5 to 40)
-                    // const randomBMI = (Math.random() * (40 - 18.5) + 18.5).toFixed(1);
-
-                    bmiHTML = `<h4>As of ${formattedDate}:</h4><ul><li>41</li></ul>`;
+                // Populate BMI data
+                if (bmiBaseline) {
+                    bmiBaseline.textContent = data.bmi_data?.bmi_baseline ? `${data.bmi_data.bmi_baseline.toFixed(1)} kg/m²` : '-';
+                }
+                if (bmiPrior) {
+                    bmiPrior.textContent = data.bmi_data?.bmi_prior ? `${data.bmi_data.bmi_prior.toFixed(1)} kg/m²` : '-';
+                }
+                if (bmiCurrent) {
+                    bmiCurrent.textContent = data.bmi_data?.bmi_current ? `${data.bmi_data.bmi_current.toFixed(1)} kg/m²` : '-';
                 }
 
-                if (data.hr_measurements && data.hr_measurements.baseline_rhr && data.hr_measurements.trailing_rhr) {
-                    hrHTML = `<ul><li><span style="text-decoration: underline;">Baseline</span>: ${data.hr_measurements.baseline_rhr} bpm</li><li><span style="text-decoration: underline;">Trailing</span>: ${data.hr_measurements.trailing_rhr} bpm</li></ul>`;
-                } else {
-                    hrHTML = "<h3>No resting heart rate data found</h3>";
+                // Populate Physical Activity data
+                if (activityBaseline) {
+                    const activityData = data.physical_activity_data?.active?.activity_baseline;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityBaseline.textContent = '-';
+                    }
                 }
 
-                if (data.ssq_score) {
-                    ssqHTML += "<ul>"
-                    data.ssq_score.forEach(section => {
-                        ssqHTML += `<li><span style="text-decoration: underline;">${section.section_title}</span>: ${section.value}</li>`
-                    })
-                    ssqHTML += "</ul>"
-                } else {
-                    // ssqHTML = "<h3>No SSQ score found</h3>"
-                    ssqHTML = `<h4>As of 7/15/2025:</h4><ul><li>34.5</li></ul>`
+                if (activityPrior) {
+                    const activityData = data.physical_activity_data?.active?.activity_prior;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityPrior.textContent = '-';
+                    }
                 }
 
-                exerciseContent.innerHTML = exerciseHTML;
-                bmiContent.innerHTML = bmiHTML;
-                hrContent.innerHTML = hrHTML;
-                sodiumContent.innerHTML = ssqHTML;
+                if (activityCurrent) {
+                    const activityData = data.physical_activity_data?.active?.activity_current;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityCurrent.textContent = '-';
+                    }
+                }
 
-                // Show table and hide spinners
-                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                metricsContent.style.display = "table";
+                // Populate Physical Inactivity data
+                if (inactivityBaseline) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_baseline;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityBaseline.textContent = '-';
+                    }
+                }
+
+                if (inactivityPrior) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_prior;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityPrior.textContent = '-';
+                    }
+                }
+
+                if (inactivityCurrent) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_current;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityCurrent.textContent = '-';
+                    }
+                }
+
+                // Populate Sodium/Sodium Status Questionnaire data
+                if (sodiumBaseline) {
+                    const ssqData = data.ssq_data?.ssq_baseline;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        sodiumBaseline.textContent = ssqData.toFixed(1);
+                    } else {
+                        sodiumBaseline.textContent = '-';
+                    }
+                }
+
+                if (sodiumPrior) {
+                    const ssqData = data.ssq_data?.ssq_prior;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        sodiumPrior.textContent = ssqData.toFixed(1);
+                    } else {
+                        sodiumPrior.textContent = '-';
+                    }
+                }
+
+                if (sodiumCurrent) {
+                    const ssqData = data.ssq_data?.ssq_current;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        sodiumCurrent.textContent = ssqData.toFixed(1);
+                    } else {
+                        sodiumCurrent.textContent = '-';
+                    }
+                }
+
+                // Show table and hide spinner
+                hideSpinner(metricsSpinnerContainer);
+                metricsTable.style.display = "table";
             })
             .catch(error => {
-                // Show table and hide spinners on error
-                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                metricsContent.style.display = "table";
+                console.log("Error fetching biometrics data for patient:", error);
+
+                // Show error container and hide spinner
+                hideSpinner(metricsSpinnerContainer);
+                metricsErrorContainer.style.display = "flex";
+                metricsErrorContainer.querySelector(".bp-no-data-error").textContent = "Error fetching biometrics data for patient: " + error;
             })
-            .finally(() => { })
+            .finally(() => {
+                hideSpinner(metricsSpinnerContainer);
+            })
     }
 
     // Function to initialize the blood pressure tab
@@ -826,7 +988,6 @@
 
         // Fetch Blood Pressure data on first render
         getBloodPressureAnalysis();
-        getMetrics();
         getHRData();
         getBiometricsData();
 
