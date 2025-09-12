@@ -217,7 +217,7 @@ class HealthieUtils():
         return response
 
 
-    def list_active_patients(self):
+    def list_active_patients(self) -> dict:
         """
         List patients using GraphQL query.
         https://docs.gethealthie.com/docs/#list-all-patients
@@ -280,6 +280,9 @@ class HealthieUtils():
                     id
                     email
                     name
+                    active_tags {
+                        name
+                    }
                 }
             }
         '''
@@ -287,9 +290,9 @@ class HealthieUtils():
         # Set up the GraphQL variables
         variables = {
             'offset': 0,  # Offset for pagination (if applicable)
-            # Add other variables as needed
             'should_paginate': False, # If set to True (default)  we only read the first 10 users
             'active_status': 'active'
+            # Add other variables as needed
         }
 
         # Send the GraphQL query using the inherited send_query method
