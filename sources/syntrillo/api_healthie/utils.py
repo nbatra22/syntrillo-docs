@@ -216,6 +216,87 @@ class HealthieUtils():
 
         return response
 
+
+    def list_active_patients(self):
+        """
+        List patients using GraphQL query.
+        https://docs.gethealthie.com/docs/#list-all-patients
+
+        Returns:
+            dict: 'usersCount' and 'users' data containing a list of patients.
+            {
+                "data": {
+                    "usersCount": 27,
+                    "users": [
+                        {
+                            "id": "1525423",
+                            "email": "olemaitre+test-patient@syntrillo.com",
+                            "name": "Patient AWS Test"
+                        },
+                        {
+                            "id": "1966292",
+                            "email": "0603a4d47b9466c732174f3c17d2ae32@gethealthie.com",
+                            "name": "Patient AWS Test 2"
+                        },
+                    ]
+                }
+            }
+        """
+
+        # Set up the GraphQL query
+        query = '''
+            query users(
+                $offset: Int,
+                $keywords: String,
+                $sort_by: String,
+                $active_status: String,
+                $group_id: String,
+                $show_all_by_default: Boolean,
+                $should_paginate: Boolean,
+                $provider_id: String,
+                $conversation_id: ID,
+                $limited_to_provider: Boolean,
+                ) {
+                usersCount(
+                    keywords: $keywords,
+                    active_status:$active_status,
+                    group_id: $group_id,
+                    conversation_id: $conversation_id,
+                    provider_id: $provider_id,
+                    limited_to_provider: $limited_to_provider
+                )
+                users(
+                    offset: $offset,
+                    keywords: $keywords,
+                    sort_by: $sort_by,
+                    active_status: $active_status,
+                    group_id: $group_id,
+                    conversation_id: $conversation_id,
+                    show_all_by_default: $show_all_by_default,
+                    should_paginate: $should_paginate,
+                    provider_id: $provider_id,
+                    limited_to_provider: $limited_to_provider
+                ) {
+                    id
+                    email
+                    name
+                }
+            }
+        '''
+
+        # Set up the GraphQL variables
+        variables = {
+            'offset': 0,  # Offset for pagination (if applicable)
+            # Add other variables as needed
+            'should_paginate': False, # If set to True (default)  we only read the first 10 users
+            'active_status': 'active'
+        }
+
+        # Send the GraphQL query using the inherited send_query method
+        response, _ = self.auth.send_query(query, variables)
+
+        return response
+
     def get_user_from_id(
         self,
         user_id : str = None

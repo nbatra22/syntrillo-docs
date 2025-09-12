@@ -90,7 +90,7 @@ def handler(event, context):
 
 def list_patients():
     healthie_utils = HealthieUtils()
-    patients = healthie_utils.list_patients()
+    patients = healthie_utils.list_active_patients()
 
     logger.info(f"Found {len(patients['users'])} patients over {patients['usersCount']}")
 
