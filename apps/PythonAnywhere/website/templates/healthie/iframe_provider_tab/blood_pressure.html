@@ -19,9 +19,11 @@
     section p {
         color: #6b7280;
         font-size: small;
+        margin-bottom: 0;
     }
 
     .bp-analysis-footnote {
+        margin-top: 1rem;
         color: #6b7280;
     }
 
@@ -29,7 +31,6 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px;
     }
 
     /* .extremes-header {
@@ -42,7 +43,7 @@
 
     #bp-header-right {
         display: flex;
-        gap: 10px;
+        gap: 1rem;
     }
 
     .bp-content {
@@ -63,14 +64,15 @@
         font-size: 0.875rem;
         border-radius: 0.375rem;
         border: none;
-        background-color: white;
+        color: #16284a;
+        background-color: #e5e7eb;
         text-decoration: none;
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
         outline: none;
     }
 
     .bp-dropdown-toggle:hover {
-        background-color: #e5e7eb;
+        background-color: #D1D5DB;
         /* hover:bg-gray-200 */
     }
 
@@ -208,7 +210,7 @@
     .bp-table-container {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        /* gap: 2rem; */
         width: 100%;
     }
 
@@ -255,7 +257,25 @@
         animation: spin 1s linear infinite;
     }
 
+    /* Spinner containers should not take up space when empty */
+    #bp-hr-spinner-container,
+    #bp-biometrics-spinner-container {
+        display: none;
+        margin: 0;
+        padding: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    #bp-hr-spinner-container:not(:empty),
+    #bp-biometrics-spinner-container:not(:empty) {
+        height: auto;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
     .bp-biometric-table {
+        display: none;
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 1rem;
@@ -343,6 +363,16 @@
         justify-content: center;
         align-items: center;
         gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .bp-error-container[style*="flex"] {
+        height: auto;
+        overflow: visible;
+        padding: 1rem;
         margin-bottom: 1rem;
     }
 
@@ -358,9 +388,14 @@
 
     <!-- BPA Header -->
     <section class="bp-header flex space-between items-center">
-        <h2 class="text-lg font-bold">
-            Blood Pressure Analysis
-        </h2>
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Blood Pressure Analysis
+            </h2>
+            <p class="text-sm text-gray-500">
+                Blood pressure data is retrieved from patient's Tenovi BPM device.
+            </p>
+        </div>
 
         <div id="bp-header-right" class="">
 
@@ -482,7 +517,7 @@
               Resting Heart Rate
           </h2>
           <p class="text-sm text-gray-500">
-              Below are metrics regarding the patient's heart rate ("HR") and resting heart rate ("RHR").
+              All heart rate measurements can be viewed on the patient's Healthie metrics tab.
           </p>
       </div>
     </section>
@@ -490,7 +525,7 @@
     <!-- Heart Rate Infographic as Table -->
     <section id="bp-hr-section" class="bp-table-container">
         <div id="bp-hr-spinner-container"></div>
-        <div id="bp-biometrics-error-container" class="bp-error-container">
+        <div id="bp-hr-error-container" class="bp-error-container">
             <i class="fa-solid fa-circle-exclamation"></i>
             <h2 class="bp-hr-error"></h2>
         </div>
@@ -528,7 +563,7 @@
                 Biometrics
             </h2>
             <p class="text-sm text-gray-500">
-                Metrics below are retrieved from forms.
+                Data is sourced from the patient's Healthie forms.
             </p>
         </div>
     </section>
@@ -796,6 +831,8 @@
 
                 // Show table and hide spinner
                 hideSpinner(hrSpinnerContainer);
+                hrSpinnerContainer.style.display = "none";
+                hrErrorContainer.style.display = "none";
                 hrContent.style.display = "table";
             })
             .catch(e => {
@@ -803,8 +840,8 @@
 
                 // Show table and hide spinners on error
                 hideSpinner(hrSpinnerContainer);
-                hrErrorContainer.style.display = "flex";
                 hrErrorContainer.querySelector(".bp-hr-error").textContent = "Error fetching HR data for patient: " + e;
+                hrErrorContainer.style.display = "flex";
             })
             .finally(() => {
                 hideSpinner(hrSpinnerContainer);
@@ -974,8 +1011,8 @@
 
                 // Show error container and hide spinner
                 hideSpinner(metricsSpinnerContainer);
-                metricsErrorContainer.style.display = "flex";
                 metricsErrorContainer.querySelector(".bp-no-data-error").textContent = "Error fetching biometrics data for patient: " + error;
+                metricsErrorContainer.style.display = "flex";
             })
             .finally(() => {
                 hideSpinner(metricsSpinnerContainer);
