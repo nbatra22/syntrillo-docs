@@ -73,7 +73,7 @@ def iframe_healthie_provider_tab_risk_score_data():
 
     try:
 
-        risk_score, metrics, stroke_priority_score = calculate_risk_score(syntrillo_internal_key_patient)
+        risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient)
 
         if risk_score is None and stroke_priority_score is None:
             return jsonify({

@@ -271,7 +271,6 @@ def iframe_healthie_provider_tab_get_metrics():
 
     return jsonify({
         'ssq_score': ssq_score,
-        # 'exercise': exercise,
         'bmi': bmi,
         'hr_measurements': hr_measurements,
     })
