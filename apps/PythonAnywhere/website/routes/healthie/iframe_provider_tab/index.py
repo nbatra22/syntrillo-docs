@@ -68,7 +68,8 @@ def iframe_healthie_provider_tab_index():
             # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
             # healthie_user_id = "dummy456456" # without syntrillo_internal_key
             # healthie_user_id = "1051529" # Omar's "Patient One" with devices
-            healthie_user_id = "3843889" # Mary Smity with syntrillo_internal_key:
+            healthie_user_id = "3843889" # Mary (Donald) Smith with syntrillo_internal_key:
+            # healthie_user_id = "3950827"
 
     # --------------------------------------------------------------------
     # get syntrillo_internal_key from healthie_user_id
