@@ -3,6 +3,7 @@
 from typing import Optional
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.system.logger import logger
+from syntrillo.medications.models import MedicationRecord
 
 class HealthieUtils():
     """
@@ -569,6 +570,87 @@ class HealthieUtils():
 
         except Exception as e:
             logger.error(f"Error fetching Device Training Note form response from Healthie: {e}")
+
+    def create_medication(self, medication: MedicationRecord, healthie_user_id: str) -> dict:
+        """
+        Creates a medication in Healthie API
+
+        Args:
+            medication (MedicationRecord): The medication to create.
+            healthie_user_id (str): The Healthie user ID.
+        Returns:
+            dict: The response from the API.
+        """
+        graphql_query = '''
+            mutation createMedication(
+                $user_id: String,
+                $active: Boolean,
+                $comment: String,
+                $directions: String,
+                $dosage: String,
+                $dosage_option_id: ID,
+                $name: String,
+                $start_date: String,
+                $end_date: String,
+            ) {
+                createMedication(
+                    input: {
+                        user_id: $user_id,
+                        active: $active,
+                        comment: $comment,
+                        directions: $directions,
+                        dosage: $dosage,
+                        dosage_option_id: $dosage_option_id,
+                        name: $name,
+                        start_date: $start_date,
+                        end_date: $end_date
+                    }
+                ) {
+                    medication {
+                        id
+                        name
+                        dosage
+                    }
+                }
+            }
+
+        # Example response:
+        # {
+            "data": {
+                "createMedication": {
+                    "medication": {
+                        "id": "58931",
+                        "name": "Besponsa Intravenous Solution Reconstituted",
+                        "dosage": "0.9 MG",
+                    }
+                }
+            }
+        }
+        '''
+        logger.info("Creating medication in Healthie...")
+        try:
+            # Continue fetching pages until no more results
+            variables = {
+                "active": medication.is_active,
+                "comment": medication.comment,
+                "directions": medication.directions,
+                "dosage": None,
+                "dosage_option_id": medication.dosage_option_id,
+                "name": medication.medication_name,
+                "start_date": medication.start_date,
+                "user_id": healthie_user_id
+            }
+
+            # Retrieve the current set of responses
+            response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
+            data = response.get("createMedication", []).get("medication", [])
+            logger.info(f"Successfully created medication in Healthie.")
+
+            return data
+
+        except Exception as e:
+            logger.error(f"Error creating medication in Healthie: {e}")
+
 
 
 if __name__ == "__main__":
