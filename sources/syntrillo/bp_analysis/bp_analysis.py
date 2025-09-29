@@ -92,7 +92,6 @@ class BloodPressureAnalysis:
         # Generate analysis + extremes table using BloodPressureAnalysis class methods
         self.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
         self.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
-        self.calculate_analysis() # Calculates row values for each timeframe
 
         if self.analysis_df is not None:
             return True
