@@ -31,6 +31,7 @@ class SyntrilloDatabaseManager:
         DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL,
+        DeviceTypes.TENOVI_DEVICE_NAME__BPM_OMRON,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX, # will retrieve all BMP devices
     ]
 
