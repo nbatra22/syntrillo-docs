@@ -1177,6 +1177,7 @@ class HealthieForms():
                     custom_module_form_id: $custom_module_form_id,
                     user_id: $user_id
                 ) {
+                    created_at
                     custom_module_form {
                         id
                     }

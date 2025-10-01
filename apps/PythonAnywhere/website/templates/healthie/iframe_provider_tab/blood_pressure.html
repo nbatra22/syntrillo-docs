@@ -535,7 +535,7 @@
                     <td></td>
                     <td>Baseline</td>
                     <td>Prior</td>
-                    <td>Trailing</td>
+                    <td>Latest</td>
                 </tr>
             </thead>
             <tbody>
@@ -580,12 +580,12 @@
                     <td></td>
                     <td>Baseline</td>
                     <td>Prior</td>
-                    <td>Current</td>
+                    <td>Latest</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><strong>Body mass index (BMI)</strong></td>
+                    <td><strong>Body mass index (kg/m²)</strong></td>
                     <td id="bp-biometric-bmi-baseline"></td>
                     <td id="bp-biometric-bmi-prior"></td>
                     <td id="bp-biometric-bmi-current"></td>
@@ -903,13 +903,16 @@
 
                 // Populate BMI data
                 if (bmiBaseline) {
-                    bmiBaseline.textContent = data.bmi_data?.bmi_baseline ? `${data.bmi_data.bmi_baseline.toFixed(1)} kg/m²` : '-';
+                    const date = data.bmi_data?.bmi_baseline.date ? formatDate(data.bmi_data.bmi_baseline.date) : '';
+                    bmiBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_baseline ? `${data.bmi_data.bmi_baseline.bmi.toFixed(1)}` : '-'}</div>`;
                 }
                 if (bmiPrior) {
-                    bmiPrior.textContent = data.bmi_data?.bmi_prior ? `${data.bmi_data.bmi_prior.toFixed(1)} kg/m²` : '-';
+                    const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
+                    bmiPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_prior ? `${data.bmi_data.bmi_prior.bmi.toFixed(1)}` : '-'}</div>`;
                 }
                 if (bmiCurrent) {
-                    bmiCurrent.textContent = data.bmi_data?.bmi_current ? `${data.bmi_data.bmi_current.toFixed(1)} kg/m²` : '-';
+                    const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
+                    bmiCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_current ? `${data.bmi_data.bmi_current.bmi.toFixed(1)}` : '-'}</div>`;
                 }
 
                 // Populate Physical Activity data
@@ -978,7 +981,8 @@
                 if (sodiumBaseline) {
                     const ssqData = data.ssq_data?.ssq_baseline;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumBaseline.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_baseline_date ? formatDate(data.ssq_data.ssq_baseline_date) : '';
+                        sodiumBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumBaseline.textContent = '-';
                     }
@@ -987,7 +991,8 @@
                 if (sodiumPrior) {
                     const ssqData = data.ssq_data?.ssq_prior;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumPrior.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_prior_date ? formatDate(data.ssq_data.ssq_prior_date) : '';
+                        sodiumPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumPrior.textContent = '-';
                     }
@@ -996,7 +1001,8 @@
                 if (sodiumCurrent) {
                     const ssqData = data.ssq_data?.ssq_current;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumCurrent.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_current_date ? formatDate(data.ssq_data.ssq_current_date) : '';
+                        sodiumCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumCurrent.textContent = '-';
                     }
