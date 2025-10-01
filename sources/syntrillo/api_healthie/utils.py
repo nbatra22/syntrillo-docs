@@ -571,13 +571,15 @@ class HealthieUtils():
         except Exception as e:
             logger.error(f"Error fetching Device Training Note form response from Healthie: {e}")
 
-    def create_medication(self, medication: MedicationRecord, healthie_user_id: str) -> dict:
+    def create_medication(self, medication: MedicationRecord, healthie_user_id: str, start_date_str: str, end_date_str: str = None) -> dict:
         """
         Creates a medication in Healthie API
 
         Args:
             medication (MedicationRecord): The medication to create.
             healthie_user_id (str): The Healthie user ID.
+            start_date_str (str): The start date of the medication.
+            end_date_str (str): The end date of the medication.
         Returns:
             dict: The response from the API.
         """
@@ -611,11 +613,17 @@ class HealthieUtils():
                         name
                         dosage
                     }
+                    messages {
+                        field
+                        message
+                    }
                 }
             }
+        '''
 
-        # Example response:
-        # {
+        '''
+        Example response:
+        {
             "data": {
                 "createMedication": {
                     "medication": {
@@ -627,24 +635,26 @@ class HealthieUtils():
             }
         }
         '''
+
         logger.info("Creating medication in Healthie...")
         try:
             # Continue fetching pages until no more results
             variables = {
+                "user_id": healthie_user_id,
                 "active": medication.is_active,
                 "comment": medication.comment,
                 "directions": medication.directions,
                 "dosage": None,
                 "dosage_option_id": medication.dosage_option_id,
                 "name": medication.medication_name,
-                "start_date": medication.start_date,
-                "user_id": healthie_user_id
+                "start_date": start_date_str,
+                "end_date": end_date_str,
             }
 
             # Retrieve the current set of responses
             response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
             data = response.get("createMedication", []).get("medication", [])
-            logger.info(f"Successfully created medication in Healthie.")
+            logger.info(f"Successfully created medication in Healthie...")
 
             return data
 
@@ -652,6 +662,68 @@ class HealthieUtils():
             logger.error(f"Error creating medication in Healthie: {e}")
 
 
+    def get_medication_info_by_keywords(self, keywords: str) -> List[dict]:
+        """
+        Gets medication info by keyword from Healthie's system.
+
+        Args:
+            keyword (str): The keyword to search for.
+        Returns:
+            List[dict]: The medication info.
+            Example Response:
+                [
+                    {
+                        "id": "Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTc2NTI",
+                        "name": "oxyCODONE HCl Oral Tablet Abuse-Deterrent",
+                        "dosage_options": [
+                            {
+                                "id": "Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTc2NTQ",
+                                "strength": "5 MG",
+                                "ndc": "73780000110"
+                            },
+                            {
+                                "id": "Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvOTM3MTQ",
+                                "strength": "10 MG",
+                                "ndc": "73780000210"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTc2NTI",
+                        "name": "oxyCODONE HCl Oral Tablet Abuse-Deterrent",
+                        "dosage_options": [
+                            {
+                                "id": "Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTc2NTQ",
+                                "strength": "5 MG",
+                                "ndc": "73780000110"
+                            }
+                        ]
+                    }
+                ]
+        """
+        try:
+            graphql_query = '''
+                query medicationOptions($keywords: String) {
+                    medication_options(keywords: $keywords) {
+                        id
+                        name
+                        dosage_options {
+                            id
+                            strength
+                            ndc
+                        }
+                    }
+                }
+            '''
+
+            variables = { "keywords": keywords }
+            response = HealthieUtils.run_graphql_query(graphql_query, variables)
+            data = response.get("medication_options", {})
+            return data
+
+        except Exception as e:
+            logger.error(f"Error getting medication info by keyword: {keywords}. Error: {e}")
+            raise e
 
 if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization

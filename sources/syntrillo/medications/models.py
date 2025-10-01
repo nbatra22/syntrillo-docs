@@ -13,7 +13,7 @@ class Frequency(str, Enum):
     MONTHLY = "monthly"
     ONE_TIME = "one-time"
 
-class Condition(str, Enum):
+class DosingScheduleRule(str, Enum):
     BID = "BID"
     TID = "TID"
     QID = "QID"
@@ -21,6 +21,7 @@ class Condition(str, Enum):
 
 class TimeOfDay(str, Enum):
     MORNING = "morning"
+    NOON = "noon"
     AFTERNOON = "afternoon"
     EVENING = "evening"
     NIGHT = "night"
@@ -28,7 +29,7 @@ class TimeOfDay(str, Enum):
 
 class DeliveryMethod(str, Enum):
     CREAM = "cream"
-    TABLET_PILL_CAPSULE = "tablet/pill/capsule"
+    PILL_TABLET_CAPSULE = "pill/tablet/capsule"
     IMPLANT = "implant"
     INHALER = "inhaler"
     SUPPOSITORIES = "suppositories"
@@ -43,30 +44,25 @@ class MedicationRecord(BaseModel):
     """
     # Required Fields (NOT NULL)
     syntrillo_internal_key: str = Field(..., max_length=255)
-    medication_id: int
     medication_name: str = Field(..., max_length=255)
+    medication_id: int = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    dosage_option_id: str = Field(default=None, max_length=255)
 
     # Nullable Fields
-    dosage_amount: Decimal | None = Field(default=None, max_digits=10, decimal_places=3)
-    dosage_unit: str | None = Field(default=None, max_length=32)
-    comment: str | None = None
-    directions: str | None = None
-    frequency: Frequency | None = None
-    interval: int | None = None
-    condition: Condition | None = None
-    dose_count: int | None = None
-    time_of_day: TimeOfDay | None = None
-    start_date: date | None = None
-    end_date: date | None = None
-    dosage_option_id: str | None = Field(default=None, max_length=255)
-    delivery_method: DeliveryMethod | None = None
-
-    # Fields with Defaults
-    is_active: bool = True
-
-    # For a default that is dynamically generated for each instance, like a timestamp,
-    # we use `default_factory`.
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    dosage_amount: Optional[Decimal] = Field(default=None, max_digits=10, decimal_places=3)
+    dosage_unit: Optional[str] = Field(default=None, max_length=32)
+    comment: Optional[str] = None
+    directions: Optional[str] = None
+    frequency: Optional[Frequency] = None
+    interval: Optional[int] = None
+    dosing_schedule_rule: Optional[DosingScheduleRule] = None
+    dose_count: Optional[int] = None
+    time_of_day: Optional[TimeOfDay] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    delivery_method: Optional[DeliveryMethod] = None
 
     class Config:
         # This allows the model to be created from ORM objects (like SQLAlchemy)
