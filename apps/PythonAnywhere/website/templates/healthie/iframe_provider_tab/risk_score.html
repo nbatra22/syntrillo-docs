@@ -208,11 +208,13 @@
 
     .rs-col-container {
         width: 100%;
-        height: auto;
+        /* height: auto; */
+        max-height: 70vh;
+        overflow-y: auto;
         gap: 2rem;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        /* overflow: hidden; */
     }
 
     .rs-col-container section {
@@ -469,7 +471,8 @@
     .rs-metric-value-container {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        /* align-items: center; */
+        align-items: end;
     }
 
     .rs-metric-srs-container, .rs-metric-sps-container {
@@ -480,9 +483,9 @@
         height: 100%;
     }
 
-    .rs-metric-value-container, .rs-metric-srs-container, .rs-metric-sps-container {
+    /* .rs-metric-value-container, .rs-metric-srs-container, .rs-metric-sps-container {
         width: 5rem;
-    }
+    } */
 
     #rs-forms-container .rs-metric-value {
         color: #6b7280;
@@ -774,15 +777,15 @@
                     Biometrics
                 </h2>
                 <div class="rs-section-header-labels-container">
-                    <h2 class="rs-section-header-value">
+                    <!-- <h2 class="rs-section-header-value">
                         Value
-                    </h2>
-                    <h2 class="rs-section-header-srs">
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
                         SRS
                     </h2>
                     <h2 class="rs-section-header-sps">
                         SPS
-                    </h2>
+                    </h2> -->
                 </div>
             </div>
 
@@ -805,7 +808,7 @@
                                 in
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-height-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -814,7 +817,7 @@
                             <h3 id="rs-height-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
                 <div id="rs-weight-container" class="rs-metric-container">
@@ -835,7 +838,7 @@
                                 lbs
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-weight-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -844,7 +847,7 @@
                             <h3 id="rs-weight-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
                 <div id="rs-bmi-container" class="rs-metric-container">
@@ -865,7 +868,7 @@
                                 -
                             </h3>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bmi-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -874,7 +877,7 @@
                             <h3 id="rs-bmi-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -887,15 +890,15 @@
                     Blood Pressure
                 </h2>
                 <div class="rs-section-header-labels-container">
-                    <h2 class="rs-section-header-value">
+                    <!-- <h2 class="rs-section-header-value">
                         Value
-                    </h2>
-                    <h2 class="rs-section-header-srs">
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
                         SRS
                     </h2>
                     <h2 class="rs-section-header-sps">
                         SPS
-                    </h2>
+                    </h2> -->
                 </div>
             </div>
 
@@ -923,7 +926,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-baseline-sbp-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -932,7 +935,7 @@
                             <h3 id="rs-bp-baseline-sbp-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -958,7 +961,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-baseline-dbp-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -967,7 +970,7 @@
                             <h3 id="rs-bp-baseline-dbp-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -994,7 +997,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-trailing-sbp-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -1003,7 +1006,7 @@
                             <h3 id="rs-bp-trailing-sbp-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -1029,7 +1032,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-trailing-dbp-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -1038,7 +1041,7 @@
                             <h3 id="rs-bp-trailing-dbp-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -1065,7 +1068,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-variability-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -1074,7 +1077,7 @@
                             <h3 id="rs-bp-variability-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -1100,7 +1103,7 @@
                                 mmHg
                             </h4>
                         </div>
-                        <div class="rs-metric-srs-container">
+                        <!-- <div class="rs-metric-srs-container">
                             <h3 id="rs-bp-peak-srs" class="rs-metric-value">
                                 -
                             </h3>
@@ -1109,16 +1112,29 @@
                             <h3 id="rs-bp-peak-sps" class="rs-metric-value">
                                 -
                             </h3>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="rs-hr-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Heart Rate
-            </h2>
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
+                    Heart Rate
+                </h2>
+                <div class="rs-section-header-labels-container">
+                    <!-- <h2 class="rs-section-header-value">
+                        Value
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2> -->
+                </div>
+            </div>
 
             <div class="rs-metrics-container">
                 <div id="rs-hr-baseline-container" class="rs-metric-container">
@@ -1190,10 +1206,21 @@
         </section>
 
         <section id="rs-physical-activity-section" class="rs-section-container">
-            <div id="" class="rs-section-header">
-                <h2 id="" class="">
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
                     Physical Activity
                 </h2>
+                <div class="rs-section-header-labels-container">
+                    <!-- <h2 class="rs-section-header-value">
+                        Value
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2> -->
+                </div>
             </div>
 
             <div id="rs-moderate-vigorous-activity-container" class="rs-metric-container">
@@ -1296,9 +1323,22 @@
         </section> -->
 
         <section id="rs-history-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Medical History
-            </h2>
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
+                    Medical History
+                </h2>
+                <div class="rs-section-header-labels-container">
+                    <!-- <h2 class="rs-section-header-value">
+                        Value
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2> -->
+                </div>
+            </div>
 
             <div class="rs-metrics-container">
 
@@ -1935,9 +1975,22 @@
         </section>
 
         <section id="rs-lab-values-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Lab Values
-            </h2>
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
+                    Lab Values
+                </h2>
+                <div class="rs-section-header-labels-container">
+                    <!-- <h2 class="rs-section-header-value">
+                        Value
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2> -->
+                </div>
+            </div>
 
             <div id="rs-lab-values-container" class="rs-metrics-container">
                 <div id="rs-ha1c-container" class="rs-metric-container">
@@ -2046,9 +2099,22 @@
         </section>
 
         <section id="rs-tests-orders-section" class="rs-section-container">
-            <h2 class="rs-section-header">
-                Tests/Orders
-            </h2>
+            <div class="rs-section-header-container">
+                <h2 class="rs-section-header">
+                    Tests/Orders
+                </h2>
+                <div class="rs-section-header-labels-container">
+                    <!-- <h2 class="rs-section-header-value">
+                        Value
+                    </h2> -->
+                    <!-- <h2 class="rs-section-header-srs">
+                        SRS
+                    </h2>
+                    <h2 class="rs-section-header-sps">
+                        SPS
+                    </h2> -->
+                </div>
+            </div>
 
             <div class="rs-metrics-container">
                 <!-- Existing Tests -->
