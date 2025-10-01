@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS medications_records (
     comment                TEXT,
     directions             TEXT,
     frequency              VARCHAR(64),
-    `interval`             INT,
+    dosing_interval        INT,
     dosing_schedule_rule   VARCHAR(10),
     dose_count             INT,
     time_of_day            VARCHAR(64),

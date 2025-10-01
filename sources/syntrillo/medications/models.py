@@ -56,7 +56,7 @@ class MedicationRecord(BaseModel):
     comment: Optional[str] = None
     directions: Optional[str] = None
     frequency: Optional[Frequency] = None
-    interval: Optional[int] = None
+    dosing_interval: Optional[int] = None
     dosing_schedule_rule: Optional[DosingScheduleRule] = None
     dose_count: Optional[int] = None
     time_of_day: Optional[TimeOfDay] = None

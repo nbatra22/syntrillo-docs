@@ -1,8 +1,8 @@
-from syntrillo.medications.models import MedicationRecord
+from syntrillo.medications.models import MedicationRecord, DosingScheduleRule
 from syntrillo.medications.helpers import medication_from_dosing_schedule_rule
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
-from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
 from datetime import date
 from syntrillo.medications.models import Frequency, TimeOfDay, DeliveryMethod
 import json
@@ -27,28 +27,30 @@ def create_medication(medication: MedicationRecord) -> None:
         healthie_user_id = entry['healthie_user_id']
 
         # Ensure required fields are present for Healthie create API call
-        if not medication.dosage_option_id:
-            logger.error(f"Dosage option ID is required for medication: {medication.medication_name}")
-            raise Exception("Dosage option ID is required")
+            # If is_active, it needs a start_date, if not active that means it ended and it needs an end date.
+        if (medication.is_active and not medication.start_date) or (not medication.is_active and not medication.end_date):
+            logger.error(f"Medication active status implies either the start or end date is missing for: {medication.medication_name}")
+            raise Exception("End/start date is required based on active status.")
 
         # Handle shortcut of using dosing schedule rule to determine dosage amount
         if medication.dosing_schedule_rule:
             medication = medication_from_dosing_schedule_rule(medication)
 
         # (1.) Create medication in Healthie's system
-        # convert start_date & end_date to string in format "September 22, 2025" for Healthie create API call
+            # convert start_date & end_date to string in format "September 22, 2025" for Healthie create API call
         start_date_str = medication.start_date.strftime("%B %d, %Y") if medication.start_date else None
         end_date_str = medication.end_date.strftime("%B %d, %Y") if medication.end_date else None
 
         healthie_utils = HealthieUtils()
         response = healthie_utils.create_medication(medication, healthie_user_id, start_date_str, end_date_str)
 
-        # (2.) If successful creation in Healthie, then create medication record in Syntrillo's system
-        db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
-
+        # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
+        db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
         if response:
-            medication.medication_id = response.get('id')
-            # TODO – Think about how to generalize inserting into DB.
+            medication.medication_id = int(response.get('id'))
+            record_id, log = db_manager.insert_medication_record(medication_record=medication)
+            if log.get("success") == False:
+                raise Exception(log['error'])
         else:
             raise Exception(response['error_message'])
 
@@ -78,9 +80,24 @@ def get_medication_info_by_keyword(keyword: str):
         logger.error(f"Error getting medication info by keyword: {keyword}: {e}")
         raise e
 
+def get_medication_by_patient_id(syntrillo_internal_key: str):
+    """
+    Fetches all the medications records in DESC order.
+    Args:
+        syntrillo_internal_key (str): unique internal id for patient identification
+    Returns:
+        medications_data (Dict[str, Dict[str, Any]]): A dictionary where keys are medication_ids.
+                                    Each value contains the 'current' record
+                                    and a 'history' list of older records.
+    """
+    db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
+    medications_data, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key)
+    return medications_data
+
 
 if __name__ == "__main__":
 
+    # CREATE MEDICATIONS
     # medication = MedicationRecord(
     #     syntrillo_internal_key="f474f229-c199-4a39-addf-0557d2c30638",
     #     medication_name="Besponsa Intravenous Solution Reconstituted",
@@ -89,17 +106,23 @@ if __name__ == "__main__":
     #     dosage_option_id="Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTMwNjM",
     #     comment="Test Comment",
     #     directions="Test Directions",
-    #     frequency=Frequency.DAILY,
-    #     interval=2,
-    #     # dosing_schedule_rule=DosingScheduleRule.BID,
-    #     dose_count=3,
+    #     # frequency=Frequency.DAILY,
+    #     # dosing_interval=2,
+    #     dosing_schedule_rule=DosingScheduleRule.BID,
+    #     dose_count=4,
     #     time_of_day=TimeOfDay.BEDTIME,
     #     start_date=date(2025, 9, 26),
     #     delivery_method=DeliveryMethod.PILL_TABLET_CAPSULE,
     # )
-
     # create_medication(medication)
-    print(json.dumps(get_medication_info_by_keyword("oxyCODONE HCl Oral Tablet Abuse-Deterrent"), indent=4))
+
+    # KEYWORD SEARCH
+    # valid_keywords = "oxyCODONE HCl Oral Tablet Abuse-Deterrent"
+    # invalid_keywords = "oxyCODONE HCl Oral Tablet Abuse-Deterrent"
+    # print(json.dumps(get_medication_info_by_keyword(valid_keywords), indent=4))
+
+    # GET MEDICATIONS
+    print(get_medication_by_patient_id("f474f229-c199-4a39-addf-0557d2c30638"))
 
 
 

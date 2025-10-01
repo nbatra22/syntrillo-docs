@@ -4,6 +4,7 @@ from typing import Optional
 from syntrillo.api_healthie.auth import HealthieAuth
 from syntrillo.system.logger import logger
 from syntrillo.medications.models import MedicationRecord
+from typing import List
 
 class HealthieUtils():
     """
@@ -581,7 +582,7 @@ class HealthieUtils():
             start_date_str (str): The start date of the medication.
             end_date_str (str): The end date of the medication.
         Returns:
-            dict: The response from the API.
+            data (dict): The response from Healthie's API about the specific medication.
         """
         graphql_query = '''
             mutation createMedication(
