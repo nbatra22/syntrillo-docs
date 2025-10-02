@@ -82,7 +82,9 @@ def iframe_healthie_provider_tab_risk_score_data():
                 'data': {
                     'risk_score': risk_score,
                     'metrics': metrics,
-                    'priority_score': stroke_priority_score
+                    'priority_score': stroke_priority_score,
+                    'independent_risk_variable_scores': independent_risk_variable_scores,
+                    'dependent_risk_variable_contributions': dependent_risk_variable_contributions
                 }
             })
 
@@ -96,7 +98,9 @@ def iframe_healthie_provider_tab_risk_score_data():
             'data': {
                 'risk_score': risk_score,
                 'metrics': metrics,
-                'priority_score': stroke_priority_score
+                'priority_score': stroke_priority_score,
+                'independent_risk_variable_scores': independent_risk_variable_scores,
+                'dependent_risk_variable_contributions': dependent_risk_variable_contributions
             }
         })
 
