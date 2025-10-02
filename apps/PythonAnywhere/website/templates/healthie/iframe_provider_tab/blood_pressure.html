@@ -902,7 +902,7 @@
                 };
 
                 // Populate BMI data
-                if (bmiBaseline) {
+                if (bmiBaseline && data.bmi_data?.bmi_baseline) {
                     const date = data.bmi_data?.bmi_baseline.date ? formatDate(data.bmi_data.bmi_baseline.date) : '';
                     const bmi = data.bmi_data?.bmi_baseline.bmi
                     if (bmi) {
@@ -911,7 +911,7 @@
                         bmiBaseline.textContent = '-';
                     }
                 }
-                if (bmiPrior) {
+                if (bmiPrior && data.bmi_data?.bmi_prior) {
                     const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
                     const bmi = data.bmi_data?.bmi_prior.bmi
                     if (bmi) {
@@ -920,7 +920,7 @@
                         bmiPrior.textContent = '-';
                     }
                 }
-                if (bmiCurrent) {
+                if (bmiCurrent && data.bmi_data?.bmi_current) {
                     const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
                     const bmi = data.bmi_data?.bmi_current.bmi
                     if (bmi) {
