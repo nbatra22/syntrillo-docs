@@ -3525,7 +3525,7 @@
                                 const year = date.getFullYear();
                                 priorCTDate.textContent = `${month}/${day}/${year}`;
                             } else {
-                                priorCTDate.innerHTML = missingDataIcon;
+                                priorCTDate.innerHTML = srs.HasPriorHeadCT ? missingDataIcon : '-';
                             }
                         }
                         if (chronicInfarct) chronicInfarct.textContent = srs.ChronicInfarctPresent ? 'Yes' : 'No';

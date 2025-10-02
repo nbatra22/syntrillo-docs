@@ -904,15 +904,30 @@
                 // Populate BMI data
                 if (bmiBaseline) {
                     const date = data.bmi_data?.bmi_baseline.date ? formatDate(data.bmi_data.bmi_baseline.date) : '';
-                    bmiBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_baseline ? `${data.bmi_data.bmi_baseline.bmi.toFixed(1)}` : '-'}</div>`;
+                    const bmi = data.bmi_data?.bmi_baseline.bmi
+                    if (bmi) {
+                        bmiBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiBaseline.textContent = '-';
+                    }
                 }
                 if (bmiPrior) {
                     const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
-                    bmiPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_prior ? `${data.bmi_data.bmi_prior.bmi.toFixed(1)}` : '-'}</div>`;
+                    const bmi = data.bmi_data?.bmi_prior.bmi
+                    if (bmi) {
+                        bmiPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiPrior.textContent = '-';
+                    }
                 }
                 if (bmiCurrent) {
                     const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
-                    bmiCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${data.bmi_data?.bmi_current ? `${data.bmi_data.bmi_current.bmi.toFixed(1)}` : '-'}</div>`;
+                    const bmi = data.bmi_data?.bmi_current.bmi
+                    if (bmi) {
+                        bmiCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiCurrent.textContent = '-';
+                    }
                 }
 
                 // Populate Physical Activity data
