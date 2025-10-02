@@ -667,7 +667,7 @@
                                     <i class="fa-solid fa-xmark"></i> Not included in SRS/SPS
                                 </li>
                                 <li id="" class="rs-legend-item">
-                                    <i class="fa-solid fa-question"></i> Unknown/missing data
+                                    <i class="fa-solid fa-triangle-exclamation" style="color: #ffc107;"></i> Unknown/missing data
                                 </li>
                             </ul>
                         </div>
@@ -3155,6 +3155,8 @@
                     const independentRiskVariableScores = data.data.independent_risk_variable_scores;
                     const dependentRiskVariableContributions = data.data.dependent_risk_variable_contributions;
 
+                    const missingDataIcon = '<i class="fa-solid fa-triangle-exclamation" style="color: #ffc107;"></i>';
+
                     // Handle Tenovi BP Data
                     if (metrics.tenovi_bp_data) {
                         const bp = metrics.tenovi_bp_data;
@@ -3189,14 +3191,15 @@
                         const sbpPeakValue = bp.systolic.trailing['Peak AVG SBP'];
                         const sbpBaselineValue = bp.systolic.baseline.average;
                         const dbpBaselineValue = bp.diastolic.baseline.average;
+                        const sbpVariabilityValue = bp.systolic.trailing.variability;
 
                         // Update BP values
-                        if (sbpTrailing) sbpTrailing.textContent = sbpValue || '-';
-                        if (sbpVariability) sbpVariability.textContent = bp.systolic.trailing.variability || '-';
-                        if (sbpPeak) sbpPeak.textContent = sbpPeakValue || '-';
-                        if (dbpTrailing) dbpTrailing.textContent = dbpValue || '-';
-                        if (sbpBaseline) sbpBaseline.textContent = sbpBaselineValue || '-';
-                        if (dbpBaseline) dbpBaseline.textContent = dbpBaselineValue || '-';
+                        if (sbpTrailing) sbpTrailing.innerHTML = sbpValue || missingDataIcon;
+                        if (sbpVariability) sbpVariability.innerHTML = sbpVariabilityValue || missingDataIcon;
+                        if (sbpPeak) sbpPeak.innerHTML = sbpPeakValue || missingDataIcon;
+                        if (dbpTrailing) dbpTrailing.innerHTML = dbpValue || missingDataIcon;
+                        if (sbpBaseline) sbpBaseline.innerHTML = sbpBaselineValue || missingDataIcon;
+                        if (dbpBaseline) dbpBaseline.innerHTML = dbpBaselineValue || missingDataIcon;
 
                         // Update color based on thresholds
                         if (sbpValue >= thresholds.sbp.red) {
@@ -3234,9 +3237,9 @@
                         }
                         dbpBaselineCircle.style.display = 'block';
 
-                        if (bp.systolic.trailing.variability >= thresholds.variability.red) {
+                        if (sbpVariabilityValue >= thresholds.variability.red) {
                             sbpVariabilityCircle.style.color = 'red';
-                        } else if (bp.systolic.trailing.variability >= thresholds.variability.yellow) {
+                        } else if (sbpVariabilityValue >= thresholds.variability.yellow) {
                             sbpVariabilityCircle.style.color = 'yellow';
                         }
                         sbpVariabilityCircle.style.display = 'block';
@@ -3245,7 +3248,7 @@
                     // Handle Tenovi HR Data
                     if (metrics.tenovi_hr_data) {
                         const hrData = metrics.tenovi_hr_data;
-                        if (hrData.trailing_hr_average) hrAvg.textContent = hrData.trailing_hr_average || '-';
+                        if (hrData.trailing_hr_average) hrAvg.innerHTML = hrData.trailing_hr_average || missingDataIcon;
                     }
 
                     // Update Healthie SRS Data
@@ -3254,18 +3257,18 @@
 
                         // Update RHR if SRS data doesn't have it
                         if (healthie.average_rhr_baseline) {
-                            hrBaseline.textContent = healthie.average_rhr_baseline || '-';
+                            hrBaseline.innerHTML = healthie.average_rhr_baseline || missingDataIcon;
                         }
                         if (healthie.average_rhr_trailing) {
-                            hrTrailing.textContent = healthie.average_rhr_trailing || '-';
+                            hrTrailing.innerHTML = healthie.average_rhr_trailing || missingDataIcon;
                         }
 
                         // Update Physical Activity data
                         if (healthie.activity_minutes_answer) {
-                            moderateVigorousActivity.textContent = healthie.activity_minutes_answer || '-';
+                            moderateVigorousActivity.innerHTML = healthie.activity_minutes_answer || missingDataIcon;
                         }
                         if (healthie.inactivity_hours_answer) {
-                            physicalInactivity.textContent = healthie.inactivity_hours_answer || '-';
+                            physicalInactivity.innerHTML = healthie.inactivity_hours_answer || missingDataIcon;
                         }
                     }
 
@@ -3325,22 +3328,22 @@
                         const srs = metrics.srs_response_data;
 
                         // Biometrics
-                        if (height) height.textContent = srs.Height || '-';
-                        if (weight) weight.textContent = srs.Weight || '-';
-                        if (bmi) bmi.textContent = Math.round(srs.BMI, 2) || '-';
+                        if (height) height.innerHTML = srs.Height || missingDataIcon;
+                        if (weight) weight.innerHTML = srs.Weight || missingDataIcon;
+                        if (bmi) bmi.innerHTML = Math.round(srs.BMI, 2) || missingDataIcon;
 
                         // Heart Rate (from SRS data)
                         // if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
 
                         // Physical Activity
-                        if (physicalInactivityLevel) physicalInactivityLevel.textContent = srs.PhysicalInactivityLevel || '-';
+                        if (physicalInactivityLevel) physicalInactivityLevel.innerHTML = srs.PhysicalInactivityLevel || missingDataIcon;
 
                         // Lab Values
-                        if (ha1c) ha1c.textContent = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : '-';
-                        if (ldl) ldl.textContent = srs.LDL ? Math.round(srs.LDL * 10) / 10 : '-';
-                        if (hdl) hdl.textContent = srs.HDL ? Math.round(srs.HDL * 10) / 10 : '-';
-                        if (triglycerides) triglycerides.textContent = srs.Triglycerides ? Math.round(srs.Triglycerides * 10) / 10 : '-';
-                        if (creatinine) creatinine.textContent = srs.Creatinine ? Math.round(srs.Creatinine * 10) / 10 : '-';
+                        if (ha1c) ha1c.innerHTML = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : missingDataIcon;
+                        if (ldl) ldl.innerHTML = srs.LDL ? Math.round(srs.LDL * 10) / 10 : missingDataIcon;
+                        if (hdl) hdl.innerHTML = srs.HDL ? Math.round(srs.HDL * 10) / 10 : missingDataIcon;
+                        if (triglycerides) triglycerides.innerHTML = srs.Triglycerides ? Math.round(srs.Triglycerides * 10) / 10 : missingDataIcon;
+                        if (creatinine) creatinine.innerHTML = srs.Creatinine ? Math.round(srs.Creatinine * 10) / 10 : missingDataIcon;
 
                         // Patient History
                         if (!srs.HasPreviousStroke && !srs.ScreenedForTIA && !srs.ChronicInfarctPresent) {
@@ -3357,18 +3360,18 @@
                             strokeHistoryContainer.style.display = 'flex';
                             strokeHistory.textContent = srs.HasPreviousStroke ? `Yes (${srs.NumberOfStrokes})` : 'No';
                             strokeEtiologyContainer.style.display = 'flex';
-                            strokeEtiology.textContent = srs.LatestStrokeMechanism || '-';
+                            strokeEtiology.innerHTML = srs.LatestStrokeMechanism || missingDataIcon;
                             tiaMechanismContainer.style.display = 'none';
                             chronicInfarctMechanismContainer.style.display = 'none';
                         } else if (srs.ScreenedForTIA) {
                             tiaMechanismContainer.style.display = 'flex';
-                            tiaMechanism.textContent = srs.TIAMechanism || '-';
+                            tiaMechanism.innerHTML = srs.TIAMechanism || missingDataIcon;
                             strokeHistoryContainer.style.display = 'none';
                             strokeEtiologyContainer.style.display = 'none';
                             chronicInfarctMechanismContainer.style.display = 'none';
                         } else if (srs.ChronicInfarctPresent) {
                             chronicInfarctMechanismContainer.style.display = 'flex';
-                            chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
+                            chronicInfarctMechanism.innerHTML = srs.ChronicInfarctMechanism || missingDataIcon;
                             strokeHistoryContainer.style.display = 'none';
                             strokeEtiologyContainer.style.display = 'none';
                             tiaMechanismContainer.style.display = 'none';
@@ -3414,7 +3417,7 @@
                             chfContainer.style.display = 'flex';
                             chf.textContent = 'Yes';
                             ejectionFractionContainer.style.display = 'flex';
-                            ejectionFraction.textContent = srs.EjectionFraction || '-';
+                            ejectionFraction.innerHTML = srs.EjectionFraction || missingDataIcon;
                         } else {
                             chfContainer.style.display = 'none';
                             ejectionFractionContainer.style.display = 'none';
@@ -3425,7 +3428,7 @@
                             carotidStenosisContainer.style.display = 'flex';
                             carotidStenosis.textContent = 'Yes';
                             carotidStenosisDegreeContainer.style.display = 'flex';
-                            carotidStenosisDegree.textContent = srs.StenosisPercentage || '-';
+                            carotidStenosisDegree.innerHTML = srs.StenosisPercentage || missingDataIcon;
                         } else {
                             carotidStenosisContainer.style.display = 'none';
                             carotidStenosisDegreeContainer.style.display = 'none';
@@ -3436,7 +3439,7 @@
                             osaContainer.style.display = 'flex';
                             osa.textContent = 'Yes';
                             osaSeverityContainer.style.display = 'flex';
-                            osaSeverity.textContent = srs.OSASeverity || '-';
+                            osaSeverity.innerHTML = srs.OSASeverity || missingDataIcon;
                         } else {
                             osaContainer.style.display = 'none';
                             osaSeverityContainer.style.display = 'none';
@@ -3472,7 +3475,7 @@
                         // LDL Level
                         if (srs.LDLLevel) {
                             ldlLevelContainer.style.display = 'flex';
-                            ldlLevel.textContent = srs.LDLLevel || '-';
+                            ldlLevel.innerHTML = srs.LDLLevel || missingDataIcon;
                         } else {
                             ldlLevelContainer.style.display = 'none';
                         }
@@ -3480,7 +3483,7 @@
                         // HDL Level
                         if (srs.HDLLevel) {
                             hdlLevelContainer.style.display = 'flex';
-                            hdlLevel.textContent = srs.HDLLevel || '-';
+                            hdlLevel.innerHTML = srs.HDLLevel || missingDataIcon;
                         } else {
                             hdlLevelContainer.style.display = 'none';
                         }
@@ -3488,7 +3491,7 @@
                         // Triglycerides Level
                         if (srs.TriglyceridesLevel) {
                             triglyceridesLevelContainer.style.display = 'flex';
-                            triglyceridesLevel.textContent = srs.TriglyceridesLevel || '-';
+                            triglyceridesLevel.innerHTML = srs.TriglyceridesLevel || missingDataIcon;
                         } else {
                             triglyceridesLevelContainer.style.display = 'none';
                         }
@@ -3511,8 +3514,8 @@
 
                         // Tests/Orders
                         if (tiaScreening) tiaScreening.textContent = srs.ScreenedForTIA ? 'Yes' : 'No';
-                        if (tiaLikelihood) tiaLikelihood.textContent = srs.LikelihoodOfTIA || '-';
-                        if (tiaMechanism) tiaMechanism.textContent = srs.TIAMechanism || '-';
+                        if (tiaLikelihood) tiaLikelihood.innerHTML = srs.ScreenedForTIA ? srs.tiaLikelihood || missingDataIcon : '-';
+                        if (tiaMechanism) tiaMechanism.innerHTML = srs.tiaLikelihood ? srs.TIAMechanism || missingDataIcon : '-';
                         if (priorCT) priorCT.textContent = srs.HasPriorHeadCT ? 'Yes' : 'No';
                         if (priorCTDate) {
                             if (srs.PriorCTDate) {
@@ -3522,11 +3525,11 @@
                                 const year = date.getFullYear();
                                 priorCTDate.textContent = `${month}/${day}/${year}`;
                             } else {
-                                priorCTDate.textContent = '-';
+                                priorCTDate.innerHTML = missingDataIcon;
                             }
                         }
                         if (chronicInfarct) chronicInfarct.textContent = srs.ChronicInfarctPresent ? 'Yes' : 'No';
-                        if (chronicInfarctMechanism) chronicInfarctMechanism.textContent = srs.ChronicInfarctMechanism || '-';
+                        if (chronicInfarctMechanism) chronicInfarctMechanism.innerHTML = srs.ChronicInfarctPresent ? srs.ChronicInfarctMechanism || missingDataIcon : '-';
 
                         // Update Treatment Optimization/Compliance Badges
                         if (srs.compliance) {
