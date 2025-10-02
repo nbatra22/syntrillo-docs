@@ -47,10 +47,16 @@ def create_medication(medication: MedicationRecord) -> None:
         # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
         db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
         if response:
-            medication.medication_id = int(response.get('id'))
+            medication_id = response.get('id')
+            if not medication_id:
+                raise Exception("Missing required patient-medication specific identifier from Healthie response...")
+
+            medication.medication_id = int(medication_id)
             record_id, log = db_manager.insert_medication_record(medication_record=medication)
+
             if log.get("success") == False:
                 raise Exception(log['error'])
+
         else:
             raise Exception(response['error_message'])
 
@@ -61,14 +67,14 @@ def create_medication(medication: MedicationRecord) -> None:
         raise e
 
 
-def get_medication_info_by_keyword(keyword: str):
+def get_medication_info_by_keyword(keyword: str) -> dict:
     """
     Gets medication info by keyword from Healthie's system.
 
     Args:
         keyword (str): The keyword to search for.
     Returns:
-        dict: The medication info.
+        response (dict): The medication info.
     Raises:
         e (Exception): exception raised while fetching Healthie medication results for keywords.
     """
@@ -93,6 +99,33 @@ def get_medication_by_patient_id(syntrillo_internal_key: str):
     db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
     medications_data, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key)
     return medications_data
+
+def update_medication_by_medication_id(medication_record: MedicationRecord) -> MedicationRecord:
+    """
+    Update medication record in both Healthie and Sytnrillo's DB.
+
+    Args:
+        medication_record (MedicationRecord): The updated medication record from the FE.
+    Returns:
+        medication_record (MedicationRecord): The updated medication record for the FE.
+    Raises:
+        e (Exception): General exception handling.
+    """
+    # To update medication in Healthie's system, the patient-medication specific id is required.
+    if not medication_record.medication_id:
+        raise Exception("Missing required patient-medication specific identifier from Healthie response...")
+
+    # 1.) Update with Healthie
+    healthie_utils = HealthieUtils()
+    data = healthie_utils.update_medication_record(medication_record)
+
+    if data.get("messages"):
+        raise Exception(f"Error while updating medication in Healthie: {data.get("messages")}")
+
+
+
+
+
 
 
 if __name__ == "__main__":

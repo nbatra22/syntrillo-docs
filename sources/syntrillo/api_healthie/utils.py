@@ -726,6 +726,72 @@ class HealthieUtils():
             logger.error(f"Error getting medication info by keyword: {keywords}. Error: {e}")
             raise e
 
+    def update_medication_record(self, medication_record: MedicationRecord) -> dict:
+        """
+        Updates medication info by keyword from Healthie's system.
+
+        Args:
+            medication_record (MedicationRecord): updated medication record.
+        Returns:
+            data (dict): the unnecessary (except for errors) response data.
+        Raises:
+            e (Exception): general exception handling for Healthie GraphQL repsonses.
+        """
+
+        try:
+            graphql_query ="""
+                mutation updateMedication(
+                $active: Boolean,
+                $comment: String,
+                $directions: String,
+                $dosage: String,
+                $id: ID,
+                $name: String,
+                $start_date: String,
+                $end_date: String
+                ) {
+                updateMedication(input: {
+                    active: $active,
+                    comment: $comment,
+                    directions: $directions,
+                    dosage: $dosage,
+                    id: $id,
+                    name: $name,
+                    start_date: $start_date,
+                    end_date: $end_date
+                }) {
+                    medication {
+                        id
+                        name
+                        mirrored
+                    }
+                    messages {
+                        field
+                        message
+                        }
+                    }
+                }
+            """
+
+            variables = {
+                "active": medication_record.is_active,
+                "comment": medication_record.comment,
+                "directions": medication_record.comment,
+                "dosage": f"{medication_record.dosage_amount} {medication_record.dosage_unit}",
+                "id": medication_record.medication_id,
+                "name": medication_record.medication_name,
+                "start_date": medication_record.start_date,
+                "end_date": medication_record.end_date if medication_record.end_date else ""
+            }
+
+            response = HealthieUtils.run_graphql_query(graphql_query, variables)
+            data = response.get("updateMedication", {})
+            return data
+
+        except Exception as e:
+            logger.error(f"Error updating medication with med id: {medication_record.medication_id}. Error: {e}")
+            raise e
+
 if __name__ == "__main__":
     # Create an instance of HealthieAPI with the provided API key and organization
     utils_api = HealthieUtils()
