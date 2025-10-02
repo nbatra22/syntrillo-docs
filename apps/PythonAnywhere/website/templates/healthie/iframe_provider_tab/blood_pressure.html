@@ -910,7 +910,10 @@
                     } else {
                         bmiBaseline.textContent = '-';
                     }
+                } else {
+                    bmiBaseline.textContent = '-';
                 }
+
                 if (bmiPrior && data.bmi_data?.bmi_prior) {
                     const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
                     const bmi = data.bmi_data?.bmi_prior.bmi
@@ -919,7 +922,10 @@
                     } else {
                         bmiPrior.textContent = '-';
                     }
+                } else {
+                    bmiPrior.textContent = '-';
                 }
+                
                 if (bmiCurrent && data.bmi_data?.bmi_current) {
                     const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
                     const bmi = data.bmi_data?.bmi_current.bmi
@@ -928,6 +934,8 @@
                     } else {
                         bmiCurrent.textContent = '-';
                     }
+                } else {
+                    bmiCurrent.textContent = '-';
                 }
 
                 // Populate Physical Activity data
