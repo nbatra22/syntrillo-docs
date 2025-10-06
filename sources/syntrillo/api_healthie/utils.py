@@ -594,7 +594,7 @@ class HealthieUtils():
                 $dosage_option_id: ID,
                 $name: String,
                 $start_date: String,
-                $end_date: String,
+                $end_date: String
             ) {
                 createMedication(
                     input: {
@@ -726,12 +726,14 @@ class HealthieUtils():
             logger.error(f"Error getting medication info by keyword: {keywords}. Error: {e}")
             raise e
 
-    def update_medication_record(self, medication_record: MedicationRecord) -> dict:
+    def update_medication_record(self, medication_record: MedicationRecord, start_date: str, end_date: str) -> dict:
         """
         Updates medication info by keyword from Healthie's system.
 
         Args:
             medication_record (MedicationRecord): updated medication record.
+            start_date (str): the start date string of the medication.
+            end_date (str): the end date string of the medication but can be None.
         Returns:
             data (dict): the unnecessary (except for errors) response data.
         Raises:
@@ -776,12 +778,12 @@ class HealthieUtils():
             variables = {
                 "active": medication_record.is_active,
                 "comment": medication_record.comment,
-                "directions": medication_record.comment,
+                "directions": medication_record.directions,
                 "dosage": f"{medication_record.dosage_amount} {medication_record.dosage_unit}",
                 "id": medication_record.medication_id,
                 "name": medication_record.medication_name,
-                "start_date": medication_record.start_date,
-                "end_date": medication_record.end_date if medication_record.end_date else ""
+                "start_date": start_date,
+                "end_date": end_date
             }
 
             response = HealthieUtils.run_graphql_query(graphql_query, variables)
@@ -790,6 +792,59 @@ class HealthieUtils():
 
         except Exception as e:
             logger.error(f"Error updating medication with med id: {medication_record.medication_id}. Error: {e}")
+            raise e
+
+    def delete_medication(self, medication_id: int) -> dict:
+        """
+        Deletes medication from Healthie's system.
+
+        Args:
+            medication_id (int): The medication ID.
+        Returns:
+            data (dict): the unnecessary (except for errors) response data.
+                Example response:
+                {
+                    "deleteMedication": {
+                        "medication": {
+                            "id": "50200",
+                            "name": "Adderall OHYAH Tablet",
+                            "user_id": "1562903"
+                        },
+                        "messages": null
+                    }
+                }
+        Raises:
+            e (Exception): general exception handling for Healthie GraphQL repsonses.
+        """
+        try:
+            graphql_query = """
+                mutation deleteMedication($id: ID) {
+                    deleteMedication(input: {
+                        id: $id
+                    }) {
+                        medication {
+                            id
+                            name
+                            user_id
+                        }
+                        messages {
+                            field
+                            message
+                        }
+                    }
+                }
+            """
+            variables = { "id": str(medication_id) }
+
+            response = HealthieUtils.run_graphql_query(graphql_query, variables)
+            if not response:
+                raise Exception(f"No medication record found in Healthie's system for medication id: {medication_id}")
+            data = response.get("deleteMedication", {})
+
+            return data
+
+        except Exception as e:
+            logger.error(f"Error deleting medication with med id: {medication_id}. Error: {e}")
             raise e
 
 if __name__ == "__main__":

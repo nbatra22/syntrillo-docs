@@ -5,7 +5,6 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
 from datetime import date
 from syntrillo.medications.models import Frequency, TimeOfDay, DeliveryMethod
-import json
 from syntrillo.system.logger import logger
 
 def create_medication(medication: MedicationRecord) -> None:
@@ -18,29 +17,22 @@ def create_medication(medication: MedicationRecord) -> None:
         None
     """
     try:
-        # (0.) Get Healthie user ID
-        syntrillo_internal_key = medication.syntrillo_internal_key
+        # (0.) Validate and extract information
+        extracted_info = extract_healthie_information(medication)
+
+        start_date_str = extracted_info.get("start_date_str", "")
+        end_date_str = extracted_info.get("end_date_str", "")
+        syntrillo_internal_key = extracted_info.get("syntrillo_internal_key", "")
+
         logger.info(f"Creating medication for syntrillo_internal_key: {syntrillo_internal_key}")
+
+        medication = validate_medication_record(medication)
 
         lookup_codes = LookUpCodesManagement()
         entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
         healthie_user_id = entry['healthie_user_id']
 
-        # Ensure required fields are present for Healthie create API call
-            # If is_active, it needs a start_date, if not active that means it ended and it needs an end date.
-        if (medication.is_active and not medication.start_date) or (not medication.is_active and not medication.end_date):
-            logger.error(f"Medication active status implies either the start or end date is missing for: {medication.medication_name}")
-            raise Exception("End/start date is required based on active status.")
-
-        # Handle shortcut of using dosing schedule rule to determine dosage amount
-        if medication.dosing_schedule_rule:
-            medication = medication_from_dosing_schedule_rule(medication)
-
         # (1.) Create medication in Healthie's system
-            # convert start_date & end_date to string in format "September 22, 2025" for Healthie create API call
-        start_date_str = medication.start_date.strftime("%B %d, %Y") if medication.start_date else None
-        end_date_str = medication.end_date.strftime("%B %d, %Y") if medication.end_date else None
-
         healthie_utils = HealthieUtils()
         response = healthie_utils.create_medication(medication, healthie_user_id, start_date_str, end_date_str)
 
@@ -51,7 +43,7 @@ def create_medication(medication: MedicationRecord) -> None:
             if not medication_id:
                 raise Exception("Missing required patient-medication specific identifier from Healthie response...")
 
-            medication.medication_id = int(medication_id)
+            medication.medication_id = int(medication_id) # convert to int for Syntrillo DB column type
             record_id, log = db_manager.insert_medication_record(medication_record=medication)
 
             if log.get("success") == False:
@@ -100,7 +92,7 @@ def get_medication_by_patient_id(syntrillo_internal_key: str):
     medications_data, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key)
     return medications_data
 
-def update_medication_by_medication_id(medication_record: MedicationRecord) -> MedicationRecord:
+def update_medication(medication_record: MedicationRecord) -> MedicationRecord:
     """
     Update medication record in both Healthie and Sytnrillo's DB.
 
@@ -111,18 +103,120 @@ def update_medication_by_medication_id(medication_record: MedicationRecord) -> M
     Raises:
         e (Exception): General exception handling.
     """
+    try:
+        medication_record = validate_medication_record(medication_record)
+        extracted_info = extract_healthie_information(medication_record)
+
+        start_date_str = extracted_info.get("start_date", "")
+        end_date_str = extracted_info.get("end_date", "")
+        syntrillo_internal_key = extracted_info.get("syntrillo_internal_key", "")
+
+        # 1.) Update with Healthie
+        healthie_utils = HealthieUtils()
+        data = healthie_utils.update_medication_record(
+            medication_record=medication_record,
+            start_date=start_date_str,
+            end_date=end_date_str
+        )
+
+        # If error in the healthie API call
+        if data.get("messages"):
+            raise Exception(f"Error while updating medication in Healthie: {data.get('messages')}")
+
+        # Successful healthie update API call (no error messages)
+        db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
+        db_manager.insert_medication_record(medication_record)
+        return medication_record
+
+    except Exception as e:
+        logger.error(f"Error in update medication function: {e}")
+        raise Exception(f"Error while updating medication record: {e}")
+
+def delete_medication(medication_id: int, syntrillo_internal_key: str) -> bool:
+    """
+    Deletes requested medication in both Healthie and Syntrillo's DB.
+    CAUTION: This function will delete ALL records in Syntrillo's DB for the given medication_id.
+
+    Args:
+        medication_id (int): The unique Healthie patient-medication specific ID.
+        syntrillo_internal_key (str): Internal ID for patient identification.
+    Returns:
+        is_delete_successful (bool): Boolean indicator if the delete operation was completely successful.
+    Raises:
+        e (Exception): General exception raised during delete operation.
+    """
+    try:
+        syntrillo_internal_key = syntrillo_internal_key
+
+        # 1. Delete from Healthie
+        healthie_utils = HealthieUtils()
+        data = healthie_utils.delete_medication(medication_id=medication_id)
+
+        #  If error in the healthie API call
+        if data.get("messages"):
+            raise Exception(f"Error while deleting medication in Healthie: {data.get('messages')}")
+
+        # 2. If Healthie deletion successful, delete all records from Syntrillo's DB.
+        db_manager = SyntrilloMedicationsDatabaseQueries(syntrillo_internal_key)
+        is_delete_successful, log = db_manager.delete_medication_records(medication_id=medication_id)
+
+        if not log.get("success"):
+            raise Exception(f"{log.get('error')}")
+
+        logger.info("Successfully deleted medication...")
+        return is_delete_successful
+
+    except Exception as e:
+        logger.error(f"Error while deleting medication record: {e}")
+        raise Exception(f"Error while deleting medication in Healthie: {e}")
+
+
+
+def validate_medication_record(medication_record: MedicationRecord) -> None:
+    """
+    Validates required information and converts any fields for saving in Syntrillo DB.
+    """
+    try:
     # To update medication in Healthie's system, the patient-medication specific id is required.
-    if not medication_record.medication_id:
-        raise Exception("Missing required patient-medication specific identifier from Healthie response...")
+        if not medication_record.medication_id:
+            raise Exception("Missing required patient-medication specific identifier from Healthie response...")
 
-    # 1.) Update with Healthie
-    healthie_utils = HealthieUtils()
-    data = healthie_utils.update_medication_record(medication_record)
+        # Ensure required fields are present for Healthie create API call
+            # If is_active, it needs a start_date, if not active that means it ended and it needs an end date.
+        if (medication_record.is_active and not medication_record.start_date) or (not medication_record.is_active and not medication_record.end_date):
+            logger.error(f"Medication active status implies either the start or end date is missing for: {medication_record.medication_name}")
+            raise Exception("End/start date is required based on active status.")
 
-    if data.get("messages"):
-        raise Exception(f"Error while updating medication in Healthie: {data.get("messages")}")
+        # Update the medication record if a shorthand scheduling rule was used (BID, TID, QID, PRN)
+        if medication_record.dosing_schedule_rule:
+                medication_record = medication_from_dosing_schedule_rule(medication_record)
 
+        return medication_record
+    except Exception as e:
+        raise e
 
+def extract_healthie_information(medication_record: MedicationRecord) -> dict:
+    """
+    Extracts the required information from medication record to make
+    both Healthie create & update API call.
+
+    Args:
+        medication_record (MedicationRecord): The medication record to extract from.
+    Returns:
+        result (dict): the dictionary of information
+    """
+    # (1.) Create medication in Healthie's system
+    # convert start_date & end_date to string in format "September 22, 2025" for Healthie create API call
+    start_date_str = medication_record.start_date.strftime("%B %d, %Y") if medication_record.start_date else None
+    end_date_str = medication_record.end_date.strftime("%B %d, %Y") if medication_record.end_date else None
+
+    result = {
+        "start_date": start_date_str,
+        "end_date": end_date_str,
+        "syntrillo_internal_key": medication_record.syntrillo_internal_key
+    }
+
+    return result
 
 
 
@@ -155,7 +249,30 @@ if __name__ == "__main__":
     # print(json.dumps(get_medication_info_by_keyword(valid_keywords), indent=4))
 
     # GET MEDICATIONS
-    print(get_medication_by_patient_id("f474f229-c199-4a39-addf-0557d2c30638"))
+    # print(get_medication_by_patient_id("f474f229-c199-4a39-addf-0557d2c30638"))
+
+    # UPDATE MEDICATIONS
+    # medication = MedicationRecord(
+    #     syntrillo_internal_key="99fddf03-9304-4e48-8711-0cc4d825eb94",
+    #     medication_name="Besponsa Intravenous Solution Reconstituted",
+    #     medication_id=60347,
+    #     dosage_amount=0.1,
+    #     dosage_unit="mg",
+    #     dosage_option_id="Z2lkOi8vRG9zZXNwb3QvRG9zZXNwb3Q6Ok1lZGljYXRpb25TZWFyY2hSZXN1bHQvMTMwNjM",
+    #     comment="Test Comment",
+    #     directions="Test Directions",
+    #     frequency=Frequency.DAILY,
+    #     dosing_interval=2,
+    #     # dosing_schedule_rule=DosingScheduleRule.BID,
+    #     dose_count=4,
+    #     time_of_day=TimeOfDay.BEDTIME,
+    #     start_date=date(2025, 9, 26),
+    #     delivery_method=DeliveryMethod.PILL_TABLET_CAPSULE,
+    # )
+    # update_medication(medication)
+
+    # DELETE MEDICATIONS
+    delete_medication(60347, "99fddf03-9304-4e48-8711-0cc4d825eb94")
 
 
 

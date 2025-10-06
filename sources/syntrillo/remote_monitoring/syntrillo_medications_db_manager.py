@@ -23,12 +23,14 @@ class SyntrilloMedicationsDatabaseQueries:
         'start_date', 'end_date', 'delivery_method'
     ]
 
-    def __init__(self, syntrillo_internal_key: uuid.UUID):
+    def __init__(self, syntrillo_internal_key: uuid.UUID) -> None:
         """
         For a given patient, manage data located in our Syntrillo PHI database
 
         Args:
             syntrillo_internal_key (uuid.UUID): The internal key for the patient
+        Returns:
+            None
         """
 
         self.syntrillo_internal_key = syntrillo_internal_key
@@ -48,6 +50,7 @@ class SyntrilloMedicationsDatabaseQueries:
             Tuple[Optional[int], dict]
         """
         data = medication_record.model_dump(exclude_none=True)
+        logger.info(f"Updating medication for medication id: {medication_record.medication_id}")
         try:
             self.conn.begin()
             with self.conn.cursor() as cursor:
@@ -63,16 +66,19 @@ class SyntrilloMedicationsDatabaseQueries:
 
             self.conn.commit()
             log = {"success": True, "error": None}
+            logger.info("Successfully updated medication record in internal DB...")
             return new_id, log
 
         except pymysql.MySQLError as e:
             self.conn.rollback()
             log = {"success": False, "error": str(e)}
+            logger.error("Error while updating medication record in internal DB...")
             return None, log
 
         except Exception as e:
             self.conn.rollback()
             log = {"success": False, "error": str(e)}
+            logger.error("Error while updating medication record in internal DB...")
             return None, log
 
 
@@ -131,3 +137,62 @@ class SyntrilloMedicationsDatabaseQueries:
 
             log = {"success": False, "error": str(e)}
             return {}, log
+
+
+    def delete_medication_records(self, medication_id: int) -> Tuple[bool, dict]:
+        """
+        Deletes ALL records associated with a given medication_id.
+
+        This function removes all historical and current entries for a specific
+        medication from the medications_records table.
+
+        Args:
+            medication_id (int): The unique identifier for the medication to be deleted.
+        Returns:
+            Tuple[bool, dict]: A tuple containing a boolean indicating success (True) or failure (False),
+                               and a log dictionary with operation details.
+        """
+        logger.info(f"Attempting to delete all records for medication_id: {medication_id}")
+        try:
+            # Begin a transaction to ensure atomicity
+            self.conn.begin()
+            with self.conn.cursor() as cursor:
+
+                query = "DELETE FROM medications_records WHERE medication_id = %s"
+                # The execute method returns the number of affected rows
+                rows_affected = cursor.execute(query, (medication_id,))
+
+            # Commit the transaction to make the deletion permanent
+            self.conn.commit()
+
+            if rows_affected > 0:
+                logger.info(f"Successfully deleted {rows_affected} records for medication_id: {medication_id}")
+            else:
+                logger.warning(f"No records found to delete for medication_id: {medication_id}. Operation successful.")
+
+            log = {
+                "success": True,
+                "error": None,
+                "rows_affected": rows_affected
+            }
+            return True, log
+
+        except pymysql.MySQLError as e:
+            # Rollback the transaction in case of a database-specific error
+            self.conn.rollback()
+            log = {
+                "success": False,
+                "error": f"MySQL Error: {e}"
+            }
+            logger.error(f"Failed to delete records for medication_id {medication_id} due to a database error.")
+            return False, log
+
+        except Exception as e:
+            # Rollback the transaction for any other unexpected errors
+            self.conn.rollback()
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            logger.error(f"An unexpected error occurred while deleting records for medication_id {medication_id}.")
+            return False, log
