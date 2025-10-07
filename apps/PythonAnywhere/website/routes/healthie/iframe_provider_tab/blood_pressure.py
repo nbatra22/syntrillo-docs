@@ -109,6 +109,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     # Generate analysis + extremes table using BloodPressureAnalysis class methods
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
+    summary_stats = data_reporting_blood_pressure.calculate_summary_stats() # Calculates summary stats for each timeframe
     analysis_table = data_reporting_blood_pressure.get_analysis_table() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
     extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
@@ -187,6 +188,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
         "extremes_html": extremes_html,
         "analysis_json": analysis_json,
         "extremes_json": extremes_json,
+        "summary_stats": summary_stats,
         # "distribution_html": distribution_html
     })
 

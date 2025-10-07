@@ -277,47 +277,47 @@ class BloodPressureAlertManager:
         return True
 
 
-    def handle_two_week_status(self) -> bool:
-        """
-        Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
+    # def handle_two_week_status(self) -> bool:
+    #     """
+    #     Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
 
-        """
-        logger.info(f"Analyzing patient {self.syntrillo_internal_key} overall categorization...")
+    #     """
+    #     logger.info(f"Analyzing patient {self.syntrillo_internal_key} overall categorization...")
 
-        status_points = {
-            'Poor': 0,
-            'Okay': 1,
-            'Good': 2
-        }
+    #     status_points = {
+    #         'Poor': 0,
+    #         'Okay': 1,
+    #         'Good': 2
+    #     }
 
-        try:
-            analysis_df = self.analysis_df
+    #     try:
+    #         analysis_df = self.analysis_df
 
-            if 'Latest' in analysis_df.columns:
-                logger.info(f"Patient {self.syntrillo_internal_key} has does not ")
-                return False
+    #         if 'Latest' in analysis_df.columns:
+    #             logger.info(f"Patient {self.syntrillo_internal_key} has does not ")
+    #             return False
 
-            current_status = analysis_df['Current']['Overall']
-            prior_status = analysis_df['Prior']['Overall']
+    #         current_status = analysis_df['Current']['Overall']
+    #         prior_status = analysis_df['Prior']['Overall']
 
-            current_date_range = analysis_df['Current']['Date Range']
-            prior_date_range = analysis_df['Prior']['Date Range']
+    #         current_date_range = analysis_df['Current']['Date Range']
+    #         prior_date_range = analysis_df['Prior']['Date Range']
 
-            current_pts = status_points[current_status]
-            prior_pts = status_points[prior_status]
+    #         current_pts = status_points[current_status]
+    #         prior_pts = status_points[prior_status]
 
-            if current_pts < prior_pts:
-                content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
-                self.notify_clinicians(content)
-                logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
-            else:
-                logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
+    #         if current_pts < prior_pts:
+    #             content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
+    #             self.notify_clinicians(content)
+    #             logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
+    #         else:
+    #             logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
 
-            return True
+    #         return True
 
-        except Exception as e:
-            logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
-            raise e
+    #     except Exception as e:
+    #         logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
+    #         raise e
 
 
     def handle_five_day_measurement_check(self) -> bool:

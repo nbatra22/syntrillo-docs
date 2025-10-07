@@ -504,7 +504,7 @@
             <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
                 allocated for the respective metric.</li>
             <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
-            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
+            <li>³ 'Low' values represent the average of the three lowest values in the timeframe.</li>
             <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
                 decrease of 5 mmHg.</li>
         </ul>
@@ -888,7 +888,7 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log("Biometrics Data:", data);
+                // console.log("Biometrics Data:", data);
 
                 // Format dates for display
                 const formatDate = (dateString) => {
@@ -925,7 +925,7 @@
                 } else {
                     bmiPrior.textContent = '-';
                 }
-                
+
                 if (bmiCurrent && data.bmi_data?.bmi_current) {
                     const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
                     const bmi = data.bmi_data?.bmi_current.bmi
@@ -1036,7 +1036,7 @@
                 metricsTable.style.display = "table";
             })
             .catch(error => {
-                console.log("Error fetching biometrics data for patient:", error);
+                // console.log("Error fetching biometrics data for patient:", error);
 
                 // Show error container and hide spinner
                 hideSpinner(metricsSpinnerContainer);
@@ -1050,7 +1050,7 @@
 
     // Function to initialize the blood pressure tab
     function initializeBloodPressureTab() {
-        console.log("Initializing blood pressure tab...");
+        // console.log("Initializing blood pressure tab...");
 
         // Fetch Blood Pressure data on first render
         getBloodPressureAnalysis();
@@ -1084,7 +1084,7 @@
 
     // Listen for the custom event when the tab is loaded dynamically
     $(document).on('blood-pressure-tab-loaded', function() {
-        console.log("Blood pressure tab loaded event received");
+        // console.log("Blood pressure tab loaded event received");
         if (typeof initializeBloodPressureTab === 'function') {
             initializeBloodPressureTab();
         }

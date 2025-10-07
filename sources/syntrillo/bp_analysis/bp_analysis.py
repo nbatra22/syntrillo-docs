@@ -75,6 +75,7 @@ class BloodPressureAnalysis:
     bpm_df : pd.DataFrame = None
     analysis_df : pd.DataFrame = None
     timeframed_data : dict = None
+    metadata : dict = None
     HYPERTENSION_SBP_THRESHOLD = 170
     HYPERTENSION_DBP_THRESHOLD = 110
     HYPOTENSION_SBP_THRESHOLD = 95
@@ -210,6 +211,9 @@ class BloodPressureAnalysis:
                 "Current": (date_range, dataframe)
             }
         """
+        if self.bpm_df is None:
+            self.get_blood_pressure_dataframe()
+
         df = self.bpm_df
 
         # Ensure timestamp_local is datetime
@@ -270,73 +274,25 @@ class BloodPressureAnalysis:
         # print(f"---- Timeframed Data ----- {timeframes}")
         return timeframes
 
-    def calculate_metadata(self, date_range, df) -> dict:
-        """Calculate blood pressure analysis metadata from dataframe."""
+    def calculate_aggregated_metadata(self) -> dict:
+        """
+        Calculate blood pressure analysis metadata from dataframe.
+        """
+        if self.timeframed_data is None:
+            self.calculate_timeframes()
 
-        # Initialize default data structure
-        data = {
-            'Date Range': date_range,
-            'Measurement Count': 0,
-            'Avg SBP (mmHg)': None,
-            'Avg DBP (mmHg)': None,
-            'Peak SBP² (mmHg)': None,
-            'Peak DBP² (mmHg)': None,
-            'Low SBP³ (mmHg)': None,
-            'Low DBP³ (mmHg)': None,
-            # 'SBP SD (mmHg)': None,
-            # 'DBP SD (mmHg)': None,
-            'SBP CV (%)': None,
-            'DBP CV (%)': None,
-            # 'SBP Count (>= 160)': 0,
-            # 'SBP Count (>= 165)': 0,
-            'SBP Count (>= 170)': 0,
-            # 'SBP Count (>= 175)': 0,
-            # 'SBP Count (<=80)': 0,
-            # 'SBP Count (<=85)': 0,
-            # 'SBP Count (<=90)': 0,
-            # 'SBP Count (<=95)': 0,
-            'Hypotensive Count⁴': 0,
-        }
+        # Initialize metadata as empty dictionary if it's None
+        if self.metadata is None:
+            self.metadata = {}
 
-        if df.empty:
-            return data
+        # print(f"---- Timeframed Data ----- {self.timeframed_data}")
 
-        # Set values directly in the data dictionary
-        data['Measurement Count'] = len(df)
-        data['Avg SBP (mmHg)'] = round(df['systolic'].mean(), 2)
-        data['Avg DBP (mmHg)'] = round(df['diastolic'].mean(), 2)
-        data['Peak SBP² (mmHg)'] = round(df['systolic'].nlargest(3).mean(), 2)
-        data['Peak DBP² (mmHg)'] = round(df['diastolic'].nlargest(3).mean(), 2)
-        data['Low SBP³ (mmHg)'] = round(df['systolic'].min(), 2)
-        data['Low DBP³ (mmHg)'] = round(df['diastolic'].min(), 2)
-        # data['SBP SD (mmHg)'] = round(df['systolic'].std(), 2)
-        # data['DBP SD (mmHg)'] = round(df['diastolic'].std(), 2)
+        for timeframe, (date_range, df) in self.timeframed_data.items():
+            self.metadata[timeframe] = self.calculate_timeframe_metadata(df=df, date_range=date_range)
 
-        # Calculate coefficients of variation
-        # systolic_sd = data['SBP SD (mmHg)']
-        systolic_sd = round(df['systolic'].std(), 2)
-        # diastolic_sd = data['DBP SD (mmHg)']
-        diastolic_sd = round(df['diastolic'].std(), 2)
-        avg_systolic = data['Avg SBP (mmHg)']
-        avg_diastolic = data['Avg DBP (mmHg)']
+        return self.metadata
 
-        data['SBP CV (%)'] = round((systolic_sd / avg_systolic) * 100, 2) if avg_systolic else None
-        data['DBP CV (%)'] = round((diastolic_sd / avg_diastolic) * 100, 2) if avg_diastolic else None
-
-        # Calculate threshold counts
-        # data['SBP Count (>= 160)'] = len(df[df['systolic'] >= 160])
-        # data['SBP Count (>= 165)'] = len(df[df['systolic'] >= 165])
-        data['SBP Count (>= 170)'] = len(df[df['systolic'] >= 170])
-        # data['SBP Count (>= 175)'] = len(df[df['systolic'] >= 175])
-        # data['SBP Count (<=80)'] = len(df[df['systolic'] <= 80])
-        # data['SBP Count (<=85)'] = len(df[df['systolic'] <= 85])
-        # data['SBP Count (<=90)'] = len(df[df['systolic'] <= 90])
-        # data['SBP Count (<=95)'] = len(df[df['systolic'] <= 95])
-        data['Hypotensive Count⁴'] = len(df[df['systolic'] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
-
-        return data
-
-    def calculate_metadata_v2(self, df: pd.DataFrame, date_range: str = None) -> dict:
+    def calculate_timeframe_metadata(self, df: pd.DataFrame, date_range: str = None) -> dict:
         """
         Calculate blood pressure analysis metadata from dataframe.
 
@@ -376,8 +332,8 @@ class BloodPressureAnalysis:
         data[AVG_DBP] = round(df[DIASTOLIC].mean(), 2)
         data[PEAK_SBP] = round(df[SYSTOLIC].nlargest(3).mean(), 2)
         data[PEAK_DBP] = round(df[DIASTOLIC].nlargest(3).mean(), 2)
-        data[LOW_SBP] = round(df[SYSTOLIC].min(), 2)
-        data[LOW_DBP] = round(df[DIASTOLIC].min(), 2)
+        data[LOW_SBP] = round(df[SYSTOLIC].nsmallest(3).mean(), 2)
+        data[LOW_DBP] = round(df[DIASTOLIC].nsmallest(3).mean(), 2)
         data[SBP_SD] = round(df[SYSTOLIC].std(), 2)
         data[DBP_SD] = round(df[DIASTOLIC].std(), 2)
 
@@ -389,6 +345,64 @@ class BloodPressureAnalysis:
         data[SBP_COUNT_170] = len(df[df[SYSTOLIC] >= 170])
         data[SBP_COUNT_175] = len(df[df[SYSTOLIC] >= 175])
         data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
+
+        return data
+
+
+    def calculate_summary_stats(self) -> dict:
+        """
+        Calculate summary statistics from data.
+        """
+        thresholds = {
+            AVG_SBP: {
+                0: (0, 125),
+                1: (125, 130),
+                2: (130, 135),
+                3: (135, 140),
+                4: (140, 300),
+            },
+            PEAK_SBP: 165,
+            LOW_SBP: 95,
+        }
+
+        if self.metadata is None:
+            self.calculate_aggregated_metadata()
+
+        latest_timeframe = self.metadata[next((key for key in self.metadata if "Current" in key or "Latest" in key), None)]
+        # print(f"---- Latest Timeframe ----- {latest_timeframe}")
+        avg_sbp = latest_timeframe[AVG_SBP]
+        peak_sbp = latest_timeframe[PEAK_SBP]
+        low_sbp = latest_timeframe[LOW_SBP]
+
+        data = {
+            AVG_SBP: {
+                'value': avg_sbp,
+                'grade': '',
+            },
+            PEAK_SBP: {
+                'value': peak_sbp,
+                'grade': '',
+            },
+            LOW_SBP: {
+                'value': low_sbp,
+                'grade': '',
+            },
+        }
+
+        for point, (low, high) in thresholds[AVG_SBP].items():
+            if avg_sbp >= low and avg_sbp < high:
+                data[AVG_SBP]['grade'] = point
+                break
+
+        if peak_sbp >= thresholds[PEAK_SBP]:
+            data[PEAK_SBP]['grade'] = 2
+        else:
+            data[PEAK_SBP]['grade'] = 0
+
+        if low_sbp <= thresholds[LOW_SBP]:
+            data[LOW_SBP]['grade'] = 2
+        else:
+            data[LOW_SBP]['grade'] = 0
 
         return data
 
@@ -421,21 +435,19 @@ class BloodPressureAnalysis:
         """
         timeframes = self.timeframed_data
 
-        analysis = {}
+        if self.metadata is None:
+            self.calculate_aggregated_metadata()
 
-        for name, (date_range, frame) in timeframes.items():
-            analysis[name] = self.calculate_metadata(date_range=date_range, df=frame)
-
-        analysis_with_progress = self.calculate_progress(analysis=analysis, timeframed_data=timeframes)
+        analysis_with_progress = self.calculate_progress(analysis=self.metadata, timeframed_data=timeframes)
         df = pd.DataFrame.from_dict(analysis_with_progress, orient='index').T
 
-        columns_to_update = [
-            col for col in df.columns
-            if not col.startswith("Since")
-        ]
-
-        df.loc['Overall', columns_to_update] = df[columns_to_update].apply(self.calculate_overall, axis=0)
-        df.loc['Overall'] = df.loc['Overall'].fillna("")
+        # * Overall row removed 10/3/25 *
+        # columns_to_update = [
+        #     col for col in df.columns
+        #     if not col.startswith("Since")
+        # ]
+        # df.loc['Overall', columns_to_update] = df[columns_to_update].apply(self.calculate_overall, axis=0)
+        # df.loc['Overall'] = df.loc['Overall'].fillna("")
 
         # Set class variable
         self.analysis_df = df
@@ -791,6 +803,7 @@ class BloodPressureAnalysis:
         styles = []
         for val in row:
             color = 'white'
+
             if pd.notna(val):
 
                 # Convert val to string and check if it contains "+" or "-"
@@ -798,14 +811,14 @@ class BloodPressureAnalysis:
                     styles.append(f'background-color: {color}; padding: 8px')
                     continue
 
-                # Colorize 'Overall' row
-                if metric == 'Overall':
-                    if val == 'Good':
-                        color = 'lightgreen'
-                    elif val == 'Okay':
-                        color = 'yellow'
-                    elif val == 'Poor':
-                        color = 'lightcoral'
+                # Colorize 'Overall' row  * REDACTED  10/3 *
+                # if metric == 'Overall':
+                #     if val == 'Good':
+                #         color = 'lightgreen'
+                #     elif val == 'Okay':
+                #         color = 'yellow'
+                #     elif val == 'Poor':
+                #         color = 'lightcoral'
 
                 # Convert string values to a numeric value
                 try:
