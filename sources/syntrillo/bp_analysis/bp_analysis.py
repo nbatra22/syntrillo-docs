@@ -18,6 +18,8 @@ matplotlib.use('Agg')
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
+from syntrillo.api_healthie.forms import HealthieForms
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.bp_analysis.constants import (
     DATE_RANGE,
     MEASUREMENT_COUNT,
@@ -328,18 +330,18 @@ class BloodPressureAnalysis:
 
         # Set values directly in the data dictionary
         data[MEASUREMENT_COUNT] = len(df)
-        data[AVG_SBP] = round(df[SYSTOLIC].mean(), 2)
-        data[AVG_DBP] = round(df[DIASTOLIC].mean(), 2)
-        data[PEAK_SBP] = round(df[SYSTOLIC].nlargest(3).mean(), 2)
-        data[PEAK_DBP] = round(df[DIASTOLIC].nlargest(3).mean(), 2)
-        data[LOW_SBP] = round(df[SYSTOLIC].nsmallest(3).mean(), 2)
-        data[LOW_DBP] = round(df[DIASTOLIC].nsmallest(3).mean(), 2)
-        data[SBP_SD] = round(df[SYSTOLIC].std(), 2)
-        data[DBP_SD] = round(df[DIASTOLIC].std(), 2)
+        data[AVG_SBP] = round(df[SYSTOLIC].mean(), 1)
+        data[AVG_DBP] = round(df[DIASTOLIC].mean(), 1)
+        data[PEAK_SBP] = round(df[SYSTOLIC].nlargest(3).mean(), 1)
+        data[PEAK_DBP] = round(df[DIASTOLIC].nlargest(3).mean(), 1)
+        data[LOW_SBP] = round(df[SYSTOLIC].nsmallest(3).mean(), 1)
+        data[LOW_DBP] = round(df[DIASTOLIC].nsmallest(3).mean(), 1)
+        data[SBP_SD] = round(df[SYSTOLIC].std(), 1)
+        data[DBP_SD] = round(df[DIASTOLIC].std(), 1)
 
         # Calculate coefficients of variation
-        data[SBP_CV] = round((data[SBP_SD] / data[AVG_SBP]) * 100, 2) if data[AVG_SBP] else None
-        data[DBP_CV] = round((data[DBP_SD] / data[AVG_DBP]) * 100, 2) if data[AVG_DBP] else None
+        data[SBP_CV] = round((data[SBP_SD] / data[AVG_SBP]) * 100, 1) if data[AVG_SBP] else None
+        data[DBP_CV] = round((data[DBP_SD] / data[AVG_DBP]) * 100, 1) if data[AVG_DBP] else None
 
         # Calculate threshold counts
         data[SBP_COUNT_170] = len(df[df[SYSTOLIC] >= 170])
@@ -352,17 +354,29 @@ class BloodPressureAnalysis:
     def calculate_summary_stats(self) -> dict:
         """
         Calculate summary statistics from data.
+
         """
         thresholds = {
             AVG_SBP: {
                 0: (0, 125),
                 1: (125, 130),
-                2: (130, 135),
-                3: (135, 140),
-                4: (140, 300),
+                2: (130, 140),
+                3: (140, 300),
+            },
+            AVG_DBP: {
+                0: (0, 80),
+                2: (80, 90),
+                3: (90, 200),
             },
             PEAK_SBP: 165,
             LOW_SBP: 95,
+        }
+
+        status_message = {
+            0: "Optimal",
+            1: "Within Target - Minor Adjustment",
+            2: "Out of Target - Moderate Intervention",
+            3: "Out of Target - Aggressive Intervention",
         }
 
         if self.metadata is None:
@@ -370,39 +384,120 @@ class BloodPressureAnalysis:
 
         latest_timeframe = self.metadata[next((key for key in self.metadata if "Current" in key or "Latest" in key), None)]
         # print(f"---- Latest Timeframe ----- {latest_timeframe}")
-        avg_sbp = latest_timeframe[AVG_SBP]
-        peak_sbp = latest_timeframe[PEAK_SBP]
-        low_sbp = latest_timeframe[LOW_SBP]
+        avg_sbp = round(latest_timeframe[AVG_SBP], 1)
+        avg_dbp = round(latest_timeframe[AVG_DBP], 1)
+        peak_sbp = round(latest_timeframe[PEAK_SBP], 1)
+        low_sbp = round(latest_timeframe[LOW_SBP], 1)
+
+        forms_manager = HealthieForms()
+        lookup_codes_manager = LookUpCodesManagement()
+        entry = lookup_codes_manager.retrieve_entry_by_internal_key(self.syntrillo_internal_key)
+
+        form_id, symptomatic_bp_module_id = self.syntrillo_database_manager.get_form_module_ids_by_module_label(module_label="symptomatic_bp")
+        form_id, bp_alert_type_module_id = self.syntrillo_database_manager.get_form_module_ids_by_module_label(module_label="bp_alert_type")
+        form_id, bp_alert_date_module_id = self.syntrillo_database_manager.get_form_module_ids_by_module_label(module_label="bp_alert_date")
+
+        response = forms_manager.get_form_answers(
+            custom_module_form_id=form_id,
+            user_id=entry['healthie_user_id'],
+        )
+
+        # Safely get form answers
+        symptomatic_bp_answer = ""
+        bp_alert_type_answer = ""
+        bp_alert_date_answer = ""
+
+        if response and 'formAnswerGroups' in response and len(response['formAnswerGroups']) > 0:
+            answers = response['formAnswerGroups'][0].get('form_answers', [])
+            answers_dict = {answer['custom_module_id']: answer['answer'] for answer in answers}
+
+            symptomatic_bp_answer = answers_dict.get(symptomatic_bp_module_id, "")
+            bp_alert_type_answer = answers_dict.get(bp_alert_type_module_id, "")
+            bp_alert_date_answer = answers_dict.get(bp_alert_date_module_id, "")
+
+        # Check for symptomatic hypotension
+        symptomatic_hypotension = False
+        if symptomatic_bp_answer == "Yes" and bp_alert_type_answer == "Hypotension" and bp_alert_date_answer:
+            try:
+                # Parse the date string - try common formats
+                bp_alert_date = None
+                if bp_alert_date_answer:
+                    try:
+                        # Try ISO format first (YYYY-MM-DD)
+                        bp_alert_date = datetime.fromisoformat(bp_alert_date_answer.split('T')[0])
+                    except (ValueError, AttributeError):
+                        try:
+                            # Try other common formats
+                            bp_alert_date = datetime.strptime(bp_alert_date_answer, '%Y-%m-%d')
+                        except (ValueError, TypeError):
+                            pass
+
+                # Check if date is within current or latest timeframe
+                if bp_alert_date:
+                    current_timeframe = self.timeframed_data.get('Current')
+                    latest_timeframe = self.timeframed_data.get('Latest')
+
+                    if current_timeframe and len(current_timeframe) > 1:
+                        min_date = current_timeframe[1][TIMESTAMP_LOCAL].min()
+                        if pd.notna(min_date) and bp_alert_date >= min_date.replace(tzinfo=None):
+                            symptomatic_hypotension = True
+
+                    if not symptomatic_hypotension and latest_timeframe and len(latest_timeframe) > 1:
+                        min_date = latest_timeframe[1][TIMESTAMP_LOCAL].min()
+                        if pd.notna(min_date) and bp_alert_date >= min_date.replace(tzinfo=None):
+                            symptomatic_hypotension = True
+            except Exception as e:
+                logger.error(f"Error parsing symptomatic hypotension data: {e}")
+                symptomatic_hypotension = False
 
         data = {
-            AVG_SBP: {
+            "status": {
+                'value': '',
+                'grade': '',
+            },
+            "avg_sbp": {
                 'value': avg_sbp,
                 'grade': '',
             },
-            PEAK_SBP: {
+            "avg_dbp": {
+                'value': avg_dbp,
+                'grade': '',
+            },
+            "peak_sbp": {
                 'value': peak_sbp,
                 'grade': '',
             },
-            LOW_SBP: {
+            "low_sbp": {
                 'value': low_sbp,
                 'grade': '',
             },
+            "symptomatic_hypotension": {
+                'value': symptomatic_hypotension,
+            }
         }
 
         for point, (low, high) in thresholds[AVG_SBP].items():
             if avg_sbp >= low and avg_sbp < high:
-                data[AVG_SBP]['grade'] = point
+                data["avg_sbp"]['grade'] = point
+                break
+
+        for point, (low, high) in thresholds[AVG_DBP].items():
+            if avg_dbp >= low and avg_dbp < high:
+                data["avg_dbp"]['grade'] = point
                 break
 
         if peak_sbp >= thresholds[PEAK_SBP]:
-            data[PEAK_SBP]['grade'] = 2
+            data["peak_sbp"]['grade'] = 3
         else:
-            data[PEAK_SBP]['grade'] = 0
+            data["peak_sbp"]['grade'] = 0
 
         if low_sbp <= thresholds[LOW_SBP]:
-            data[LOW_SBP]['grade'] = 2
+            data["low_sbp"]['grade'] = 3
         else:
-            data[LOW_SBP]['grade'] = 0
+            data["low_sbp"]['grade'] = 0
+
+        data["status"]['grade'] = max(data["avg_sbp"]['grade'], data["avg_dbp"]['grade'], data["peak_sbp"]['grade'], data["low_sbp"]['grade'])
+        data["status"]['value'] = status_message[data["status"]['grade']]
 
         return data
 

@@ -1197,8 +1197,46 @@ class HealthieForms():
 
         response, log = self.auth.send_query(query, variables)
 
-        print(f"-------- response: {response}")
-        print(f"-------- log: {log}")
+        # print(f"-------- response: {response}")
+        # print(f"-------- log: {log}")
+
+        return response
+
+
+    def get_form_answers(self, custom_module_form_id: str, user_id: str):
+        query = """
+            query formAnswerGroups(
+                $custom_module_form_id: ID!,
+                $user_id: String!
+            ) {
+                formAnswerGroups(
+                    custom_module_form_id: $custom_module_form_id,
+                    user_id: $user_id
+                ) {
+                    created_at
+                    custom_module_form {
+                        id
+                    }
+                    user_id
+                    form_answers {
+                        custom_module_id
+                        label
+                        answer
+                        id
+                    }
+                }
+            }
+        """
+
+        variables = {
+            'custom_module_form_id': custom_module_form_id,
+            'user_id': user_id,
+        }
+
+        response, log = self.auth.send_query(query, variables)
+
+        # print(f"-------- response: {response}")
+        # print(f"-------- log: {log}")
 
         return response
 

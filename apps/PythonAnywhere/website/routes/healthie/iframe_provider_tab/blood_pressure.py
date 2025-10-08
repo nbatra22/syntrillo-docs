@@ -144,7 +144,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
                 )
     )
 
-    rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.2f}" if isinstance(x, float) else x)
+    rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.1f}" if isinstance(x, float) else x)
 
     styled_extremes_table = (
         extremes.style
