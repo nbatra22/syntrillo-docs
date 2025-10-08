@@ -68,13 +68,7 @@ class BloodPressureAlertManager:
 
             if self.calculate_timeframed_data:
                 # Separate BP dataframe into timeframes
-                timeframed_data = analysis_manager.calculate_timeframes()
-                metadata = {}
-
-                for timeframe, (date_range, df) in timeframed_data.items():
-                    metadata[timeframe] = analysis_manager.calculate_metadata(date_range=date_range, df=df)
-
-                self.timeframed_data = metadata
+                self.timeframed_data = analysis_manager.calculate_aggregated_metadata()
 
                 # Retrieve timeframed data + overall rows + progress cols
                 analysis_df = analysis_manager.get_analysis_table()
