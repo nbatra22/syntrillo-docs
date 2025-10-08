@@ -398,6 +398,22 @@ class BloodPressureAlertManager:
             logger.error(f"Error notifying clinicians: {e}")
             raise e
 
+    def notify_physicians(self, content: str) -> None:
+        """
+        Notify physicians when extreme blood pressure is detected
+        """
+        try:
+            user_manager = HealthieUser(self.healthie_user_id)
+            patient_name = user_manager.get_name_by_healthie_user_id()
+        
+
+        except Exception as e:
+            logger.error(f"Error notifying physicians: {e}")
+            raise e
+
+        except Exception as e:
+            logger.error(f"Error notifying physicians: {e}")
+            raise e
 
     def make_conversation_query(self, clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
         """
