@@ -28,30 +28,11 @@ def get_biometric_data(syntrillo_internal_key: uuid.UUID) -> dict:
     try:
         logger.info(f"Getting biometric data for patient ...")
         lookup_codes = LookUpCodesManagement()
-        healthie_utils = HealthieUtils()
 
         entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
         healthie_user_id = entry['healthie_user_id']
 
-        query="""
-            query getUser($id: ID) {
-                user(
-                    id: $id
-                    ) {
-                    gender
-                    height
-                    weight
-                    }
-                }
-        """
-        variables = {
-            "id": healthie_user_id,
-        }
-
-        # Retrieve the current set of responses
-        response: dict= healthie_utils.run_graphql_query(query=query, variables=variables)
-        data = response.get("user", None)
-        logger.info(f"Successfully got biometric data for patient ...")
+        data = get_patient_info(healthie_user_id=healthie_user_id)
 
         height = data.get("height", None)
         weight = data.get("weight", None)
@@ -71,6 +52,30 @@ def get_biometric_data(syntrillo_internal_key: uuid.UUID) -> dict:
         logger.error(f"Error getting biometric data for syntrillo internal key {syntrillo_internal_key}: {e}")
         return None
 
+
+def get_patient_info(healthie_user_id: str ):
+    query="""
+        query getUser($id: ID) {
+            user(
+                id: $id
+                ) {
+                gender
+                height
+                weight
+                }
+            }
+    """
+    variables = {
+        "id": healthie_user_id,
+    }
+
+    healthie_utils = HealthieUtils()
+
+    # Retrieve the current set of responses
+    response: dict = healthie_utils.run_graphql_query(query=query, variables=variables)
+    data = response.get("user", None)
+    logger.info(f"Successfully got biometric data for patient ...")
+    return data
 
 def is_valid_timeframe(timeframe_df: pd.DataFrame, min_measurements: int = 3) -> bool:
     """Check if a timeframe has at least one valid (non-null) measurement and meets the min count."""

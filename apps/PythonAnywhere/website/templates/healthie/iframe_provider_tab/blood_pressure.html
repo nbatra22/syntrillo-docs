@@ -19,17 +19,97 @@
     section p {
         color: #6b7280;
         font-size: small;
+        margin-bottom: 0;
     }
 
     .bp-analysis-footnote {
+        margin-top: 1rem;
         color: #6b7280;
+    }
+
+    .bp-summary-section {
+        margin: 0.5rem 0;
+    }
+
+    .bp-summary-container {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        height: fit-content;
+        padding: 1rem 0;
+    }
+
+    .bp-summary-subcontainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: 33%;
+        padding: 0 1rem;
+    }
+
+    #bp-summary-middle-container {
+        border-right: 1px solid #d1d5db;
+        border-left: 1px solid #d1d5db;
+    }
+
+    .bp-summary-subcontainer-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .bp-summary-status-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+    }
+
+    .bp-summary-status {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .bp-summary-metrics-container, .bp-summary-targets-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .bp-summary-targets-container {
+        align-items: center;
+    }
+
+    .bp-summary-targets-value {
+        color: #16284a;
+        line-height: 30px;
+    }
+
+    .bp-summary-metric-container {
+        display: grid;
+        grid-template-columns: 1rem 1fr;
+        align-items: center;
+        gap: 1rem;
+        font-size: 20px;
+        margin-left: 0.5rem;
+    }
+
+    .bp-summary-metrics-value {
+        margin: 0;
+        color: #16284a;
     }
 
     .bp-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px;
     }
 
     /* .extremes-header {
@@ -42,7 +122,7 @@
 
     #bp-header-right {
         display: flex;
-        gap: 10px;
+        gap: 1rem;
     }
 
     .bp-content {
@@ -63,14 +143,15 @@
         font-size: 0.875rem;
         border-radius: 0.375rem;
         border: none;
-        background-color: white;
+        color: #16284a;
+        background-color: #e5e7eb;
         text-decoration: none;
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
         outline: none;
     }
 
     .bp-dropdown-toggle:hover {
-        background-color: #e5e7eb;
+        background-color: #D1D5DB;
         /* hover:bg-gray-200 */
     }
 
@@ -208,7 +289,7 @@
     .bp-table-container {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        /* gap: 2rem; */
         width: 100%;
     }
 
@@ -255,7 +336,25 @@
         animation: spin 1s linear infinite;
     }
 
+    /* Spinner containers should not take up space when empty */
+    #bp-hr-spinner-container,
+    #bp-biometrics-spinner-container {
+        display: none;
+        margin: 0;
+        padding: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    #bp-hr-spinner-container:not(:empty),
+    #bp-biometrics-spinner-container:not(:empty) {
+        height: auto;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
     .bp-biometric-table {
+        display: none;
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 1rem;
@@ -278,6 +377,7 @@
         padding: 1rem;
         text-align: left;
         vertical-align: top;
+        border: 1px solid black;
     }
 
     .bp-biometric-table td:first-child {
@@ -288,9 +388,22 @@
         border-right: 1px solid black;
     }
 
-    .bp-biometric-table td:last-child {
-        width: 60%;
-        color: #6b7280;
+    /* Special styling for heart rate table with multiple columns */
+    .bp-biometric-table td:nth-child(2),
+    .bp-biometric-table td:nth-child(3),
+    .bp-biometric-table td:nth-child(4) {
+        width: 20%;
+        /* font-weight: bold; */
+        color: #374151;
+        /* color: #6b7280; */
+        text-align: center;
+    }
+
+    .bp-biometric-table th {
+        font-weight: bold;
+        color: #374151;
+        background-color: #f9fafb;
+        border-right: 1px solid black;
     }
 
     .bp-biometric-table h3 {
@@ -322,16 +435,132 @@
     .hidden {
         display: none;
     }
+
+    .bp-error-container {
+        width: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .bp-error-container[style*="flex"] {
+        height: auto;
+        overflow: visible;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .bp-error-container i {
+        font-size: 1.5rem;
+        color: #dc2626;
+    }
+
 </style>
 
 <!-- Main Content -->
 <div class="flex flex-col gap-4">
 
+    <section class="bp-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Patient Summary
+            </h2>
+            <p class="text-sm text-gray-500">
+                Summary data below is based on patient's latest two weeks of measurements.
+            </p>
+        </div>
+    </section>
+
+    <section class="bp-summary-section">
+        <div id="bp-summary-container" class="bp-summary-container">
+            <div id="bp-summary-left-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Status
+                </h3>
+                <div class="bp-summary-status-container">
+                    <span id="bp-summary-status"></span>
+                </div>
+            </div>
+            <div id="bp-summary-middle-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Targets
+                </h3>
+                <div class="bp-summary-targets-container">
+                    <p class="bp-summary-targets-value">
+                        Avg SBP < 125 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Avg DBP < 80 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Peak SBP < 165 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Low SBP > 90 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        No Symptomatic Hypotension
+                    </p>
+                </div>
+            </div>
+            <div id="bp-summary-right-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Actual
+                </h3>
+                <div id="bp-summary-metrics-loading-container" class="bp-summary-metrics-container" style="display: flex; justify-content: center; align-items: center;">
+                    Retrieving metrics...
+                </div>
+                <div id="bp-summary-metrics-container" class="bp-summary-metrics-container" style="display: none;">
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-avg-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Avg SBP: <span id="bp-summary-avg-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-avg-dbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Avg DBP: <span id="bp-summary-avg-dbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-peak-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Peak SBP: <span id="bp-summary-peak-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-low-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Low SBP: <span id="bp-summary-low-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-symptomatic-hypotension-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            No Symptomatic Hypotension
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- BPA Header -->
     <section class="bp-header flex space-between items-center">
-        <h2 class="text-lg font-bold">
-            Blood Pressure Analysis
-        </h2>
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Blood Pressure Analysis
+            </h2>
+            <p class="text-sm text-gray-500">
+                Blood pressure data is retrieved from patient's Tenovi BPM device.
+            </p>
+        </div>
 
         <div id="bp-header-right" class="">
 
@@ -440,11 +669,57 @@
             <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
                 allocated for the respective metric.</li>
             <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
-            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
+            <li>³ 'Low' values represent the average of the three lowest values in the timeframe.</li>
             <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
                 decrease of 5 mmHg.</li>
         </ul>
     </section>
+
+    <!-- Heart Rate Header -->
+    <section id="bp-hr-header" class="hr-header">
+      <div class="flex flex-col gap-1">
+          <h2 class="text-lg font-bold">
+              Resting Heart Rate
+          </h2>
+          <p class="text-sm text-gray-500">
+              All heart rate measurements can be viewed on the patient's Healthie metrics tab.
+          </p>
+      </div>
+    </section>
+
+    <!-- Heart Rate Infographic as Table -->
+    <section id="bp-hr-section" class="bp-table-container">
+        <div id="bp-hr-spinner-container"></div>
+        <div id="bp-hr-error-container" class="bp-error-container">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h2 class="bp-hr-error"></h2>
+        </div>
+        <table id="bp-hr-table" class="bp-biometric-table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Baseline</td>
+                    <td>Prior</td>
+                    <td>Latest</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Date Range</strong></td>
+                    <td id="bp-rhr-date-baseline"></td>
+                    <td id="bp-rhr-date-prior"></td>
+                    <td id="bp-rhr-date-trailing"></td>
+                </tr>
+                <tr>
+                    <td><strong>Average RHR</strong></td>
+                    <td id="bp-avg-rhr-baseline"></td>
+                    <td id="bp-avg-rhr-prior"></td>
+                    <td id="bp-avg-rhr-trailing"></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
 
     <!-- Biometrics Header -->
     <section id="bp-biometrics-header" class="biometrics-header">
@@ -453,31 +728,50 @@
                 Biometrics
             </h2>
             <p class="text-sm text-gray-500">
-                Metrics below are retrieved from forms.
+                Data is sourced from the patient's Healthie forms.
             </p>
         </div>
     </section>
-
     <!-- Biometrics Infographic as Table -->
     <section id="bp-biometrics-section" class="bp-table-container">
         <div id="bp-biometrics-spinner-container"></div>
+        <div id="bp-biometrics-error-container" class="bp-error-container">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <h2 class="bp-no-data-error"></h2>
+        </div>
         <table id="bp-biometrics-table" class="bp-biometric-table">
+            <thead>
+                <tr>
+                    <td></td>
+                    <td>Baseline</td>
+                    <td>Prior</td>
+                    <td>Latest</td>
+                </tr>
+            </thead>
             <tbody>
                 <tr>
-                    <td><strong>Physical activity level</strong></td>
-                    <td id="bp-biometric-activity-value"></td>
+                    <td><strong>Body mass index (kg/m²)</strong></td>
+                    <td id="bp-biometric-bmi-baseline"></td>
+                    <td id="bp-biometric-bmi-prior"></td>
+                    <td id="bp-biometric-bmi-current"></td>
                 </tr>
                 <tr>
-                    <td><strong>Heart rate</strong></td>
-                    <td id="bp-biometric-hr-value"></td>
+                    <td><strong>Physical Activity (min/week)</strong></td>
+                    <td id="bp-biometric-activity-baseline"></td>
+                    <td id="bp-biometric-activity-prior"></td>
+                    <td id="bp-biometric-activity-current"></td>
                 </tr>
                 <tr>
-                    <td><strong>Body mass index (BMI)</strong></td>
-                    <td id="bp-biometric-bmi-value"></td>
+                    <td><strong>Physical Inactivity (hours/day)</strong></td>
+                    <td id="bp-biometric-inactivity-baseline"></td>
+                    <td id="bp-biometric-inactivity-prior"></td>
+                    <td id="bp-biometric-inactivity-current"></td>
                 </tr>
                 <tr>
                     <td><strong>Sodium consumer status</strong></td>
-                    <td id="bp-biometric-sodium-value"></td>
+                    <td id="bp-biometric-sodium-baseline"></td>
+                    <td id="bp-biometric-sodium-prior"></td>
+                    <td id="bp-biometric-sodium-current"></td>
                 </tr>
             </tbody>
         </table>
@@ -563,6 +857,7 @@
         const filterMenu = document.getElementById("bp-filter-menu")
         const bpAnalysisContent = document.getElementById("bp-analysis-table");
         const extremesContent = document.getElementById("bp-extremes-table");
+        const statusContent = document.getElementById("bp-summary-status");
         // const distributionContent = document.getElementById("bp-time-distribution-plot");
         const hiddenAnalysisInput = document.getElementById("analysis_json");
         const hiddenExtremesInput = document.getElementById("extremes_json");
@@ -570,6 +865,7 @@
         filterSubmit.disabled = true;
         showSpinner(bpAnalysisContent);
         showSpinner(extremesContent);
+        showSpinner(statusContent);
         // showSpinner(distributionContent);
 
         let formData = new FormData()
@@ -588,28 +884,44 @@
         })
             .then(response => response.json())
             .then(data => {
-                if (data.analysis_html && data.extremes_html
-                    // && data.distribution_html
-                    && data.analysis_json && data.extremes_json) {
+                if (data.analysis_html && data.analysis_json) {
                     bpAnalysisContent.innerHTML = data.analysis_html;
-                    extremesContent.innerHTML = data.extremes_html;
                     hiddenAnalysisInput.value = data.analysis_json;
                     hiddenExtremesInput.value = data.extremes_json;
+                }
 
-                    // distributionContent.innerHTML = data.distribution_html
+                if (data.extremes_html && data.extremes_json) {
+                    extremesContent.innerHTML = data.extremes_html;
+                    hiddenExtremesInput.value = data.extremes_json;
+                }
 
-                    // distributionContent.getElementsByClassName("svg-container").style = "postion: relative; width: 100%; height: 700px"
+                if (data.summary_stats) {
+                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
+                    document.getElementById("bp-summary-status").style.fontWeight = "bold";
+                    document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
+                    document.getElementById("bp-summary-status").style.textAlign = "center";
+                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "#16a34a" : data.summary_stats.status.grade === 1 ? "#f59e0b" : data.summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
 
-                    // distributionContent.querySelectorAll("script").forEach(oldScript => {
-                    //     const newScript = document.createElement("script");
-                    //     if (oldScript.src) {
-                    //         newScript.src = oldScript.src;
-                    //     } else {
-                    //         newScript.textContent = oldScript.textContent;
-                    //     }
-                    //     document.body.appendChild(newScript);
-                    // });
+                    document.getElementById("bp-summary-avg-sbp").textContent = data.summary_stats.avg_sbp.value;
+                    document.getElementById("bp-summary-avg-dbp").textContent = data.summary_stats.avg_dbp.value;
+                    document.getElementById("bp-summary-peak-sbp").textContent = data.summary_stats.peak_sbp.value;
+                    document.getElementById("bp-summary-low-sbp").textContent = data.summary_stats.low_sbp.value;
 
+                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
+                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
+                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
+                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
+
+                    document.getElementById("bp-summary-avg-sbp-grade").innerHTML = data.summary_stats.avg_sbp.grade === 0 ? greenCheck : data.summary_stats.avg_sbp.grade === 1 ? yellowExclamation : data.summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-summary-avg-dbp-grade").innerHTML = data.summary_stats.avg_dbp.grade === 0 ? greenCheck : data.summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-summary-peak-sbp-grade").innerHTML = data.summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-summary-low-sbp-grade").innerHTML = data.summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = data.summary_stats.symptomatic_hypotension.value ? redXmark : greenCheck;
+
+                    document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
+                    document.getElementById("bp-summary-metrics-container").style.display = "flex";
+
+                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
                 }
 
                 if (data.error) {
@@ -623,12 +935,105 @@
                 filterMenu.style.display = 'none';
                 hideSpinner(bpAnalysisContent);
                 hideSpinner(extremesContent);
+                hideSpinner(statusContent);
                 // hideSpinner(distributionContent);
                 filterSubmit.disabled = false;
             })
     }
 
-    function getMetrics() {
+    function getHRData() {
+        // Set up request (aka the form) to send to data fetching routes
+        let formData = new FormData()
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
+        formData.append('healthie_user_id', "{{ healthie_user_id }}")
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
+
+        const hrSpinnerContainer = document.getElementById("bp-hr-spinner-container");
+        const hrErrorContainer = document.getElementById("bp-hr-error-container");
+        const hrContent = document.getElementById("bp-hr-table");
+        const rhrBaselineDate = document.getElementById("bp-rhr-date-baseline");
+        const rhrPriorDate = document.getElementById("bp-rhr-date-prior");
+        const rhrTrailingDate = document.getElementById("bp-rhr-date-trailing");
+        const rhrBaseline = document.getElementById("bp-avg-rhr-baseline");
+        const rhrPrior = document.getElementById("bp-avg-rhr-prior");
+        const rhrTrailing = document.getElementById("bp-avg-rhr-trailing");
+
+        // Hide HR table and show spinner initially until data is successfully fetched
+        hrContent.style.display = "none";
+        showSpinner(hrSpinnerContainer);
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_hr_data') }}", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // console.log("HR Data:", data);
+
+                // Format dates for display
+                const formatDate = (dateString) => {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        month: 'numeric',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                };
+
+                // Populate date ranges
+                if (rhrBaselineDate) {
+                    rhrBaselineDate.textContent = data.baseline_start_date && data.baseline_end_date
+                        ? `${formatDate(data.baseline_start_date)} - ${formatDate(data.baseline_end_date)}`
+                        : '-';
+                }
+
+                if (rhrPriorDate) {
+                    rhrPriorDate.textContent = data.prior_start_date && data.prior_end_date
+                        ? `${formatDate(data.prior_start_date)} - ${formatDate(data.prior_end_date)}`
+                        : '-';
+                }
+
+                if (rhrTrailingDate) {
+                    rhrTrailingDate.textContent = data.current_start_date && data.current_end_date
+                        ? `${formatDate(data.current_start_date)} - ${formatDate(data.current_end_date)}`
+                        : '-';
+                }
+
+                // Populate average RHR values
+                if (rhrBaseline) {
+                    rhrBaseline.textContent = data.average_rhr_baseline ? `${data.average_rhr_baseline.toFixed(1)} bpm` : '-';
+                }
+
+                if (rhrPrior) {
+                    rhrPrior.textContent = data.average_rhr_prior ? `${data.average_rhr_prior.toFixed(1)} bpm` : '-';
+                }
+
+                if (rhrTrailing) {
+                    rhrTrailing.textContent = data.average_rhr_trailing ? `${data.average_rhr_trailing.toFixed(1)} bpm` : '-';
+                }
+
+                // Show table and hide spinner
+                hideSpinner(hrSpinnerContainer);
+                hrSpinnerContainer.style.display = "none";
+                hrErrorContainer.style.display = "none";
+                hrContent.style.display = "table";
+            })
+            .catch(e => {
+                // console.log("Error fetching HR data for patient:", e);
+
+                // Show table and hide spinners on error
+                hideSpinner(hrSpinnerContainer);
+                hrErrorContainer.querySelector(".bp-hr-error").textContent = "Error fetching HR data for patient: " + e;
+                hrErrorContainer.style.display = "flex";
+            })
+            .finally(() => {
+                hideSpinner(hrSpinnerContainer);
+            })
+
+    }
+
+    function getBiometricsData() {
         let formData = new FormData()
 
         formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
@@ -636,99 +1041,205 @@
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        const metricsContent = document.getElementById("bp-biometrics-table");
-        const metricsContentContainer = document.getElementById("bp-biometrics-section");
-        const exerciseContent = document.getElementById("bp-biometric-activity-value");
-        const bmiContent = document.getElementById("bp-biometric-bmi-value");
-        const hrContent = document.getElementById("bp-biometric-hr-value");
-        const sodiumContent = document.getElementById("bp-biometric-sodium-value");
+        const metricsSpinnerContainer = document.getElementById("bp-biometrics-spinner-container");
+        const metricsErrorContainer = document.getElementById("bp-biometrics-error-container");
+        const metricsTable = document.getElementById("bp-biometrics-table");
+
+        // BMI content
+        const bmiBaseline = document.getElementById("bp-biometric-bmi-baseline");
+        const bmiPrior = document.getElementById("bp-biometric-bmi-prior");
+        const bmiCurrent = document.getElementById("bp-biometric-bmi-current");
+        // Activity content
+        const activityBaseline = document.getElementById("bp-biometric-activity-baseline");
+        const activityPrior = document.getElementById("bp-biometric-activity-prior");
+        const activityCurrent = document.getElementById("bp-biometric-activity-current");
+        // Inactivity content
+        const inactivityBaseline = document.getElementById("bp-biometric-inactivity-baseline");
+        const inactivityPrior = document.getElementById("bp-biometric-inactivity-prior");
+        const inactivityCurrent = document.getElementById("bp-biometric-inactivity-current");
+        // Sodium content
+        const sodiumBaseline = document.getElementById("bp-biometric-sodium-baseline");
+        const sodiumPrior = document.getElementById("bp-biometric-sodium-prior");
+        const sodiumCurrent = document.getElementById("bp-biometric-sodium-current");
 
         // Hide table and show spinner initially
-        metricsContent.style.display = "none";
-        showSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
+        metricsTable.style.display = "none";
+        showSpinner(metricsSpinnerContainer);
 
-        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_metrics') }}", {
+        fetch("{{ url_for('iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_get_biometrics_data') }}", {
             method: "POST",
             body: formData
         })
             .then(response => response.json())
             .then(data => {
-                // console.log(data)
+                // console.log("Biometrics Data:", data);
 
-                let exerciseHTML = "";
-                let bmiHTML = "";
-                let hrHTML = "";
-                let ssqHTML = "";
-
-                if (data.exercise && data.exercise.date) {
-                    exerciseHTML = `<h4>As of ${data.exercise.date}:</h4><ul><li>${data.exercise.value.mod_exercise} minutes of moderate exercise</li><li>${data.exercise.value.vig_exercise} minutes of vigorous exercise</li></ul>`
-                } else {
-                    // exerciseHTML = "<h3>No exercise data found</h3>"
-                    exerciseHTML = `<h4>As of 8/9/2025:</h4><ul><li>Low</li></ul>`
-                }
-
-                if (data.bmi) {
-                    bmiHTML = `<ul><li>${data.bmi}</li></ul>`
-                } else {
-                    // bmiHTML = "<h3>No BMI data found</h3>"
-                    // Generate random date (within last 30 days)
-                    const randomDate = new Date();
-                    randomDate.setDate(randomDate.getDate() - Math.floor(Math.random() * 30));
-                    const formattedDate = randomDate.toLocaleDateString('en-US', {
-                        month: 'short',
+                // Format dates for display
+                const formatDate = (dateString) => {
+                    if (!dateString) return '-';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', {
+                        month: 'numeric',
                         day: 'numeric',
                         year: 'numeric'
                     });
+                };
 
-                    // Generate random BMI number (18.5 to 40)
-                    // const randomBMI = (Math.random() * (40 - 18.5) + 18.5).toFixed(1);
-
-                    bmiHTML = `<h4>As of ${formattedDate}:</h4><ul><li>41</li></ul>`;
-                }
-
-                if (data.hr_measurements && data.hr_measurements.baseline_rhr && data.hr_measurements.trailing_rhr) {
-                    hrHTML = `<ul><li><span style="text-decoration: underline;">Baseline</span>: ${data.hr_measurements.baseline_rhr} bpm</li><li><span style="text-decoration: underline;">Trailing</span>: ${data.hr_measurements.trailing_rhr} bpm</li></ul>`;
+                // Populate BMI data
+                if (bmiBaseline && data.bmi_data?.bmi_baseline) {
+                    const date = data.bmi_data?.bmi_baseline.date ? formatDate(data.bmi_data.bmi_baseline.date) : '';
+                    const bmi = data.bmi_data?.bmi_baseline.bmi
+                    if (bmi) {
+                        bmiBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiBaseline.textContent = '-';
+                    }
                 } else {
-                    hrHTML = "<h3>No resting heart rate data found</h3>";
+                    bmiBaseline.textContent = '-';
                 }
 
-                if (data.ssq_score) {
-                    ssqHTML += "<ul>"
-                    data.ssq_score.forEach(section => {
-                        ssqHTML += `<li><span style="text-decoration: underline;">${section.section_title}</span>: ${section.value}</li>`
-                    })
-                    ssqHTML += "</ul>"
+                if (bmiPrior && data.bmi_data?.bmi_prior) {
+                    const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
+                    const bmi = data.bmi_data?.bmi_prior.bmi
+                    if (bmi) {
+                        bmiPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiPrior.textContent = '-';
+                    }
                 } else {
-                    // ssqHTML = "<h3>No SSQ score found</h3>"
-                    ssqHTML = `<h4>As of 7/15/2025:</h4><ul><li>34.5</li></ul>`
+                    bmiPrior.textContent = '-';
                 }
 
-                exerciseContent.innerHTML = exerciseHTML;
-                bmiContent.innerHTML = bmiHTML;
-                hrContent.innerHTML = hrHTML;
-                sodiumContent.innerHTML = ssqHTML;
+                if (bmiCurrent && data.bmi_data?.bmi_current) {
+                    const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
+                    const bmi = data.bmi_data?.bmi_current.bmi
+                    if (bmi) {
+                        bmiCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiCurrent.textContent = '-';
+                    }
+                } else {
+                    bmiCurrent.textContent = '-';
+                }
 
-                // Show table and hide spinners
-                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                metricsContent.style.display = "table";
+                // Populate Physical Activity data
+                if (activityBaseline) {
+                    const activityData = data.physical_activity_data?.active?.activity_baseline;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityBaseline.textContent = '-';
+                    }
+                }
+
+                if (activityPrior) {
+                    const activityData = data.physical_activity_data?.active?.activity_prior;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityPrior.textContent = '-';
+                    }
+                }
+
+                if (activityCurrent) {
+                    const activityData = data.physical_activity_data?.active?.activity_current;
+                    if (activityData && activityData[0]) {
+                        const date = activityData[1] ? formatDate(activityData[1]) : '';
+                        activityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
+                    } else {
+                        activityCurrent.textContent = '-';
+                    }
+                }
+
+                // Populate Physical Inactivity data
+                if (inactivityBaseline) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_baseline;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityBaseline.textContent = '-';
+                    }
+                }
+
+                if (inactivityPrior) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_prior;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityPrior.textContent = '-';
+                    }
+                }
+
+                if (inactivityCurrent) {
+                    const inactivityData = data.physical_activity_data?.inactive?.inactivity_current;
+                    if (inactivityData && inactivityData[0]) {
+                        const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
+                        inactivityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
+                    } else {
+                        inactivityCurrent.textContent = '-';
+                    }
+                }
+
+                // Populate Sodium/Sodium Status Questionnaire data
+                if (sodiumBaseline) {
+                    const ssqData = data.ssq_data?.ssq_baseline;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        const date = data.ssq_data?.ssq_baseline_date ? formatDate(data.ssq_data.ssq_baseline_date) : '';
+                        sodiumBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
+                    } else {
+                        sodiumBaseline.textContent = '-';
+                    }
+                }
+
+                if (sodiumPrior) {
+                    const ssqData = data.ssq_data?.ssq_prior;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        const date = data.ssq_data?.ssq_prior_date ? formatDate(data.ssq_data.ssq_prior_date) : '';
+                        sodiumPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
+                    } else {
+                        sodiumPrior.textContent = '-';
+                    }
+                }
+
+                if (sodiumCurrent) {
+                    const ssqData = data.ssq_data?.ssq_current;
+                    if (ssqData !== null && ssqData !== undefined) {
+                        const date = data.ssq_data?.ssq_current_date ? formatDate(data.ssq_data.ssq_current_date) : '';
+                        sodiumCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
+                    } else {
+                        sodiumCurrent.textContent = '-';
+                    }
+                }
+
+                // Show table and hide spinner
+                hideSpinner(metricsSpinnerContainer);
+                metricsTable.style.display = "table";
             })
             .catch(error => {
-                // Show table and hide spinners on error
-                hideSpinner(metricsContentContainer.querySelector("#bp-biometrics-spinner-container"));
-                metricsContentContainer.querySelector("#bp-biometrics-spinner-container").style.display = "none";
-                metricsContent.style.display = "table";
+                // console.log("Error fetching biometrics data for patient:", error);
+
+                // Show error container and hide spinner
+                hideSpinner(metricsSpinnerContainer);
+                metricsErrorContainer.querySelector(".bp-no-data-error").textContent = "Error fetching biometrics data for patient: " + error;
+                metricsErrorContainer.style.display = "flex";
             })
-            .finally(() => { })
+            .finally(() => {
+                hideSpinner(metricsSpinnerContainer);
+            })
     }
 
     // Function to initialize the blood pressure tab
     function initializeBloodPressureTab() {
-        console.log("Initializing blood pressure tab...");
+        // console.log("Initializing blood pressure tab...");
 
         // Fetch Blood Pressure data on first render
         getBloodPressureAnalysis();
-        getMetrics();
+        getHRData();
+        getBiometricsData();
 
         // Set up event listeners for form elements
         const startDateInput = document.getElementById("start-date");
@@ -757,7 +1268,7 @@
 
     // Listen for the custom event when the tab is loaded dynamically
     $(document).on('blood-pressure-tab-loaded', function() {
-        console.log("Blood pressure tab loaded event received");
+        // console.log("Blood pressure tab loaded event received");
         if (typeof initializeBloodPressureTab === 'function') {
             initializeBloodPressureTab();
         }

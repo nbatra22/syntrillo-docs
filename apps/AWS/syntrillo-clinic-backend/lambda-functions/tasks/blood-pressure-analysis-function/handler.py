@@ -89,8 +89,9 @@ def handler(event, context):
 
 
 def list_patients():
+    excluded_tags = ["Test Account", "Demo"]
     healthie_utils = HealthieUtils()
-    patients = healthie_utils.list_patients()
+    patients = healthie_utils.list_active_patients()
 
     logger.info(f"Found {len(patients['users'])} patients over {patients['usersCount']}")
 
@@ -99,6 +100,12 @@ def list_patients():
 
     patient_internal_key_list = {"users": []}
     for patient in patients['users']:
+        # Skip any test account or demo patient from any list of patients
+        patient_active_tags = [tag["name"] for tag in patient["active_tags"]] if len(patient["active_tags"]) > 0 else []
+        if len(list(set(excluded_tags) & set(patient_active_tags))):
+            logger.info("Skipping patient with 'test account'/'demo' tag...")
+            continue
+
         entry = lookup_codes.retrieve_entry_by_healthie_user_id(patient["id"])
         if entry:
             patient_internal_key_list["users"].append({
@@ -106,8 +113,8 @@ def list_patients():
             })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
-            error_msg = "Failed to find patient. No entry found in lookup"
-            logger.error(error_msg)
+            logger.error(f"Failed to find patient. No entry found in lookup")
+
 
     lookup_codes.close_connection()
 

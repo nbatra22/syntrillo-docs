@@ -68,13 +68,7 @@ class BloodPressureAlertManager:
 
             if self.calculate_timeframed_data:
                 # Separate BP dataframe into timeframes
-                timeframed_data = analysis_manager.calculate_timeframes()
-                metadata = {}
-
-                for timeframe, (date_range, df) in timeframed_data.items():
-                    metadata[timeframe] = analysis_manager.calculate_metadata(date_range=date_range, df=df)
-
-                self.timeframed_data = metadata
+                self.timeframed_data = analysis_manager.calculate_aggregated_metadata()
 
                 # Retrieve timeframed data + overall rows + progress cols
                 analysis_df = analysis_manager.get_analysis_table()
@@ -274,47 +268,47 @@ class BloodPressureAlertManager:
         return True
 
 
-    def handle_two_week_status(self) -> bool:
-        """
-        Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
+    # def handle_two_week_status(self) -> bool:
+    #     """
+    #     Checks for decrease in patients overall status (using BloodPressureAnalysis class) and notifies clinicians if so.
 
-        """
-        logger.info(f"Analyzing patient {self.syntrillo_internal_key} overall categorization...")
+    #     """
+    #     logger.info(f"Analyzing patient {self.syntrillo_internal_key} overall categorization...")
 
-        status_points = {
-            'Poor': 0,
-            'Okay': 1,
-            'Good': 2
-        }
+    #     status_points = {
+    #         'Poor': 0,
+    #         'Okay': 1,
+    #         'Good': 2
+    #     }
 
-        try:
-            analysis_df = self.analysis_df
+    #     try:
+    #         analysis_df = self.analysis_df
 
-            if 'Latest' in analysis_df.columns:
-                logger.info(f"Patient {self.syntrillo_internal_key} has does not ")
-                return False
+    #         if 'Latest' in analysis_df.columns:
+    #             logger.info(f"Patient {self.syntrillo_internal_key} has does not ")
+    #             return False
 
-            current_status = analysis_df['Current']['Overall']
-            prior_status = analysis_df['Prior']['Overall']
+    #         current_status = analysis_df['Current']['Overall']
+    #         prior_status = analysis_df['Prior']['Overall']
 
-            current_date_range = analysis_df['Current']['Date Range']
-            prior_date_range = analysis_df['Prior']['Date Range']
+    #         current_date_range = analysis_df['Current']['Date Range']
+    #         prior_date_range = analysis_df['Prior']['Date Range']
 
-            current_pts = status_points[current_status]
-            prior_pts = status_points[prior_status]
+    #         current_pts = status_points[current_status]
+    #         prior_pts = status_points[prior_status]
 
-            if current_pts < prior_pts:
-                content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
-                self.notify_clinicians(content)
-                logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
-            else:
-                logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
+    #         if current_pts < prior_pts:
+    #             content = f"<b>⚠️ PATIENT'S OVERALL STATUS DOWNGRADED FROM '{prior_status}' ({prior_date_range}) TO '{current_status}' ({current_date_range}).</b>"
+    #             self.notify_clinicians(content)
+    #             logger.info(f"Notification sent for patient {self.syntrillo_internal_key}. Overall status changed from '{prior_status}' to '{current_status}'.")
+    #         else:
+    #             logger.info(f"No notification sent for patient {self.syntrillo_internal_key}. No overall status change detected.")
 
-            return True
+    #         return True
 
-        except Exception as e:
-            logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
-            raise e
+    #     except Exception as e:
+    #         logger.error(f"Error analyzing overall status for patient {self.syntrillo_internal_key}: {e}")
+    #         raise e
 
 
     def handle_five_day_measurement_check(self) -> bool:
@@ -401,6 +395,22 @@ class BloodPressureAlertManager:
             logger.error(f"Error notifying clinicians: {e}")
             raise e
 
+    def notify_physicians(self, content: str) -> None:
+        """
+        Notify physicians when extreme blood pressure is detected
+        """
+        try:
+            user_manager = HealthieUser(self.healthie_user_id)
+            patient_name = user_manager.get_name_by_healthie_user_id()
+        
+
+        except Exception as e:
+            logger.error(f"Error notifying physicians: {e}")
+            raise e
+
+        except Exception as e:
+            logger.error(f"Error notifying physicians: {e}")
+            raise e
 
     def make_conversation_query(self, clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
         """

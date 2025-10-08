@@ -31,6 +31,7 @@ class SyntrilloDatabaseManager:
         DeviceTypes.TENOVI_DEVICE_NAME__PILLBOX,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_LARGE,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_SMALL,
+        DeviceTypes.TENOVI_DEVICE_NAME__BPM_OMRON,
         DeviceTypes.TENOVI_DEVICE_NAME__BPM_PREFIX, # will retrieve all BMP devices
     ]
 
@@ -1174,6 +1175,53 @@ class SyntrilloDatabaseManager:
                 "error": f"An unexpected error occurred: {e}"
             }
             return None, None
+
+    def get_all_patient_form_responses_by_module_id(self, module_id: str, syntrillo_internal_key: str):
+        """
+        Gets all (not just one) form responses for a module id (aka a question on a healthie form).
+
+        Args:
+            module_id (str): The module id to query by.
+            syntrillo_internal_key (str): The syntrillo internal key to query by.
+        Returns:
+            db_response
+        Raises:
+            pymysql.MySQLError: If there is an error retrieving the form and module ids.
+            Exception: If there is an unexpected error during the retrieval.
+        """
+        try:
+            with self.conn.cursor() as cursor:
+                query = """
+                    SELECT
+                        answer,
+                        updated_at
+                    FROM
+                        healthie_form_responses
+                    WHERE module_id = %s AND syntrillo_internal_key = %s
+                    ORDER BY updated_at DESC;
+                """
+                cursor.execute(query, (module_id, syntrillo_internal_key))
+                db_response = cursor.fetchall()
+                if not db_response:
+                    logger.warning("No healthie response data found for patient ...")
+                    return None
+                return db_response
+
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            return None, None
+
+        except Exception as e:
+            log = {
+                "success": False,
+                "error": f"An unexpected error occurred: {e}"
+            }
+            return None, None
+
+
 
     def get_srs_value_by_category_and_value(self, category: str, value: Union[float, str] = None, gender: str = None) -> dict:
         """
