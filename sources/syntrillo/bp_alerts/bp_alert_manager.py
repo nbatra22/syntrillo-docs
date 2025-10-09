@@ -175,6 +175,8 @@ class BloodPressureAlertManager:
         """
         logger.info(f"Starting 2-week BP analysis...")
 
+        self.handle_two_week_summary_stats()
+
         db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
         record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
@@ -267,6 +269,46 @@ class BloodPressureAlertManager:
 
         return True
 
+    def handle_two_week_summary_stats(self) -> bool:
+        """
+        Checks for changes in summary statistics and notifies physicians if so.
+        """
+        logger.info(f"Analyzing patient {self.syntrillo_internal_key} summary statistics...")
+
+        try:
+            summary_stats = BloodPressureAnalysis(syntrillo_internal_key=self.syntrillo_internal_key).calculate_summary_stats()
+
+            if summary_stats['status']['grade'] > 0:
+                logger.info(f"Patient {self.syntrillo_internal_key} requires intervention. Sending notification...")
+
+                content = f"<p><b>⚠️ PATIENT'S SUMMARY STATISTICS EXCEEDS TARGET.</b></p>\n<ul>"
+
+                if summary_stats['avg_sbp']['grade'] > 0:
+                    content = content + f"<li>Avg SBP: {summary_stats['avg_sbp']['value']}</li>"
+
+                if summary_stats['avg_dbp']['grade'] > 0:
+                    content = content + f"<li>Avg DBP: {summary_stats['avg_dbp']['value']}</li>"
+
+                if summary_stats['peak_sbp']['grade'] > 0:
+                    content = content + f"<li>Peak SBP: {summary_stats['peak_sbp']['value']}</li>"
+
+                if summary_stats['low_sbp']['grade'] > 0:
+                    content = content + f"<li>Low SBP: {summary_stats['low_sbp']['value']}</li>"
+
+                if summary_stats['symptomatic_hypotension']['value']:
+                    content = content + f"<li>Symptomatic Hypotension: {summary_stats['symptomatic_hypotension']['value']}</li>"
+
+                content = content + f"</ul>"
+
+                self.notify_physicians(content)
+                return True
+            else:
+                logger.info(f"Patient {self.syntrillo_internal_key} does not require intervention. No notification sent.")
+                return False
+
+        except Exception as e:
+            logger.error(f"Error analyzing patient {self.syntrillo_internal_key} summary statistics: {e}")
+            raise e
 
     # def handle_two_week_status(self) -> bool:
     #     """
@@ -402,14 +444,40 @@ class BloodPressureAlertManager:
         try:
             user_manager = HealthieUser(self.healthie_user_id)
             patient_name = user_manager.get_name_by_healthie_user_id()
-        
+
+            # Retrieve healthie IDs env variable to use for conversation query
+            secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
+
+            excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+            messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+            physicians = secrets.get_secret_value('healthie_ids', 'physicians')
+
+            # If a specific patient is excluded from notifications, skip the notification
+            if excluded_patients and self.healthie_user_id in excluded_patients:
+                logger.info(f"Patient {patient_name} is excluded from notifications ...")
+                return
+
+            # The patient name is to be used as the title of the conversation
+            # alert_title = f"⚠️ {patient_name} - BP Alert"
+            alert_title = f"🚨 {patient_name} - BP Alert"
+
+            conversation_manager = HealthieConversations()
+
+            conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
+            if not conversation_id:
+                # Create a new conversation
+                conversation_output = self.make_conversation_query(physicians, messenger_id, alert_title)
+                if not conversation_output:
+                    raise Exception(f"Error creating conversation in Healthie")
+
+                conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
+                logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
+
+            message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
+            logger.info(f"Successfully added note to conversation in Healthie: {message}")
 
         except Exception as e:
-            logger.error(f"Error notifying physicians: {e}")
-            raise e
-
-        except Exception as e:
-            logger.error(f"Error notifying physicians: {e}")
+            logger.error(f"Error notifying clinicians: {e}")
             raise e
 
     def make_conversation_query(self, clinician_ids: List[str], messenger_id: str, alert_title: str) -> None:
