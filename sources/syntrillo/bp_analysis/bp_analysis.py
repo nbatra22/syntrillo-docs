@@ -402,53 +402,61 @@ class BloodPressureAnalysis:
             user_id=entry['healthie_user_id'],
         )
 
-        # Safely get form answers
-        symptomatic_bp_answer = ""
-        bp_alert_type_answer = ""
-        bp_alert_date_answer = ""
+        # Count symptomatic hypotension episodes in current/latest timeframe
+        symptomatic_hypotension_count = 0
 
         if response and 'formAnswerGroups' in response and len(response['formAnswerGroups']) > 0:
-            answers = response['formAnswerGroups'][0].get('form_answers', [])
-            answers_dict = {answer['custom_module_id']: answer['answer'] for answer in answers}
+            # Get the date range for current or latest timeframe
+            current_timeframe = self.timeframed_data.get('Current')
+            latest_timeframe = self.timeframed_data.get('Latest')
 
-            symptomatic_bp_answer = answers_dict.get(symptomatic_bp_module_id, "")
-            bp_alert_type_answer = answers_dict.get(bp_alert_type_module_id, "")
-            bp_alert_date_answer = answers_dict.get(bp_alert_date_module_id, "")
+            timeframe_start_date = None
+            if current_timeframe and len(current_timeframe) > 1:
+                timeframe_start_date = current_timeframe[1][TIMESTAMP_LOCAL].min()
+            elif latest_timeframe and len(latest_timeframe) > 1:
+                timeframe_start_date = latest_timeframe[1][TIMESTAMP_LOCAL].min()
 
-        # Check for symptomatic hypotension
-        symptomatic_hypotension = False
-        if symptomatic_bp_answer == "Yes" and bp_alert_type_answer == "Hypotension" and bp_alert_date_answer:
-            try:
-                # Parse the date string - try common formats
-                bp_alert_date = None
-                if bp_alert_date_answer:
-                    try:
-                        # Try ISO format first (YYYY-MM-DD)
-                        bp_alert_date = datetime.fromisoformat(bp_alert_date_answer.split('T')[0])
-                    except (ValueError, AttributeError):
+            # Iterate through all form answer groups
+            for form_answer_group in response['formAnswerGroups']:
+                try:
+                    answers = form_answer_group.get('form_answers', [])
+                    answers_dict = {answer['custom_module_id']: answer['answer'] for answer in answers}
+
+                    symptomatic_bp_answer = answers_dict.get(symptomatic_bp_module_id, "")
+                    bp_alert_type_answer = answers_dict.get(bp_alert_type_module_id, "")
+                    bp_alert_date_answer = answers_dict.get(bp_alert_date_module_id, "")
+
+                    # Check if this is a symptomatic hypotension episode
+                    if symptomatic_bp_answer == "Yes" and bp_alert_type_answer == "Hypotension" and bp_alert_date_answer:
+                        # Parse the date string
+                        bp_alert_date = None
                         try:
-                            # Try other common formats
-                            bp_alert_date = datetime.strptime(bp_alert_date_answer, '%Y-%m-%d')
-                        except (ValueError, TypeError):
-                            pass
+                            # Try ISO format first (YYYY-MM-DD)
+                            bp_alert_date = datetime.fromisoformat(bp_alert_date_answer.split('T')[0])
+                        except (ValueError, AttributeError):
+                            try:
+                                # Try other common formats
+                                bp_alert_date = datetime.strptime(bp_alert_date_answer, '%Y-%m-%d')
+                            except (ValueError, TypeError):
+                                pass
 
-                # Check if date is within current or latest timeframe
-                if bp_alert_date:
-                    current_timeframe = self.timeframed_data.get('Current')
-                    latest_timeframe = self.timeframed_data.get('Latest')
+                        # Check if date is within current or latest timeframe
+                        if bp_alert_date and timeframe_start_date and pd.notna(timeframe_start_date):
+                            if bp_alert_date >= timeframe_start_date.replace(tzinfo=None):
+                                symptomatic_hypotension_count += 1
+                except Exception as e:
+                    logger.error(f"Error parsing symptomatic hypotension data for form answer group: {e}")
+                    continue
 
-                    if current_timeframe and len(current_timeframe) > 1:
-                        min_date = current_timeframe[1][TIMESTAMP_LOCAL].min()
-                        if pd.notna(min_date) and bp_alert_date >= min_date.replace(tzinfo=None):
-                            symptomatic_hypotension = True
-
-                    if not symptomatic_hypotension and latest_timeframe and len(latest_timeframe) > 1:
-                        min_date = latest_timeframe[1][TIMESTAMP_LOCAL].min()
-                        if pd.notna(min_date) and bp_alert_date >= min_date.replace(tzinfo=None):
-                            symptomatic_hypotension = True
-            except Exception as e:
-                logger.error(f"Error parsing symptomatic hypotension data: {e}")
-                symptomatic_hypotension = False
+        # Calculate near-hypotensive episodes (SBP between 90-95 mmHg)
+        # These represent measurements where a 5 mmHg reduction would cause hypotension
+        near_hypotensive_count = 0
+        if current_timeframe and len(current_timeframe) > 1:
+            df = current_timeframe[1]
+            near_hypotensive_count = len(df[(df[SYSTOLIC] > 90) & (df[SYSTOLIC] <= 95)])
+        elif latest_timeframe and len(latest_timeframe) > 1:
+            df = latest_timeframe[1]
+            near_hypotensive_count = len(df[(df[SYSTOLIC] > 90) & (df[SYSTOLIC] <= 95)])
 
         data = {
             "status": {
@@ -472,7 +480,12 @@ class BloodPressureAnalysis:
                 'grade': '',
             },
             "symptomatic_hypotension": {
-                'value': symptomatic_hypotension,
+                'value': symptomatic_hypotension_count,
+                'grade': 3 if symptomatic_hypotension_count > 0 else 0,
+            },
+            "near_hypotensive": {
+                'value': near_hypotensive_count,
+                'grade': 2 if near_hypotensive_count > 0 else 0,
             }
         }
 
@@ -496,7 +509,15 @@ class BloodPressureAnalysis:
         else:
             data["low_sbp"]['grade'] = 0
 
-        data["status"]['grade'] = max(data["avg_sbp"]['grade'], data["avg_dbp"]['grade'], data["peak_sbp"]['grade'], data["low_sbp"]['grade'])
+        # Calculate overall status based on all metrics
+        data["status"]['grade'] = max(
+            data["avg_sbp"]['grade'],
+            data["avg_dbp"]['grade'],
+            data["peak_sbp"]['grade'],
+            data["low_sbp"]['grade'],
+            data["symptomatic_hypotension"]['grade'],
+            data["near_hypotensive"]['grade']
+        )
         data["status"]['value'] = status_message[data["status"]['grade']]
 
         return data

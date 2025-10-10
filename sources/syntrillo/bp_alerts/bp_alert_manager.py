@@ -298,9 +298,16 @@ class BloodPressureAlertManager:
                 if summary_stats['symptomatic_hypotension']['value']:
                     content = content + f"<li>Symptomatic Hypotension: {summary_stats['symptomatic_hypotension']['value']}</li>"
 
+                if summary_stats['near_hypotensive']['value']:
+                    content = content + f"<li>Near-Hypotensive: {summary_stats['near_hypotensive']['value']}</li>"
+
                 content = content + f"</ul>"
 
-                self.notify_physicians(content)
+                if summary_stats['status']['grade'] > 1:
+                    self.notify_physicians(content)
+                else:
+                    self.notify_clinicians(content)
+
                 return True
             else:
                 logger.info(f"Patient {self.syntrillo_internal_key} does not require intervention. No notification sent.")
