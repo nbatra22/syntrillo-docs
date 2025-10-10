@@ -402,20 +402,26 @@ class BloodPressureAnalysis:
             user_id=entry['healthie_user_id'],
         )
 
-        # Count symptomatic hypotension episodes in current/latest timeframe
+        # Determine which timeframe to use (Current if it exists, otherwise Latest)
+        # Current exists if there were measurements within 5 days of today
+        current_timeframe = self.timeframed_data.get('Current')
+        latest_timeframe = self.timeframed_data.get('Latest')
+
+        # Use Current timeframe if it exists, otherwise use Latest
+        active_timeframe = None
+        timeframe_start_date = None
+
+        if current_timeframe and len(current_timeframe) > 1:
+            active_timeframe = current_timeframe
+            timeframe_start_date = current_timeframe[1][TIMESTAMP_LOCAL].min()
+        elif latest_timeframe and len(latest_timeframe) > 1:
+            active_timeframe = latest_timeframe
+            timeframe_start_date = latest_timeframe[1][TIMESTAMP_LOCAL].min()
+
+        # Count symptomatic hypotension episodes in the active timeframe
         symptomatic_hypotension_count = 0
 
-        if response and 'formAnswerGroups' in response and len(response['formAnswerGroups']) > 0:
-            # Get the date range for current or latest timeframe
-            current_timeframe = self.timeframed_data.get('Current')
-            latest_timeframe = self.timeframed_data.get('Latest')
-
-            timeframe_start_date = None
-            if current_timeframe and len(current_timeframe) > 1:
-                timeframe_start_date = current_timeframe[1][TIMESTAMP_LOCAL].min()
-            elif latest_timeframe and len(latest_timeframe) > 1:
-                timeframe_start_date = latest_timeframe[1][TIMESTAMP_LOCAL].min()
-
+        if response and 'formAnswerGroups' in response and len(response['formAnswerGroups']) > 0 and timeframe_start_date:
             # Iterate through all form answer groups
             for form_answer_group in response['formAnswerGroups']:
                 try:
@@ -440,8 +446,8 @@ class BloodPressureAnalysis:
                             except (ValueError, TypeError):
                                 pass
 
-                        # Check if date is within current or latest timeframe
-                        if bp_alert_date and timeframe_start_date and pd.notna(timeframe_start_date):
+                        # Check if date is within the active timeframe
+                        if bp_alert_date and pd.notna(timeframe_start_date):
                             if bp_alert_date >= timeframe_start_date.replace(tzinfo=None):
                                 symptomatic_hypotension_count += 1
                 except Exception as e:
@@ -451,14 +457,12 @@ class BloodPressureAnalysis:
         # Calculate near-hypotensive episodes (SBP between 90-95 mmHg)
         # These represent measurements where a 5 mmHg reduction would cause hypotension
         near_hypotensive_count = 0
-        if current_timeframe and len(current_timeframe) > 1:
-            df = current_timeframe[1]
-            near_hypotensive_count = len(df[(df[SYSTOLIC] > 90) & (df[SYSTOLIC] <= 95)])
-        elif latest_timeframe and len(latest_timeframe) > 1:
-            df = latest_timeframe[1]
+        if active_timeframe:
+            df = active_timeframe[1]
             near_hypotensive_count = len(df[(df[SYSTOLIC] > 90) & (df[SYSTOLIC] <= 95)])
 
         data = {
+            "date_range": active_timeframe[0],
             "status": {
                 'value': '',
                 'grade': '',

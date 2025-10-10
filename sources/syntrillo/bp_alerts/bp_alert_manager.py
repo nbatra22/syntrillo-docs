@@ -281,7 +281,7 @@ class BloodPressureAlertManager:
             if summary_stats['status']['grade'] > 0:
                 logger.info(f"Patient {self.syntrillo_internal_key} requires intervention. Sending notification...")
 
-                content = f"<p><b>⚠️ PATIENT'S SUMMARY STATISTICS EXCEEDS TARGET.</b></p>\n<ul>"
+                content = f"<p><b>⚠️ PATIENT'S SUMMARY STATISTICS ({summary_stats['date_range']}) EXCEEDS TARGET.</b></p>\n<ul>"
 
                 if summary_stats['avg_sbp']['grade'] > 0:
                     content = content + f"<li>Avg SBP: {summary_stats['avg_sbp']['value']}</li>"
@@ -296,10 +296,10 @@ class BloodPressureAlertManager:
                     content = content + f"<li>Low SBP: {summary_stats['low_sbp']['value']}</li>"
 
                 if summary_stats['symptomatic_hypotension']['value']:
-                    content = content + f"<li>Symptomatic Hypotension: {summary_stats['symptomatic_hypotension']['value']}</li>"
+                    content = content + f"<li>Symptomatic Hypertensive Episodes: {summary_stats['symptomatic_hypotension']['value']}</li>"
 
                 if summary_stats['near_hypotensive']['value']:
-                    content = content + f"<li>Near-Hypotensive: {summary_stats['near_hypotensive']['value']}</li>"
+                    content = content + f"<li>Near-Hypotensive Episodes: {summary_stats['near_hypotensive']['value']}</li>"
 
                 content = content + f"</ul>"
 
