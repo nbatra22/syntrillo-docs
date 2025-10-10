@@ -109,6 +109,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     # Generate analysis + extremes table using BloodPressureAnalysis class methods
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
+    summary_stats = data_reporting_blood_pressure.calculate_summary_stats() # Calculates summary stats for each timeframe
     analysis_table = data_reporting_blood_pressure.get_analysis_table() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
     extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
@@ -143,7 +144,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
                 )
     )
 
-    rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.2f}" if isinstance(x, float) else x)
+    rounded_analysis_table = styled_analysis_table.format(lambda x: f"{x:.1f}" if isinstance(x, float) else x)
 
     styled_extremes_table = (
         extremes.style
@@ -187,6 +188,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
         "extremes_html": extremes_html,
         "analysis_json": analysis_json,
         "extremes_json": extremes_json,
+        "summary_stats": summary_stats,
         # "distribution_html": distribution_html
     })
 
@@ -391,7 +393,10 @@ def iframe_healthie_provider_tab_get_biometrics_data():
     bmis = []
     for weight_data in weight_data_response:
         # 3.) calc bmi similar to PA
-        bmis.append(calculate_bmi(weight_data["metric_stat"], height))
+        bmis.append({
+            'bmi': calculate_bmi(weight_data["metric_stat"], height),
+            'date': weight_data["created_at"]
+        })
         activity_baseline, activity_prior, activity_current = None, None, None
 
     # Need minimum of 3 responses for baseline, prior, and current
@@ -423,6 +428,7 @@ def iframe_healthie_provider_tab_get_biometrics_data():
     autoscored_sections  = forms_manager.get_autoscored_sections(custom_module_form_id=custom_module_form_id,user_id=entry['healthie_user_id'])
 
     ssq_baseline, ssq_prior, ssq_current = None, None, None
+    ssq_baseline_date, ssq_prior_date, ssq_current_date = None, None, None
     # Need minimum of 3 responses for baseline, prior, and current
     is_valid_autosections = autoscored_sections and len(autoscored_sections['formAnswerGroups']) > 0
     if is_valid_autosections:
@@ -430,20 +436,29 @@ def iframe_healthie_provider_tab_get_biometrics_data():
         ssq_responses = autoscored_sections['formAnswerGroups']
         if len(ssq_responses) >= 3:
             ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+            ssq_baseline_date = ssq_responses[-1].get('created_at', None)
             ssq_prior = ssq_responses[1]['autoscored_sections'][-1].get('value', None)
+            ssq_prior_date = ssq_responses[1].get('created_at', None)
             ssq_current = ssq_responses[0]['autoscored_sections'][-1].get('value', None)
+            ssq_current_date = ssq_responses[0].get('created_at', None)
         elif len(ssq_responses) == 2:
             ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+            ssq_baseline_date = ssq_responses[-1].get('created_at', None)
             ssq_current = ssq_responses[0]['autoscored_sections'][-1].get('value', None)
+            ssq_current_date = ssq_responses[0].get('created_at', None)
         elif len(ssq_responses) == 1:
             ssq_baseline = ssq_responses[-1]['autoscored_sections'][-1].get('value', None)
+            ssq_baseline_date = ssq_responses[-1].get('created_at', None)
         else:
             logger.warning("Patient does not have at least 1 activity response...")
 
     ssq_data = {
         "ssq_current": ssq_current,
         "ssq_prior": ssq_prior,
-        "ssq_baseline": ssq_baseline
+        "ssq_baseline": ssq_baseline,
+        "ssq_baseline_date": ssq_baseline_date,
+        "ssq_prior_date": ssq_prior_date,
+        "ssq_current_date": ssq_current_date
     }
 
 

@@ -641,9 +641,9 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
     try:
         logger.info(f"Calculating bp metadata...")
         # Calculate the metadata for the trailing dataframe
-        trailing_bp_metadata = bp_analysis.calculate_metadata_v2(trailing_bp_dataframe)
-        # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
-        baseline_bp_metadata = bp_analysis.calculate_metadata_v2(baseline_bp_dataframe)
+        trailing_bp_metadata = bp_analysis.calculate_timeframe_metadata(trailing_bp_dataframe)
+        # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
+        baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
 
         # Trim the metadata to only include the necessary data for SRS calculation
         trimmed_bp_metadata = {

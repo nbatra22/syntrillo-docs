@@ -107,7 +107,7 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
         final_srs = round(total_srs**0.70, 2)
 
         total_stroke_priority_score = final_dependent_score * stroke_priority_score_total
-        final_stroke_priority_score = round(total_stroke_priority_score**0.70, 2)
+        final_sps = round(total_stroke_priority_score**0.70, 2)
 
         independent_risk_variable_scores, dependent_risk_variable_contributions = calc_risk_variable_contributions(
             final_dependent_score=final_dependent_score,
@@ -117,7 +117,7 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
             dependent_risk_variable_scores=dependent_risk_variable_scores
         )
 
-        return final_srs, agg_data, final_stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions
+        return final_srs, agg_data, final_sps, independent_risk_variable_scores, dependent_risk_variable_contributions
 
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
@@ -620,7 +620,7 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
             if cat in EXCLUDED_CATEGORIES:
                 continue
             independent_risk_variable_scores["srs"][cat] /= independent_risk_variable_srs_total
-            independent_risk_variable_scores["sps"][category] /= independent_risk_variable_srs_total
+            independent_risk_variable_scores["sps"][cat] /= independent_risk_variable_srs_total
 
 
         logger.info(f"Successfully got independent risk score value...")
@@ -630,18 +630,27 @@ def get_independent_risk_score_value(independent_risk_factors: dict, db_manager:
         logger.error(f"Error getting independent risk score value: {e}")
         raise e
 
+import json
+
 
 if __name__ == "__main__":
+
     # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160")
     # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36") # 3.33 / 5.05
     # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160") # 3.33 / 5.05
-    syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77 / ID: 1562903
+    # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77 / ID: 1562903
     # syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") #
-    srs, agg_data, stroke_priority_score = calculate_risk_score(syntrillo_internal_key)
+    syntrillo_internal_key = uuid.UUID("f474f229-c199-4a39-addf-0557d2c30638") # 4.76 / 9.77 / ID: 3843889 – Mary (Donald) Smith
+
+    final_srs, agg_data, final_sps, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key)
 
     print("================================================")
-    print(f"================ Final SRS: {srs} ===============")
-    print(f"================ Final SPS: {stroke_priority_score} ===============")
+    print(f"================ Final SRS: {final_srs} ===============")
+    print(f"================ Final SPS: {final_sps} ===============")
+    print(f"================ Independent Risk Variable Scores ===============")
+    print(f"{json.dumps(independent_risk_variable_scores, indent=4)}")
+    print(f"================ Dependent Risk Variable Contributions ===============")
+    print(f"{json.dumps(dependent_risk_variable_contributions, indent=4)}")
     print("================================================")
 
         # Patient: "ff8d04c4-9307-4171-888b-447047d5fa36"
@@ -677,3 +686,4 @@ if __name__ == "__main__":
         #     AVG_DBP: 81.825,
         #     CREATININE: creatinine_levels_value,
         # }
+

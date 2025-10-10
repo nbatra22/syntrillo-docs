@@ -27,6 +27,85 @@
         color: #6b7280;
     }
 
+    .bp-summary-section {
+        margin: 0.5rem 0;
+    }
+
+    .bp-summary-container {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        height: fit-content;
+        padding: 1rem 0;
+    }
+
+    .bp-summary-subcontainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: 33%;
+        padding: 0 1rem;
+    }
+
+    #bp-summary-middle-container {
+        border-right: 1px solid #d1d5db;
+        border-left: 1px solid #d1d5db;
+    }
+
+    .bp-summary-subcontainer-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .bp-summary-status-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+    }
+
+    .bp-summary-status {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .bp-summary-metrics-container, .bp-summary-targets-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .bp-summary-targets-container {
+        align-items: center;
+    }
+
+    .bp-summary-targets-value {
+        color: #16284a;
+        line-height: 30px;
+    }
+
+    .bp-summary-metric-container {
+        display: grid;
+        grid-template-columns: 1rem 1fr;
+        align-items: center;
+        gap: 1rem;
+        font-size: 20px;
+        margin-left: 0.5rem;
+    }
+
+    .bp-summary-metrics-value {
+        margin: 0;
+        color: #16284a;
+    }
+
     .bp-header {
         display: flex;
         justify-content: space-between;
@@ -386,6 +465,101 @@
 <!-- Main Content -->
 <div class="flex flex-col gap-4">
 
+    <section class="bp-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">
+                Patient Summary
+            </h2>
+            <p class="text-sm text-gray-500">
+                Summary data below is based on patient's latest two weeks of measurements.
+            </p>
+        </div>
+    </section>
+
+    <section class="bp-summary-section">
+        <div id="bp-summary-container" class="bp-summary-container">
+            <div id="bp-summary-left-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Status
+                </h3>
+                <div class="bp-summary-status-container">
+                    <span id="bp-summary-status"></span>
+                </div>
+            </div>
+            <div id="bp-summary-middle-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Targets
+                </h3>
+                <div class="bp-summary-targets-container">
+                    <p class="bp-summary-targets-value">
+                        Avg SBP < 125 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Avg DBP < 80 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Peak SBP < 165 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Low SBP > 90 mmHg
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Symptomatic Hypotensive Episodes: 0
+                    </p>
+                    <p class="bp-summary-targets-value">
+                        Near-Hypotensive Episodes: 0
+                    </p>
+                </div>
+            </div>
+            <div id="bp-summary-right-container" class="bp-summary-subcontainer">
+                <h3 class="bp-summary-subcontainer-title">
+                    Actual
+                </h3>
+                <div id="bp-summary-metrics-loading-container" class="bp-summary-metrics-container" style="display: flex; justify-content: center; align-items: center;">
+                    Retrieving metrics...
+                </div>
+                <div id="bp-summary-metrics-container" class="bp-summary-metrics-container" style="display: none;">
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-avg-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Avg SBP: <span id="bp-summary-avg-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-avg-dbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Avg DBP: <span id="bp-summary-avg-dbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-peak-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Peak SBP: <span id="bp-summary-peak-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-low-sbp-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Low SBP: <span id="bp-summary-low-sbp"></span> mmHg
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-symptomatic-hypotension-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Symptomatic Hypotensive Episodes: <span id="bp-summary-symptomatic-hypotension-count"></span>
+                        </p>
+                    </div>
+                    <div class="bp-summary-metric-container">
+                        <span id="bp-summary-near-hypotensive-grade"></span>
+                        <p class="bp-summary-metrics-value">
+                            Near-Hypotensive Episodes: <span id="bp-summary-near-hypotensive-count"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- BPA Header -->
     <section class="bp-header flex space-between items-center">
         <div class="flex flex-col gap-1">
@@ -504,7 +678,7 @@
             <li>¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were
                 allocated for the respective metric.</li>
             <li>² 'Peak' values represent the average of the three highest values in the timeframe.</li>
-            <li>³ 'Low' values represent the single lowest value in the timeframe.</li>
+            <li>³ 'Low' values represent the average of the three lowest values in the timeframe.</li>
             <li>⁴ 'Hypotensive Count' indicates the number of systolic BP values ≤ 95 mmHg with a hypothetical average
                 decrease of 5 mmHg.</li>
         </ul>
@@ -535,7 +709,7 @@
                     <td></td>
                     <td>Baseline</td>
                     <td>Prior</td>
-                    <td>Trailing</td>
+                    <td>Latest</td>
                 </tr>
             </thead>
             <tbody>
@@ -580,12 +754,12 @@
                     <td></td>
                     <td>Baseline</td>
                     <td>Prior</td>
-                    <td>Current</td>
+                    <td>Latest</td>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><strong>Body mass index (BMI)</strong></td>
+                    <td><strong>Body mass index (kg/m²)</strong></td>
                     <td id="bp-biometric-bmi-baseline"></td>
                     <td id="bp-biometric-bmi-prior"></td>
                     <td id="bp-biometric-bmi-current"></td>
@@ -692,6 +866,7 @@
         const filterMenu = document.getElementById("bp-filter-menu")
         const bpAnalysisContent = document.getElementById("bp-analysis-table");
         const extremesContent = document.getElementById("bp-extremes-table");
+        const statusContent = document.getElementById("bp-summary-status");
         // const distributionContent = document.getElementById("bp-time-distribution-plot");
         const hiddenAnalysisInput = document.getElementById("analysis_json");
         const hiddenExtremesInput = document.getElementById("extremes_json");
@@ -699,6 +874,7 @@
         filterSubmit.disabled = true;
         showSpinner(bpAnalysisContent);
         showSpinner(extremesContent);
+        showSpinner(statusContent);
         // showSpinner(distributionContent);
 
         let formData = new FormData()
@@ -717,28 +893,47 @@
         })
             .then(response => response.json())
             .then(data => {
-                if (data.analysis_html && data.extremes_html
-                    // && data.distribution_html
-                    && data.analysis_json && data.extremes_json) {
+                if (data.analysis_html && data.analysis_json) {
                     bpAnalysisContent.innerHTML = data.analysis_html;
-                    extremesContent.innerHTML = data.extremes_html;
                     hiddenAnalysisInput.value = data.analysis_json;
                     hiddenExtremesInput.value = data.extremes_json;
+                }
 
-                    // distributionContent.innerHTML = data.distribution_html
+                if (data.extremes_html && data.extremes_json) {
+                    extremesContent.innerHTML = data.extremes_html;
+                    hiddenExtremesInput.value = data.extremes_json;
+                }
 
-                    // distributionContent.getElementsByClassName("svg-container").style = "postion: relative; width: 100%; height: 700px"
+                if (data.summary_stats) {
+                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
+                    document.getElementById("bp-summary-status").style.fontWeight = "bold";
+                    document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
+                    document.getElementById("bp-summary-status").style.textAlign = "center";
+                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "#16a34a" : data.summary_stats.status.grade === 1 ? "#f59e0b" : data.summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
 
-                    // distributionContent.querySelectorAll("script").forEach(oldScript => {
-                    //     const newScript = document.createElement("script");
-                    //     if (oldScript.src) {
-                    //         newScript.src = oldScript.src;
-                    //     } else {
-                    //         newScript.textContent = oldScript.textContent;
-                    //     }
-                    //     document.body.appendChild(newScript);
-                    // });
+                    document.getElementById("bp-summary-avg-sbp").textContent = data.summary_stats.avg_sbp.value;
+                    document.getElementById("bp-summary-avg-dbp").textContent = data.summary_stats.avg_dbp.value;
+                    document.getElementById("bp-summary-peak-sbp").textContent = data.summary_stats.peak_sbp.value;
+                    document.getElementById("bp-summary-low-sbp").textContent = data.summary_stats.low_sbp.value;
+                    document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = data.summary_stats.symptomatic_hypotension.value;
+                    document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
 
+                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
+                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
+                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
+                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
+
+                    document.getElementById("bp-summary-avg-sbp-grade").innerHTML = data.summary_stats.avg_sbp.grade === 0 ? greenCheck : data.summary_stats.avg_sbp.grade === 1 ? yellowExclamation : data.summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-summary-avg-dbp-grade").innerHTML = data.summary_stats.avg_dbp.grade === 0 ? greenCheck : data.summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-summary-peak-sbp-grade").innerHTML = data.summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-summary-low-sbp-grade").innerHTML = data.summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = data.summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
+                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+
+                    document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
+                    document.getElementById("bp-summary-metrics-container").style.display = "flex";
+
+                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
                 }
 
                 if (data.error) {
@@ -752,6 +947,7 @@
                 filterMenu.style.display = 'none';
                 hideSpinner(bpAnalysisContent);
                 hideSpinner(extremesContent);
+                hideSpinner(statusContent);
                 // hideSpinner(distributionContent);
                 filterSubmit.disabled = false;
             })
@@ -784,7 +980,7 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log("HR Data:", data);
+                // console.log("HR Data:", data);
 
                 // Format dates for display
                 const formatDate = (dateString) => {
@@ -836,7 +1032,7 @@
                 hrContent.style.display = "table";
             })
             .catch(e => {
-                console.log("Error fetching HR data for patient:", e);
+                // console.log("Error fetching HR data for patient:", e);
 
                 // Show table and hide spinners on error
                 hideSpinner(hrSpinnerContainer);
@@ -888,7 +1084,7 @@
         })
             .then(response => response.json())
             .then(data => {
-                console.log("Biometrics Data:", data);
+                // console.log("Biometrics Data:", data);
 
                 // Format dates for display
                 const formatDate = (dateString) => {
@@ -902,14 +1098,40 @@
                 };
 
                 // Populate BMI data
-                if (bmiBaseline) {
-                    bmiBaseline.textContent = data.bmi_data?.bmi_baseline ? `${data.bmi_data.bmi_baseline.toFixed(1)} kg/m²` : '-';
+                if (bmiBaseline && data.bmi_data?.bmi_baseline) {
+                    const date = data.bmi_data?.bmi_baseline.date ? formatDate(data.bmi_data.bmi_baseline.date) : '';
+                    const bmi = data.bmi_data?.bmi_baseline.bmi
+                    if (bmi) {
+                        bmiBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiBaseline.textContent = '-';
+                    }
+                } else {
+                    bmiBaseline.textContent = '-';
                 }
-                if (bmiPrior) {
-                    bmiPrior.textContent = data.bmi_data?.bmi_prior ? `${data.bmi_data.bmi_prior.toFixed(1)} kg/m²` : '-';
+
+                if (bmiPrior && data.bmi_data?.bmi_prior) {
+                    const date = data.bmi_data?.bmi_prior.date ? formatDate(data.bmi_data.bmi_prior.date) : '';
+                    const bmi = data.bmi_data?.bmi_prior.bmi
+                    if (bmi) {
+                        bmiPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiPrior.textContent = '-';
+                    }
+                } else {
+                    bmiPrior.textContent = '-';
                 }
-                if (bmiCurrent) {
-                    bmiCurrent.textContent = data.bmi_data?.bmi_current ? `${data.bmi_data.bmi_current.toFixed(1)} kg/m²` : '-';
+
+                if (bmiCurrent && data.bmi_data?.bmi_current) {
+                    const date = data.bmi_data?.bmi_current.date ? formatDate(data.bmi_data.bmi_current.date) : '';
+                    const bmi = data.bmi_data?.bmi_current.bmi
+                    if (bmi) {
+                        bmiCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${bmi.toFixed(1)}</div>`;
+                    } else {
+                        bmiCurrent.textContent = '-';
+                    }
+                } else {
+                    bmiCurrent.textContent = '-';
                 }
 
                 // Populate Physical Activity data
@@ -978,7 +1200,8 @@
                 if (sodiumBaseline) {
                     const ssqData = data.ssq_data?.ssq_baseline;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumBaseline.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_baseline_date ? formatDate(data.ssq_data.ssq_baseline_date) : '';
+                        sodiumBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumBaseline.textContent = '-';
                     }
@@ -987,7 +1210,8 @@
                 if (sodiumPrior) {
                     const ssqData = data.ssq_data?.ssq_prior;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumPrior.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_prior_date ? formatDate(data.ssq_data.ssq_prior_date) : '';
+                        sodiumPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumPrior.textContent = '-';
                     }
@@ -996,7 +1220,8 @@
                 if (sodiumCurrent) {
                     const ssqData = data.ssq_data?.ssq_current;
                     if (ssqData !== null && ssqData !== undefined) {
-                        sodiumCurrent.textContent = ssqData.toFixed(1);
+                        const date = data.ssq_data?.ssq_current_date ? formatDate(data.ssq_data.ssq_current_date) : '';
+                        sodiumCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${ssqData.toFixed(1)}</div>`;
                     } else {
                         sodiumCurrent.textContent = '-';
                     }
@@ -1007,7 +1232,7 @@
                 metricsTable.style.display = "table";
             })
             .catch(error => {
-                console.log("Error fetching biometrics data for patient:", error);
+                // console.log("Error fetching biometrics data for patient:", error);
 
                 // Show error container and hide spinner
                 hideSpinner(metricsSpinnerContainer);
@@ -1021,7 +1246,7 @@
 
     // Function to initialize the blood pressure tab
     function initializeBloodPressureTab() {
-        console.log("Initializing blood pressure tab...");
+        // console.log("Initializing blood pressure tab...");
 
         // Fetch Blood Pressure data on first render
         getBloodPressureAnalysis();
@@ -1055,7 +1280,7 @@
 
     // Listen for the custom event when the tab is loaded dynamically
     $(document).on('blood-pressure-tab-loaded', function() {
-        console.log("Blood pressure tab loaded event received");
+        // console.log("Blood pressure tab loaded event received");
         if (typeof initializeBloodPressureTab === 'function') {
             initializeBloodPressureTab();
         }
