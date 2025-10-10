@@ -281,25 +281,25 @@ class BloodPressureAlertManager:
             if summary_stats['status']['grade'] > 0:
                 logger.info(f"Patient {self.syntrillo_internal_key} requires intervention. Sending notification...")
 
-                content = f"<p><b>⚠️ PATIENT'S SUMMARY STATISTICS ({summary_stats['date_range']}) EXCEEDS TARGET.</b></p>\n<ul>"
+                content = f"<p><b>⚠️ PATIENT REQUIRES ({'MODERATE' if summary_stats['status']['grade'] == 2 else 'AGGRESSIVE'} INTERVENTION. DATA BELOW REFLECTS MEASUREMENTS FROM {summary_stats['date_range']}.</b></p>\n<ul>"
 
                 if summary_stats['avg_sbp']['grade'] > 0:
-                    content = content + f"<li>Avg SBP: {summary_stats['avg_sbp']['value']}</li>"
+                    content = content + f"\n<li>Avg SBP: {summary_stats['avg_sbp']['value']}</li>"
 
                 if summary_stats['avg_dbp']['grade'] > 0:
-                    content = content + f"<li>Avg DBP: {summary_stats['avg_dbp']['value']}</li>"
+                    content = content + f"\n<li>Avg DBP: {summary_stats['avg_dbp']['value']}</li>"
 
                 if summary_stats['peak_sbp']['grade'] > 0:
-                    content = content + f"<li>Peak SBP: {summary_stats['peak_sbp']['value']}</li>"
+                    content = content + f"\n<li>Peak SBP: {summary_stats['peak_sbp']['value']}</li>"
 
                 if summary_stats['low_sbp']['grade'] > 0:
-                    content = content + f"<li>Low SBP: {summary_stats['low_sbp']['value']}</li>"
+                    content = content + f"\n<li>Low SBP: {summary_stats['low_sbp']['value']}</li>"
 
-                if summary_stats['symptomatic_hypotension']['value']:
-                    content = content + f"<li>Symptomatic Hypertensive Episodes: {summary_stats['symptomatic_hypotension']['value']}</li>"
+                if summary_stats['symptomatic_hypotension']['value'] > 0:
+                    content = content + f"\n<li>Symptomatic Hypertensive Episodes: {summary_stats['symptomatic_hypotension']['value']}</li>"
 
-                if summary_stats['near_hypotensive']['value']:
-                    content = content + f"<li>Near-Hypotensive Episodes: {summary_stats['near_hypotensive']['value']}</li>"
+                if summary_stats['near_hypotensive']['value'] > 0:
+                    content = content + f"\n<li>Near-Hypotensive Episodes: {summary_stats['near_hypotensive']['value']}</li>"
 
                 content = content + f"</ul>"
 

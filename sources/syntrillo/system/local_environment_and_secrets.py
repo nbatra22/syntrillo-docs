@@ -28,7 +28,7 @@ class LocalEnvironmentAndSecrets:
     AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN = 'AWS_SECRETS_MANAGER_OPENAI_SECRET_ARN'
     AWS_SECRETS_MANAGER_CANDID_SECRET_ARN = 'AWS_SECRETS_MANAGER_CANDID_SECRET_ARN'
     AWS_LAMBDA_BLOOD_PRESSURE_ANALYSIS_ARN = 'AWS_LAMBDA_BLOOD_PRESSURE_ANALYSIS_ARN'
-    
+
     # ------------------------------
     # array of available secret codes
     # first is local in .env, second is in aws secrets managers
@@ -41,6 +41,7 @@ class LocalEnvironmentAndSecrets:
             'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
             'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
+            'physicians'    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
@@ -367,6 +368,7 @@ class LocalEnvironmentAndSecretsNoCache:
             'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
             'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
+            'physicians'    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
