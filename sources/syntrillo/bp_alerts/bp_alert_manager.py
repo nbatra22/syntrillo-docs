@@ -281,7 +281,13 @@ class BloodPressureAlertManager:
             if summary_stats['status']['grade'] > 0:
                 logger.info(f"Patient {self.syntrillo_internal_key} requires intervention. Sending notification...")
 
-                content = f"<p><b>⚠️ PATIENT REQUIRES {'MODERATE' if summary_stats['status']['grade'] == 2 else 'AGGRESSIVE'} INTERVENTION. Values below use measurements from {summary_stats['date_range']}.</b></p>\n<ul>"
+                intervention_type = {
+                    1: 'MINOR ADJUSTMENT',
+                    2: 'MODERATE INTERVENTION',
+                    3: 'AGGRESSIVE INTERVENTION',
+                }
+
+                content = f"<p><b>⚠️ PATIENT REQUIRES {intervention_type[summary_stats['status']['grade']]}. Value(s) below use measurements from {summary_stats['date_range']}.</b></p>\n<ul>"
 
                 if summary_stats['avg_sbp']['grade'] > 0:
                     content = content + f"\n<li>Avg SBP: {summary_stats['avg_sbp']['value']}</li>"
