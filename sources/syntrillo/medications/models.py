@@ -45,13 +45,14 @@ class MedicationRecord(BaseModel):
     # Required Fields (NOT NULL)
     syntrillo_internal_key: str = Field(..., max_length=255)
     medication_name: str = Field(..., max_length=255)
-    medication_id: int = None
+    medication_id: int = 0
     is_active: bool = True
+    dosage_option_id: str = Field(default=None, max_length=255) # type: ignore # default=None bc. of merge_medication_records func.
+
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    dosage_option_id: str = Field(default=None, max_length=255)
 
     # Nullable Fields
-    dosage_amount: Optional[Decimal] = Field(default=None, max_digits=10, decimal_places=3)
+    dosage_amount: Optional[float] = 1.0
     dosage_unit: Optional[str] = Field(default=None, max_length=32)
     comment: Optional[str] = None
     directions: Optional[str] = None
@@ -63,6 +64,7 @@ class MedicationRecord(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     delivery_method: Optional[DeliveryMethod] = None
+    mirrored: Optional[bool] = False
 
     class Config:
         # This allows the model to be created from ORM objects (like SQLAlchemy)

@@ -1,7 +1,5 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/iframe_provider_tab/care_plan.py
-from flask import Blueprint, render_template, request, jsonify, current_app, abort
-
-import json
+from flask import Blueprint, render_template, request, jsonify, abort
 
 from .post_management import PostManager
 from syntrillo.remote_monitoring.data_reporting_combined import DataReportingCombination
@@ -10,14 +8,11 @@ from syntrillo.remote_monitoring.data_reporting_blood_pressure import DataReport
 from syntrillo.remote_monitoring.data_reporting_heart_rate import DataReportingHeartRate
 from syntrillo.remote_monitoring.data_reporting_steps import DataReportingSteps
 from syntrillo.data_structures.healthie_dataset_handler import DataStructureHealthieDatasetHandler
-
+from syntrillo.system.logger import logger
 from syntrillo.api_healthie.medications import HealthieMedications
-
 from syntrillo.system.iframe_validator import IframeValidator
 
 iframe_healthie_provider_tab_care_plan_bp = Blueprint('iframe_healthie_provider_tab_care_plan_bp', __name__)
-
-from syntrillo.system.logger import logger
 
 @iframe_healthie_provider_tab_care_plan_bp.route('/healthie/iframe_provider_tab/care_plan', methods=['POST'])
 def iframe_healthie_provider_tab_care_plan():

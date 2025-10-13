@@ -17,24 +17,21 @@ class SyntrilloMedicationsDatabaseQueries:
 
     MED_DB_COLUMN_NAMES = [
         'medication_record_id', 'syntrillo_internal_key', 'medication_id', 'medication_name',
-        'is_active', 'created_at', 'dosage_option_id',
+        'is_active', 'created_at', 'dosage_option_id', 'mirrored',
         'dosage_amount', 'dosage_unit', 'comment', 'directions', 'frequency',
         'dosing_interval', 'dosing_schedule_rule', 'dose_count', 'time_of_day',
         'start_date', 'end_date', 'delivery_method'
     ]
 
-    def __init__(self, syntrillo_internal_key: uuid.UUID) -> None:
+    def __init__(self) -> None:
         """
         For a given patient, manage data located in our Syntrillo PHI database
 
         Args:
-            syntrillo_internal_key (uuid.UUID): The internal key for the patient
+            None
         Returns:
             None
         """
-
-        self.syntrillo_internal_key = syntrillo_internal_key
-
         # connect to our database
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
         self.conn, _ = db_conn.create_connection()
@@ -82,7 +79,7 @@ class SyntrilloMedicationsDatabaseQueries:
             return None, log
 
 
-    def get_medication_records_for_patient(self, syntrillo_internal_key: str) -> Dict[str, Dict[str, Any]]:
+    def get_medication_records_for_patient(self, syntrillo_internal_key: str) -> Tuple[Dict[int, Dict[str, Any]], dict]:
         """
         Fetches and structures medication records for a patient.
 
@@ -93,7 +90,7 @@ class SyntrilloMedicationsDatabaseQueries:
             syntrillo_internal_key (str): Internal patient identifier.
 
         Returns:
-            medications_data (Dict[str, Dict[str, Any]]): A dictionary where keys are medication_ids.
+            medications_data (Dict[int, Dict[str, Any]]): A dictionary where keys are medication_ids.
                                     Each value contains the 'current' record
                                     and a 'history' list of older records.
             log (dict): The logs for the DB operation.

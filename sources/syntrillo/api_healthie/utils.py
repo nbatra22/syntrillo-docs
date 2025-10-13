@@ -209,12 +209,13 @@ class HealthieUtils():
         # Set up the GraphQL variables
         variables = {
             'offset': 0,  # Offset for pagination (if applicable)
-            # Add other variables as needed
             'should_paginate': False, # If set to True (default)  we only read the first 10 users
+            # Add other variables as needed
         }
 
         # Send the GraphQL query using the inherited send_query method
         response, _ = self.auth.send_query(query, variables)
+        logger.info(f"Found {len(response['users'])} patients over {response['usersCount']}")
 
         return response
 
@@ -302,10 +303,7 @@ class HealthieUtils():
 
         return response
 
-    def get_user_from_id(
-        self,
-        user_id : str = None
-        ):
+    def get_user_from_id( self, user_id : str = ""):
         """
         Retrieve a specific patient
         https://docs.gethealthie.com/docs/#retrieving-a-patient
@@ -565,14 +563,20 @@ class HealthieUtils():
             response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
             current_page_data = response.get("formAnswerGroups", [])
 
-            logger.info(f"Successfully fetched Device Training Note form response from Healthie.")
+            logger.info("Successfully fetched Device Training Note form response from Healthie.")
 
             return current_page_data
 
         except Exception as e:
             logger.error(f"Error fetching Device Training Note form response from Healthie: {e}")
 
-    def create_medication(self, medication: MedicationRecord, healthie_user_id: str, start_date_str: str, end_date_str: str = None) -> dict:
+    def create_medication(
+            self,
+            medication: MedicationRecord,
+            healthie_user_id: str,
+            start_date_str: str,
+            end_date_str: str = ""
+        ) -> dict:
         """
         Creates a medication in Healthie API
 
@@ -583,6 +587,8 @@ class HealthieUtils():
             end_date_str (str): The end date of the medication.
         Returns:
             data (dict): The response from Healthie's API about the specific medication.
+        Raises:
+            e (Exception): generic exception
         """
         graphql_query = '''
             mutation createMedication(
@@ -613,6 +619,7 @@ class HealthieUtils():
                         id
                         name
                         dosage
+                        mirrored
                     }
                     messages {
                         field
@@ -654,13 +661,14 @@ class HealthieUtils():
 
             # Retrieve the current set of responses
             response: dict = HealthieUtils.run_graphql_query(graphql_query, variables)
-            data = response.get("createMedication", []).get("medication", [])
-            logger.info(f"Successfully created medication in Healthie...")
+            data = response.get("createMedication", {}).get("medication", {})
+            logger.info("Successfully created medication in Healthie...")
 
             return data
 
         except Exception as e:
             logger.error(f"Error creating medication in Healthie: {e}")
+            raise e
 
 
     def get_medication_info_by_keywords(self, keywords: str) -> List[dict]:

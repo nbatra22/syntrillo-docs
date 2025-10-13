@@ -28,7 +28,7 @@ class HealthieMedications:
         self,
         healthie_user_id: str,
         active: bool = False,
-        ) -> Tuple[dict, dict]:
+        ) -> dict:
         """
         List medications based on the specified criteria using the Healthie API.
 
@@ -47,7 +47,7 @@ class HealthieMedications:
 
         Parameters:
             healthie_user_id (str): The Healthie user ID.
-            active (bool): Optional. Fetch only active Medications. Default is False.
+            active (bool): Optional. Fetch only inactive Medications. Default is False.
 
         Returns:
             dict: returns list of medication types based on the specified criteria.
@@ -64,17 +64,19 @@ class HealthieMedications:
                     ) {
                         id
                         name
-                        code            # CCDA code for this medication
-                        active
-                        route           # The way this medication is administered
-                        dosage          # Dosage of medication entered by provider
-                        frequency       # Frequency of this medication
-                        directions      # Directions to use medication entered by provider
-                        comment         # Comments entered by provider
-                        start_date      # First active date of medication
-                        end_date        # last date patient should be able to use medication
-                        created_at      # Date medication was created
-                        updated_at      # Date medication was last updated
+                        code              # CCDA code for this medication
+                        active            # Active status of medication
+                        route             # The way this medication is administered
+                        dosage            # Dosage of medication entered by provider
+                        frequency         # Frequency of this medication
+                        directions        # Directions to use medication entered by provider
+                        comment           # Comments entered by provider
+                        start_date        # First active date of medication
+                        end_date          # last date patient should be able to use medication
+                        created_at        # Date medication was created
+                        updated_at        # Date medication was last updated
+                        mirrored          # If the medication is mirrored in another system
+                        normalized_status
                     }
                 }
         '''
