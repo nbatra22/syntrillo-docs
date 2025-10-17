@@ -461,9 +461,10 @@ class HealthieUtils():
 
         except Exception as e:
             logger.error(f"Error fetching form responses from Healthie: {e}")
+            return {}
 
 
-    def fetch_single_healthie_form_response_by_form_name_and_user_id(self, form_name: str, user_id: int) -> dict:
+    def fetch_single_healthie_form_response_by_form_name_and_user_id(self, form_name: str, user_id: int) -> List:
         """
         Fetches a single form response from Healthie API
 
@@ -471,7 +472,7 @@ class HealthieUtils():
             form_name (str): The name of the form to fetch
             user_id (int): The ID of the user to fetch the form response for
         Returns:
-            dict: The JSON response 'data' from the API
+            List: The JSON response 'data' from the API
         """
 
         # Set up the GraphQL query to list custom module forms
@@ -569,6 +570,7 @@ class HealthieUtils():
 
         except Exception as e:
             logger.error(f"Error fetching Device Training Note form response from Healthie: {e}")
+            return []
 
     def create_medication(
             self,
@@ -727,7 +729,7 @@ class HealthieUtils():
 
             variables = { "keywords": keywords }
             response = HealthieUtils.run_graphql_query(graphql_query, variables)
-            data = response.get("medication_options", {})
+            data = response.get("medication_options", [])
             return data
 
         except Exception as e:

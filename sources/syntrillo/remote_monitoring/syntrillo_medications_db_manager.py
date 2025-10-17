@@ -136,7 +136,7 @@ class SyntrilloMedicationsDatabaseQueries:
             return {}, log
 
 
-    def delete_medication_records(self, medication_id: int) -> Tuple[bool, dict]:
+    def delete_medication_records(self, medication_id: str) -> Tuple[bool, dict]:
         """
         Deletes ALL records associated with a given medication_id.
 
@@ -144,7 +144,7 @@ class SyntrilloMedicationsDatabaseQueries:
         medication from the medications_records table.
 
         Args:
-            medication_id (int): The unique identifier for the medication to be deleted.
+            medication_id (str): The unique identifier for the medication to be deleted.
         Returns:
             Tuple[bool, dict]: A tuple containing a boolean indicating success (True) or failure (False),
                                and a log dictionary with operation details.

@@ -1,7 +1,6 @@
 # Path: ./sources/syntrillo/api_healthie/medications.py
 
 import json
-
 from typing import Tuple
 
 from syntrillo.api_healthie.auth import HealthieAuth
@@ -28,7 +27,7 @@ class HealthieMedications:
         self,
         healthie_user_id: str,
         active: bool = False,
-        ) -> dict:
+        ) -> Tuple[dict, dict]:
         """
         List medications based on the specified criteria using the Healthie API.
 
@@ -62,8 +61,8 @@ class HealthieMedications:
                         active: $active,
                         patient_id: $patient_id
                     ) {
-                        id
-                        name
+                        id                # Patient<->medication specific id
+                        name              # Medication name
                         code              # CCDA code for this medication
                         active            # Active status of medication
                         route             # The way this medication is administered
