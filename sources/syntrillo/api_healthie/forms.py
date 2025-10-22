@@ -4,6 +4,7 @@ import json
 import html
 
 from syntrillo.api_healthie.auth import HealthieAuth
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 class HealthieForms():
     """
@@ -1238,6 +1239,40 @@ class HealthieForms():
         # print(f"-------- response: {response}")
         # print(f"-------- log: {log}")
 
+        return response
+
+    def get_first_telemed_form(self, user_id: str, form_id: str):
+
+        query = """
+            query formAnswerGroups(
+                $user_id: String,
+                $custom_module_form_id: ID,
+            ) {
+                formAnswerGroups (
+                    custom_module_form_id: $custom_module_form_id
+                    user_id: $user_id
+                    order_by: CREATED_AT_ASC
+                ) {
+                    user_id
+                    created_at
+                    form_answers {
+                        label
+                        displayed_answer
+                        custom_module {
+                            id
+                        }
+                    }
+                    form_answer_group_signings {
+                        created_at
+                    }
+                }
+            }
+        """
+        variables = {
+            'custom_module_form_id': form_id,
+            'user_id': user_id,
+        }
+        response, log = self.auth.send_query(query, variables)
         return response
 
 

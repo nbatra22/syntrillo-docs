@@ -9,23 +9,139 @@
 .so-header {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    /* gap: 0.5rem; */
+    padding: 1rem 0;
+}
+
+.so-header p {
+    font-size: small;
+    color: #6b7280;
+    margin: 0;
 }
 
 .so-header-title {
-    font-size: 1.5rem;
     font-weight: bold;
+    font-size: large;
+    color: #16284a;
+    margin: 0;
 }
 
 .so-header-description {
-    font-size: 0.875rem;
-    color: #6b7280;
+    font-size: small;
+    color: #6b7280 !important;
+    margin: 0;
 }
 
 .so-content-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+.so-content-container section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.so-content-container section table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 0.25px solid #6b7280;
+    /* color: #16284a; */
+}
+
+#so-study-info-table {
+    margin-bottom: 0.5rem;
+}
+
+#so-study-info-table tr {
+    display: grid;
+    grid-template-columns: 4fr 3fr 3fr;
+}
+
+#so-outcomes-table tr {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
+}
+
+.so-table thead th {
+    background-color: #16284a;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.5rem;
+    border: 0.25px solid #6b7280;
+}
+
+.so-table tbody th, td {
+    padding: 0.5rem;
+    font-weight: normal;
+    border: 0.5px solid #6b7280;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#so-outcomes-table tbody th {
+    text-align: left;
+}
+
+#so-loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    width: 100%;
+}
+
+#so-table-container {
+    position: relative;
+    min-height: 300px;
+}
+
+#so-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+#so-loading-spinner {
+    width: 2rem;
+    height: 2rem;
+}
+
+#so-loading-text {
+    font-size: small;
+    color: #6b7280;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border: 4px solid transparent;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 </style>
 
@@ -34,15 +150,113 @@
 <div id="so-container">
     <div class="so-header">
         <h2 class="so-header-title">
-            Study Outcomes
+            Primary Prevention
         </h2>
-        <p class="so-header-description">
-
+        <p id="so-primary-prevention-description" class="so-header-description">
+            Data below is sourced from Tenovi blood pressure measurements and Healthie metric values.
         </p>
     </div>
 
     <div class="so-content-container">
-
+        <section id="so-table-container">
+            <div id="so-loading-overlay">
+                <div id="so-loading-container">
+                    <div id="so-loading-spinner" class="spinner"></div>
+                    <p id="so-loading-text">Fetching data...</p>
+                </div>
+            </div>
+            <table id="so-study-info-table" class="so-table">
+                <thead>
+                    <th scope="col">Start Date (Telemedicine Visit)</th>
+                    <th scope="col">Timeline Completion (%)</th>
+                    <th scope="col">Days Remaining</th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="so-start-date">-</td>
+                        <td id="so-timeline-completion">-</td>
+                        <td id="so-days-remaining">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table id="so-outcomes-table" class="so-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Goal</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Baseline</th>
+                        <th scope="col">Current</th>
+                        <th scope="col">Progress (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">Reduce average SBP by 10 mmHg</th>
+                        <td id="so-status-avg-sbp">-</td>
+                        <td id="so-baseline-avg-sbp">-</td>
+                        <td id="so-current-avg-sbp">-</td>
+                        <td id="so-progress-avg-sbp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Decrease SBP standard deviation (SD) by 10%</th>
+                        <td id="so-status-sbp-sd">-</td>
+                        <td id="so-baseline-sbp-sd">-</td>
+                        <td id="so-current-sbp-sd">-</td>
+                        <td id="so-progress-sbp-sd">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Reduce average pulse pressure (PP) by 5 mmHg</th>
+                        <td id="so-status-pp">-</td>
+                        <td id="so-baseline-pp">-</td>
+                        <td id="so-current-pp">-</td>
+                        <td id="so-progress-pp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Reduce average DBP by 5 mmHg</th>
+                        <td id="so-status-dbp">-</td>
+                        <td id="so-baseline-dbp">-</td>
+                        <td id="so-current-dbp">-</td>
+                        <td id="so-progress-dbp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Reduction of hs-CRP</th>
+                        <td id="so-status-hs-crp">-</td>
+                        <td id="so-baseline-hs-crp">-</td>
+                        <td id="so-current-hs-crp">-</td>
+                        <td id="so-progress-hs-crp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Reduce resting heart rate (RHR) by 5 bpm</th>
+                        <td id="so-status-rhr">-</td>
+                        <td id="so-baseline-rhr">-</td>
+                        <td id="so-current-rhr">-</td>
+                        <td id="so-progress-rhr">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Increase of heart rate variability (HRV) by 10% measured by SDNN</th>
+                        <td id="so-status-hrv">-</td>
+                        <td id="so-baseline-hrv">-</td>
+                        <td id="so-current-hrv">-</td>
+                        <td id="so-progress-hrv">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Maintain upwards of 90% engagement</th>
+                        <td id="so-status-engagement">-</td>
+                        <td id="so-baseline-engagement">-</td>
+                        <td id="so-current-engagement">-</td>
+                        <td id="so-progress-engagement">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <ul id="so-timeframe-description">
+                <li><span style="text-decoration: underline;">Baseline</span>: first 20 measurements, cuttoff date agnostic</li>
+                <li><span style="text-decoration: underline;">Current/Latest</span>: most recent 10 trailing measurements</li>
+                <li><span style="text-decoration: underline;">1 - 6 months</span>: last 10 measurements leading up to cutoff, separated by 30 day intervals</li>
+                <!-- <li><span style="text-decoration: underline;">Status</span>: </li> -->
+                <li><span style="text-decoration: underline;">Progress (%)</span>: negative progress percentages indicate worsening behavior</li>
+                <li><span style="text-decoration: underline;">Engagement</span>: percentage of days within the study period that a measurement was taken</li>
+            </ul>
+        </section>
     </div>
 </div>
 
@@ -50,4 +264,178 @@
 <!-- SCRIPT -->
 <script>
 
+var healthieProviderId = "{{ healthie_provider_id }}";
+var healthieUserId = "{{ healthie_user_id }}";
+var temporaryLookupCode = "{{ temporary_lookup_code }}";
+var patientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+
+function showSpinner(targetElement) {
+    targetElement.style.display = "flex";
+}
+
+function hideSpinner(targetElement) {
+    targetElement.style.display = "none";
+}
+
+function getStudyOutcomesData() {
+
+    showSpinner(document.getElementById('so-loading-overlay'));
+
+    const formData = new FormData();
+    formData.append('healthie_provider_id', healthieProviderId);
+    formData.append('healthie_user_id', healthieUserId);
+    formData.append('temporary_lookup_code', temporaryLookupCode);
+    formData.append('patient_not_registered_at_syntrillo', patientNotRegisteredAtSyntrillo);
+
+    fetch('{{ url_for("iframe_healthie_provider_tab_study_outcomes_bp.iframe_healthie_provider_tab_study_outcomes_data") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if (data.success && data.study_outcomes_data) {
+            populateStudyOutcomesTable(data.study_outcomes_data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        hideSpinner(document.getElementById('so-loading-overlay'));
+    });
+}
+
+function populateStudyOutcomesTable(studyData) {
+    const baseline = studyData.Baseline;
+    const current = studyData.Current;
+
+    if (!baseline || !current) {
+        console.error('Missing baseline or current data');
+        return;
+    }
+
+    // Get progress data from backend
+    const progress = current.progress || {};
+
+    // Average SBP
+    const baselineAvgSBP = baseline.bp_metadata['Avg SBP (mmHg)'];
+    const currentAvgSBP = current.bp_metadata['Avg SBP (mmHg)'];
+    const sbpReduction = progress.avg_sbp ? progress.avg_sbp.progress : null;
+
+    document.getElementById('so-baseline-avg-sbp').textContent = baselineAvgSBP.toFixed(1);
+    document.getElementById('so-current-avg-sbp').textContent = currentAvgSBP.toFixed(1);
+    document.getElementById('so-progress-avg-sbp').textContent = sbpReduction.toFixed(1);
+    document.getElementById('so-status-avg-sbp').textContent = progress.avg_sbp ? progress.avg_sbp.status : 'N/A';
+
+    // SBP Standard Deviation
+    const baselineSBPSD = baseline.bp_metadata['SBP SD (mmHg)'];
+    const currentSBPSD = current.bp_metadata['SBP SD (mmHg)'];
+    const sbpSDReduction = progress.sbp_sd ? progress.sbp_sd.progress : null;
+
+    document.getElementById('so-baseline-sbp-sd').textContent = baselineSBPSD.toFixed(1);
+    document.getElementById('so-current-sbp-sd').textContent = currentSBPSD.toFixed(1);
+    document.getElementById('so-progress-sbp-sd').textContent = sbpSDReduction.toFixed(1);
+    document.getElementById('so-status-sbp-sd').textContent = progress.sbp_sd ? progress.sbp_sd.status : 'N/A';
+
+    // Average Pulse Pressure (PP)
+    const baselineAvgPP = baseline.bp_metadata['Avg PP (mmHg)'];
+    const currentAvgPP = current.bp_metadata['Avg PP (mmHg)'];
+    const ppReduction = progress.avg_pp ? progress.avg_pp.progress : null;
+
+    document.getElementById('so-baseline-pp').textContent = baselineAvgPP.toFixed(1);
+    document.getElementById('so-current-pp').textContent = currentAvgPP.toFixed(1);
+    document.getElementById('so-progress-pp').textContent = ppReduction.toFixed(1);
+    document.getElementById('so-status-pp').textContent = progress.avg_pp ? progress.avg_pp.status : 'N/A';
+
+    // Average DBP
+    const baselineAvgDBP = baseline.bp_metadata['Avg DBP (mmHg)'];
+    const currentAvgDBP = current.bp_metadata['Avg DBP (mmHg)'];
+    const dbpReduction = progress.avg_dbp ? progress.avg_dbp.progress : null;
+
+    document.getElementById('so-baseline-dbp').textContent = baselineAvgDBP.toFixed(1);
+    document.getElementById('so-current-dbp').textContent = currentAvgDBP.toFixed(1);
+    document.getElementById('so-progress-dbp').textContent = dbpReduction.toFixed(1);
+    document.getElementById('so-status-dbp').textContent = progress.avg_dbp ? progress.avg_dbp.status : 'N/A';
+
+    // hs-CRP
+    const baselineHsCRP = baseline.hs_crp_data ? baseline.hs_crp_data.metric_stat : null;
+    const currentHsCRP = current.hs_crp_data ? current.hs_crp_data.metric_stat : null;
+
+    if (baselineHsCRP !== null) {
+        document.getElementById('so-baseline-hs-crp').textContent = baselineHsCRP.toFixed(1);
+    } else {
+        document.getElementById('so-baseline-hs-crp').textContent = 'N/A';
+    }
+
+    if (currentHsCRP !== null) {
+        document.getElementById('so-current-hs-crp').textContent = currentHsCRP.toFixed(1);
+        document.getElementById('so-status-hs-crp').textContent = progress.hs_crp ? progress.hs_crp.status : 'N/A';
+    } else {
+        document.getElementById('so-current-hs-crp').textContent = 'N/A';
+        document.getElementById('so-progress-hs-crp').textContent = 'N/A';
+        document.getElementById('so-status-hs-crp').textContent = 'N/A';
+    }
+
+    if (progress.hs_crp && progress.hs_crp.progress !== null) {
+        document.getElementById('so-progress-hs-crp').textContent = progress.hs_crp.progress.toFixed(1);
+    } else {
+        document.getElementById('so-progress-hs-crp').textContent = 'N/A';
+    }
+
+    // Resting Heart Rate (RHR)
+    const baselineRHR = baseline.hr_metadata ? baseline.hr_metadata.average_rhr : null;
+    const currentRHR = current.hr_metadata ? current.hr_metadata.average_rhr : null;
+    const rhrReduction = progress.rhr ? progress.rhr.progress : null;
+
+    if (baselineRHR !== null && currentRHR !== null) {
+        document.getElementById('so-baseline-rhr').textContent = baselineRHR.toFixed(1);
+        document.getElementById('so-current-rhr').textContent = currentRHR.toFixed(1);
+        document.getElementById('so-progress-rhr').textContent = rhrReduction.toFixed(1);
+        document.getElementById('so-status-rhr').textContent = progress.rhr ? progress.rhr.status : 'N/A';
+    } else {
+        document.getElementById('so-baseline-rhr').textContent = baselineRHR !== null ? baselineRHR.toFixed(1) : 'N/A';
+        document.getElementById('so-current-rhr').textContent = currentRHR !== null ? currentRHR.toFixed(1) : 'N/A';
+        document.getElementById('so-progress-rhr').textContent = 'N/A';
+    }
+
+    // Heart Rate Variability (HRV) - SDNN
+    const baselineHRV = baseline.hr_metadata ? baseline.hr_metadata.standard_deviation_rhr : null;
+    const currentHRV = current.hr_metadata ? current.hr_metadata.standard_deviation_rhr : null;
+
+    if (baselineHRV !== null && currentHRV !== null) {
+        const hrvIncrease = progress.hrv ? progress.hrv.progress : null;
+        document.getElementById('so-baseline-hrv').textContent = baselineHRV.toFixed(1);
+        document.getElementById('so-current-hrv').textContent = currentHRV.toFixed(1);
+        document.getElementById('so-progress-hrv').textContent = hrvIncrease.toFixed(1);
+        document.getElementById('so-status-hrv').textContent = progress.hrv ? progress.hrv.status : 'N/A';
+    } else {
+        document.getElementById('so-baseline-hrv').textContent = baselineHRV !== null ? baselineHRV.toFixed(1) : 'N/A';
+        document.getElementById('so-current-hrv').textContent = currentHRV !== null ? currentHRV.toFixed(1) : 'N/A';
+        document.getElementById('so-progress-hrv').textContent = 'N/A';
+        document.getElementById('so-status-hrv').textContent = 'Pending';
+    }
+
+    // Engagement
+    const baselineEngagement = baseline.engagement;
+    const currentEngagement = current.engagement;
+
+    document.getElementById('so-baseline-engagement').textContent = baselineEngagement.toFixed(1);
+    document.getElementById('so-current-engagement').textContent = currentEngagement.toFixed(1);
+    document.getElementById('so-status-engagement').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
+
+    // Study Info
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    const startDate = formatDate(baseline.start_date);
+    const timelineCompletion = current.progress.study_progress.percentage;
+
+    document.getElementById('so-start-date').textContent = startDate;
+    document.getElementById('so-timeline-completion').textContent = timelineCompletion < 100 ? timelineCompletion.toFixed(1) : 100.0;
+    document.getElementById('so-days-remaining').textContent = current.progress.study_progress.days_remaining;
+}
+
+getStudyOutcomesData();
 </script>
