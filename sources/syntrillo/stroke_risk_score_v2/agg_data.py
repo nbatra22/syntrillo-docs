@@ -69,6 +69,9 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         # Get healthie user id from lookup codes
         lookup_codes = LookUpCodesManagement()
         entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
+
+        if not entry:
+            return {}
         healthie_user_id = entry['healthie_user_id']
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
@@ -115,7 +118,7 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
         ValueError: If the healthie data is not valid
     """
     try:
-        logger.info(f"Fetching RHR and Activity data from Healthie...")
+        logger.info("Fetching RHR and Activity data from Healthie...")
         # Retreive resting hr from healthie
         healthie_utils = HealthieUtils()
 
@@ -127,12 +130,12 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
-        logger.info(f"Successfully fetched RHR and Activity data from Healthie...")
+        logger.info("Successfully fetched RHR and Activity data from Healthie...")
         return {
             "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
             "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
             "average_rhr_prior": rhr_metadata["average_rhr_prior"] if rhr_metadata else None,
-            "inactivity_hours_answer": activity_data["inactivity_hours_answer"],
+            "inactivity_hours_answer": activity_data.get("inactivity_hours_answer", ),
             "activity_minutes_answer": activity_data["activity_minutes_answer"],
         }
 
@@ -168,7 +171,7 @@ def get_healthie_activity_and_inactivity_module_ids(db_manager: SyntrilloDatabas
     }
 
 
-def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> Union[int, None]:
+def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
     """
     Get the activity data from healthie
     Args:
@@ -176,13 +179,13 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         db_manager (SyntrilloDatabaseManager): The syntrillo database manager
 
     Returns:
-        inactivity_minutes_answer (int | None): The patient's inactivity minutes form response answer
+        inactivity_minutes_answer (dict | None): The patient's inactivity minutes form response answer
     Raises:
         ValueError: If the inactivity minutes answer is not valid
     """
 
     try:
-        logger.info(f"Fetching activity data from healthie...")
+        logger.info("Fetching activity data from healthie...")
 
         # Get the module ids for the intake and charting modules
         physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
@@ -191,12 +194,14 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
         module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
 
-        # Retreive the intake & charting inactivity value based on the module id and healthie user id
-        intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
-        charting_inactivity_hours_answer, charting_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, syntrillo_internal_key)
+        syntrillo_internal_key_str = str(syntrillo_internal_key)
 
-        intake_activity_minutes_answer, intake_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, syntrillo_internal_key)
-        charting_activity_minutes_answer, charting_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, syntrillo_internal_key)
+        # Retreive the intake & charting inactivity value based on the module id and healthie user id
+        intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key_str)
+        charting_inactivity_hours_answer, charting_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, syntrillo_internal_key_str)
+
+        intake_activity_minutes_answer, intake_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, syntrillo_internal_key_str)
+        charting_activity_minutes_answer, charting_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, syntrillo_internal_key_str)
 
         # Use the most recent answer from the intake or charting responses
         if not intake_inactivity_hours_answer and not charting_inactivity_hours_answer:
@@ -218,7 +223,7 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         inactivity_hours_answer = float(inactivity_hours_answer)
         activity_minutes_answer = float(activity_minutes_answer)
 
-        logger.info(f"Successfully fetched activity data from healthie...")
+        logger.info("Successfully fetched activity data from healthie...")
         return {
             "inactivity_hours_answer": inactivity_hours_answer,
             "activity_minutes_answer": activity_minutes_answer,
@@ -240,7 +245,7 @@ def get_healthie_metric_data(healthie_utils: HealthieUtils, healthie_user_id: st
     Returns:
         all_metric_data (List[dict]): All metric data for the patient and
     """
-    logger.info(f"Fetching RHR data from healthie...")
+    logger.info("Fetching RHR data from healthie...")
     try:
         all_metric_data = []
         cursor = None
@@ -326,7 +331,7 @@ def calc_rhr_metadata(
         ValueError: If the RHR metadata is not valid
     """
     try:
-        logger.info(f"Calculating RHR metadata...")
+        logger.info("Calculating RHR metadata...")
         # Convert rhr_data to pandas dataframe
         rhr_df = pd.DataFrame(rhr_data)
 
@@ -391,7 +396,7 @@ def calc_rhr_metadata(
 
 
 
-def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> SRSFormResponse:
+def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> Union[SRSFormResponse, None]:
     """
     Get the most recent srs form response from the syntrillo_internal_key
     Args:
@@ -430,7 +435,7 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         ValueError: If the hr data is not valid
     """
     try:
-        logger.info(f"Fetching Tenovi HR data...")
+        logger.info("Fetching Tenovi HR data...")
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
         if len(hr_measurements) == 0:
             logger.warning("No Tenovi HR data found for the patient ...")
@@ -454,7 +459,7 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         trailing_hr_average = trailing_df[VALUE_1].mean() if not trailing_df.empty else None
         trailing_hr_variability = trailing_df[VALUE_1].std() if not trailing_df.empty else None
 
-        logger.info(f"Successfully fetched Tenovi HR data...")
+        logger.info("Successfully fetched Tenovi HR data...")
         return {
             "trailing_hr_variability": round(trailing_hr_variability, 2) if trailing_hr_variability else None,
             "trailing_hr_average": round(trailing_hr_average, 2) if trailing_hr_average else None,
@@ -500,7 +505,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
         ValueError: If the bp metadata is not valid
     """
     try:
-        logger.info(f"Beginning Tenovi BP data aggregation...")
+        logger.info("Beginning Tenovi BP data aggregation...")
         bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
         bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
         if bp_df is None or bp_df.empty:
@@ -525,14 +530,14 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     },
                 }
             }
-        logger.info(f"Successfully fetched Tenovi BP data...")
+        logger.info("Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
         # Baseline start date is the first timestamp in the bp_df
         baseline_start = bp_df[TIMESTAMP_LOCAL].min()
 
         # Get the baseline and trailing dataframes
-        logger.info(f"Getting baseline and trailing dataframes...")
+        logger.info("Getting baseline and trailing dataframes...")
         baseline_bp_df = get_baseline_bp_data(bp_df, baseline_start=baseline_start, baseline_weeks=BASELINE_NUM_WEEKS) # Get the baseline data
         trailing_bp_df = get_trailing_bp_data(bp_df, baseline_start=baseline_start, trailing_weeks=TRAILING_NUM_WEEKS, trailing_days=TRAILING_NUM_DAYS) # Get the trailing data
 
