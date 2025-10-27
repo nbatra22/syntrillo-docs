@@ -1,0 +1,117 @@
+{% extends "healthie/iframe_provider_tab/forms/index_form.html" %}
+
+{% block extra_head %}
+<style>
+
+#medication-form-content {
+    height: 500px;
+    overflow: scroll;
+}
+
+.form-group-container-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<form id="medication-form" class="form-subcontainer" onsubmit="">
+    <div id="medication-form-content" class="form-content">
+        <div id="medication-name-container" class="form-group">
+            <label for="medication-name">Medication Name</label>
+            <input type="text" id="medication-name" name="medication_name" required>
+        </div>
+
+        <div id="medication-is-active-container" class="form-group">
+            <label for="medication-is-active">Is this medication currently being taken by the patient?</label>
+            <div class="input-button-group">
+                <div class="input-button-group-item">
+                    <input type="radio" id="medication-is-active-yes" name="medication_is_active" value="yes" default>
+                    <label for="medication-is-active-yes">Yes</label>
+                </div>
+                <div class="input-button-group-item">
+                    <input type="radio" id="medication-is-active-no" name="medication_is_active" value="no">
+                    <label for="medication-is-active-no">No</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-start-date-container" class="form-group">
+                <label for="medication-start-date">Start Date</label>
+                <input type="date" id="medication-start-date" name="medication_start_date" required>
+            </div>
+            <div id="medication-end-date-container" class="form-group">
+                <label for="medication-end-date">End Date</label>
+                <input type="date" id="medication-end-date" name="medication_end_date" required>
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-dose-container" class="form-group">
+                <label for="medication-dose">Dosage</label>
+                <input type="number" id="medication-dose" name="medication_dose" step="0.1" required>
+            </div>
+            <div id="medication-dose-unit-container" class="form-group">
+                <label for="medication-dose-unit">Unit</label>
+                <input type="text" id="medication-dose-unit" name="medication_dose_unit" placeholder="e.g. mg, g, mL, etc." required>
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-count-container" class="form-group">
+                <label for="medication-count">Count (# of doses per intake)</label>
+                <input type="number" id="medication-count" name="medication_count" step="1" required>
+            </div>
+            <div id="medication-frequency-container" class="form-group">
+                <label for="medication-frequency">Frequency</label>
+                <input type="text" id="medication-frequency" name="medication_frequency" placeholder="e.g. once a day, twice a day, etc." required>
+            </div>
+        </div>
+
+        <div id="medication-time-of-day-container" class="form-group">
+            <label for="medication-time-of-day">Time of Day</label>
+            <input type="text" id="medication-time-of-day" name="medication_time_of-day" placeholder="e.g. morning, afternoon, evening, etc." required>
+        </div>
+
+        <div id="medication-delivery-method-container" class="form-group">
+            <label for="medication-delivery-method">Delivery Method</label>
+            <select id="medication-delivery-method" name="medication_delivery_method" required>
+                <option value="tablet-capsule-pill" selected>Tablet/Capsule/Pill</option>
+                <option value="cream">Cream</option>
+                <option value="implant">Implant</option>
+                <option value="inhaler">Inhaler</option>
+                <option value="suppository">Suppository</option>
+                <option value="injection">Injection</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <div id="medication-comment-container" class="form-group">
+            <label for="medication-comment">Comment</label>
+            <textarea id="medication-comment" name="medication_comment" placeholder="Enter any additional information about the medication"></textarea>
+        </div>
+
+        <div id="medication-directions-container" class="form-group">
+            <label for="medication-directions">Directions</label>
+            <textarea id="medication-directions" name="medication_directions" placeholder="Enter any additional directions about the medication"></textarea>
+        </div>
+    </div>
+
+    <div class="form-submit-footer">
+        <div id="form-status-message"></div>
+        <button type="submit" class="form-submit-btn" onclick="submitMedicationForm()">Submit</button>
+    </div>
+</form>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+</script>
+{% endblock %}

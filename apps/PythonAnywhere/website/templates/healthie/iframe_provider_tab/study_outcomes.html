@@ -60,7 +60,7 @@
     grid-template-columns: 4fr 3fr 3fr;
 }
 
-#so-outcomes-table tr {
+#primary-prevention-table tr {
     display: grid;
     grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
 }
@@ -82,7 +82,7 @@
     vertical-align: middle;
 }
 
-#so-outcomes-table tbody th {
+#primary-prevention-table tbody th {
     text-align: left;
 }
 
@@ -146,8 +146,8 @@
 </style>
 
 
-<!-- CONTENT -->
-<div id="so-container">
+<!-- Primary Prevention -->
+<div id="primary-prevention-container" class="so-container">
     <div class="so-header">
         <h2 class="so-header-title">
             Primary Prevention
@@ -179,7 +179,7 @@
                     </tr>
                 </tbody>
             </table>
-            <table id="so-outcomes-table" class="so-table">
+            <table id="primary-prevention-table" class="so-table">
                 <thead>
                     <tr>
                         <th scope="col">Goal</th>
@@ -245,6 +245,99 @@
                         <td id="so-baseline-engagement">-</td>
                         <td id="so-current-engagement">-</td>
                         <td id="so-progress-engagement">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <ul id="so-timeframe-description">
+                <li><span style="text-decoration: underline;">Baseline</span>: first 20 measurements, cuttoff date agnostic</li>
+                <li><span style="text-decoration: underline;">Current/Latest</span>: most recent 10 trailing measurements</li>
+                <li><span style="text-decoration: underline;">1 - 6 months</span>: last 10 measurements leading up to cutoff, separated by 30 day intervals</li>
+                <!-- <li><span style="text-decoration: underline;">Status</span>: </li> -->
+                <li><span style="text-decoration: underline;">Progress (%)</span>: negative progress percentages indicate worsening behavior</li>
+                <li><span style="text-decoration: underline;">Engagement</span>: percentage of days within the study period that a measurement was taken</li>
+            </ul>
+        </section>
+    </div>
+</div>
+
+<!-- Secondary Prevention -->
+<div id="secondary-prevention-container" class="so-container">
+    <div class="so-header">
+        <h2 class="so-header-title">
+            Secondary Prevention
+        </h2>
+        <p id="so-primary-prevention-description" class="so-header-description">
+            Data below is sourced from Tenovi blood pressure measurements and Healthie metric values.
+        </p>
+    </div>
+
+    <div class="so-content-container">
+        <section id="so-table-container">
+            <div id="so-loading-overlay">
+                <div id="so-loading-container">
+                    <div id="so-loading-spinner" class="spinner"></div>
+                    <p id="so-loading-text">Fetching data...</p>
+                </div>
+            </div>
+            <table id="so-study-info-table" class="so-table">
+                <thead>
+                    <th scope="col">Start Date (Telemedicine Visit)</th>
+                    <th scope="col">Timeline Completion (%)</th>
+                    <th scope="col">Days Remaining</th>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="so-start-date">-</td>
+                        <td id="so-timeline-completion">-</td>
+                        <td id="so-days-remaining">-</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table id="secondary-prevention-table" class="so-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Goal</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Baseline</th>
+                        <th scope="col">Current</th>
+                        <th scope="col">Progress (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">90% of SBP measurements below 130 mmHg</th>
+                        <td id="so-status-90-sbp">-</td>
+                        <td id="so-baseline-90-sbp">-</td>
+                        <td id="so-current-90-sbp">-</td>
+                        <td id="so-progress-90-sbp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">90% of DBP measurements below 80 mmHg</th>
+                        <td id="so-status-90-dbp">-</td>
+                        <td id="so-baseline-90-dbp">-</td>
+                        <td id="so-current-90-dbp">-</td>
+                        <td id="so-progress-90-dbp">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Correct prescription of antiplatelet, anticoagulant, and statins above 90%</th>
+                        <td id="so-status-prescription-accuracy">-</td>
+                        <td id="so-baseline-prescription-accuracy">-</td>
+                        <td id="so-current-prescription-accuracy">-</td>
+                        <td id="so-progress-prescription-accuracy">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Adherence to dosing regimen of antiplatelet, anticoagulant, and statins above 90%</th>
+                        <td id="so-status-prescription-adherence">-</td>
+                        <td id="so-baseline-prescription-adherence">-</td>
+                        <td id="so-current-prescription-adherence">-</td>
+                        <td id="so-progress-prescription-adherence">-</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Maintain upwards of 90% engagement</th>
+                        <td id="so-status-prescription-adherence">-</td>
+                        <td id="so-baseline-prescription-adherence">-</td>
+                        <td id="so-current-prescription-adherence">-</td>
+                        <td id="so-progress-prescription-adherence">-</td>
                     </tr>
                 </tbody>
             </table>

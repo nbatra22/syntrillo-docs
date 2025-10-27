@@ -1,0 +1,171 @@
+<style>
+    .medications-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .medications-header-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .meds-header {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .meds-header-buttons {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .meds-header-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        border: none;
+        color: #16284a;
+        background-color: #e5e7eb;
+        text-decoration: none;
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
+    }
+
+    .meds-header-button:hover {
+        background-color: #D1D5DB;
+    }
+
+    .meds-header-button:focus {
+        outline: 2px solid #1e40af;
+    }
+
+    .meds-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .meds-modal-content {
+        background: #fff;
+        width: 600px;
+        max-width: 90%;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .meds-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #d1d5db;
+    }
+
+    .close-btn {
+        cursor: pointer;
+        padding: 0.5rem;
+        border: none;
+        outline: none;
+        background: transparent;
+        border-radius: 0.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn:hover {
+        color: red;
+    }
+
+    .close-btn:active {
+        outline: none !important;
+    }
+
+    .modal-body form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .meds-modal-title {
+        font-weight: bold;
+        font-size: large;
+    }
+
+    .meds-modal-subtitle {
+        font-size: small;
+    }
+</style>
+
+<div class="medications-container">
+    <section id="meds-header-container" class="medications-header-container">
+        <div class="meds-header">
+            <h2>Medications</h2>
+            <p>The medications listed below are sourced from the patient's Healthie account.</p>
+        </div>
+        <div class="meds-header-buttons">
+            <button class="meds-header-button" onclick="openMedicationsModal()">
+                <i class="fas fa-plus"></i>
+                Add Medication
+            </button>
+        </div>
+    </section>
+</div>
+
+<div id="meds-modal" class="meds-modal">
+    <div class="meds-modal-content">
+        <div class="meds-modal-header">
+            <div id="meds-modal-title-container">
+                <h2 id="meds-modal-title" class="meds-modal-title">Medication Form</h2>
+                <p id="meds-modal-subtitle" class="meds-modal-subtitle"></p>
+            </div>
+            <button class="close-btn" onclick="closeMedicationsModal()">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>
+        <div id="modal-body">
+            {% include 'healthie/iframe_provider_tab/forms/medication_form.html' %}
+        </div>
+    </div>
+</div>
+
+<script>
+    var healthieProviderId = "{{ healthie_provider_id }}";
+    var healthieUserId = "{{ healthie_user_id }}";
+    var temporaryLookupCode = "{{ temporary_lookup_code }}";
+    var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
+
+    function openMedicationsModal() {
+        const modal = document.getElementById('meds-modal');
+        modal.style.display = 'flex';
+    }
+
+    function closeMedicationsModal() {
+        const modal = document.getElementById('meds-modal');
+        modal.style.display = 'none';
+    }
+
+    function submitMedicationForm() {
+        const form = document.getElementById('medication-form');
+        const formData = new FormData(form);
+        console.log(formData);
+    }
+</script>

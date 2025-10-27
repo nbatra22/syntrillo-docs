@@ -16,46 +16,43 @@ class PatientStudyOutcomes:
 
     syntrillo_internal_key: uuid.UUID = None
     healthie_user_id: str = None
+    bp_analysis_manager: BloodPressureAnalysis = None
     bp_df: pd.DataFrame = None
+    timeframed_data: dict = None
     study_start_date: datetime = None
     study_end_date: datetime = None
+
+    # TODO: CREATE DB TABLE FOR STUDY GROUP
+    primary_prevention_study_group = [
+        '70770', # Sentara Health
+        '67724', # Encompass Cohort 1
+        '66295', # Sheltering Arms (1st cohort)
+        '63826', # Primary Prevention Study Group
+    ]
+    secondary_prevention_study_group = [
+        '55543', # Valley Health - Early Enrollmenet
+        '55544', # Valley Health - Late Enrollment
+    ]
 
     def __init__(self, syntrillo_internal_key, healthie_user_id):
         self.syntrillo_internal_key = syntrillo_internal_key
         self.healthie_user_id = healthie_user_id
+        self.bp_analysis_manager = BloodPressureAnalysis(self.syntrillo_internal_key)
 
-    def get_study_outcomes(self):
+    def get_primary_prevention_data(self):
         """
-        Get the study outcomes for a patient.
+        Get the primary prevention data for a patient.
         """
-        start_date_str = self.get_start_date()
-        today_date_str = datetime.now().isoformat()
+        valid_bp = self.initialize_blood_pressure_data()
 
-        # Run only if patient has had a telemedicine visit
-        if start_date_str is None:
+        if not valid_bp:
             return None
 
-        # Parse the start and today date strings to datetime objects
-        start_date = parser.isoparse(start_date_str)
-        today_date = parser.isoparse(today_date_str)
-        self.study_start_date = start_date.isoformat()
-        self.study_end_date = (start_date + timedelta(days=30 * 6)).isoformat()
-
-        bp_analysis_manager = BloodPressureAnalysis(self.syntrillo_internal_key)
-        bp_df, _ = bp_analysis_manager.get_blood_pressure_dataframe(start_date=start_date, end_date=today_date)
-
-        if bp_df is None or bp_df.empty:
-            return None
-
-        bp_df = bp_df.sort_values(by='timestamp_local')
-        self.bp_df = bp_df
-
-        # Get the time intervals
-        time_interval_data = self.get_bp_time_intervals(start_date=start_date, bp_df=bp_df)
+        time_interval_data = self.get_bp_time_intervals(start_date=self.study_start_date, bp_df=self.bp_df, study_type='primary')
 
         for time_interval, data in time_interval_data.items():
             # Get BP metadata
-            time_interval_data[time_interval]['bp_metadata'] = bp_analysis_manager.calculate_timeframe_metadata(data['data']) if data['data'] is not None else None
+            time_interval_data[time_interval]['bp_metadata'] = self.bp_analysis_manager.calculate_timeframe_metadata(data['data']) if data['data'] is not None else None
             time_interval_data[time_interval]['bp_data'] = data['data'].to_dict(orient='records') if data['data'] is not None else None
             del time_interval_data[time_interval]['data'] # Remove the DataFrame from the time interval data
 
@@ -66,7 +63,7 @@ class PatientStudyOutcomes:
 
             # Get hs-CRP data
             if time_interval in ['Baseline', 'Current']:
-                hs_crp_data = self.get_hs_crp_data(start_date=start_date, end_date=today_date)
+                hs_crp_data = self.get_hs_crp_data(start_date=self.study_start_date, end_date=self.study_end_date)
 
                 if time_interval == 'Baseline' and hs_crp_data is not None and len(hs_crp_data) > 0:
                     time_interval_data[time_interval]['hs_crp_data'] = hs_crp_data[0]
@@ -81,11 +78,31 @@ class PatientStudyOutcomes:
             # Get engagement percentage
             time_interval_data[time_interval]['engagement'] = round(self.calculate_engagement(data['start_date'], data['end_date']), 1)
 
-        print(f"-------- time_interval_data: {time_interval_data}")
+        # print(f"-------- time_interval_data: {time_interval_data}")
 
         time_interval_data['Current'] = self.calculate_metric_status_and_progress(current_dict=time_interval_data['Current'], baseline_dict=time_interval_data['Baseline'])
 
         print(f"-------- time_interval_data: {time_interval_data}")
+
+        return time_interval_data
+
+    def get_secondary_prevention_data(self):
+        """
+        Get the secondary prevention data for a patient.
+        """
+        valid_bp = self.initialize_blood_pressure_data()
+
+        if not valid_bp:
+            return None
+
+        time_interval_data = self.get_bp_time_intervals(start_date=self.study_start_date, bp_df=self.bp_df, study_type='secondary')
+
+        for time_interval, data in time_interval_data.items():
+            sbp_percentage_below_130 = (data['data']['systolic'] < 130).sum() / len(data['data'])
+            dbp_percentage_below_80 = (data['data']['diastolic'] < 80).sum() / len(data['data'])
+
+            time_interval_data[time_interval]['sbp_goal'] = sbp_percentage_below_130
+            time_interval_data[time_interval]['dbp_goal'] = dbp_percentage_below_80
 
         return time_interval_data
 
@@ -120,13 +137,43 @@ class PatientStudyOutcomes:
 
         return timestamp
 
-    def get_bp_time_intervals(self, start_date: datetime, bp_df: pd.DataFrame) -> dict:
+    def initialize_blood_pressure_data(self) -> bool:
+        """
+        Get the blood pressure dataframe and timeframed data for a patient.
+        """
+
+        start_date_str = self.get_start_date()
+        today_date_str = datetime.now().isoformat()
+
+        # Run only if patient has had a telemedicine visit
+        if start_date_str is None:
+            return False
+
+        # Parse the start and today date strings to datetime objects
+        start_date = parser.isoparse(start_date_str)
+        today_date = parser.isoparse(today_date_str)
+        self.study_start_date = start_date
+        self.study_end_date = (start_date + timedelta(days=30 * 6))
+
+        bp_df, _ = self.bp_analysis_manager.get_blood_pressure_dataframe(start_date=start_date, end_date=today_date)
+
+        if bp_df is None or bp_df.empty:
+            return False
+
+        bp_df = bp_df.sort_values(by='timestamp_local')
+
+        self.bp_df = bp_df
+
+        return True
+
+    def get_bp_time_intervals(self, start_date: datetime, bp_df: pd.DataFrame, study_type: str) -> dict:
         """
         Get the time intervals for the blood pressure data.
 
         Args:
             start_date: date of the telemedicine visit
             bp_df: blood pressure dataframe
+            study_type: 'primary' or 'secondary'
 
         Returns:
             A dictionary with the time intervals.
@@ -166,11 +213,12 @@ class PatientStudyOutcomes:
         for month_num in range(1, 7):
             cutoff_date = start_date + timedelta(days=30 * month_num)
             prior_date = cutoff_date - timedelta(days=29)
-            month_data = get_last_n_before_cutoff(bp_df, prior_date, cutoff_date, n=10)
+            primary_prevention_data = get_last_n_before_cutoff(bp_df, prior_date, cutoff_date, n=10)
+            secondary_prevention_data = bp_df[(bp_df['timestamp_local'] >= prior_date) & (bp_df['timestamp_local'] <= cutoff_date)]
             data[f"{month_num}mo"] = {
                 "start_date": prior_date,
                 "end_date": cutoff_date,
-                "data": month_data,
+                "data": primary_prevention_data if study_type == 'primary' else secondary_prevention_data,
             }
 
         # Latest: last 10 measurements overall
