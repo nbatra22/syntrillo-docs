@@ -3,7 +3,7 @@
 import requests
 import json
 import inspect
-from typing import Tuple
+from typing import Tuple, Optional
 
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.system.logger import logger
@@ -79,7 +79,7 @@ class HealthieAuth:
     def send_query(
         self,
         query: str,
-        variables: dict = {}
+        variables: Optional[dict] = {}
         ) -> Tuple[dict, dict]:
         """
         Sends a GraphQL query to the Healthie API.

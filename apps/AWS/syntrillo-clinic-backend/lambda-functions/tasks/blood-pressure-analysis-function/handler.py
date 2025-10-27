@@ -14,7 +14,7 @@ def handler(event, context):
     try:
         action = event.get('action', None)
         if not action:
-            raise ValueError(f"No action provided")
+            raise ValueError("No action provided")
         logger.info(f"Processing action: {action}")
 
         if action == 'list_patients':
@@ -30,12 +30,12 @@ def handler(event, context):
 
         # Input validation
         if syntrillo_internal_key is None or healthie_user_id is None:
-            raise ValueError(f"No syntrillo_internal_key or healthie_user_id provided")
+            raise ValueError("No syntrillo_internal_key or healthie_user_id provided")
 
         # Existing measurement validation
         db_manager = SyntrilloDatabaseManager(uuid.UUID(syntrillo_internal_key))
         record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
-        if log['success'] == False:
+        if not log['success']:
             return {
                 'success': False,
                 'error': log['error'],
@@ -113,7 +113,7 @@ def list_patients():
             })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
-            logger.error(f"Failed to find patient. No entry found in lookup")
+            logger.error("Failed to find patient. No entry found in lookup")
 
 
     lookup_codes.close_connection()

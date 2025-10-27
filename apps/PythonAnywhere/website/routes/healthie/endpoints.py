@@ -1,35 +1,34 @@
 # Path: ./apps/PythonAnywhere/website/routes/healthie/endpoints.py
 
 """
-
 routes to healthie webhooks endpoints
-
 """
-from syntrillo.system.logger import logger
-
-from flask import Blueprint, request, jsonify, render_template
-import json
-
 # ----- healthie package integration --------------
-
 # python anywhere requirements
 #    pip install python-dotenv
 
+from flask import Blueprint, request, jsonify
+import json
+from datetime import datetime
+
 # python.analysis.extraPaths added into .vscode/settings.json
+from syntrillo.system.logger import logger
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.chatbots.dispatcher import ChatBotsDispatcher
 from syntrillo.patient_initialization.new_patient_created import NewPatientCreated
+from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
+from syntrillo.medications.utils import process_medication_webhook_event
 
-# -------------------------------------------------
 
 healthie_endpoint_bp = Blueprint('healthie_endpoint', __name__)
 
-# whitelisting Healthie's IP addresses : Healthie does not sign its webhook events. https://docs.gethealthie.com/docs/#webhooks
+# Whitelisting Healthie's IP addresses : Healthie does not sign its webhook events. https://docs.gethealthie.com/docs/#webhooks
 # Define the whitelist of allowed IP addresses
-ALLOWED_IPS = ['192.168.0.1', '10.0.0.1', '127.0.0.1',  # local IPs
-               '18.206.70.225', '44.195.8.253',         # staging
-               '52.4.158.130', '3.216.152.234', '54.243.233.84', '50.19.211.21',  # production
-               ]
+ALLOWED_IPS = [
+    '192.168.0.1', '10.0.0.1', '127.0.0.1',                            # local IPs
+    '18.206.70.225', '44.195.8.253',                                   # staging
+    '52.4.158.130', '3.216.152.234', '54.243.233.84', '50.19.211.21',  # production
+]
 
 @healthie_endpoint_bp.route('/healthie_endpoint_post', methods=['POST'])
 def healthie_endpoint_post():
@@ -40,10 +39,11 @@ def healthie_endpoint_post():
 
     See https://docs.gethealthie.com/docs/#webhooks
 
+    {
         "resource_id": resource_id, # The ID of the resource that was affected
         "resource_id_type": resource_id_type, # The type of resource (can be 'Appointment', 'FormAnswerGroup', 'Entry', or 'Note')
         "event_type": event_type # The event that occurred
-
+    }
     """
 
     # Get the IP address of the incoming request
@@ -57,13 +57,11 @@ def healthie_endpoint_post():
 
     # Retrieve the JSON data from the POST request
     data = request.json
+    if not data:
+        logger.error("Invalid webhook payload: %r", data)
+        return {"error": "Invalid payload"}, 400
 
     # TODO : Log the data json.dumps(data)
-
-    # --------------------------------------------
-    # Dispatch
-
-    from datetime import datetime
 
     logger.info(f"Endpoint : start post: {datetime.now()}")
 
@@ -79,7 +77,7 @@ def healthie_endpoint_post():
         logger.info({
             "message": "> Time to execute chatbot endpoint",
             "duration_seconds": duration
-        })         
+        })
 
     # Patient created on the provider 'Add Client' page. The webhook fires before the patient logs in for the first time.
     #   {"resource_id": 1209676, "resource_id_type": "User", "event_type": "patient.created", "changed_fields": []}
@@ -88,6 +86,26 @@ def healthie_endpoint_post():
         logger.info("Endpoint : User : patient.created")
         npc = NewPatientCreated()
         npc.endpoint(data=data)
+
+    # Example payload: {"resource_id":58612,"resource_id_type":"Medication","event_type":"medication.updated","changed_fields":["dosage","start_date"],"user_id":1562903}
+    elif data['resource_id_type'] == "Medication":
+
+        # Get Healthie user id from payload ("user_id")
+        healthie_user_id = str(data.get("user_id"))
+        medication_id = str(data.get("resource_id"))
+        event_type = data["event_type"]
+
+        if event_type in ["medication.create", "medication.update"]:
+            logger.info(f"Healthie {event_type} medications webhook event triggered...")
+            # Process the webhook event for medication.create, medication.update, medication.delete
+            process_medication_webhook_event(healthie_user_id, medication_id, event_type)
+
+        else:
+            # This means the record was medication.delete so we delete all records from our DB
+            logger.info(f"Deleting medication with medication_id: {medication_id}")
+            db_medication_manager = SyntrilloMedicationsDatabaseQueries()
+            db_medication_manager.delete_medication_records(medication_id)
+            logger.info("Successfully deleted medication...")
 
     return jsonify({'message': 'Webhook received'}), 200
 

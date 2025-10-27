@@ -25,3 +25,5 @@ VARIABILITY = "variability"
 AVERAGE = "average"
 BASELINE = "baseline"
 TRAILING = "trailing"
+
+EXCLUEDED_PATIENT_TAGS = ["Test Account", "Demo"]

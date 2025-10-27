@@ -56,4 +56,4 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    handler({}, None)
+    handler({}, None) # type: ignore
