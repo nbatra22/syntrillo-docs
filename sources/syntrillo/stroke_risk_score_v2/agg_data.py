@@ -7,11 +7,24 @@ import pandas as pd
 from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
+from syntrillo.stroke_risk_score_v2.models.lab_data import LabData
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.api_healthie.utils import HealthieUtils
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.constants import PULSE_METRIC_NAME
-from syntrillo.api_healthie.constants import RHR_CATEGORY, ENTRY_TYPE
+from syntrillo.api_healthie.constants import (
+    RHR_CATEGORY,
+    ENTRY_TYPE,
+    LDL_CATEGORY,
+    HDL_CATEGORY,
+    HGA1C_CATEGORY,
+    HSCRP_CATEGORY,
+    HEMOGLOBIN_CATEGORY,
+    CREATINTINE_CATEGORY,
+    HOURS_SITTING_CATEGORY,
+    PHYSICAL_ACTIVITY_MINS_CATEGORY,
+    SSQ_CATEGORY,
+)
 from syntrillo.bp_analysis.constants import (
     TIMESTAMP_LOCAL,
     SYSTOLIC,
@@ -58,13 +71,14 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
             "tenovi_bp_data": tenovi_bp_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
-            "lab_data": {},
+            "lab_data": lab_data,
             "substance_use_data": {},
         }
     """
     try:
         logger.info(f"Beginning to aggregate data for patient with syntrillo_internal_key {syntrillo_internal_key} ...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        healthie_utils = HealthieUtils()
 
         # Get healthie user id from lookup codes
         lookup_codes = LookUpCodesManagement()
@@ -76,15 +90,16 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
         tenovi_hr_data = get_tenovi_hr_data(db_manager)
-        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key)
+        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
         srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
+        lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
 
         return {
             "tenovi_bp_data": tenovi_bp_data,
             "tenovi_hr_data": tenovi_hr_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
-            "lab_data": {},
+            "lab_data": lab_data,
             "substance_use_data": {},
         }
 
@@ -99,7 +114,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
 
 # Get records using syntrillo_internal_key from srs_form_responses table
-def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
+def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID, healthie_utils: HealthieUtils) -> dict:
     """
     Get the data needed for SRS calculations that is stored in healthie from the healthie user id
     Args:
@@ -113,35 +128,44 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
             "average_rhr_prior": "average_rhr_prior",
             "inactivity_hours_answer": inactivity_hours_answer,
             "activity_minutes_answer": activity_minutes_answer,
+            "ssq_score": recent_ssq_entry.get("metric_stat"),
         }
     Raises:
         ValueError: If the healthie data is not valid
     """
     try:
         logger.info("Fetching RHR and Activity data from Healthie...")
-        # Retreive resting hr from healthie
-        healthie_utils = HealthieUtils()
 
+        # Retreive resting hr from healthie
         rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
-        rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else None
+        rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else {}
 
         # Retreive the activity data
-        activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key)
+        # OLD ACTIVITY DATA RETRIEVAL METHOD --> activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key)
+        hours_sitting_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HOURS_SITTING_CATEGORY)
+        recent_hours_sitting_entry = hours_sitting_data[-1] if hours_sitting_data else {}
+
+        physical_activity_minutes_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=PHYSICAL_ACTIVITY_MINS_CATEGORY)
+        recent_physical_activity_minutes_entry = physical_activity_minutes_data[-1] if physical_activity_minutes_data else {}
+
+        recent_ssq_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=SSQ_CATEGORY)
+        recent_ssq_entry = recent_ssq_data[-1] if recent_ssq_data else {}
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
-        logger.info("Successfully fetched RHR and Activity data from Healthie...")
+        logger.info("Successfully fetched RHR and Physical Activity data from Healthie...")
         return {
-            "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
-            "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
-            "average_rhr_prior": rhr_metadata["average_rhr_prior"] if rhr_metadata else None,
-            "inactivity_hours_answer": activity_data.get("inactivity_hours_answer", ),
-            "activity_minutes_answer": activity_data["activity_minutes_answer"],
+            "average_rhr_baseline": rhr_metadata.get("average_rhr_baseline"),
+            "average_rhr_trailing": rhr_metadata.get("average_rhr_trailing"),
+            "average_rhr_prior": rhr_metadata.get("average_rhr_prior"),
+            "inactivity_hours_answer": recent_hours_sitting_entry.get("metric_stat"),
+            "activity_minutes_answer": recent_physical_activity_minutes_entry.get("metric_stat"),
+            "ssq_score": recent_ssq_entry.get("metric_stat")
         }
 
     except Exception as e:
-        logger.error(f"Error fetching RHR data from healthie: {e}")
-        raise ValueError("Error fetching RHR data from healthie")
+        logger.error(f"Error fetching RHR and/or Physical Activity data from healthie: {e}")
+        raise ValueError("Error fetching RHR and/or Physical Activity data from healthie")
 
 
 def get_healthie_activity_and_inactivity_module_ids(db_manager: SyntrilloDatabaseManager) -> dict:
@@ -372,7 +396,7 @@ def calc_rhr_metadata(
         else:
             logger.warning("Not enough data to calculate prior average...")
 
-        logger.info(f"Successfully calculated RHR metadata...")
+        logger.info("Successfully calculated RHR metadata...")
         # Return the metadata
         return {
             "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
@@ -389,11 +413,6 @@ def calc_rhr_metadata(
     except Exception as e:
         logger.error(f"Error calculating RHR metadata: {e}")
         raise ValueError("Error calculating RHR metadata")
-
-
-
-
-
 
 
 def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> Union[SRSFormResponse, None]:
@@ -644,7 +663,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         ValueError: If the bp metadata is not valid
     """
     try:
-        logger.info(f"Calculating bp metadata...")
+        logger.info("Calculating bp metadata...")
         # Calculate the metadata for the trailing dataframe
         trailing_bp_metadata = bp_analysis.calculate_timeframe_metadata(trailing_bp_dataframe)
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
@@ -672,7 +691,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                 },
             },
         }
-        logger.info(f"Successfully calculated bp metadata...")
+        logger.info("Successfully calculated bp metadata...")
         return trimmed_bp_metadata
 
     except Exception as e:
@@ -740,10 +759,62 @@ def is_valid_trailing_timeframe_dates(trailing_start: datetime, baseline_end: da
     """
     return trailing_start > baseline_end
 
+def get_lab_data(healthie_utils: HealthieUtils, healthie_user_id: str) -> LabData:
+    """
+    Retieves all the lab relevant data (metrics section) from Healthie.
+
+    Args:
+        healthie_utils (HealthieUtils): The healthie utils
+        healthie_user_id (str): The healthie user id
+    Returns:
+        lab_data (LabData):
+    Raises:
+        e (Exception): General error exception
+    """
+    try:
+        # 1. Get lab data from Healthie
+        ldl_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=LDL_CATEGORY)
+        hdl_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HDL_CATEGORY)
+        creatintine_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=CREATINTINE_CATEGORY)
+        hgA1c_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HGA1C_CATEGORY)
+        hsCRP_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HSCRP_CATEGORY)
+        hemoglobin_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HEMOGLOBIN_CATEGORY)
+
+        recent_ldl_entry = ldl_data[-1] if ldl_data else {}
+        recent_hdl_entry = hdl_data[-1] if hdl_data else {}
+        recent_creatintine_entry = creatintine_data[-1] if creatintine_data else {}
+        recent_hgA1c_entry = hgA1c_data[-1] if hgA1c_data else {}
+        recent_hsCRP_entry = hsCRP_data[-1] if hsCRP_data else {}
+        recent_hemoglobin_entry = hemoglobin_data[-1] if hemoglobin_data else {}
+
+        lab_data_vals = {
+            "ldl_value": recent_ldl_entry.get("metric_stat"),
+            "hdl_value": recent_hdl_entry.get("metric_stat"),
+            "creatintine_value": recent_creatintine_entry.get("metric_stat"),
+            "hgA1c_value": recent_hgA1c_entry.get("metric_stat"),
+            "hsCRP_value": recent_hsCRP_entry.get("metric_stat"),
+            "hemoglobin_value": recent_hemoglobin_entry.get("metric_stat"),
+        }
+
+        # TODO -- 2. Get Zus lab data from internal DB
+
+        # Load data into LabData object
+        lab_data = LabData.model_validate(lab_data_vals)
+
+        return lab_data
+
+    except Exception as e:
+        logger.error(f"Error while retrieving lab data for SRS: {e}")
+        raise e
 
 
 
 if __name__ == "__main__":
-    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    data = aggregate_data(syntrillo_internal_key)
-    print(data)
+    # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # data = aggregate_data(syntrillo_internal_key)
+    # print(data)
+
+    healthie_utils = HealthieUtils()
+    healthie_user_id = "1562903"
+    get_lab_data(healthie_utils, healthie_user_id)
+
