@@ -153,7 +153,7 @@ class LookUpCodesManagement:
             add_log_entry(event='RETRIEVE_ENTRY_BY_healthie_USER_ID_FAILED', json_data=str(healthie_user_id), comment="No entry found.")
             return None
 
-    def retrieve_entry_by_internal_key(self, syntrillo_internal_key: uuid.UUID):
+    def retrieve_entry_by_internal_key(self, syntrillo_internal_key: uuid.UUID) -> dict:
         """
         Retrieve an entry from the user_look_up_codes table using the syntrillo_internal_key.
 
@@ -161,7 +161,7 @@ class LookUpCodesManagement:
             syntrillo_internal_key (uuid.UUID): The syntrillo internal key.
 
         Returns:
-            dict: A dictionary with healthie_user_id (str) and pseudo_code_for_tenovi_phi_access (uuid.UUID), or None if no entry is found.
+            result (dict): A dictionary with healthie_user_id (str) and pseudo_code_for_tenovi_phi_access (uuid.UUID), or None if no entry is found.
 
         """
 

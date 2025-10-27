@@ -235,3 +235,30 @@ CREATE TABLE IF NOT EXISTS srs_independent_risk_values (
   categorical_value VARCHAR(100),
   gender VARCHAR(50)
 )
+
+CREATE TABLE IF NOT EXISTS medications_records (
+    medication_record_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    syntrillo_internal_key VARCHAR(255) NOT NULL,
+    medication_name        VARCHAR(255) NOT NULL,
+    medication_id          INT NOT NULL,
+    is_active              BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dosage_option_id       VARCHAR(255) NOT NULL,
+    mirrored               BOOLEAN NOT NULL DEFAULT FALSE,
+    dosage_amount          FLOAT,
+    dosage_unit            VARCHAR(32),
+    comment                TEXT,
+    directions             TEXT,
+    frequency              VARCHAR(64),
+    dosing_interval        INT,
+    dosing_schedule_rule   VARCHAR(10),
+    dose_count             INT,
+    time_of_day            VARCHAR(64),
+    start_date             DATE,
+    end_date               DATE,
+    delivery_method        VARCHAR(64),
+    CHECK (frequency IN ('hourly', 'daily', 'weekly', 'monthly', 'one-time')),
+    CHECK (dosing_schedule_rule IN ('BID', 'TID', 'QID', 'PRN')),
+    CHECK (time_of_day IN ('morning', 'noon', 'afternoon', 'evening', 'night', 'bedtime')),
+    CHECK (delivery_method IN ('cream', 'pill/tablet/capsule', 'implant', 'inhaler', 'suppositories', 'injection', 'other'))
+)
