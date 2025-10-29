@@ -12,6 +12,7 @@ class Frequency(str, Enum):
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     ONE_TIME = "one-time"
+    AS_NEEDED = "as-needed"
 
 class DosingScheduleRule(str, Enum):
     BID = "BID"
@@ -36,6 +37,17 @@ class DeliveryMethod(str, Enum):
     INJECTION = "injection"
     OTHER = "other"
 
+class MedicationCategory(str, Enum):
+    ANTI_PLATELET = "antiplatelet"
+    ANTI_HYPERTENSIVE = "antihypertensive"
+    STATIN = "statin"
+    HYPOLYCEMIC_AGENT = "hypoglycemic-agent"
+    ACE_INHIBITOR = "ace_inhibitor"
+    ARB = "arb"
+    BETA_BLOCKER = "beta_blocker"
+    CALCIUM_CHANNEL_BLOCKER = "calcium_channel_blocker"
+    DIURETIC = "diuretic"
+    OTHER = "other"
 
 class MedicationRecord(BaseModel):
     """
@@ -52,6 +64,7 @@ class MedicationRecord(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Nullable Fields
+    category: Optional[MedicationCategory] = None
     dosage_amount: Optional[float] = 1.0
     dosage_unit: Optional[str] = Field(default=None, max_length=32)
     comment: Optional[str] = None
