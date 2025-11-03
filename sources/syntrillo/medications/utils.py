@@ -196,9 +196,10 @@ def validate_medication_record(medication_record: MedicationRecord, is_creation:
         if not medication_record.medication_id and not is_creation:
             raise Exception("Missing required patient-medication specific identifier from Healthie response...")
 
+
         # Ensure required fields are present for Healthie create API call
             # If is_active, it needs a start_date, if not active that means it ended and it needs an end date.
-        if (medication_record.is_active and not medication_record.start_date) or (not medication_record.is_active and not medication_record.end_date):
+        if (medication_record.is_active and not medication_record.start_date) or (medication_record.is_active and medication_record.end_date):
             logger.error(f"Medication active status implies either the start or end date is missing for: {medication_record.medication_name}")
             raise Exception("End/start date is required based on active status.")
 

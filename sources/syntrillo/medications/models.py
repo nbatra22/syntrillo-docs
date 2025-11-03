@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 from decimal import Decimal
-from datetime import date, timezone
+from datetime import date, timezone, time
 from pydantic import Field
 
 class Frequency(str, Enum):
@@ -37,7 +37,7 @@ class DeliveryMethod(str, Enum):
     INJECTION = "injection"
     OTHER = "other"
 
-class MedicationCategory(str, Enum):
+class DrugCategory(str, Enum): # Mechanism of Action (MOA)
     ANTI_PLATELET = "antiplatelet"
     ANTI_HYPERTENSIVE = "antihypertensive"
     STATIN = "statin"
@@ -47,6 +47,13 @@ class MedicationCategory(str, Enum):
     BETA_BLOCKER = "beta_blocker"
     CALCIUM_CHANNEL_BLOCKER = "calcium_channel_blocker"
     DIURETIC = "diuretic"
+    OTHER = "other"
+
+class DrugSupercategory(str, Enum):
+    BLOOD_THINNER = "blood_thinner"
+    CHOLESTEROL_MEDICATION = "cholesterol_medication"
+    DIABETES_MEDICATION = "diabetes_medication"
+    BLOOD_PRESSURE_MEDICATION = "blood_pressure_medication"
     OTHER = "other"
 
 class MedicationRecord(BaseModel):
@@ -64,7 +71,9 @@ class MedicationRecord(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Nullable Fields
-    category: Optional[MedicationCategory] = None
+    category: Optional[DrugCategory] = None # new
+    supercategory: Optional[DrugSupercategory] = None # new
+    should_track: Optional[bool] = True # new
     dosage_amount: Optional[float] = 1.0
     dosage_unit: Optional[str] = Field(default=None, max_length=32)
     comment: Optional[str] = None
@@ -74,6 +83,7 @@ class MedicationRecord(BaseModel):
     dosing_schedule_rule: Optional[DosingScheduleRule] = None
     dose_count: Optional[int] = None
     time_of_day: Optional[TimeOfDay] = None
+    time_of_day_specific: Optional[time] = None # new
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     delivery_method: Optional[DeliveryMethod] = None

@@ -218,9 +218,9 @@
         margin: 0;
     }
 
-    .medication-category {
+    .medication-category,
+    .medication-supercategory {
         font-size: 0.625rem;
-        background-color: #16284a;
         border-radius: 0.25rem;
         padding: 0.125rem 0.5rem;
         color: white;
@@ -228,6 +228,14 @@
         text-transform: uppercase;
         font-weight: 500;
         letter-spacing: 0.025em;
+    }
+
+    .medication-category {
+        background-color: #007bff;
+    }
+
+    .medication-supercategory {
+        background-color: #16284a;
     }
 
     .medication-dosage-info-container {
@@ -252,7 +260,7 @@
     }
 
     #medication-delivery-method {
-        text-transform: uppercase;
+        text-transform: capitalize;
     }
 
     .medication-data-block,
@@ -273,8 +281,14 @@
         width: 100%;
     }
 
+    .medication-dates-container {
+        display: flex;
+        gap: 0.25rem;
+    }
+
     .medication-data-block-title,
-    .medication-start-date-title {
+    .medication-start-date-title,
+    .medication-end-date-title {
         font-size: 0.625rem;
         font-weight: 600;
         color: #6B7280;
@@ -283,7 +297,8 @@
     }
 
     .medication-data-block-value,
-    .medication-start-date {
+    .medication-start-date,
+    .medication-end-date {
         font-size: 0.875rem;
         font-weight: 500;
         color: #16284a;
@@ -380,6 +395,38 @@
             transform: rotate(360deg);
         }
     }
+
+    #form-status-message {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        padding: 0.5rem;
+        font-size: small;
+        font-weight: 500 !important;
+        border-radius: 0.375rem;
+        transition: all 0.3s ease;
+        min-height: 3rem !important;
+    }
+
+    #form-status-message.success {
+        color: #10b981;
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    #form-status-message.pending {
+        color: #3b82f6;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    #form-status-message.error {
+        color: #ef4444;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+
 </style>
 
 <div class="medications-container">
@@ -412,6 +459,7 @@
                         <div class="medication-title-container">
                             <h3 class="medication-title">[Medication Name]</h3>
                             <p class="medication-category">[Category]</p>
+                            <p class="medication-supercategory">[Supercategory]</p>
                         </div>
                         <div class="medication-dosage-info-container">
                             <div class="medication-dosage-info">
@@ -427,16 +475,25 @@
                             </div>
                         </div>
                     </div>
-                    <div class="medication-date-container">
-                        <p class="medication-start-date-title">START DATE</p>
-                        <p class="medication-start-date">[Start Date]</p>
+                    <div class="medication-dates-container">
+                        <div class="medication-date-container">
+                            <p class="medication-start-date-title">START DATE</p>
+                            <p class="medication-start-date">[Start Date]</p>
+                        </div>
+                        <div class="medication-date-container">
+                            <p class="medication-end-date-title">END DATE</p>
+                            <p class="medication-end-date">[End Date]</p>
+                        </div>
                     </div>
                     <div id="medication-actions-container" class="medication-actions-container">
                         <button class="medication-action-button" title="Edit Medication">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="medication-action-button" title="Delete Medication">
+                        <!-- <button class="medication-action-button" title="Delete Medication">
                             <i class="fas fa-trash"></i>
+                        </button> -->
+                        <button class="medication-action-button" title="Medication to Track">
+                            <i class="fa-solid fa-flag"></i>
                         </button>
                     </div>
                 </div>
@@ -451,14 +508,18 @@
                     </div>
                 </div>
             </div>
+
+            <ul>
+                <li></li>
+            </ul>
         </div>
 
-        <div id="active-medications-container" class="active-medications-container">
-            <div id="loading-medications-container" class="loading-medications-container">
-                <div id="loading-medications-spinner" class="spinner"></div>
-                <p>Fetching active medications...</p>
-            </div>
+        <div id="loading-medications-container" class="loading-medications-container">
+            <div id="loading-medications-spinner" class="spinner"></div>
+            <p id="loading-medications-text">Fetching active medications...</p>
         </div>
+
+        <div id="active-medications-container" class="active-medications-container"></div>
     </section>
 </div>
 
@@ -530,9 +591,7 @@
             populateMedicationForm(medication);
         } else {
             const modalTitle = document.getElementById('meds-modal-title');
-            const modalSubtitle = document.getElementById('meds-modal-subtitle');
             modalTitle.textContent = 'Add Medication';
-            modalSubtitle.textContent = '';
             populateMedicationForm(null);
         }
     }
@@ -541,6 +600,13 @@
         const modal = document.getElementById('meds-modal');
         modal.style.display = 'none';
         currentMedication = null;
+        const statusMessage = document.getElementById('form-status-message');
+        statusMessage.textContent = '';
+        statusMessage.className = '';
+        const doseSuggestionsContainer = document.getElementById('dose-suggestions-container');
+        doseSuggestionsContainer.style.display = 'none';
+        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
+        doseSuggestionsList.innerHTML = '';
     }
 
     function editMedication(medicationId) {
@@ -549,6 +615,22 @@
         if (medication) {
             openMedicationsModal(medication.current);
         }
+    }
+
+    function showLoadingSpinner(message) {
+        const activeMedicationsContainer = document.getElementById('active-medications-container');
+        activeMedicationsContainer.innerHTML = '';
+        const loadingContainer = document.getElementById('loading-medications-container');
+        loadingContainer.style.display = 'flex';
+        const loadingText = document.getElementById('loading-medications-text');
+        loadingText.textContent = message;
+    }
+
+    function hideLoadingSpinner() {
+        const loadingContainer = document.getElementById('loading-medications-container');
+        loadingContainer.style.display = 'none';
+        const loadingText = document.getElementById('loading-medications-text');
+        loadingText.textContent = '';
     }
 
     function getMedicationsData() {
@@ -567,10 +649,10 @@
             console.log('Medications data:', data);
 
             // Store data globally for edit/delete operations
-            window.medicationsData = data;
+            window.medicationsData = data.data;
 
             // Convert the dictionary to an array of medication objects
-            const medications = Object.values(data);
+            const medications = Object.values(window.medicationsData);
             const medicationsContainer = document.getElementById('active-medications-container');
 
             // If no medications, show a message
@@ -582,6 +664,8 @@
             medications.forEach(medData => {
                 // Access the 'current' medication record
                 const medication = medData.current;
+
+                console.log('Medication:', medication);
 
                 // Helper function to safely display values
                 const safeDisplay = (value, defaultText = '') => value || defaultText;
@@ -635,8 +719,7 @@
                 medicationsContainer.innerHTML += medicationHTML;
             });
 
-            const loadingContainer = document.getElementById('loading-medications-container');
-            loadingContainer.style.display = 'none';
+            hideLoadingSpinner();
 
         })
         .catch(error => {
@@ -644,6 +727,85 @@
             const medicationsContainer = document.getElementById('meds-data-container');
             medicationsContainer.innerHTML = '<p style="color: red;">Error loading medications. Please try again.</p>';
         });
+    }
+
+    let keywordDebounceTimer;
+    let medicationKeywords = {};
+    let medicationKeywordByName = {};
+
+    function getMedicationKeywords(keyword) {
+        // Clear previous timer
+        clearTimeout(keywordDebounceTimer);
+
+        // Don't search if keyword is too short
+        if (keyword.length < 2) {
+            const datalist = document.getElementById('medication-suggestions');
+            datalist.innerHTML = '';
+            return;
+        }
+
+        // Debounce the search
+        keywordDebounceTimer = setTimeout(() => {
+            const encodedKeyword = encodeURIComponent(keyword);
+            fetch(`{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_keywords", keyword="") }}${encodedKeyword}`, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medication keywords:', data);
+                const datalist = document.getElementById('medication-suggestions');
+                datalist.innerHTML = '';
+
+                if (data.success && Object.keys(data.data).length > 0) {
+                    medicationKeywords = data.data;
+                    medicationKeywordByName = {};
+                    for (const [id, value] of Object.entries(medicationKeywords)) {
+                        const option = document.createElement('option');
+                        option.value = value.name;
+                        datalist.appendChild(option);
+                        // cache by name for lookup on selection
+                        medicationKeywordByName[value.name] = { id, ...value };
+                    }
+                }
+            })
+            .catch(error => console.error('Error fetching medication keywords:', error));
+        }, 300); // Wait 300ms after user stops typing
+    }
+
+    const medNameInput = document.getElementById('medication-name');
+    medNameInput.addEventListener('input', function() {
+        getMedicationKeywords(this.value);
+        handleMedicationSelection();
+    });
+    medNameInput.addEventListener('change', handleMedicationSelection);
+
+    function handleMedicationSelection() {
+        const selected = medNameInput.value.trim();
+        const item = medicationKeywordByName[selected];
+        const doseContainer = document.getElementById('dose-suggestions-container');
+        if (item) {
+            // set hidden id and populate dose suggestions
+            const hiddenId = document.getElementById('medication-id');
+            if (hiddenId) hiddenId.value = item.id;
+            populateDoseSuggestions(item.dosage_options || []);
+            if (doseContainer) doseContainer.style.display = 'flex';
+        } else {
+            // not an exact match
+            if (doseContainer) doseContainer.style.display = 'none';
+        }
+    }
+
+    function populateDoseSuggestions(dosageOptions) {
+        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
+        doseSuggestionsList.innerHTML = '';
+        if (dosageOptions.length > 0) {
+            for (const dosageOption of dosageOptions) {
+                const li = document.createElement('li');
+                li.textContent = dosageOption.strength;
+                li.id = dosageOption.dosage_option_id;
+                doseSuggestionsList.appendChild(li);
+            }
+        }
     }
 
     function populateMedicationForm(medication) {
@@ -660,6 +822,19 @@
         // Populate form fields with medication data
         console.log('Populating form with medication:', medication);
 
+        // Hidden inputs
+        if (medication.medication_id) {
+            document.getElementById('medication-id').value = medication.medication_id;
+        }
+
+        if (medication.dosage_option_id) {
+            document.getElementById('medication-dosage-option-id').value = medication.dosage_option_id;
+        }
+
+        if (medication.mirrored) {
+            document.getElementById('medication-mirrored').value = medication.mirrored;
+        }
+
         // Text inputs
         if (medication.medication_name) {
             document.getElementById('medication-name').value = medication.medication_name;
@@ -667,11 +842,23 @@
 
         // Select fields
         if (medication.category) {
-            document.getElementById('medication-category').value = medication.category;
+            const categorySelect = document.getElementById('medication-category');
+            categorySelect.value = medication.category;
         }
 
         if (medication.delivery_method) {
-            document.getElementById('medication-delivery-method').value = medication.delivery_method;
+            const deliveryMethodSelect = document.getElementById('medication-delivery-method');
+            deliveryMethodSelect.value = medication.delivery_method;
+        }
+
+        if (medication.frequency) {
+            const frequencySelect = document.getElementById('medication-frequency');
+            frequencySelect.value = medication.frequency;
+        }
+
+        if (medication.time_of_day) {
+            const timeOfDaySelect = document.getElementById('medication-time-of-day');
+            timeOfDaySelect.value = medication.time_of_day;
         }
 
         // Radio buttons for is_active
@@ -703,17 +890,9 @@
             document.getElementById('medication-count').value = medication.dose_count;
         }
 
-        // Text inputs (dosage and frequency)
+        // Text inputs (dosage unit)
         if (medication.dosage_unit) {
             document.getElementById('medication-dose-unit').value = medication.dosage_unit;
-        }
-
-        if (medication.frequency) {
-            document.getElementById('medication-frequency').value = medication.frequency;
-        }
-
-        if (medication.time_of_day) {
-            document.getElementById('medication-time-of-day').value = medication.time_of_day;
         }
 
         // Textareas
@@ -726,16 +905,90 @@
         }
     }
 
-    function submitMedicationForm() {
-        const form = document.getElementById('medication-form');
-        const formData = new FormData(form);
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+    async function submitMedicationForm() {
+        const statusMessage = document.getElementById('form-status-message');
+        statusMessage.textContent = 'Submitting form data...';
+        statusMessage.className = 'pending';
+        const submitBtn = document.getElementById('medication-submit-btn');
+        submitBtn.disabled = true;
 
-        console.log(formData);
+        const form = document.getElementById('medication-form');
+
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        // Filter out empty string values and convert is_active to boolean
+        const cleanedFormData = new FormData();
+        for (let [key, value] of formData.entries()) {
+            // Skip empty strings for optional fields
+            if (value === '' || value === null) {
+                continue;
+            }
+            cleanedFormData.append(key, value);
+        }
+
+        cleanedFormData.append('healthie_provider_id', healthieProviderId);
+        cleanedFormData.append('healthie_user_id', healthieUserId);
+        cleanedFormData.append('temporary_lookup_code', temporaryLookupCode);
+        cleanedFormData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+
+        // Log for debugging
+        console.log('Cleaned Form Data:');
+        for (let [key, value] of cleanedFormData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        if (currentMedication) {
+            // Update the medication
+            fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_update_medication") }}', {
+                method: 'POST',
+                body: cleanedFormData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medication updated:', data);
+                statusMessage.textContent = 'Medication updated successfully!';
+                statusMessage.className = 'success';
+                submitBtn.disabled = false;
+                closeMedicationsModal();
+                showLoadingSpinner('Fetching updated medications...');
+                getMedicationsData();
+            })
+            .catch(error => {
+                console.error('Error updating medication:', error);
+                statusMessage.textContent = `Error (${error.status}) updating medication.`;
+                statusMessage.className = 'error';
+                submitBtn.disabled = false;
+            })
+        } else {
+            // Create a new medication
+            fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_create_medication") }}', {
+                method: 'POST',
+                body: cleanedFormData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medication created:', data);
+                statusMessage.textContent = 'Medication created successfully!';
+                statusMessage.className = 'success';
+                submitBtn.disabled = false;
+                closeMedicationsModal();
+                showLoadingSpinner('Fetching updated medications...');
+                getMedicationsData();
+            })
+            .catch(error => {
+                console.error('Error creating medication:', error);
+                statusMessage.textContent = 'Error creating medication. Please try again.';
+                statusMessage.className = 'error';
+                submitBtn.disabled = false;
+            })
+        }
     }
 
+    showLoadingSpinner('Fetching active medications...');
     getMedicationsData();
 </script>

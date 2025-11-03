@@ -67,7 +67,7 @@ def iframe_healthie_provider_tab_active_medications():
 
         db_manager = SyntrilloMedicationsDatabaseQueries()
         medications_data, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key)
-        print(f"***** MEDICATIONS DATA *****: {medications_data}")
+        # print(f"***** MEDICATIONS DATA *****: {medications_data}")
         if log['success']:
             return jsonify({
                 'success': True,
@@ -86,15 +86,25 @@ def iframe_healthie_provider_tab_active_medications():
         }), 500
 
 @iframe_healthie_provider_tab_medications_bp.route('/healthie/iframe_provider_tab/medications/keywords/<keyword>', methods=['GET','POST'])
-def iframe_healthie_provider_tab_keywords(keyword):
+def iframe_healthie_provider_tab_keywords(keyword=''):
     """
     Returns list of keywords for a patient.
     """
     try:
-        keywords = get_medication_info_by_keyword(keyword=keyword)
+        if keyword:
+            keywords = get_medication_info_by_keyword(keyword=keyword)
+            keyword_dict = {}
+            if len(keywords) > 0:
+                for keyword in keywords:
+                    keyword_dict[keyword['id']] = {
+                        'name': keyword['name'],
+                        'dosage_options': keyword['dosage_options']
+                    }
+        else:
+            keyword_dict = {}
         return jsonify({
             'success': True,
-            'data': keywords
+            'data': keyword_dict
         })
     except Exception as e:
         return jsonify({
@@ -130,7 +140,7 @@ def iframe_healthie_provider_tab_create_medication():
         time_of_day = request.form.get('time_of_day')
 
         medication_record = MedicationRecord(
-            syntrillo_internal_key=syntrillo_internal_key,
+            syntrillo_internal_key=str(syntrillo_internal_key),
             medication_name=medication_name,
             is_active=is_active,
             start_date=start_date,
@@ -187,9 +197,9 @@ def iframe_healthie_provider_tab_update_medication():
 
         medication_record = MedicationRecord(
             medication_id=medication_id,
-            syntrillo_internal_key=syntrillo_internal_key,
+            syntrillo_internal_key=str(syntrillo_internal_key),
             medication_name=medication_name,
-            dosage_option_id=dosage_option_id,
+            # dosage_option_id=dosage_option_id,
             # medication_category=medication_category,
             is_active=is_active,
             start_date=start_date,
