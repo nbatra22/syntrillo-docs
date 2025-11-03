@@ -51,11 +51,13 @@
     /* color: #16284a; */
 }
 
-#so-study-info-table {
+#so-primary-study-info-table,
+#so-secondary-study-info-table {
     margin-bottom: 0.5rem;
 }
 
-#so-study-info-table tr {
+#so-primary-study-info-table tr,
+#so-secondary-study-info-table tr {
     display: grid;
     grid-template-columns: 4fr 3fr 3fr;
 }
@@ -99,12 +101,14 @@
     width: 100%;
 }
 
-#so-table-container {
+#so-primary-table-container,
+#so-secondary-table-container {
     position: relative;
     min-height: 300px;
 }
 
-#so-loading-overlay {
+#so-primary-loading-overlay,
+#so-secondary-loading-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -117,12 +121,14 @@
     z-index: 10;
 }
 
-#so-loading-spinner {
+#so-primary-loading-spinner,
+#so-secondary-loading-spinner {
     width: 2rem;
     height: 2rem;
 }
 
-#so-loading-text {
+#so-primary-loading-text,
+#so-secondary-loading-text {
     font-size: small;
     color: #6b7280;
 }
@@ -160,14 +166,14 @@
     </div>
 
     <div class="so-content-container">
-        <section id="so-table-container">
-            <div id="so-loading-overlay">
-                <div id="so-loading-container">
-                    <div id="so-loading-spinner" class="spinner"></div>
-                    <p id="so-loading-text">Fetching data...</p>
+        <section id="so-primary-table-container">
+            <div id="so-primary-loading-overlay">
+                <div id="so-primary-loading-container">
+                    <div id="so-primary-loading-spinner" class="spinner"></div>
+                    <p id="so-primary-loading-text">Fetching data...</p>
                 </div>
             </div>
-            <table id="so-study-info-table" class="so-table">
+            <table id="so-primary-study-info-table" class="so-table">
                 <thead>
                     <th scope="col">Start Date (Telemedicine Visit)</th>
                     <th scope="col">Timeline Completion (%)</th>
@@ -175,9 +181,9 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td id="so-start-date">-</td>
-                        <td id="so-timeline-completion">-</td>
-                        <td id="so-days-remaining">-</td>
+                        <td id="so-primary-start-date">-</td>
+                        <td id="so-primary-timeline-completion">-</td>
+                        <td id="so-primary-days-remaining">-</td>
                     </tr>
                 </tbody>
             </table>
@@ -274,14 +280,14 @@
     </div>
 
     <div class="so-content-container">
-        <section id="so-table-container">
-            <div id="so-loading-overlay">
-                <div id="so-loading-container">
-                    <div id="so-loading-spinner" class="spinner"></div>
-                    <p id="so-loading-text">Fetching data...</p>
+        <section id="so-secondary-table-container">
+            <div id="so-secondary-loading-overlay">
+                <div id="so-secondary-loading-container">
+                    <div id="so-secondary-loading-spinner" class="spinner"></div>
+                    <p id="so-secondary-loading-text">Fetching data...</p>
                 </div>
             </div>
-            <table id="so-study-info-table" class="so-table">
+            <table id="so-secondary-study-info-table" class="so-table">
                 <thead>
                     <th scope="col">Start Date (Telemedicine Visit)</th>
                     <th scope="col">Timeline Completion (%)</th>
@@ -289,9 +295,9 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td id="so-start-date">-</td>
-                        <td id="so-timeline-completion">-</td>
-                        <td id="so-days-remaining">-</td>
+                        <td id="so-secondary-start-date">-</td>
+                        <td id="so-secondary-timeline-completion">-</td>
+                        <td id="so-secondary-days-remaining">-</td>
                     </tr>
                 </tbody>
             </table>
@@ -320,20 +326,20 @@
                         <td id="so-current-90-dbp">-</td>
                         <td id="so-progress-90-dbp">-</td>
                     </tr>
-                    <tr>
+                    <!-- <tr>
                         <th scope="row">Correct prescription of antiplatelet, anticoagulant, and statins above 90%</th>
                         <td id="so-status-prescription-accuracy">-</td>
                         <td id="so-baseline-prescription-accuracy">-</td>
                         <td id="so-current-prescription-accuracy">-</td>
                         <td id="so-progress-prescription-accuracy">-</td>
-                    </tr>
-                    <tr>
+                    </tr> -->
+                    <!-- <tr>
                         <th scope="row">Adherence to dosing regimen of antiplatelet, anticoagulant, and statins above 90%</th>
                         <td id="so-status-prescription-adherence">-</td>
                         <td id="so-baseline-prescription-adherence">-</td>
                         <td id="so-current-prescription-adherence">-</td>
                         <td id="so-progress-prescription-adherence">-</td>
-                    </tr>
+                    </tr> -->
                     <tr>
                         <th scope="row">Maintain upwards of 90% engagement</th>
                         <td id="so-status-prescription-adherence">-</td>
@@ -365,16 +371,23 @@ var temporaryLookupCode = "{{ temporary_lookup_code }}";
 var patientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
 function showSpinner(targetElement) {
-    targetElement.style.display = "flex";
+    if (targetElement) {
+        targetElement.style.display = "flex";
+    }
 }
 
 function hideSpinner(targetElement) {
-    targetElement.style.display = "none";
+    if (targetElement) {
+        targetElement.style.display = "none";
+    }
 }
 
 function getStudyOutcomesData() {
+    const primaryLoadingOverlay = document.getElementById('so-primary-loading-overlay');
+    const secondaryLoadingOverlay = document.getElementById('so-secondary-loading-overlay');
 
-    showSpinner(document.getElementById('so-loading-overlay'));
+    showSpinner(primaryLoadingOverlay);
+    showSpinner(secondaryLoadingOverlay);
 
     const formData = new FormData();
     formData.append('healthie_provider_id', healthieProviderId);
@@ -388,125 +401,139 @@ function getStudyOutcomesData() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        if (data.success && data.study_outcomes_data) {
-            populateStudyOutcomesTable(data.study_outcomes_data);
+        console.log('Study outcomes data:', data);
+
+        // Populate primary prevention table if data exists
+        if (data.primary_prevention) {
+            populatePrimaryPreventionTable(data.primary_prevention);
+        }
+
+        // Populate secondary prevention table if data exists
+        if (data.secondary_prevention) {
+            populateSecondaryPreventionTable(data.secondary_prevention);
         }
     })
     .catch(error => {
         console.error('Error:', error);
     })
     .finally(() => {
-        hideSpinner(document.getElementById('so-loading-overlay'));
+        hideSpinner(document.getElementById('so-primary-loading-overlay'));
+        hideSpinner(document.getElementById('so-secondary-loading-overlay'));
     });
 }
 
-function populateStudyOutcomesTable(studyData) {
-    const baseline = studyData.Baseline;
-    const current = studyData.Current;
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function formatNumber(value, decimals = 1) {
+    if (value === null || value === undefined) return 'N/A';
+    return value.toFixed(decimals);
+}
+
+function populatePrimaryPreventionTable(primaryData) {
+    const baseline = primaryData.Baseline;
+    const current = primaryData.Current;
 
     if (!baseline || !current) {
-        console.error('Missing baseline or current data');
+        console.error('Missing baseline or current data for primary prevention');
         return;
     }
 
-    // Get progress data from backend
+    // Get progress data from current (only exists in Current)
     const progress = current.progress || {};
 
     // Average SBP
-    const baselineAvgSBP = baseline.bp_metadata['Avg SBP (mmHg)'];
-    const currentAvgSBP = current.bp_metadata['Avg SBP (mmHg)'];
-    const sbpReduction = progress.avg_sbp ? progress.avg_sbp.progress : null;
+    if (baseline.bp_metadata && current.bp_metadata) {
+        const baselineAvgSBP = baseline.bp_metadata['Avg SBP (mmHg)'];
+        const currentAvgSBP = current.bp_metadata['Avg SBP (mmHg)'];
+        const sbpProgress = progress.avg_sbp ? progress.avg_sbp.progress : null;
 
-    document.getElementById('so-baseline-avg-sbp').textContent = baselineAvgSBP.toFixed(1);
-    document.getElementById('so-current-avg-sbp').textContent = currentAvgSBP.toFixed(1);
-    document.getElementById('so-progress-avg-sbp').textContent = sbpReduction.toFixed(1);
-    document.getElementById('so-status-avg-sbp').textContent = progress.avg_sbp ? progress.avg_sbp.status : 'N/A';
+        document.getElementById('so-baseline-avg-sbp').textContent = formatNumber(baselineAvgSBP);
+        document.getElementById('so-current-avg-sbp').textContent = formatNumber(currentAvgSBP);
+        document.getElementById('so-progress-avg-sbp').textContent = formatNumber(sbpProgress);
+        document.getElementById('so-status-avg-sbp').textContent = progress.avg_sbp ? progress.avg_sbp.status : 'N/A';
+    }
 
     // SBP Standard Deviation
-    const baselineSBPSD = baseline.bp_metadata['SBP SD (mmHg)'];
-    const currentSBPSD = current.bp_metadata['SBP SD (mmHg)'];
-    const sbpSDReduction = progress.sbp_sd ? progress.sbp_sd.progress : null;
+    if (baseline.bp_metadata && current.bp_metadata) {
+        const baselineSBPSD = baseline.bp_metadata['SBP SD (mmHg)'];
+        const currentSBPSD = current.bp_metadata['SBP SD (mmHg)'];
+        const sbpSDProgress = progress.sbp_sd ? progress.sbp_sd.progress : null;
 
-    document.getElementById('so-baseline-sbp-sd').textContent = baselineSBPSD.toFixed(1);
-    document.getElementById('so-current-sbp-sd').textContent = currentSBPSD.toFixed(1);
-    document.getElementById('so-progress-sbp-sd').textContent = sbpSDReduction.toFixed(1);
-    document.getElementById('so-status-sbp-sd').textContent = progress.sbp_sd ? progress.sbp_sd.status : 'N/A';
+        document.getElementById('so-baseline-sbp-sd').textContent = formatNumber(baselineSBPSD);
+        document.getElementById('so-current-sbp-sd').textContent = formatNumber(currentSBPSD);
+        document.getElementById('so-progress-sbp-sd').textContent = formatNumber(sbpSDProgress);
+        document.getElementById('so-status-sbp-sd').textContent = progress.sbp_sd ? progress.sbp_sd.status : 'N/A';
+    }
 
     // Average Pulse Pressure (PP)
-    const baselineAvgPP = baseline.bp_metadata['Avg PP (mmHg)'];
-    const currentAvgPP = current.bp_metadata['Avg PP (mmHg)'];
-    const ppReduction = progress.avg_pp ? progress.avg_pp.progress : null;
+    if (baseline.bp_metadata && current.bp_metadata) {
+        const baselineAvgPP = baseline.bp_metadata['Avg PP (mmHg)'];
+        const currentAvgPP = current.bp_metadata['Avg PP (mmHg)'];
+        const ppProgress = progress.avg_pp ? progress.avg_pp.progress : null;
 
-    document.getElementById('so-baseline-pp').textContent = baselineAvgPP.toFixed(1);
-    document.getElementById('so-current-pp').textContent = currentAvgPP.toFixed(1);
-    document.getElementById('so-progress-pp').textContent = ppReduction.toFixed(1);
-    document.getElementById('so-status-pp').textContent = progress.avg_pp ? progress.avg_pp.status : 'N/A';
+        document.getElementById('so-baseline-pp').textContent = formatNumber(baselineAvgPP);
+        document.getElementById('so-current-pp').textContent = formatNumber(currentAvgPP);
+        document.getElementById('so-progress-pp').textContent = formatNumber(ppProgress);
+        document.getElementById('so-status-pp').textContent = progress.avg_pp ? progress.avg_pp.status : 'N/A';
+    }
 
     // Average DBP
-    const baselineAvgDBP = baseline.bp_metadata['Avg DBP (mmHg)'];
-    const currentAvgDBP = current.bp_metadata['Avg DBP (mmHg)'];
-    const dbpReduction = progress.avg_dbp ? progress.avg_dbp.progress : null;
+    if (baseline.bp_metadata && current.bp_metadata) {
+        const baselineAvgDBP = baseline.bp_metadata['Avg DBP (mmHg)'];
+        const currentAvgDBP = current.bp_metadata['Avg DBP (mmHg)'];
+        const dbpProgress = progress.avg_dbp ? progress.avg_dbp.progress : null;
 
-    document.getElementById('so-baseline-dbp').textContent = baselineAvgDBP.toFixed(1);
-    document.getElementById('so-current-dbp').textContent = currentAvgDBP.toFixed(1);
-    document.getElementById('so-progress-dbp').textContent = dbpReduction.toFixed(1);
-    document.getElementById('so-status-dbp').textContent = progress.avg_dbp ? progress.avg_dbp.status : 'N/A';
+        document.getElementById('so-baseline-dbp').textContent = formatNumber(baselineAvgDBP);
+        document.getElementById('so-current-dbp').textContent = formatNumber(currentAvgDBP);
+        document.getElementById('so-progress-dbp').textContent = formatNumber(dbpProgress);
+        document.getElementById('so-status-dbp').textContent = progress.avg_dbp ? progress.avg_dbp.status : 'N/A';
+    }
 
     // hs-CRP
     const baselineHsCRP = baseline.hs_crp_data ? baseline.hs_crp_data.metric_stat : null;
     const currentHsCRP = current.hs_crp_data ? current.hs_crp_data.metric_stat : null;
 
-    if (baselineHsCRP !== null) {
-        document.getElementById('so-baseline-hs-crp').textContent = baselineHsCRP.toFixed(1);
-    } else {
-        document.getElementById('so-baseline-hs-crp').textContent = 'N/A';
-    }
+    document.getElementById('so-baseline-hs-crp').textContent = formatNumber(baselineHsCRP);
+    document.getElementById('so-current-hs-crp').textContent = formatNumber(currentHsCRP);
 
-    if (currentHsCRP !== null) {
-        document.getElementById('so-current-hs-crp').textContent = currentHsCRP.toFixed(1);
-        document.getElementById('so-status-hs-crp').textContent = progress.hs_crp ? progress.hs_crp.status : 'N/A';
+    if (progress.hs_crp) {
+        document.getElementById('so-progress-hs-crp').textContent = formatNumber(progress.hs_crp.progress);
+        document.getElementById('so-status-hs-crp').textContent = progress.hs_crp.status || 'N/A';
     } else {
-        document.getElementById('so-current-hs-crp').textContent = 'N/A';
         document.getElementById('so-progress-hs-crp').textContent = 'N/A';
         document.getElementById('so-status-hs-crp').textContent = 'N/A';
-    }
-
-    if (progress.hs_crp && progress.hs_crp.progress !== null) {
-        document.getElementById('so-progress-hs-crp').textContent = progress.hs_crp.progress.toFixed(1);
-    } else {
-        document.getElementById('so-progress-hs-crp').textContent = 'N/A';
     }
 
     // Resting Heart Rate (RHR)
     const baselineRHR = baseline.hr_metadata ? baseline.hr_metadata.average_rhr : null;
     const currentRHR = current.hr_metadata ? current.hr_metadata.average_rhr : null;
-    const rhrReduction = progress.rhr ? progress.rhr.progress : null;
 
-    if (baselineRHR !== null && currentRHR !== null) {
-        document.getElementById('so-baseline-rhr').textContent = baselineRHR.toFixed(1);
-        document.getElementById('so-current-rhr').textContent = currentRHR.toFixed(1);
-        document.getElementById('so-progress-rhr').textContent = rhrReduction.toFixed(1);
-        document.getElementById('so-status-rhr').textContent = progress.rhr ? progress.rhr.status : 'N/A';
+    document.getElementById('so-baseline-rhr').textContent = formatNumber(baselineRHR);
+    document.getElementById('so-current-rhr').textContent = formatNumber(currentRHR);
+
+    if (progress.rhr) {
+        document.getElementById('so-progress-rhr').textContent = formatNumber(progress.rhr.progress);
+        document.getElementById('so-status-rhr').textContent = progress.rhr.status || 'N/A';
     } else {
-        document.getElementById('so-baseline-rhr').textContent = baselineRHR !== null ? baselineRHR.toFixed(1) : 'N/A';
-        document.getElementById('so-current-rhr').textContent = currentRHR !== null ? currentRHR.toFixed(1) : 'N/A';
         document.getElementById('so-progress-rhr').textContent = 'N/A';
+        document.getElementById('so-status-rhr').textContent = 'N/A';
     }
 
     // Heart Rate Variability (HRV) - SDNN
     const baselineHRV = baseline.hr_metadata ? baseline.hr_metadata.standard_deviation_rhr : null;
     const currentHRV = current.hr_metadata ? current.hr_metadata.standard_deviation_rhr : null;
 
-    if (baselineHRV !== null && currentHRV !== null) {
-        const hrvIncrease = progress.hrv ? progress.hrv.progress : null;
-        document.getElementById('so-baseline-hrv').textContent = baselineHRV.toFixed(1);
-        document.getElementById('so-current-hrv').textContent = currentHRV.toFixed(1);
-        document.getElementById('so-progress-hrv').textContent = hrvIncrease.toFixed(1);
-        document.getElementById('so-status-hrv').textContent = progress.hrv ? progress.hrv.status : 'N/A';
+    document.getElementById('so-baseline-hrv').textContent = formatNumber(baselineHRV);
+    document.getElementById('so-current-hrv').textContent = formatNumber(currentHRV);
+
+    if (progress.hrv) {
+        document.getElementById('so-progress-hrv').textContent = formatNumber(progress.hrv.progress);
+        document.getElementById('so-status-hrv').textContent = progress.hrv.status || 'N/A';
     } else {
-        document.getElementById('so-baseline-hrv').textContent = baselineHRV !== null ? baselineHRV.toFixed(1) : 'N/A';
-        document.getElementById('so-current-hrv').textContent = currentHRV !== null ? currentHRV.toFixed(1) : 'N/A';
         document.getElementById('so-progress-hrv').textContent = 'N/A';
         document.getElementById('so-status-hrv').textContent = 'Pending';
     }
@@ -515,21 +542,83 @@ function populateStudyOutcomesTable(studyData) {
     const baselineEngagement = baseline.engagement;
     const currentEngagement = current.engagement;
 
-    document.getElementById('so-baseline-engagement').textContent = baselineEngagement.toFixed(1);
-    document.getElementById('so-current-engagement').textContent = currentEngagement.toFixed(1);
+    document.getElementById('so-baseline-engagement').textContent = formatNumber(baselineEngagement);
+    document.getElementById('so-current-engagement').textContent = formatNumber(currentEngagement);
     document.getElementById('so-status-engagement').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
+    document.getElementById('so-progress-engagement').textContent = progress.engagement ? formatNumber(progress.engagement.progress) : 'N/A';
 
     // Study Info
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-    const startDate = formatDate(baseline.start_date);
-    const timelineCompletion = current.progress.study_progress.percentage;
+    if (current.progress && current.progress.study_progress) {
+        const startDate = formatDate(baseline.start_date);
+        const timelineCompletion = current.progress.study_progress.percentage;
+        const daysRemaining = current.progress.study_progress.days_remaining;
 
-    document.getElementById('so-start-date').textContent = startDate;
-    document.getElementById('so-timeline-completion').textContent = timelineCompletion < 100 ? timelineCompletion.toFixed(1) : 100.0;
-    document.getElementById('so-days-remaining').textContent = current.progress.study_progress.days_remaining;
+        document.getElementById('so-primary-start-date').textContent = startDate;
+        document.getElementById('so-primary-timeline-completion').textContent = timelineCompletion < 100 ? formatNumber(timelineCompletion) : '100.0';
+        document.getElementById('so-primary-days-remaining').textContent = daysRemaining;
+    }
+}
+
+function populateSecondaryPreventionTable(secondaryData) {
+    const baseline = secondaryData.Baseline;
+    const current = secondaryData.Current;
+
+    if (!baseline || !current) {
+        console.error('Missing baseline or current data for secondary prevention');
+        return;
+    }
+
+    // SBP Goal (90% below 130 mmHg)
+    const baselineSBPGoal = baseline.sbp_goal !== undefined ? baseline.sbp_goal : null;
+    const currentSBPGoal = current.sbp_goal !== undefined ? current.sbp_goal : null;
+
+    // Calculate progress (difference between current and baseline)
+    const sbpGoalProgress = (baselineSBPGoal !== null && currentSBPGoal !== null) ?
+        ((currentSBPGoal - baselineSBPGoal) / baselineSBPGoal * 100) : null;
+
+    document.getElementById('so-baseline-90-sbp').textContent = formatNumber(baselineSBPGoal * 100) + '%';
+    document.getElementById('so-current-90-sbp').textContent = formatNumber(currentSBPGoal * 100) + '%';
+    document.getElementById('so-progress-90-sbp').textContent = formatNumber(sbpGoalProgress);
+    document.getElementById('so-status-90-sbp').textContent = currentSBPGoal >= 0.9 ? 'Achieved' : 'Behind';
+
+    // DBP Goal (90% below 80 mmHg)
+    const baselineDBPGoal = baseline.dbp_goal !== undefined ? baseline.dbp_goal : null;
+    const currentDBPGoal = current.dbp_goal !== undefined ? current.dbp_goal : null;
+
+    // Calculate progress
+    const dbpGoalProgress = (baselineDBPGoal !== null && currentDBPGoal !== null) ?
+        ((currentDBPGoal - baselineDBPGoal) / baselineDBPGoal * 100) : null;
+
+    document.getElementById('so-baseline-90-dbp').textContent = formatNumber(baselineDBPGoal * 100) + '%';
+    document.getElementById('so-current-90-dbp').textContent = formatNumber(currentDBPGoal * 100) + '%';
+    document.getElementById('so-progress-90-dbp').textContent = formatNumber(dbpGoalProgress);
+    document.getElementById('so-status-90-dbp').textContent = currentDBPGoal >= 0.9 ? 'Achieved' : 'Behind';
+
+    // Engagement (calculate from baseline and current if available)
+    // For secondary prevention, we might need to calculate engagement from bp_data
+    let baselineEngagement = 0;
+    let currentEngagement = 0;
+
+    if (baseline.bp_data && Array.isArray(baseline.bp_data) && baseline.bp_data.length > 0) {
+        // Calculate engagement if we have date range
+        // For now, use a placeholder or calculate from data availability
+        baselineEngagement = baseline.bp_data.length > 0 ? 100 : 0;
+    }
+
+    if (current.bp_data && Array.isArray(current.bp_data) && current.bp_data.length > 0) {
+        currentEngagement = current.bp_data.length > 0 ? 100 : 0;
+    }
+
+    document.getElementById('so-baseline-prescription-adherence').textContent = formatNumber(baselineEngagement) + '%';
+    document.getElementById('so-current-prescription-adherence').textContent = formatNumber(currentEngagement) + '%';
+    document.getElementById('so-status-prescription-adherence').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
+    document.getElementById('so-progress-prescription-adherence').textContent = formatNumber(currentEngagement - baselineEngagement);
+
+    // Study Info - use baseline start_date
+    const startDate = formatDate(baseline.start_date);
+    document.getElementById('so-secondary-start-date').textContent = startDate;
+    document.getElementById('so-secondary-timeline-completion').textContent = 'N/A';
+    document.getElementById('so-secondary-days-remaining').textContent = 'N/A';
 }
 
 getStudyOutcomesData();

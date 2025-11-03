@@ -55,9 +55,9 @@
         <li class="nav-item">
             <a class="nav-link active" id="tab-study-outcomes-tab" data-toggle="tab" href="#tab-study-outcomes" role="tab" aria-controls="tab-study-outcomes" aria-selected="false">Study Outcomes</a>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link" id="tab-medications-tab" data-toggle="tab" href="#tab-medications" role="tab" aria-controls="tab-medications" aria-selected="false">Medications</a>
-        </li>
+        </li> -->
         <!-- <li class="nav-item">
             <a class="nav-link" id="tab-forms-tab" data-toggle="tab" href="#tab-forms" role="tab" aria-controls="tab-forms" aria-selected="false">Forms</a>
         </li> -->
@@ -88,7 +88,7 @@
         <!-- <div class="tab-pane fade show active" id="tab-risk-score" role="tabpanel" aria-labelledby="tab-risk-score-tab"></div> -->
         <div class="tab-pane fade show" id="tab-blood-pressure" role="tabpanel" aria-labelledby="tab-blood-pressure-tab"></div>
         <div class="tab-pane fade show active" id="tab-study-outcomes" role="tabpanel" aria-labelledby="tab-study-outcomes-tab"></div>
-        <div class="tab-pane fade show" id="tab-medications" role="tabpanel" aria-labelledby="tab-medications-tab"></div>
+        <!-- <div class="tab-pane fade show" id="tab-medications" role="tabpanel" aria-labelledby="tab-medications-tab"></div> -->
         <!-- <div class="tab-pane fade" id="tab-forms" role="tabpanel" aria-labelledby="tab-forms-tab"></div> -->
         <!-- <div class="tab-pane fade show active" id="tab-status" role="tabpanel" aria-labelledby="tab-status-tab"></div> -->
         <div class="tab-pane fade" id="tab-devices" role="tabpanel" aria-labelledby="tab-devices-tab"></div>
@@ -248,7 +248,7 @@
         // Load the content of the other tabs in the background
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_bp_analysis_bp.iframe_healthie_provider_tab_blood_pressure") }}', '#tab-blood-pressure');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_study_outcomes_bp.iframe_healthie_provider_tab_study_outcomes") }}', '#tab-study-outcomes');
-        loadTabContent('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_medications") }}', '#tab-medications');
+        // loadTabContent('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_medications") }}', '#tab-medications');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_forms_bp.iframe_healthie_provider_tab_forms") }}', '#tab-forms');
         loadTabContent('{{ url_for("iframe_healthie_provider_tab_devices_bp.iframe_healthie_provider_tab_devices") }}', '#tab-devices');
         // loadTabContent('{{ url_for("iframe_healthie_provider_tab_onboarding_bp.iframe_healthie_provider_tab_onboarding") }}', '#tab-onboarding');

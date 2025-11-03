@@ -98,11 +98,18 @@ class PatientStudyOutcomes:
         time_interval_data = self.get_bp_time_intervals(start_date=self.study_start_date, bp_df=self.bp_df, study_type='secondary')
 
         for time_interval, data in time_interval_data.items():
-            sbp_percentage_below_130 = (data['data']['systolic'] < 130).sum() / len(data['data'])
-            dbp_percentage_below_80 = (data['data']['diastolic'] < 80).sum() / len(data['data'])
+            if data['data'] is not None and len(data['data']) > 0:
+                sbp_percentage_below_130 = (data['data']['systolic'] < 130).sum() / len(data['data'])
+                dbp_percentage_below_80 = (data['data']['diastolic'] < 80).sum() / len(data['data'])
+            else:
+                sbp_percentage_below_130 = 0
+                dbp_percentage_below_80 = 0
 
             time_interval_data[time_interval]['sbp_goal'] = sbp_percentage_below_130
             time_interval_data[time_interval]['dbp_goal'] = dbp_percentage_below_80
+
+            time_interval_data[time_interval]['bp_data'] = data['data'].to_dict(orient='records') if data['data'] is not None else None
+            del time_interval_data[time_interval]['data'] # Remove the DataFrame from the time interval data
 
         return time_interval_data
 

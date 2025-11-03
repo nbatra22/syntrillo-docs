@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
 
 from .post_management import PostManager
@@ -7,6 +8,10 @@ from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
 from syntrillo.study_outcomes.patient_study_outcomes import PatientStudyOutcomes
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.api_healthie.user import HealthieUser
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.stroke_risk_score_v2.agg_data import get_healthie_activity_data
 
 iframe_healthie_provider_tab_study_outcomes_bp = Blueprint('iframe_healthie_provider_tab_study_outcomes_bp', __name__)
 
@@ -60,18 +65,33 @@ def iframe_healthie_provider_tab_study_outcomes_data():
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
     healthie_user_id = post_manager.pseudonyms['healthie_user_id']
 
+    local_environment_and_secrets = LocalEnvironmentAndSecrets()
+    is_production = local_environment_and_secrets.is_production()
+
     study_outcomes = PatientStudyOutcomes(syntrillo_internal_key_patient, healthie_user_id)
-    study_outcomes_data = study_outcomes.get_primary_prevention_data()
+    primary_prevention_study_groups = study_outcomes.primary_prevention_study_group
+    secondary_prevention_study_groups = study_outcomes.secondary_prevention_study_group
 
-    if study_outcomes_data is None:
-        return jsonify({
-            "success": True,
-            "message": "No data available",
-            "study_outcomes_data": {}
-        })
+    healthie_user_manager = HealthieUser(healthie_user_id)
+    user_group = healthie_user_manager.get_user_group_by_healthie_user_id()
+    user_group_name = user_group['name'] if user_group else None
+    user_group_id = user_group['id'] if user_group else None
 
-    return jsonify({
-        "success": True,
-        "message": "Study outcomes data received successfully",
-        "study_outcomes_data": study_outcomes_data
-    })
+    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key_patient)
+    activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key_patient)
+
+    data = {
+        'primary_prevention': None,
+        'secondary_prevention': None,
+        'user_group_name': user_group_name,
+        'activity_data': activity_data,
+    }
+
+    if is_production:
+        data['primary_prevention'] = study_outcomes.get_primary_prevention_data() if user_group_id in primary_prevention_study_groups else None
+        data['secondary_prevention'] = study_outcomes.get_secondary_prevention_data() if user_group_id in secondary_prevention_study_groups else None
+    else:
+        data['primary_prevention'] = study_outcomes.get_primary_prevention_data()
+        data['secondary_prevention'] = study_outcomes.get_secondary_prevention_data()
+
+    return jsonify(data)
