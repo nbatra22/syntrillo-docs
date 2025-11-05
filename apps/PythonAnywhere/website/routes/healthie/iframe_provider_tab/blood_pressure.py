@@ -112,6 +112,11 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
     summary_stats = data_reporting_blood_pressure.calculate_summary_stats() # Calculates summary stats for each timeframe
     analysis_table = data_reporting_blood_pressure.get_analysis_table() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
+
+    # Remove specific rows from analysis_table
+    rows_to_remove = ['SBP SD (mmHg)', 'DBP SD (mmHg)', 'SBP CV (%)', 'DBP CV (%)', 'SBP Count (>= 175)']
+    analysis_table = analysis_table[~analysis_table.index.isin(rows_to_remove)]
+
     extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
 
     num_columns = len(analysis_table.columns)

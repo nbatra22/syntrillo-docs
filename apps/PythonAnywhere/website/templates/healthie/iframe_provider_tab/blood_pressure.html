@@ -59,6 +59,7 @@
         font-size: 0.875rem;
         font-weight: 500;
         color: #6b7280;
+        text-decoration: underline;
     }
 
     .bp-summary-status-container {
@@ -909,7 +910,7 @@
                     document.getElementById("bp-summary-status").style.fontWeight = "bold";
                     document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
                     document.getElementById("bp-summary-status").style.textAlign = "center";
-                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "#16a34a" : data.summary_stats.status.grade === 1 ? "#f59e0b" : data.summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
+                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "green" : data.summary_stats.status.grade === 1 ? "yellow" : data.summary_stats.status.grade === 2 ? "orange" : "red";
 
                     document.getElementById("bp-summary-avg-sbp").textContent = data.summary_stats.avg_sbp.value;
                     document.getElementById("bp-summary-avg-dbp").textContent = data.summary_stats.avg_dbp.value;
@@ -918,17 +919,17 @@
                     document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = data.summary_stats.symptomatic_hypotension.value;
                     document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
 
-                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
-                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
-                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
-                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
+                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: red;"></i>`
+                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: orange;"></i>`
+                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: yellow;"></i>`
+                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: green;"></i>`
 
                     document.getElementById("bp-summary-avg-sbp-grade").innerHTML = data.summary_stats.avg_sbp.grade === 0 ? greenCheck : data.summary_stats.avg_sbp.grade === 1 ? yellowExclamation : data.summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
                     document.getElementById("bp-summary-avg-dbp-grade").innerHTML = data.summary_stats.avg_dbp.grade === 0 ? greenCheck : data.summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
                     document.getElementById("bp-summary-peak-sbp-grade").innerHTML = data.summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-low-sbp-grade").innerHTML = data.summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = data.summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? orangeExclamation : greenCheck;
 
                     document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
                     document.getElementById("bp-summary-metrics-container").style.display = "flex";
