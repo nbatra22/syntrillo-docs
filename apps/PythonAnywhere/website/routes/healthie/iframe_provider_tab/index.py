@@ -63,8 +63,8 @@ def iframe_healthie_provider_tab_index():
             # healthie_user_id = "1525423" # Patient AWS Test
             # healthie_user_id = "2062692" # Patient AWS Test 5
             # healthie_user_id = "2062877" # Patient AWS Test 6 (hypertensive)
-            healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
-            # healthie_user_id = "2315391" # Bob Barker
+            # healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
+            healthie_user_id = "2315391" # Bob Barker
             # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
             # healthie_user_id = "dummy456456" # without syntrillo_internal_key
             # healthie_user_id = "1051529" # Omar's "Patient One" with devices

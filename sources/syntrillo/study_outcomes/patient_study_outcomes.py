@@ -24,12 +24,15 @@ class PatientStudyOutcomes:
 
     # TODO: CREATE DB TABLE FOR STUDY GROUP
     primary_prevention_study_group = [
+        '96033', # STAGING
         '70770', # Sentara Health
         '67724', # Encompass Cohort 1
         '66295', # Sheltering Arms (1st cohort)
         '63826', # Primary Prevention Study Group
     ]
+
     secondary_prevention_study_group = [
+        '96034', # STAGING
         '55543', # Valley Health - Early Enrollmenet
         '55544', # Valley Health - Late Enrollment
     ]
@@ -39,14 +42,18 @@ class PatientStudyOutcomes:
         self.healthie_user_id = healthie_user_id
         self.bp_analysis_manager = BloodPressureAnalysis(self.syntrillo_internal_key)
 
-    def get_primary_prevention_data(self):
+    def get_primary_prevention_data(self) -> dict:
         """
         Get the primary prevention data for a patient.
         """
-        valid_bp = self.initialize_blood_pressure_data()
+        bp_data = self.initialize_blood_pressure_data()
 
-        if not valid_bp:
-            return None
+        if not bp_data['success']:
+            return {
+                'success': False,
+                'message': bp_data['message'],
+                'data': None,
+            }
 
         time_interval_data = self.get_bp_time_intervals(start_date=self.study_start_date, bp_df=self.bp_df, study_type='primary')
 
@@ -80,20 +87,28 @@ class PatientStudyOutcomes:
 
         # print(f"-------- time_interval_data: {time_interval_data}")
 
-        time_interval_data['Current'] = self.calculate_metric_status_and_progress(current_dict=time_interval_data['Current'], baseline_dict=time_interval_data['Baseline'])
+        time_interval_data['Current'] = self.calculate_primary_prevention_metric_status_and_progress(current_dict=time_interval_data['Current'], baseline_dict=time_interval_data['Baseline'])
 
-        print(f"-------- time_interval_data: {time_interval_data}")
+        # print(f"-------- time_interval_data: {time_interval_data}")
 
-        return time_interval_data
+        return {
+            'success': True,
+            'message': 'Successfully retrieved primary prevention data',
+            'data': time_interval_data,
+        }
 
-    def get_secondary_prevention_data(self):
+    def get_secondary_prevention_data(self) -> dict:
         """
         Get the secondary prevention data for a patient.
         """
-        valid_bp = self.initialize_blood_pressure_data()
+        bp_data = self.initialize_blood_pressure_data()
 
-        if not valid_bp:
-            return None
+        if not bp_data['success']:
+            return {
+                'success': False,
+                'message': bp_data['message'],
+                'data': None,
+            }
 
         time_interval_data = self.get_bp_time_intervals(start_date=self.study_start_date, bp_df=self.bp_df, study_type='secondary')
 
@@ -111,9 +126,13 @@ class PatientStudyOutcomes:
             time_interval_data[time_interval]['bp_data'] = data['data'].to_dict(orient='records') if data['data'] is not None else None
             del time_interval_data[time_interval]['data'] # Remove the DataFrame from the time interval data
 
-        return time_interval_data
+        return {
+            'success': True,
+            'message': 'Successfully retrieved secondary prevention data',
+            'data': time_interval_data,
+        }
 
-    def get_start_date(self) -> datetime:
+    def get_start_date(self) -> dict:
         """
         Retrieves the date of the initial telemedicine visit.
 
@@ -130,34 +149,58 @@ class PatientStudyOutcomes:
         response = forms_manager.get_first_telemed_form(self.healthie_user_id, form_id)
 
         if response is None or len(response['formAnswerGroups']) == 0:
-            return None
+            return {
+                'timestamp': None,
+                'message': 'No telemedicine visit form found',
+            }
 
         first_form = response['formAnswerGroups'][0]
-        form_answers = first_form['form_answers']
-
-        for answer in form_answers:
-            if answer['custom_module']['id'] == module_id:
-                timestamp = answer['displayed_answer']
-                return timestamp
 
         timestamp = first_form['created_at']
 
-        return timestamp
+        print(f"-------- timestamp: {timestamp}")
 
-    def initialize_blood_pressure_data(self) -> bool:
+        return {
+            'timestamp': timestamp,
+            'message': 'Successfully retrieved start date',
+        }
+
+    def initialize_blood_pressure_data(self) -> dict:
         """
         Get the blood pressure dataframe and timeframed data for a patient.
+
+        Sets 'bp_df' class variable.
+
+        Returns:
+            A dictionary with the success, message, and bp_df.
         """
 
-        start_date_str = self.get_start_date()
+        start_date_response = self.get_start_date()
         today_date_str = datetime.now().isoformat()
 
         # Run only if patient has had a telemedicine visit
-        if start_date_str is None:
-            return False
+        if start_date_response['timestamp'] is None:
+            return {
+                'success': False,
+                'message': start_date_response['message'],
+            }
 
-        # Parse the start and today date strings to datetime objects
-        start_date = parser.isoparse(start_date_str)
+        start_date_str = start_date_response['timestamp']
+        # Parse the start date string to datetime object
+        # Try ISO parse first, then fall back to general date parsing for formats like "March 6, 2025"
+        try:
+            start_date = parser.isoparse(start_date_str)
+        except (ValueError, TypeError):
+            try:
+                start_date = parser.parse(start_date_str)
+            except (ValueError, TypeError) as e:
+                print(f"Error parsing start date '{start_date_str}': {e}")
+                return {
+                    'success': False,
+                    'message': f"Error parsing start date '{start_date_str}': {e}",
+                }
+
+        # Parse today date string to datetime object (should always be ISO format)
         today_date = parser.isoparse(today_date_str)
         self.study_start_date = start_date
         self.study_end_date = (start_date + timedelta(days=30 * 6))
@@ -165,13 +208,19 @@ class PatientStudyOutcomes:
         bp_df, _ = self.bp_analysis_manager.get_blood_pressure_dataframe(start_date=start_date, end_date=today_date)
 
         if bp_df is None or bp_df.empty:
-            return False
+            return {
+                'success': False,
+                'message': 'No blood pressure data found',
+            }
 
         bp_df = bp_df.sort_values(by='timestamp_local')
 
         self.bp_df = bp_df
 
-        return True
+        return {
+            'success': True,
+            'message': 'Successfully initialized blood pressure data',
+        }
 
     def get_bp_time_intervals(self, start_date: datetime, bp_df: pd.DataFrame, study_type: str) -> dict:
         """
@@ -338,12 +387,12 @@ class PatientStudyOutcomes:
         """
         print(f"-------- start_date: {start_date}")
         print(f"-------- end_date: {end_date}")
-        total_days = (end_date - start_date).days
-        measurement_window = self.bp_df[(self.bp_df['timestamp_local'] >= start_date) & (self.bp_df['timestamp_local'] <= end_date)]
+        total_days = (end_date - start_date).days + 1
+        measurement_window = self.bp_df[(self.bp_df['timestamp_local'] >= start_date) & (self.bp_df['timestamp_local'] < end_date)]
         days_with_measurements = measurement_window['timestamp_local'].dt.date.nunique()
         return (days_with_measurements / total_days) * 100
 
-    def calculate_metric_status_and_progress(
+    def calculate_primary_prevention_metric_status_and_progress(
         self,
         current_dict: dict, # current timeframe data dictionary
         baseline_dict: dict, # baseline timeframe data dictionary
@@ -424,13 +473,6 @@ class PatientStudyOutcomes:
             'engagement': round(current_metrics['engagement'], 1),
         }
 
-        statuses = {
-            0: 'Behind',
-            1: 'On track',
-            2: 'Completed',
-            3: 'Unachieved'
-        }
-
         # Parse study dates back to datetime objects if they're strings
         study_start_date = parser.isoparse(self.study_start_date) if isinstance(self.study_start_date, str) else self.study_start_date
         study_end_date = parser.isoparse(self.study_end_date) if isinstance(self.study_end_date, str) else self.study_end_date
@@ -493,6 +535,22 @@ class PatientStudyOutcomes:
         current_dict['progress'] = progress_dict
 
         return current_dict
+
+    def get_physical_activity_data(self, start_date: datetime, end_date: datetime) -> dict:
+        """
+        Get the physical activity data.
+        """
+        healthie_metrics = HealthieMetrics()
+        entries, log = healthie_metrics.get_metric_data(
+            user_id=self.healthie_user_id,
+            category=HealthieMetrics.HEALTHIE_METRICS_PHYSICAL_ACTIVITY_CATEGORY,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        if entries is None or len(entries) == 0 or log['success'] == False:
+            return None
+
+        return entries
 
 if __name__ == "__main__":
     healthie_user_id = '1051529'

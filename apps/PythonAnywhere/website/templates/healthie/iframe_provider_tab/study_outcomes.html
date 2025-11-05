@@ -1,193 +1,231 @@
 <!-- STYLING -->
 <style>
-.so-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.so-header {
-    display: flex;
-    flex-direction: column;
-    /* gap: 0.5rem; */
-    padding: 1rem 0;
-}
-
-.so-header p {
-    font-size: small;
-    color: #6b7280;
-    margin: 0;
-}
-
-.so-header-title {
-    font-weight: bold;
-    font-size: large;
-    color: #16284a;
-    margin: 0;
-}
-
-.so-header-description {
-    font-size: small;
-    color: #6b7280 !important;
-    margin: 0;
-}
-
-.so-content-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.so-content-container section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.so-content-container section table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 0.25px solid #6b7280;
-    /* color: #16284a; */
-}
-
-#so-primary-study-info-table,
-#so-secondary-study-info-table {
-    margin-bottom: 0.5rem;
-}
-
-#so-primary-study-info-table tr,
-#so-secondary-study-info-table tr {
-    display: grid;
-    grid-template-columns: 4fr 3fr 3fr;
-}
-
-#primary-prevention-table tr,
-#secondary-prevention-table tr {
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
-}
-
-.so-table thead th {
-    background-color: #16284a;
-    color: white;
-    text-align: center;
-    vertical-align: middle;
-    padding: 0.5rem;
-    border: 0.25px solid #6b7280;
-}
-
-.so-table tbody th, td {
-    padding: 0.5rem;
-    font-weight: normal;
-    border: 0.5px solid #6b7280;
-    text-align: center;
-    vertical-align: middle;
-}
-
-#primary-prevention-table tbody th,
-#secondary-prevention-table tbody th {
-    text-align: left;
-}
-
-#so-loading-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    height: 100%;
-    width: 100%;
-}
-
-#so-primary-table-container,
-#so-secondary-table-container {
-    position: relative;
-    min-height: 300px;
-}
-
-#so-primary-loading-overlay,
-#so-secondary-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-}
-
-#so-primary-loading-spinner,
-#so-secondary-loading-spinner {
-    width: 2rem;
-    height: 2rem;
-}
-
-#so-primary-loading-text,
-#so-secondary-loading-text {
-    font-size: small;
-    color: #6b7280;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
+    .so-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
-    100% {
-        transform: rotate(360deg);
-    }
-}
 
-.spinner {
-    display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    border: 4px solid transparent;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
+    .so-header {
+        display: flex;
+        flex-direction: column;
+        /* gap: 0.5rem; */
+        padding: 1rem 0;
+    }
+
+    .so-header p {
+        font-size: small;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .so-header-title {
+        font-weight: bold;
+        font-size: large;
+        color: #16284a;
+        margin: 0;
+    }
+
+    .so-header-description {
+        font-size: small;
+        color: #6b7280 !important;
+        margin: 0;
+    }
+
+    .so-content-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .so-content-container section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0;
+    }
+
+    .so-content-container section table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 0.25px solid #6b7280;
+        /* color: #16284a; */
+    }
+
+    #so-study-info-table {
+        margin-bottom: 0.5rem;
+    }
+
+    #so-study-info-table tr {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    #so-study-info-table.secondary-prevention-mode tr {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .so-primary-prevention-column {
+        display: table-cell;
+    }
+
+    #so-study-info-table.secondary-prevention-mode .so-primary-prevention-column {
+        display: none;
+    }
+
+    #primary-prevention-table tr,
+    #secondary-prevention-table tr {
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
+    }
+
+    .so-table thead th {
+        background-color: #16284a;
+        color: white;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.5rem;
+        border: 0.25px solid #6b7280;
+    }
+
+    .so-table tbody th,
+    td {
+        padding: 0.5rem;
+        font-weight: normal;
+        border: 0.25px solid #6b7280;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #primary-prevention-table tbody th,
+    #secondary-prevention-table tbody th {
+        text-align: left;
+    }
+
+    #so-loading-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        height: 100%;
+        width: 100%;
+    }
+
+    #so-table-container {
+        position: relative;
+        min-height: 300px;
+    }
+
+    #so-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    #so-loading-spinner {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    #so-loading-text {
+        font-size: small;
+        color: #6b7280;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border: 4px solid transparent;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    #so-no-data-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        color: #dc2626;
+        font-size: 0.875rem;
+        font-weight: 500;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    #so-no-data-container i {
+        font-size: 1rem;
+        color: #dc2626;
+    }
+
+    #so-no-data-container p {
+        margin: 0;
+        color: #dc2626;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
 </style>
 
-
-<!-- Primary Prevention -->
-<div id="primary-prevention-container" class="so-container">
+<div class="so-container">
     <div class="so-header">
-        <h2 class="so-header-title">
-            Primary Prevention
-        </h2>
-        <p id="so-primary-prevention-description" class="so-header-description">
-            Data below is sourced from Tenovi blood pressure measurements and Healthie metric values.
-        </p>
+        <h1 class="so-header-title">Study Outcomes</h1>
+        <p class="so-header-description">The following data is sourced from Tenovi blood pressure measurements and Healthie metrics. </p>
     </div>
 
     <div class="so-content-container">
-        <section id="so-primary-table-container">
-            <div id="so-primary-loading-overlay">
-                <div id="so-primary-loading-container">
-                    <div id="so-primary-loading-spinner" class="spinner"></div>
-                    <p id="so-primary-loading-text">Fetching data...</p>
-                </div>
-            </div>
-            <table id="so-primary-study-info-table" class="so-table">
+        <section id="so-study-info-container">
+            <table id="so-study-info-table" class="so-table">
                 <thead>
+                    <th scope="col">Cohort</th>
+                    <th scope="col">Study Type</th>
                     <th scope="col">Start Date (Telemedicine Visit)</th>
-                    <th scope="col">Timeline Completion (%)</th>
-                    <th scope="col">Days Remaining</th>
+                    <th scope="col">Latest Measurement Date</th>
+                    <th scope="col" class="so-primary-prevention-column">Timeline Completion (%)</th>
                 </thead>
                 <tbody>
                     <tr>
-                        <td id="so-primary-start-date">-</td>
-                        <td id="so-primary-timeline-completion">-</td>
-                        <td id="so-primary-days-remaining">-</td>
+                        <td id="so-study-group">-</td>
+                        <td id="so-study-type">-</td>
+                        <td id="so-start-date">-</td>
+                        <td id="so-current-date">-</td>
+                        <td id="so-primary-timeline-completion" class="so-primary-prevention-column">-</td>
                     </tr>
                 </tbody>
             </table>
-            <table id="primary-prevention-table" class="so-table">
+        </section>
+
+        <section id="so-table-container">
+            <div id="so-loading-overlay">
+                <div id="so-loading-container">
+                    <div id="so-loading-spinner" class="spinner"></div>
+                    <p id="so-loading-text">Fetching data...</p>
+                </div>
+            </div>
+            <!-- PRIMARY PREVENTION -->
+            <table id="primary-prevention-table" class="so-table" style="display: none;">
                 <thead>
                     <tr>
                         <th scope="col">Goal</th>
@@ -198,56 +236,56 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Reduce average SBP by 10 mmHg</th>
                         <td id="so-status-avg-sbp">-</td>
                         <td id="so-baseline-avg-sbp">-</td>
                         <td id="so-current-avg-sbp">-</td>
                         <td id="so-progress-avg-sbp">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Decrease SBP standard deviation (SD) by 10%</th>
                         <td id="so-status-sbp-sd">-</td>
                         <td id="so-baseline-sbp-sd">-</td>
                         <td id="so-current-sbp-sd">-</td>
                         <td id="so-progress-sbp-sd">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Reduce average pulse pressure (PP) by 5 mmHg</th>
                         <td id="so-status-pp">-</td>
                         <td id="so-baseline-pp">-</td>
                         <td id="so-current-pp">-</td>
                         <td id="so-progress-pp">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Reduce average DBP by 5 mmHg</th>
                         <td id="so-status-dbp">-</td>
                         <td id="so-baseline-dbp">-</td>
                         <td id="so-current-dbp">-</td>
                         <td id="so-progress-dbp">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Reduction of hs-CRP</th>
                         <td id="so-status-hs-crp">-</td>
                         <td id="so-baseline-hs-crp">-</td>
                         <td id="so-current-hs-crp">-</td>
                         <td id="so-progress-hs-crp">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Reduce resting heart rate (RHR) by 5 bpm</th>
                         <td id="so-status-rhr">-</td>
                         <td id="so-baseline-rhr">-</td>
                         <td id="so-current-rhr">-</td>
                         <td id="so-progress-rhr">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Increase of heart rate variability (HRV) by 10% measured by SDNN</th>
                         <td id="so-status-hrv">-</td>
                         <td id="so-baseline-hrv">-</td>
                         <td id="so-current-hrv">-</td>
                         <td id="so-progress-hrv">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-primary-prevention-row">
                         <th scope="row">Maintain upwards of 90% engagement</th>
                         <td id="so-status-engagement">-</td>
                         <td id="so-baseline-engagement">-</td>
@@ -256,52 +294,8 @@
                     </tr>
                 </tbody>
             </table>
-            <ul id="so-timeframe-description">
-                <li><span style="text-decoration: underline;">Baseline</span>: first 20 measurements, cuttoff date agnostic</li>
-                <li><span style="text-decoration: underline;">Current/Latest</span>: most recent 10 trailing measurements</li>
-                <li><span style="text-decoration: underline;">1 - 6 months</span>: last 10 measurements leading up to cutoff, separated by 30 day intervals</li>
-                <!-- <li><span style="text-decoration: underline;">Status</span>: </li> -->
-                <li><span style="text-decoration: underline;">Progress (%)</span>: negative progress percentages indicate worsening behavior</li>
-                <li><span style="text-decoration: underline;">Engagement</span>: percentage of days within the study period that a measurement was taken</li>
-            </ul>
-        </section>
-    </div>
-</div>
-
-<!-- Secondary Prevention -->
-<div id="secondary-prevention-container" class="so-container">
-    <div class="so-header">
-        <h2 class="so-header-title">
-            Secondary Prevention
-        </h2>
-        <p id="so-primary-prevention-description" class="so-header-description">
-            Data below is sourced from Tenovi blood pressure measurements and Healthie metric values.
-        </p>
-    </div>
-
-    <div class="so-content-container">
-        <section id="so-secondary-table-container">
-            <div id="so-secondary-loading-overlay">
-                <div id="so-secondary-loading-container">
-                    <div id="so-secondary-loading-spinner" class="spinner"></div>
-                    <p id="so-secondary-loading-text">Fetching data...</p>
-                </div>
-            </div>
-            <table id="so-secondary-study-info-table" class="so-table">
-                <thead>
-                    <th scope="col">Start Date (Telemedicine Visit)</th>
-                    <th scope="col">Timeline Completion (%)</th>
-                    <th scope="col">Days Remaining</th>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td id="so-secondary-start-date">-</td>
-                        <td id="so-secondary-timeline-completion">-</td>
-                        <td id="so-secondary-days-remaining">-</td>
-                    </tr>
-                </tbody>
-            </table>
-            <table id="secondary-prevention-table" class="so-table">
+            <!-- SECONDARY PREVENTION -->
+            <table id="secondary-prevention-table" class="so-table" style="display: none;">
                 <thead>
                     <tr>
                         <th scope="col">Goal</th>
@@ -312,14 +306,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <tr class="so-secondary-prevention-row">
                         <th scope="row">90% of SBP measurements below 130 mmHg</th>
                         <td id="so-status-90-sbp">-</td>
                         <td id="so-baseline-90-sbp">-</td>
                         <td id="so-current-90-sbp">-</td>
                         <td id="so-progress-90-sbp">-</td>
                     </tr>
-                    <tr>
+                    <tr class="so-secondary-prevention-row">
                         <th scope="row">90% of DBP measurements below 80 mmHg</th>
                         <td id="so-status-90-dbp">-</td>
                         <td id="so-baseline-90-dbp">-</td>
@@ -340,7 +334,7 @@
                         <td id="so-current-prescription-adherence">-</td>
                         <td id="so-progress-prescription-adherence">-</td>
                     </tr> -->
-                    <tr>
+                    <tr class="so-secondary-prevention-row">
                         <th scope="row">Maintain upwards of 90% engagement</th>
                         <td id="so-status-prescription-adherence">-</td>
                         <td id="so-baseline-prescription-adherence">-</td>
@@ -350,14 +344,24 @@
                 </tbody>
             </table>
             <ul id="so-timeframe-description">
-                <li><span style="text-decoration: underline;">Baseline</span>: first 20 measurements, cuttoff date agnostic</li>
-                <li><span style="text-decoration: underline;">Current/Latest</span>: most recent 10 trailing measurements</li>
-                <li><span style="text-decoration: underline;">1 - 6 months</span>: last 10 measurements leading up to cutoff, separated by 30 day intervals</li>
+                <li><span style="text-decoration: underline;">Baseline</span>: first 20 measurements, cuttoff date
+                    agnostic</li>
+                <li><span style="text-decoration: underline;">Current/Latest</span>: most recent 10 trailing
+                    measurements</li>
+                <!-- <li><span style="text-decoration: underline;">1 - 6 months</span>: last 10 measurements leading up to
+                    cutoff, separated by 30 day intervals</li> -->
                 <!-- <li><span style="text-decoration: underline;">Status</span>: </li> -->
-                <li><span style="text-decoration: underline;">Progress (%)</span>: negative progress percentages indicate worsening behavior</li>
-                <li><span style="text-decoration: underline;">Engagement</span>: percentage of days within the study period that a measurement was taken</li>
+                <li><span style="text-decoration: underline;">Progress (%)</span>: negative progress percentages
+                    indicate worsening behavior</li>
+                <li><span style="text-decoration: underline;">Engagement</span>: percentage of days within the study
+                    period that a measurement was taken</li>
             </ul>
         </section>
+
+        <div id="so-no-data-container" style="display: none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <p id="so-no-data-text"></p>
+        </div>
     </div>
 </div>
 
@@ -365,261 +369,327 @@
 <!-- SCRIPT -->
 <script>
 
-var healthieProviderId = "{{ healthie_provider_id }}";
-var healthieUserId = "{{ healthie_user_id }}";
-var temporaryLookupCode = "{{ temporary_lookup_code }}";
-var patientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
-
-function showSpinner(targetElement) {
-    if (targetElement) {
-        targetElement.style.display = "flex";
+    function showSpinner(targetElement) {
+        if (targetElement) {
+            targetElement.style.display = "flex";
+        }
     }
-}
 
-function hideSpinner(targetElement) {
-    if (targetElement) {
-        targetElement.style.display = "none";
+    function hideSpinner(targetElement) {
+        if (targetElement) {
+            targetElement.style.display = "none";
+        }
     }
-}
 
-function getStudyOutcomesData() {
-    const primaryLoadingOverlay = document.getElementById('so-primary-loading-overlay');
-    const secondaryLoadingOverlay = document.getElementById('so-secondary-loading-overlay');
+    function getStudyOutcomesData() {
+        const loadingOverlay = document.getElementById('so-loading-overlay');
+        showSpinner(loadingOverlay);
 
-    showSpinner(primaryLoadingOverlay);
-    showSpinner(secondaryLoadingOverlay);
+        const formData = new FormData();
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        formData.append('healthie_user_id', "{{ healthie_user_id }}");
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
 
-    const formData = new FormData();
-    formData.append('healthie_provider_id', healthieProviderId);
-    formData.append('healthie_user_id', healthieUserId);
-    formData.append('temporary_lookup_code', temporaryLookupCode);
-    formData.append('patient_not_registered_at_syntrillo', patientNotRegisteredAtSyntrillo);
+        fetch('{{ url_for("iframe_healthie_provider_tab_study_outcomes_bp.iframe_healthie_provider_tab_study_outcomes_data") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Study outcomes data:', data);
 
-    fetch('{{ url_for("iframe_healthie_provider_tab_study_outcomes_bp.iframe_healthie_provider_tab_study_outcomes_data") }}', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Study outcomes data:', data);
+                // Hide no-data container initially
+                const noDataContainer = document.getElementById('so-no-data-container');
+                noDataContainer.style.display = 'none';
 
-        // Populate primary prevention table if data exists
-        if (data.primary_prevention) {
-            populatePrimaryPreventionTable(data.primary_prevention);
+                if (data.success) {
+                    // Hide both tables initially
+                    document.getElementById('primary-prevention-table').style.display = 'none';
+                    document.getElementById('secondary-prevention-table').style.display = 'none';
+
+                    if (data.study_type === 'Primary Prevention' && data.primary_prevention_data) {
+                        populatePrimaryPreventionTable(data.primary_prevention_data);
+                        populateStudyInfoTable({
+                            user_group_name: data.user_group_name,
+                            primary_prevention: data.primary_prevention_data
+                        }, 'primary');
+                    } else if (data.study_type === 'Secondary Prevention' && data.secondary_prevention_data) {
+                        populateSecondaryPreventionTable(data.secondary_prevention_data);
+                        populateStudyInfoTable({
+                            user_group_name: data.user_group_name,
+                            secondary_prevention: data.secondary_prevention_data
+                        }, 'secondary');
+                    } else {
+                        // No data available
+                        noDataContainer.style.display = 'flex';
+                        document.getElementById('so-no-data-text').textContent = 'No study data available for this patient.';
+                    }
+                } else {
+                    // Show error message
+                    noDataContainer.style.display = 'flex';
+                    document.getElementById('so-no-data-text').textContent = data.message || 'Failed to retrieve study outcomes data.';
+                    document.getElementById('so-table-container').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                hideSpinner(document.getElementById('so-loading-overlay'));
+            });
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function formatNumber(value, decimals = 1) {
+        if (value === null || value === undefined) return 'N/A';
+        return value.toFixed(decimals);
+    }
+
+    function populateStudyInfoTable(data, studyType) {
+        // Get cohort/group name
+        const cohort = data.user_group_name || 'N/A';
+        document.getElementById('so-study-group').textContent = cohort;
+
+        // Set study type
+        const studyTypeText = studyType === 'primary' ? 'Primary Prevention' : (studyType === 'secondary' ? 'Secondary Prevention' : 'Primary + Secondary');
+        document.getElementById('so-study-type').textContent = studyTypeText;
+
+        // Get baseline and current data
+        let baseline = null;
+        let current = null;
+        if (studyType === 'primary' && data.primary_prevention) {
+            baseline = data.primary_prevention.Baseline;
+            current = data.primary_prevention.Current;
+        } else if (studyType === 'secondary' && data.secondary_prevention) {
+            baseline = data.secondary_prevention.Baseline;
+            current = data.secondary_prevention.Current;
         }
 
-        // Populate secondary prevention table if data exists
-        if (data.secondary_prevention) {
-            populateSecondaryPreventionTable(data.secondary_prevention);
+        // Populate start date from baseline
+        if (baseline && baseline.start_date) {
+            document.getElementById('so-start-date').textContent = formatDate(baseline.start_date);
+        } else {
+            document.getElementById('so-start-date').textContent = 'N/A';
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    })
-    .finally(() => {
-        hideSpinner(document.getElementById('so-primary-loading-overlay'));
-        hideSpinner(document.getElementById('so-secondary-loading-overlay'));
-    });
-}
 
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
+        // Populate current date from current end_date
+        if (current && current.end_date) {
+            document.getElementById('so-current-date').textContent = formatDate(current.end_date);
+        } else {
+            document.getElementById('so-current-date').textContent = 'N/A';
+        }
 
-function formatNumber(value, decimals = 1) {
-    if (value === null || value === undefined) return 'N/A';
-    return value.toFixed(decimals);
-}
-
-function populatePrimaryPreventionTable(primaryData) {
-    const baseline = primaryData.Baseline;
-    const current = primaryData.Current;
-
-    if (!baseline || !current) {
-        console.error('Missing baseline or current data for primary prevention');
-        return;
+        // Timeline completion (only for primary prevention)
+        if (studyType === 'primary') {
+            if (current && current.progress && current.progress.study_progress) {
+                const timelineCompletion = current.progress.study_progress.percentage;
+                document.getElementById('so-primary-timeline-completion').textContent =
+                    timelineCompletion < 100 ? formatNumber(timelineCompletion) : '100.0';
+            } else {
+                document.getElementById('so-primary-timeline-completion').textContent = 'N/A';
+            }
+        }
     }
 
-    // Get progress data from current (only exists in Current)
-    const progress = current.progress || {};
+    function populatePrimaryPreventionTable(primaryData) {
+        // Hide secondary prevention table
+        document.getElementById('secondary-prevention-table').style.display = 'none';
+        // Show primary prevention table
+        document.getElementById('primary-prevention-table').style.display = 'table';
 
-    // Average SBP
-    if (baseline.bp_metadata && current.bp_metadata) {
-        const baselineAvgSBP = baseline.bp_metadata['Avg SBP (mmHg)'];
-        const currentAvgSBP = current.bp_metadata['Avg SBP (mmHg)'];
-        const sbpProgress = progress.avg_sbp ? progress.avg_sbp.progress : null;
+        // Show timeline columns and update grid to 5 columns
+        const studyInfoTable = document.getElementById('so-study-info-table');
+        studyInfoTable.classList.remove('secondary-prevention-mode');
 
-        document.getElementById('so-baseline-avg-sbp').textContent = formatNumber(baselineAvgSBP);
-        document.getElementById('so-current-avg-sbp').textContent = formatNumber(currentAvgSBP);
-        document.getElementById('so-progress-avg-sbp').textContent = formatNumber(sbpProgress);
-        document.getElementById('so-status-avg-sbp').textContent = progress.avg_sbp ? progress.avg_sbp.status : 'N/A';
+        const baseline = primaryData.Baseline;
+        const current = primaryData.Current;
+
+        if (!baseline || !current) {
+            console.error('Missing baseline or current data for primary prevention');
+            return;
+        }
+
+        // Get progress data from current (only exists in Current)
+        const progress = current.progress || {};
+
+        // Average SBP
+        if (baseline.bp_metadata && current.bp_metadata) {
+            const baselineAvgSBP = baseline.bp_metadata['Avg SBP (mmHg)'];
+            const currentAvgSBP = current.bp_metadata['Avg SBP (mmHg)'];
+            const sbpProgress = progress.avg_sbp ? progress.avg_sbp.progress : null;
+
+            document.getElementById('so-baseline-avg-sbp').textContent = formatNumber(baselineAvgSBP);
+            document.getElementById('so-current-avg-sbp').textContent = formatNumber(currentAvgSBP);
+            document.getElementById('so-progress-avg-sbp').textContent = formatNumber(sbpProgress);
+            document.getElementById('so-status-avg-sbp').textContent = progress.avg_sbp ? progress.avg_sbp.status : 'N/A';
+        }
+
+        // SBP Standard Deviation
+        if (baseline.bp_metadata && current.bp_metadata) {
+            const baselineSBPSD = baseline.bp_metadata['SBP SD (mmHg)'];
+            const currentSBPSD = current.bp_metadata['SBP SD (mmHg)'];
+            const sbpSDProgress = progress.sbp_sd ? progress.sbp_sd.progress : null;
+
+            document.getElementById('so-baseline-sbp-sd').textContent = formatNumber(baselineSBPSD);
+            document.getElementById('so-current-sbp-sd').textContent = formatNumber(currentSBPSD);
+            document.getElementById('so-progress-sbp-sd').textContent = formatNumber(sbpSDProgress);
+            document.getElementById('so-status-sbp-sd').textContent = progress.sbp_sd ? progress.sbp_sd.status : 'N/A';
+        }
+
+        // Average Pulse Pressure (PP)
+        if (baseline.bp_metadata && current.bp_metadata) {
+            const baselineAvgPP = baseline.bp_metadata['Avg PP (mmHg)'];
+            const currentAvgPP = current.bp_metadata['Avg PP (mmHg)'];
+            const ppProgress = progress.avg_pp ? progress.avg_pp.progress : null;
+
+            document.getElementById('so-baseline-pp').textContent = formatNumber(baselineAvgPP);
+            document.getElementById('so-current-pp').textContent = formatNumber(currentAvgPP);
+            document.getElementById('so-progress-pp').textContent = formatNumber(ppProgress);
+            document.getElementById('so-status-pp').textContent = progress.avg_pp ? progress.avg_pp.status : 'N/A';
+        }
+
+        // Average DBP
+        if (baseline.bp_metadata && current.bp_metadata) {
+            const baselineAvgDBP = baseline.bp_metadata['Avg DBP (mmHg)'];
+            const currentAvgDBP = current.bp_metadata['Avg DBP (mmHg)'];
+            const dbpProgress = progress.avg_dbp ? progress.avg_dbp.progress : null;
+
+            document.getElementById('so-baseline-dbp').textContent = formatNumber(baselineAvgDBP);
+            document.getElementById('so-current-dbp').textContent = formatNumber(currentAvgDBP);
+            document.getElementById('so-progress-dbp').textContent = formatNumber(dbpProgress);
+            document.getElementById('so-status-dbp').textContent = progress.avg_dbp ? progress.avg_dbp.status : 'N/A';
+        }
+
+        // hs-CRP
+        const baselineHsCRP = baseline.hs_crp_data ? baseline.hs_crp_data.metric_stat : null;
+        const currentHsCRP = current.hs_crp_data ? current.hs_crp_data.metric_stat : null;
+
+        document.getElementById('so-baseline-hs-crp').textContent = formatNumber(baselineHsCRP);
+        document.getElementById('so-current-hs-crp').textContent = formatNumber(currentHsCRP);
+
+        if (progress.hs_crp) {
+            document.getElementById('so-progress-hs-crp').textContent = formatNumber(progress.hs_crp.progress);
+            document.getElementById('so-status-hs-crp').textContent = progress.hs_crp.status || 'N/A';
+        } else {
+            document.getElementById('so-progress-hs-crp').textContent = 'N/A';
+            document.getElementById('so-status-hs-crp').textContent = 'N/A';
+        }
+
+        // Resting Heart Rate (RHR)
+        const baselineRHR = baseline.hr_metadata ? baseline.hr_metadata.average_rhr : null;
+        const currentRHR = current.hr_metadata ? current.hr_metadata.average_rhr : null;
+
+        document.getElementById('so-baseline-rhr').textContent = formatNumber(baselineRHR);
+        document.getElementById('so-current-rhr').textContent = formatNumber(currentRHR);
+
+        if (progress.rhr) {
+            document.getElementById('so-progress-rhr').textContent = formatNumber(progress.rhr.progress);
+            document.getElementById('so-status-rhr').textContent = progress.rhr.status || 'N/A';
+        } else {
+            document.getElementById('so-progress-rhr').textContent = 'N/A';
+            document.getElementById('so-status-rhr').textContent = 'N/A';
+        }
+
+        // Heart Rate Variability (HRV) - SDNN
+        const baselineHRV = baseline.hr_metadata ? baseline.hr_metadata.standard_deviation_rhr : null;
+        const currentHRV = current.hr_metadata ? current.hr_metadata.standard_deviation_rhr : null;
+
+        document.getElementById('so-baseline-hrv').textContent = formatNumber(baselineHRV);
+        document.getElementById('so-current-hrv').textContent = formatNumber(currentHRV);
+
+        if (progress.hrv) {
+            document.getElementById('so-progress-hrv').textContent = formatNumber(progress.hrv.progress);
+            document.getElementById('so-status-hrv').textContent = progress.hrv.status || 'N/A';
+        } else {
+            document.getElementById('so-progress-hrv').textContent = 'N/A';
+            document.getElementById('so-status-hrv').textContent = 'Pending';
+        }
+
+        // Engagement
+        const baselineEngagement = baseline.engagement;
+        const currentEngagement = current.engagement;
+
+        document.getElementById('so-baseline-engagement').textContent = formatNumber(baselineEngagement);
+        document.getElementById('so-current-engagement').textContent = formatNumber(currentEngagement);
+        document.getElementById('so-status-engagement').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
+        document.getElementById('so-progress-engagement').textContent = progress.engagement ? formatNumber(progress.engagement.progress) : 'N/A';
+
+        // Study Info is now handled by populateStudyInfoTable()
     }
 
-    // SBP Standard Deviation
-    if (baseline.bp_metadata && current.bp_metadata) {
-        const baselineSBPSD = baseline.bp_metadata['SBP SD (mmHg)'];
-        const currentSBPSD = current.bp_metadata['SBP SD (mmHg)'];
-        const sbpSDProgress = progress.sbp_sd ? progress.sbp_sd.progress : null;
+    function populateSecondaryPreventionTable(secondaryData) {
+        // Hide primary prevention table
+        document.getElementById('primary-prevention-table').style.display = 'none';
+        // Show secondary prevention table
+        document.getElementById('secondary-prevention-table').style.display = 'table';
 
-        document.getElementById('so-baseline-sbp-sd').textContent = formatNumber(baselineSBPSD);
-        document.getElementById('so-current-sbp-sd').textContent = formatNumber(currentSBPSD);
-        document.getElementById('so-progress-sbp-sd').textContent = formatNumber(sbpSDProgress);
-        document.getElementById('so-status-sbp-sd').textContent = progress.sbp_sd ? progress.sbp_sd.status : 'N/A';
+        // Hide timeline columns and update grid to 3 columns
+        const studyInfoTable = document.getElementById('so-study-info-table');
+        studyInfoTable.classList.add('secondary-prevention-mode');
+
+        const baseline = secondaryData.Baseline;
+        const current = secondaryData.Current;
+
+        if (!baseline || !current) {
+            console.error('Missing baseline or current data for secondary prevention');
+            return;
+        }
+
+        // SBP Goal (90% below 130 mmHg)
+        const baselineSBPGoal = baseline.sbp_goal !== undefined ? baseline.sbp_goal : null;
+        const currentSBPGoal = current.sbp_goal !== undefined ? current.sbp_goal : null;
+
+        // Calculate progress (difference between current and baseline)
+        const sbpGoalProgress = (baselineSBPGoal !== null && currentSBPGoal !== null) ?
+            ((currentSBPGoal - baselineSBPGoal) / baselineSBPGoal * 100) : null;
+
+        document.getElementById('so-baseline-90-sbp').textContent = formatNumber(baselineSBPGoal * 100) + '%';
+        document.getElementById('so-current-90-sbp').textContent = formatNumber(currentSBPGoal * 100) + '%';
+        document.getElementById('so-progress-90-sbp').textContent = formatNumber(sbpGoalProgress);
+        document.getElementById('so-status-90-sbp').textContent = currentSBPGoal >= 0.9 ? 'Achieved' : 'Behind';
+
+        // DBP Goal (90% below 80 mmHg)
+        const baselineDBPGoal = baseline.dbp_goal !== undefined ? baseline.dbp_goal : null;
+        const currentDBPGoal = current.dbp_goal !== undefined ? current.dbp_goal : null;
+
+        // Calculate progress
+        const dbpGoalProgress = (baselineDBPGoal !== null && currentDBPGoal !== null) ?
+            ((currentDBPGoal - baselineDBPGoal) / baselineDBPGoal * 100) : null;
+
+        document.getElementById('so-baseline-90-dbp').textContent = formatNumber(baselineDBPGoal * 100) + '%';
+        document.getElementById('so-current-90-dbp').textContent = formatNumber(currentDBPGoal * 100) + '%';
+        document.getElementById('so-progress-90-dbp').textContent = formatNumber(dbpGoalProgress);
+        document.getElementById('so-status-90-dbp').textContent = currentDBPGoal >= 0.9 ? 'Achieved' : 'Behind';
+
+        // Engagement (calculate from baseline and current if available)
+        // For secondary prevention, we might need to calculate engagement from bp_data
+        let baselineEngagement = 0;
+        let currentEngagement = 0;
+
+        if (baseline.bp_data && Array.isArray(baseline.bp_data) && baseline.bp_data.length > 0) {
+            // Calculate engagement if we have date range
+            // For now, use a placeholder or calculate from data availability
+            baselineEngagement = baseline.bp_data.length > 0 ? 100 : 0;
+        }
+
+        if (current.bp_data && Array.isArray(current.bp_data) && current.bp_data.length > 0) {
+            currentEngagement = current.bp_data.length > 0 ? 100 : 0;
+        }
+
+        document.getElementById('so-baseline-prescription-adherence').textContent = formatNumber(baselineEngagement) + '%';
+        document.getElementById('so-current-prescription-adherence').textContent = formatNumber(currentEngagement) + '%';
+        document.getElementById('so-status-prescription-adherence').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
+        document.getElementById('so-progress-prescription-adherence').textContent = formatNumber(currentEngagement - baselineEngagement);
+
+        // Study Info is now handled by populateStudyInfoTable()
     }
 
-    // Average Pulse Pressure (PP)
-    if (baseline.bp_metadata && current.bp_metadata) {
-        const baselineAvgPP = baseline.bp_metadata['Avg PP (mmHg)'];
-        const currentAvgPP = current.bp_metadata['Avg PP (mmHg)'];
-        const ppProgress = progress.avg_pp ? progress.avg_pp.progress : null;
-
-        document.getElementById('so-baseline-pp').textContent = formatNumber(baselineAvgPP);
-        document.getElementById('so-current-pp').textContent = formatNumber(currentAvgPP);
-        document.getElementById('so-progress-pp').textContent = formatNumber(ppProgress);
-        document.getElementById('so-status-pp').textContent = progress.avg_pp ? progress.avg_pp.status : 'N/A';
-    }
-
-    // Average DBP
-    if (baseline.bp_metadata && current.bp_metadata) {
-        const baselineAvgDBP = baseline.bp_metadata['Avg DBP (mmHg)'];
-        const currentAvgDBP = current.bp_metadata['Avg DBP (mmHg)'];
-        const dbpProgress = progress.avg_dbp ? progress.avg_dbp.progress : null;
-
-        document.getElementById('so-baseline-dbp').textContent = formatNumber(baselineAvgDBP);
-        document.getElementById('so-current-dbp').textContent = formatNumber(currentAvgDBP);
-        document.getElementById('so-progress-dbp').textContent = formatNumber(dbpProgress);
-        document.getElementById('so-status-dbp').textContent = progress.avg_dbp ? progress.avg_dbp.status : 'N/A';
-    }
-
-    // hs-CRP
-    const baselineHsCRP = baseline.hs_crp_data ? baseline.hs_crp_data.metric_stat : null;
-    const currentHsCRP = current.hs_crp_data ? current.hs_crp_data.metric_stat : null;
-
-    document.getElementById('so-baseline-hs-crp').textContent = formatNumber(baselineHsCRP);
-    document.getElementById('so-current-hs-crp').textContent = formatNumber(currentHsCRP);
-
-    if (progress.hs_crp) {
-        document.getElementById('so-progress-hs-crp').textContent = formatNumber(progress.hs_crp.progress);
-        document.getElementById('so-status-hs-crp').textContent = progress.hs_crp.status || 'N/A';
-    } else {
-        document.getElementById('so-progress-hs-crp').textContent = 'N/A';
-        document.getElementById('so-status-hs-crp').textContent = 'N/A';
-    }
-
-    // Resting Heart Rate (RHR)
-    const baselineRHR = baseline.hr_metadata ? baseline.hr_metadata.average_rhr : null;
-    const currentRHR = current.hr_metadata ? current.hr_metadata.average_rhr : null;
-
-    document.getElementById('so-baseline-rhr').textContent = formatNumber(baselineRHR);
-    document.getElementById('so-current-rhr').textContent = formatNumber(currentRHR);
-
-    if (progress.rhr) {
-        document.getElementById('so-progress-rhr').textContent = formatNumber(progress.rhr.progress);
-        document.getElementById('so-status-rhr').textContent = progress.rhr.status || 'N/A';
-    } else {
-        document.getElementById('so-progress-rhr').textContent = 'N/A';
-        document.getElementById('so-status-rhr').textContent = 'N/A';
-    }
-
-    // Heart Rate Variability (HRV) - SDNN
-    const baselineHRV = baseline.hr_metadata ? baseline.hr_metadata.standard_deviation_rhr : null;
-    const currentHRV = current.hr_metadata ? current.hr_metadata.standard_deviation_rhr : null;
-
-    document.getElementById('so-baseline-hrv').textContent = formatNumber(baselineHRV);
-    document.getElementById('so-current-hrv').textContent = formatNumber(currentHRV);
-
-    if (progress.hrv) {
-        document.getElementById('so-progress-hrv').textContent = formatNumber(progress.hrv.progress);
-        document.getElementById('so-status-hrv').textContent = progress.hrv.status || 'N/A';
-    } else {
-        document.getElementById('so-progress-hrv').textContent = 'N/A';
-        document.getElementById('so-status-hrv').textContent = 'Pending';
-    }
-
-    // Engagement
-    const baselineEngagement = baseline.engagement;
-    const currentEngagement = current.engagement;
-
-    document.getElementById('so-baseline-engagement').textContent = formatNumber(baselineEngagement);
-    document.getElementById('so-current-engagement').textContent = formatNumber(currentEngagement);
-    document.getElementById('so-status-engagement').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
-    document.getElementById('so-progress-engagement').textContent = progress.engagement ? formatNumber(progress.engagement.progress) : 'N/A';
-
-    // Study Info
-    if (current.progress && current.progress.study_progress) {
-        const startDate = formatDate(baseline.start_date);
-        const timelineCompletion = current.progress.study_progress.percentage;
-        const daysRemaining = current.progress.study_progress.days_remaining;
-
-        document.getElementById('so-primary-start-date').textContent = startDate;
-        document.getElementById('so-primary-timeline-completion').textContent = timelineCompletion < 100 ? formatNumber(timelineCompletion) : '100.0';
-        document.getElementById('so-primary-days-remaining').textContent = daysRemaining;
-    }
-}
-
-function populateSecondaryPreventionTable(secondaryData) {
-    const baseline = secondaryData.Baseline;
-    const current = secondaryData.Current;
-
-    if (!baseline || !current) {
-        console.error('Missing baseline or current data for secondary prevention');
-        return;
-    }
-
-    // SBP Goal (90% below 130 mmHg)
-    const baselineSBPGoal = baseline.sbp_goal !== undefined ? baseline.sbp_goal : null;
-    const currentSBPGoal = current.sbp_goal !== undefined ? current.sbp_goal : null;
-
-    // Calculate progress (difference between current and baseline)
-    const sbpGoalProgress = (baselineSBPGoal !== null && currentSBPGoal !== null) ?
-        ((currentSBPGoal - baselineSBPGoal) / baselineSBPGoal * 100) : null;
-
-    document.getElementById('so-baseline-90-sbp').textContent = formatNumber(baselineSBPGoal * 100) + '%';
-    document.getElementById('so-current-90-sbp').textContent = formatNumber(currentSBPGoal * 100) + '%';
-    document.getElementById('so-progress-90-sbp').textContent = formatNumber(sbpGoalProgress);
-    document.getElementById('so-status-90-sbp').textContent = currentSBPGoal >= 0.9 ? 'Achieved' : 'Behind';
-
-    // DBP Goal (90% below 80 mmHg)
-    const baselineDBPGoal = baseline.dbp_goal !== undefined ? baseline.dbp_goal : null;
-    const currentDBPGoal = current.dbp_goal !== undefined ? current.dbp_goal : null;
-
-    // Calculate progress
-    const dbpGoalProgress = (baselineDBPGoal !== null && currentDBPGoal !== null) ?
-        ((currentDBPGoal - baselineDBPGoal) / baselineDBPGoal * 100) : null;
-
-    document.getElementById('so-baseline-90-dbp').textContent = formatNumber(baselineDBPGoal * 100) + '%';
-    document.getElementById('so-current-90-dbp').textContent = formatNumber(currentDBPGoal * 100) + '%';
-    document.getElementById('so-progress-90-dbp').textContent = formatNumber(dbpGoalProgress);
-    document.getElementById('so-status-90-dbp').textContent = currentDBPGoal >= 0.9 ? 'Achieved' : 'Behind';
-
-    // Engagement (calculate from baseline and current if available)
-    // For secondary prevention, we might need to calculate engagement from bp_data
-    let baselineEngagement = 0;
-    let currentEngagement = 0;
-
-    if (baseline.bp_data && Array.isArray(baseline.bp_data) && baseline.bp_data.length > 0) {
-        // Calculate engagement if we have date range
-        // For now, use a placeholder or calculate from data availability
-        baselineEngagement = baseline.bp_data.length > 0 ? 100 : 0;
-    }
-
-    if (current.bp_data && Array.isArray(current.bp_data) && current.bp_data.length > 0) {
-        currentEngagement = current.bp_data.length > 0 ? 100 : 0;
-    }
-
-    document.getElementById('so-baseline-prescription-adherence').textContent = formatNumber(baselineEngagement) + '%';
-    document.getElementById('so-current-prescription-adherence').textContent = formatNumber(currentEngagement) + '%';
-    document.getElementById('so-status-prescription-adherence').textContent = currentEngagement >= 90 ? 'Achieved' : 'Behind';
-    document.getElementById('so-progress-prescription-adherence').textContent = formatNumber(currentEngagement - baselineEngagement);
-
-    // Study Info - use baseline start_date
-    const startDate = formatDate(baseline.start_date);
-    document.getElementById('so-secondary-start-date').textContent = startDate;
-    document.getElementById('so-secondary-timeline-completion').textContent = 'N/A';
-    document.getElementById('so-secondary-days-remaining').textContent = 'N/A';
-}
-
-getStudyOutcomesData();
+    // Fetch study outcomes data on first render
+    getStudyOutcomesData();
 </script>

@@ -53,7 +53,7 @@ def iframe_healthie_provider_tab_study_outcomes():
     )
 
 
-@iframe_healthie_provider_tab_study_outcomes_bp.route('/healthie/iframe_provider_tab/study_outcomes/data', methods=['POST'])
+@iframe_healthie_provider_tab_study_outcomes_bp.route('/healthie/iframe_provider_tab/study_outcomes_data', methods=['POST'])
 def iframe_healthie_provider_tab_study_outcomes_data():
     """
     This endpoint is used to get the data for the study outcomes tab.
@@ -77,21 +77,46 @@ def iframe_healthie_provider_tab_study_outcomes_data():
     user_group_name = user_group['name'] if user_group else None
     user_group_id = user_group['id'] if user_group else None
 
-    db_manager = SyntrilloDatabaseManager(syntrillo_internal_key_patient)
-    activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key_patient)
+    if user_group_id is None:
+        return jsonify({
+            'success': False,
+            'message': 'User is not assigned to a group',
+        })
 
-    data = {
-        'primary_prevention': None,
-        'secondary_prevention': None,
-        'user_group_name': user_group_name,
-        'activity_data': activity_data,
-    }
+    study_type = 'Primary Prevention' if user_group_id in primary_prevention_study_groups else 'Secondary Prevention' if user_group_id in secondary_prevention_study_groups else 'N/A'
 
-    if is_production:
-        data['primary_prevention'] = study_outcomes.get_primary_prevention_data() if user_group_id in primary_prevention_study_groups else None
-        data['secondary_prevention'] = study_outcomes.get_secondary_prevention_data() if user_group_id in secondary_prevention_study_groups else None
-    else:
-        data['primary_prevention'] = study_outcomes.get_primary_prevention_data()
-        data['secondary_prevention'] = study_outcomes.get_secondary_prevention_data()
+    # Initialize both to None
+    primary_prevention_data = None
+    secondary_prevention_data = None
 
-    return jsonify(data)
+    if study_type == 'Primary Prevention':
+        primary_prevention_data = study_outcomes.get_primary_prevention_data()
+        if primary_prevention_data['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully retrieved primary prevention data',
+                'user_group_name': user_group_name,
+                'study_type': study_type,
+                'primary_prevention_data': primary_prevention_data['data'],
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': primary_prevention_data['message'],
+            })
+
+    elif study_type == 'Secondary Prevention':
+        secondary_prevention_data = study_outcomes.get_secondary_prevention_data()
+        if secondary_prevention_data['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully retrieved secondary prevention data',
+                'user_group_name': user_group_name,
+                'study_type': study_type,
+                'secondary_prevention_data': secondary_prevention_data['data'],
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': secondary_prevention_data['message'],
+            })
