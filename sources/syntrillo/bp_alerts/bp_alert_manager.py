@@ -202,7 +202,7 @@ class BloodPressureAlertManager:
         if days_since_first > 28 and days_since_first % 14 == 0:
             self.handle_two_week_summary_stats()
 
-            self.handle_two_week_avg_sbp()
+            # self.handle_two_week_avg_sbp()
             # self.handle_two_week_status()
             return {
                 'success': True,
