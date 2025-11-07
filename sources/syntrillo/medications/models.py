@@ -15,6 +15,7 @@ class Frequency(str, Enum):
     AS_NEEDED = "as-needed"
 
 class DosingScheduleRule(str, Enum):
+    QD = 'QD'
     BID = "BID"
     TID = "TID"
     QID = "QID"
@@ -47,6 +48,7 @@ class DrugCategory(str, Enum): # Mechanism of Action (MOA)
     BETA_BLOCKER = "beta_blocker"
     CALCIUM_CHANNEL_BLOCKER = "calcium_channel_blocker"
     DIURETIC = "diuretic"
+    VITAMIN = 'vitamin'
     OTHER = "other"
 
 class DrugSupercategory(str, Enum):
@@ -73,20 +75,21 @@ class MedicationRecord(BaseModel):
     # Nullable Fields
     category: Optional[DrugCategory] = None # new
     supercategory: Optional[DrugSupercategory] = None # new
-    should_track: Optional[bool] = True # new
-    dosage_amount: Optional[float] = 1.0
-    dosage_unit: Optional[str] = Field(default=None, max_length=32)
-    comment: Optional[str] = None
+    delivery_method: Optional[DeliveryMethod] = None
     directions: Optional[str] = None
+    dosing_schedule_rule: Optional[DosingScheduleRule] = None
+    dosage_amount: Optional[float] = 1.0
+    total_dosage: Optional[float] = 1.0
+    dosage_unit: Optional[str] = Field(default=None, max_length=32)
+    dose_count: Optional[int] = None
+    doses_per_day: Optional[int] = None
     frequency: Optional[Frequency] = None
     dosing_interval: Optional[int] = None
-    dosing_schedule_rule: Optional[DosingScheduleRule] = None
-    dose_count: Optional[int] = None
     time_of_day: Optional[TimeOfDay] = None
     time_of_day_specific: Optional[time] = None # new
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    delivery_method: Optional[DeliveryMethod] = None
+    comment: Optional[str] = None
     mirrored: Optional[bool] = False
 
     class Config:
