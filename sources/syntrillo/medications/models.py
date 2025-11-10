@@ -73,23 +73,26 @@ class MedicationRecord(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Nullable Fields
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    comment: Optional[str] = None
+    directions: Optional[str] = None
+
+    # common_name = Optional[str] = None
     category: Optional[DrugCategory] = None # new
     supercategory: Optional[DrugSupercategory] = None # new
     delivery_method: Optional[DeliveryMethod] = None
-    directions: Optional[str] = None
     dosing_schedule_rule: Optional[DosingScheduleRule] = None
     dosage_amount: Optional[float] = 1.0
-    total_dosage: Optional[float] = 1.0
     dosage_unit: Optional[str] = Field(default=None, max_length=32)
+    total_daily_dosage: Optional[float] = None
     dose_count: Optional[int] = None
-    doses_per_day: Optional[int] = None
     frequency: Optional[Frequency] = None
     dosing_interval: Optional[int] = None
     time_of_day: Optional[TimeOfDay] = None
     time_of_day_specific: Optional[time] = None # new
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    comment: Optional[str] = None
+    # day_period = Optional[str] = None
+    # day_of_week = Optional[str] = None
     mirrored: Optional[bool] = False
 
     class Config:
