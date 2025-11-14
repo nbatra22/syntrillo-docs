@@ -1,4 +1,4 @@
-# import json
+import json
 from typing import Union
 import uuid
 from datetime import datetime
@@ -203,23 +203,9 @@ def get_patient_history_data(healthie_user_id: str):
     # Fetch the patient's responses to the Healthie form "Onboarding Record Review w/ Patient [v9.2]"" (as of 11/12/25).
 
     # Map Healthie form inputs to result object
-    srs_attribute_to_question_id = {
-        "hasPriorStroke": "19191897",
-        "numOfPriorStrokes": "19191898",
-        "priorHeadCT": "19191910",
-        "hasChronicInfarct": "19191912",
-        "histories": "19191917",
-        "arterialClotsNumberOfOccurances": "19191923",
-        "venousClotsNumberOfOccurances": "19191924",
-        "venousClotsPfoHasHistory": "19191924",
-        "chfEf": "19191920",
-        "carotidStenosisDegree": "19191921",
-        "osaSeverity": "19191922",
-        "cadType": "19191919",
-    }
-
     secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
     form_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
+    srs_attribute_to_question_id = json.loads(secrets.get_secret_value('healthie_ids', 'srs_charting_note_question_ids'))
 
     payload = fetch_all_form_responses_from_healthie(form_id=form_id)
 
