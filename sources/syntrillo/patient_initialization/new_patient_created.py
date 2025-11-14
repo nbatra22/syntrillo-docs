@@ -38,10 +38,7 @@ class NewPatientCreated():
         return data['resource_id']
 
 
-    def endpoint(
-        self,
-        data : dict  = None
-    ) :
+    def endpoint(self, data: dict = {}) :
         """
         Called when User:patient.created webhook is received.
 

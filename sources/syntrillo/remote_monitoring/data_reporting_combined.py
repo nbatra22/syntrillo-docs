@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta, timezone
+from dateutil import parser
 from typing import Tuple
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager

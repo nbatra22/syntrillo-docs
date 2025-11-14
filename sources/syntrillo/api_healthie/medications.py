@@ -1,7 +1,6 @@
 # Path: ./sources/syntrillo/api_healthie/medications.py
 
 import json
-
 from typing import Tuple
 
 from syntrillo.api_healthie.auth import HealthieAuth
@@ -47,7 +46,7 @@ class HealthieMedications:
 
         Parameters:
             healthie_user_id (str): The Healthie user ID.
-            active (bool): Optional. Fetch only active Medications. Default is False.
+            active (bool): Optional. Fetch only inactive Medications. Default is False.
 
         Returns:
             dict: returns list of medication types based on the specified criteria.
@@ -62,19 +61,21 @@ class HealthieMedications:
                         active: $active,
                         patient_id: $patient_id
                     ) {
-                        id
-                        name
-                        code            # CCDA code for this medication
-                        active
-                        route           # The way this medication is administered
-                        dosage          # Dosage of medication entered by provider
-                        frequency       # Frequency of this medication
-                        directions      # Directions to use medication entered by provider
-                        comment         # Comments entered by provider
-                        start_date      # First active date of medication
-                        end_date        # last date patient should be able to use medication
-                        created_at      # Date medication was created
-                        updated_at      # Date medication was last updated
+                        id                # Patient<->medication specific id
+                        name              # Medication name
+                        code              # CCDA code for this medication
+                        active            # Active status of medication
+                        route             # The way this medication is administered
+                        dosage            # Dosage of medication entered by provider
+                        frequency         # Frequency of this medication
+                        directions        # Directions to use medication entered by provider
+                        comment           # Comments entered by provider
+                        start_date        # First active date of medication
+                        end_date          # last date patient should be able to use medication
+                        created_at        # Date medication was created
+                        updated_at        # Date medication was last updated
+                        mirrored          # If the medication is mirrored in another system
+                        normalized_status
                     }
                 }
         '''

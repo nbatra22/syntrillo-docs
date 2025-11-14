@@ -17,6 +17,11 @@ class HealthieMetrics():
     # names of the categories in Healthie > Settings > Journal Entries
     HEALTHIE_METRICS_BLOOD_PRESSURE_CATEGORY = "Blood Pressure"
     HEALTHIE_METRICS_PULSE_CATEGORY = "Pulse"
+    HEALTHIE_METRICS_RHR_CATEGORY = "Resting Heart Rate"
+    HEALTHIE_METRICS_HS_CRP_CATEGORY = "hs-CRP"
+    HEALTHIE_METRICS_LDL_CATEGORY = "LDL"
+    HEALTHIE_METRICS_HDL_CATEGORY = "HDL"
+    HEALTHIE_METRICS_CREATININE_CATEGORY = "Creatinine"
 
     HEALTHIE_METRICS_HOURS_OF_SLEEP_CATEGORY = "Hours of Sleep"
     HEALTHIE_METRICS_AVERAGE_PULSE_CATEGORY = "Average Pulse"
@@ -367,6 +372,7 @@ class HealthieMetrics():
                         start_range: $start_range,
                         end_datetime_range: $end_datetime_range,
                         start_datetime_range: $start_datetime_range,
+                        order_by: CREATED_AT_ASC
                     ) {
                         id
                         type
@@ -735,9 +741,3 @@ if __name__ == "__main__":
             end_date=today
         )
         HealthieAuth.print_pretty_json(log)
-
-
-
-
-
-

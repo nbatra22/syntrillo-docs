@@ -25,6 +25,7 @@ from syntrillo.bp_analysis.constants import (
     MEASUREMENT_COUNT,
     AVG_SBP,
     AVG_DBP,
+    AVG_PP,
     PEAK_SBP,
     PEAK_DBP,
     LOW_SBP,
@@ -36,6 +37,7 @@ from syntrillo.bp_analysis.constants import (
     SBP_COUNT_170,
     SBP_COUNT_175,
     HYPOTENSIVE_COUNT,
+    ENGAGEMENT,
     SYSTOLIC,
     DIASTOLIC,
     TIMESTAMP_LOCAL,
@@ -95,7 +97,6 @@ class BloodPressureAnalysis:
         # Generate analysis + extremes table using BloodPressureAnalysis class methods
         self.calculate_metadata() # Used to calculate since baseline columns; calculates row values since baseline
         self.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
-        self.calculate_analysis() # Calculates row values for each timeframe
 
         if self.analysis_df is not None:
             return True
@@ -312,6 +313,7 @@ class BloodPressureAnalysis:
             MEASUREMENT_COUNT: 0,
             AVG_SBP: None,
             AVG_DBP: None,
+            AVG_PP: None,
             PEAK_SBP: None,
             PEAK_DBP: None,
             LOW_SBP: None,
@@ -332,6 +334,7 @@ class BloodPressureAnalysis:
         data[MEASUREMENT_COUNT] = len(df)
         data[AVG_SBP] = round(df[SYSTOLIC].mean(), 1)
         data[AVG_DBP] = round(df[DIASTOLIC].mean(), 1)
+        data[AVG_PP] = round(data[AVG_SBP] - data[AVG_DBP], 1)
         data[PEAK_SBP] = round(df[SYSTOLIC].nlargest(3).mean(), 1)
         data[PEAK_DBP] = round(df[DIASTOLIC].nlargest(3).mean(), 1)
         data[LOW_SBP] = round(df[SYSTOLIC].nsmallest(3).mean(), 1)
@@ -347,6 +350,8 @@ class BloodPressureAnalysis:
         data[SBP_COUNT_170] = len(df[df[SYSTOLIC] >= 170])
         data[SBP_COUNT_175] = len(df[df[SYSTOLIC] >= 175])
         data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
+
+        data[ENGAGEMENT] = self.calculate_engagement(df=df)
 
         return data
 
@@ -526,6 +531,23 @@ class BloodPressureAnalysis:
 
         return data
 
+    def calculate_engagement(self, df: pd.DataFrame) -> float:
+        """
+        Calculate the engagement as measured by the number of days with measurements out of the total number of days in the period.
+
+        Args:
+            df: the dataframe containing the data
+
+        Returns:
+            A float value representing the engagement.
+        """
+        start_date = df['timestamp_local'].min()
+        end_date = df['timestamp_local'].max()
+        total_days = (end_date - start_date).days
+        days_with_measurements = df['timestamp_local'].dt.date.nunique()
+        engagement = (days_with_measurements / total_days) * 100
+        return round(engagement, 1)
+
     def get_analysis_table(self) -> pd.DataFrame:
         """
 
@@ -585,10 +607,10 @@ class BloodPressureAnalysis:
         points = {
             'Avg SBP (mmHg)': 2,
             'Avg DBP (mmHg)': 2,
-            'SBP CV (%)': 1,
-            'DBP CV (%)': 1,
-            'SBP SD (mmHg)': 1,
-            'DBP SD (mmHg)': 1,
+            # 'SBP CV (%)': 1,
+            # 'DBP CV (%)': 1,
+            # 'SBP SD (mmHg)': 1,
+            # 'DBP SD (mmHg)': 1,
             'Peak SBP² (mmHg)': 2,
             'Peak DBP² (mmHg)': 2
         }
@@ -596,10 +618,10 @@ class BloodPressureAnalysis:
         thresholds = {
             'Avg SBP (mmHg)': 2,
             'Avg DBP (mmHg)': 2,
-            'SBP CV (%)': 1.1,
-            'DBP CV (%)': 1.4,
-            'SBP SD (mmHg)': 1.5,
-            'DBP SD (mmHg)': 1.3,
+            # 'SBP CV (%)': 1.1,
+            # 'DBP CV (%)': 1.4,
+            # 'SBP SD (mmHg)': 1.5,
+            # 'DBP SD (mmHg)': 1.3,
             'Peak SBP² (mmHg)': 170,
             'Peak DBP² (mmHg)': 110
         }
@@ -607,10 +629,10 @@ class BloodPressureAnalysis:
         boundaries = {
             'Avg SBP (mmHg)': [0, 130],
             'Avg DBP (mmHg)': [0, 80],
-            'SBP CV (%)': [0, 5.5],
-            'DBP CV (%)': [0, 6],
-            'SBP SD (mmHg)': [0, 7.5],
-            'DBP SD (mmHg)': [0, 5],
+            # 'SBP CV (%)': [0, 5.5],
+            # 'DBP CV (%)': [0, 6],
+            # 'SBP SD (mmHg)': [0, 7.5],
+            # 'DBP SD (mmHg)': [0, 5],
             'Peak SBP² (mmHg)': [0, 170],
             'Peak DBP² (mmHg)': [0, 110]
         }
@@ -686,46 +708,46 @@ class BloodPressureAnalysis:
                     # print(f"Baseline Delta (after Avg): {baseline_delta}")
 
                 # Handle SBP-SD and DBP-SD
-                elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
-                    if valid_prior and valid_prior_change:
-                        if abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                            if prior_unit_change > 0:
-                                prior_delta -= points[metric]
-                                prior_progress = "-1"
-                            elif prior_unit_change < 0:
-                                prior_delta += points[metric]
-                                prior_progress = "+1"
+                # elif metric in ['SBP SD (mmHg)', 'DBP SD (mmHg)']:
+                #     if valid_prior and valid_prior_change:
+                #         if abs(prior_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                #             if prior_unit_change > 0:
+                #                 prior_delta -= points[metric]
+                #                 prior_progress = "-1"
+                #             elif prior_unit_change < 0:
+                #                 prior_delta += points[metric]
+                #                 prior_progress = "+1"
 
-                    if valid_baseline and valid_baseline_change:
-                        if abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                            if baseline_unit_change > 0:
-                                baseline_delta -= points[metric]
-                                base_progress = "-1"
-                            elif baseline_unit_change < 0:
-                                baseline_delta += points[metric]
-                                base_progress = "+1"
+                #     if valid_baseline and valid_baseline_change:
+                #         if abs(baseline_unit_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                #             if baseline_unit_change > 0:
+                #                 baseline_delta -= points[metric]
+                #                 base_progress = "-1"
+                #             elif baseline_unit_change < 0:
+                #                 baseline_delta += points[metric]
+                #                 base_progress = "+1"
 
                     # print(f"Baseline Delta (after SD): {baseline_delta}")
 
                 # Handle SBP-CV and DBP-CV
-                elif metric in ['SBP CV (%)', 'DBP CV (%)']:
-                    if valid_prior and valid_prior_change:
-                        if abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
-                            if prior_percent_change > 0:
-                                prior_delta -= points[metric]
-                                prior_progress = "-1"
-                            elif prior_percent_change < 0:
-                                prior_delta += points[metric]
-                                prior_progress = "+1"
+                # elif metric in ['SBP CV (%)', 'DBP CV (%)']:
+                #     if valid_prior and valid_prior_change:
+                #         if abs(prior_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [prior_value, current_value]):
+                #             if prior_percent_change > 0:
+                #                 prior_delta -= points[metric]
+                #                 prior_progress = "-1"
+                #             elif prior_percent_change < 0:
+                #                 prior_delta += points[metric]
+                #                 prior_progress = "+1"
 
-                    if valid_baseline and valid_baseline_change:
-                        if abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
-                            if baseline_percent_change > 0:
-                                baseline_delta -= points[metric]
-                                base_progress = "-1"
-                            elif baseline_percent_change < 0:
-                                baseline_delta += points[metric]
-                                base_progress = "+1"
+                #     if valid_baseline and valid_baseline_change:
+                #         if abs(baseline_percent_change) >= thresholds[metric] and any(val > boundaries[metric][1] for val in [baseline_value, current_value]):
+                #             if baseline_percent_change > 0:
+                #                 baseline_delta -= points[metric]
+                #                 base_progress = "-1"
+                #             elif baseline_percent_change < 0:
+                #                 baseline_delta += points[metric]
+                #                 base_progress = "+1"
 
                     # print(f"Baseline Delta (after CV): {baseline_delta}")
 

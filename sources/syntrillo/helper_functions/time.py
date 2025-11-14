@@ -330,5 +330,3 @@ if __name__ == '__main__':
         max_number_of_rows=8,
         )
     print(date_ranges_df)
-
-
