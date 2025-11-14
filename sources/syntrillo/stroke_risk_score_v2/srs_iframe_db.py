@@ -107,6 +107,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
                     category=RISK_VALUE_MAPPING[value_field],
                     gender=srs_form_response.Gender
                 )
+                # Hyperlipidemia is if any of the specific lab values are within a dangerour range – Ask Omar if unsure.
                 if categorical_value:
                     srs_form_response.HistoryOfHyperlipidemia = True
                 setattr(srs_form_response, categorical_field, categorical_value)

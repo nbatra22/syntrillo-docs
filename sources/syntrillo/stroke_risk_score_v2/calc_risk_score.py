@@ -84,7 +84,7 @@ weighting = {
 
 EXCLUDED_CATEGORIES = {PHYSICAL_ACTIVITY, GENDER}
 
-def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict, float]:
+def calculate_risk_score(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = False) -> tuple[float, dict, float]:
     """
     Calculate the risk score for a given syntrillo internal key
 
@@ -96,11 +96,14 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID) -> tuple[float, dict
     """
     try:
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
-        agg_data = aggregate_data(syntrillo_internal_key)
+        agg_data = aggregate_data(
+            syntrillo_internal_key=syntrillo_internal_key,
+            is_ondemand_srs=is_ondemand_srs
+        )
 
         if agg_data.get("srs_response_data", None) is None:
             logger.warning("No SRS response data found, returning agg_data objectand None for risk score...")
-            return None, agg_data, None
+            return None, agg_data, None, None, None
 
         independent_risk_factor_value, stroke_priority_score_total, independent_risk_variable_scores = calculate_independent_srs_values(agg_data, db_manager)
 
@@ -208,6 +211,9 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 elif most_recent_srs_form_response.LatestStrokeMechanism == StrokeMechanismOptions.STRUCTURAL:
                     dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
+                else:
+                    dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
+                    dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
             elif most_recent_srs_form_response.NumberOfStrokes == NumberOfStrokesOptions.MULTIPLE:
                 if most_recent_srs_form_response.LatestStrokeMechanism == StrokeMechanismOptions.SMALL_VESSEL:
@@ -225,8 +231,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 elif most_recent_srs_form_response.LatestStrokeMechanism == StrokeMechanismOptions.STRUCTURAL:
                     dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+                else:
+                    dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
+                    dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.strokeCompliance]
+            if compliance_data and compliance_data.strokeCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.strokeCompliance]
+            else: # Default to Moderate
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["recent_stroke"] = dependent_section_score
 
@@ -253,8 +266,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.TIAMechanism == StrokeMechanismOptions.STRUCTURAL:
                 dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.tiaCompliance]
+            if compliance_data and compliance_data.tiaCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.tiaCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["tia"] = dependent_section_score
 
@@ -281,8 +301,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.ChronicInfarctMechanism == StrokeMechanismOptions.STRUCTURAL:
                 dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chronicInfarctCompliance]
+            if compliance_data and compliance_data.chronicInfarctCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chronicInfarctCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["headCT"] = dependent_section_score
 
@@ -294,7 +321,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             dependent_risk_factor_value = weighting[VALUE][HIGH_VALUE]
             dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.atrialFibrillationCompliance]
+            if compliance_data and compliance_data.atrialFibrillationCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.atrialFibrillationCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["afib"] = dependent_section_score
 
@@ -309,8 +340,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.AnemiaSeverity == AnemiaSeverityOptions.SEVERE:
                 dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ironDeficiencyAnemiaCompliance]
+            if compliance_data and compliance_data.ironDeficiencyAnemiaCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ironDeficiencyAnemiaCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["anemia"] = dependent_section_score
 
@@ -325,8 +363,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.ArterialClotOccurrences == ArterialClotOccurrencesOptions.MULTIPLE_PRIOR_EVENTS:
                 dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.arterialClotsCompliance]
+            if compliance_data and compliance_data.arterialClotsCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.arterialClotsCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["arterialClots"] = dependent_section_score
 
@@ -342,6 +387,9 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 elif most_recent_srs_form_response.VenousClotOccurrences == VenousClotOccurrencesOptions.MULTIPLE:
                     dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+                else:
+                    dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
+                    dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
             elif most_recent_srs_form_response.PFOPresence == PFOPresenceOptions.UNKNOWN:
                 if most_recent_srs_form_response.VenousClotOccurrences == VenousClotOccurrencesOptions.SINGLE:
                     dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
@@ -349,8 +397,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
                 elif most_recent_srs_form_response.VenousClotOccurrences == VenousClotOccurrencesOptions.MULTIPLE:
                     dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
                     dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+                else:
+                    dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                    dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.venousClotsCompliance]
+            if compliance_data and compliance_data.venousClotsCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.venousClotsCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["venousClots"] = dependent_section_score
 
@@ -368,8 +423,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.EjectionFraction == EjectionFractionOptions.UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chfCompliance]
+            if compliance_data and compliance_data.chfCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.chfCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["chf"] = dependent_section_score
 
@@ -387,8 +449,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.StenosisPercentage == StenosisPercentageOptions.UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.carotidStenosisCompliance]
+            if compliance_data and compliance_data.carotidStenosisCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.carotidStenosisCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["stenosis"] = dependent_section_score
 
@@ -409,8 +478,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.OSASeverity == OSASeverityOptions.UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.osaCompliance]
+            if compliance_data and compliance_data.osaCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.osaCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["osa"] = dependent_section_score
 
@@ -422,7 +498,11 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             dependent_risk_factor_value = weighting[VALUE][INTERMEDIATE_HIGH_VALUE]
             dependent_efficacy_value = weighting[TREATMENT_EFFICACY][HIGH_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.valvularHeartDiseaseCompliance]
+            if compliance_data and compliance_data.valvularHeartDiseaseCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.valvularHeartDiseaseCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["heartDisease"] = dependent_section_score
 
@@ -443,8 +523,14 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.CADType == CADTypeOptions.UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_INTERMEDIATE_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.cadCompliance]
+            if compliance_data and compliance_data.cadCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.cadCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["cad"] = dependent_section_score
 
@@ -465,9 +551,16 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.LDLLevel == UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
-            # if compliance_data.ldlCompliance is not None:
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ldlCompliance]
+            # if compliance_data.ldlCompliance is not None:
+            if compliance_data and compliance_data.ldlCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.ldlCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["ldl"] = dependent_section_score
 
@@ -481,8 +574,14 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.HDLLevel == UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.hdlCompliance]
+            if compliance_data and compliance_data.hdlCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.hdlCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["hdl"] = dependent_section_score
 
@@ -499,8 +598,15 @@ def calculate_dependent_risk_factors(agg_data: dict) -> dict:
             elif most_recent_srs_form_response.TriglyceridesLevel == UNKNOWN:
                 dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
                 dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
+            else:
+                dependent_risk_factor_value = weighting[VALUE][LOW_VALUE]
+                dependent_efficacy_value = weighting[TREATMENT_EFFICACY][MODERATE_EFFICACY]
 
-            dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.triglyceridesCompliance]
+            if compliance_data and compliance_data.triglyceridesCompliance:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][compliance_data.triglyceridesCompliance]
+            else:
+                dependent_optimization_value = weighting[TREATMENT_OPTIM][TreatmentComplianceOptions.PARTIALLY_OPTIMIZED]
+
             dependent_section_score = ((dependent_risk_factor_value-1)*(1-(dependent_efficacy_value*dependent_optimization_value)))+1
             dependent_variable_values["triglycerides"] = dependent_section_score
 
@@ -654,10 +760,10 @@ if __name__ == "__main__":
     # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36") # 3.33 / 5.05
     # syntrillo_internal_key = uuid.UUID("6446f4da-b19a-4a1a-851e-06b5bc716160") # 3.33 / 5.05
     # syntrillo_internal_key = uuid.UUID("99fddf03-9304-4e48-8711-0cc4d825eb94") # 4.76 / 9.77 / ID: 1562903
-    # syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") #
-    syntrillo_internal_key = uuid.UUID("f474f229-c199-4a39-addf-0557d2c30638") # 4.76 / 9.77 / ID: 3843889 – Mary (Donald) Smith
+    # syntrillo_internal_key = uuid.UUID("f474f229-c199-4a39-addf-0557d2c30638") # 4.76 / 9.77 / ID: 3843889 – Mary (Donald) Smith
+    syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") # Bob Barker – id 2315391
 
-    final_srs, agg_data, final_sps, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key)
+    final_srs, agg_data, final_sps, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key, True)
 
     print("================================================")
     print(f"================ Final SRS: {final_srs} ===============")

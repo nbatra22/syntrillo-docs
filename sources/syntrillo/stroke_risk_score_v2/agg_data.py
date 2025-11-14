@@ -1,16 +1,28 @@
+# import json
 from typing import Union
 import uuid
 from datetime import datetime
 from typing import List
 import pandas as pd
-
 from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, fetch_all_form_responses_from_healthie
+from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.stroke_risk_score_v2.models.srs_form import (
+    SRSFormResponse,
+    GenderOptions,
+    VenousClotOccurrencesOptions,
+    EjectionFractionOptions,
+    PFOPresenceOptions,
+    CADTypeOptions,
+    StenosisPercentageOptions,
+    OSASeverityOptions,
+    ArterialClotOccurrencesOptions
+)
 from syntrillo.stroke_risk_score_v2.models.lab_data import LabData
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.constants import PULSE_METRIC_NAME
 from syntrillo.api_healthie.constants import (
     RHR_CATEGORY,
@@ -57,8 +69,13 @@ from syntrillo.stroke_risk_score_v2.constants import (
     METRIC_STAT,
 )
 
+GENDER_MAPPING = {
+    "male": GenderOptions.MAN,
+    "female": GenderOptions.WOMAN,
+}
 
-def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
+
+def aggregate_data(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = False, gender: GenderOptions = GenderOptions.MAN) -> dict:
     """
     Aggregate data from Tenovi, Healthie, and SRS response data
 
@@ -91,8 +108,19 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
         tenovi_hr_data = get_tenovi_hr_data(db_manager)
         healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
-        srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
         lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
+
+        if is_ondemand_srs:
+            patient_history_data = get_patient_history_data(healthie_user_id=healthie_user_id)
+            srs_response_data = [
+                SRSFormResponse(
+                    syntrillo_internal_key_patient= str(syntrillo_internal_key),
+                    created_at=datetime.now(),
+                    Gender=gender,
+                )]
+            srs_response_data[0] = populate_with_patient_history(srs_response_data[0], patient_history_data, syntrillo_internal_key)
+        else:
+            srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
 
         return {
             "tenovi_bp_data": tenovi_bp_data,
@@ -103,14 +131,254 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
             "substance_use_data": {},
         }
 
-
     except Exception as e:
         logger.error(f"Error aggregating SRS data: {e}")
         raise ValueError("Error aggregating SRS data")
 
+def populate_with_patient_history(srs_response_data: SRSFormResponse, patient_history_data: dict, syntrillo_internal_key):
+
+    srs_response_data.HasPreviousStroke = patient_history_data["hasPriorStroke"]
+    srs_response_data.NumberOfStrokes = patient_history_data["numOfPriorStrokes"]
+    srs_response_data.HasPriorHeadCT = patient_history_data["priorHeadCT"]
+    srs_response_data.ChronicInfarctPresent = patient_history_data["hasChronicInfarct"]
+    srs_response_data.HistoryOfAtrialFibrillation = patient_history_data["atrialFibrillationHasHistory"]
+    srs_response_data.HistoryOfIronDeficiencyAnemia = patient_history_data["ironDeficiencyAnemiaHasHistory"]
+    srs_response_data.HistoryOfArterialClots = patient_history_data["arterialClotsHasHistory"]
+    srs_response_data.ArterialClotOccurrences = patient_history_data["arterialClotsNumberOfOccurances"]
+    srs_response_data.HistoryOfVenousClots = patient_history_data["venousClotsHasHistory"]
+    srs_response_data.VenousClotOccurrences = patient_history_data["venousClotsNumberOfOccurances"]
+    srs_response_data.PFOPresence = patient_history_data["venousClotsPfoHasHistory"]
+    srs_response_data.HistoryOfCHF = patient_history_data["chfHasHistory"]
+    srs_response_data.EjectionFraction = patient_history_data["chfEf"]
+    srs_response_data.HistoryOfCarotidStenosis = patient_history_data["carotidStenosisHasHistory"]
+    srs_response_data.StenosisPercentage = patient_history_data["carotidStenosisDegree"]
+    srs_response_data.HistoryOfOSA = patient_history_data["osaHasHistory"]
+    srs_response_data.OSASeverity = patient_history_data["osaSeverity"]
+    srs_response_data.HistoryOfCAD = patient_history_data["cadHasHistory"]
+    srs_response_data.CADType = patient_history_data["cadType"]
+    srs_response_data.HistoryOfValvularHeartDisease = patient_history_data["valvularHeartDiseaseHasHistory"]
+    srs_response_data.HistoryOfCKD = patient_history_data["ckdHasHistory"]
+
+    # Get patient specific biometric data from Healthie
+    biometric_data = get_biometric_data(syntrillo_internal_key)
+    # Update SRSFormResponse object with new data
+    srs_response_data.Height = biometric_data.get("height", None)
+    srs_response_data.Gender = GENDER_MAPPING[biometric_data["gender"].lower() if biometric_data["gender"] else "male"]
+    srs_response_data.Weight = biometric_data.get("weight", None)
+    srs_response_data.BMI = biometric_data.get("bmi", None)
+
+    return srs_response_data
+
+
+
+
+# def initial_srs_calc(syntrillo_internal_key: uuid.UUID):
+#     logger.info(f"Beginning to aggregate data for patient with syntrillo_internal_key {syntrillo_internal_key} ...")
+#     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+#     healthie_utils = HealthieUtils()
+
+#     # Get healthie user id from lookup codes
+#     lookup_codes = LookUpCodesManagement()
+#     entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
+
+#     if not entry:
+#         return {}
+#     healthie_user_id = entry['healthie_user_id']
+
+#     tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
+#     tenovi_hr_data = get_tenovi_hr_data(db_manager)
+#     healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
+#     lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
+#     patient_history_data = get_patient_history_data(healthie_user_id=healthie_user_id)
+
+
+
 #########################################################
 ####### HEALTHIE DATA ###################################
 #########################################################
+
+def get_patient_history_data(healthie_user_id: str):
+    """
+    """
+    # Fetch the patient's responses to the Healthie form "Onboarding Record Review w/ Patient [v9.2]"" (as of 11/12/25).
+
+    # Map Healthie form inputs to result object
+    srs_attribute_to_question_id = {
+        "hasPriorStroke": "19191897",
+        "numOfPriorStrokes": "19191898",
+        "priorHeadCT": "19191910",
+        "hasChronicInfarct": "19191912",
+        "histories": "19191917",
+        "arterialClotsNumberOfOccurances": "19191923",
+        "venousClotsNumberOfOccurances": "19191924",
+        "venousClotsPfoHasHistory": "19191924",
+        "chfEf": "19191920",
+        "carotidStenosisDegree": "19191921",
+        "osaSeverity": "19191922",
+        "cadType": "19191919",
+    }
+
+    secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
+    form_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
+
+    payload = fetch_all_form_responses_from_healthie(form_id=form_id)
+
+    all_form_groups = payload.get('formAnswerGroups', [])
+    if not all_form_groups:
+        return []
+
+    # 1. Filter for patient-specific form groups
+    patient_form_groups = []
+    for answer_group in all_form_groups:
+        # Check 'form_answers' exists and is not empty
+        if answer_group.get('form_answers'):
+            # Check the user_id of the first answer – assumeing all answers in a group have same user_id
+            first_answer = answer_group['form_answers'][0]
+            if first_answer.get('user_id') == healthie_user_id:
+                patient_form_groups.append(answer_group)
+
+    # If no forms were found for this patient, return an empty list
+    if not patient_form_groups:
+        return []
+
+    # 2. Filter for the most recent form response
+    try:
+        # Find the group with the maximum (latest) 'created_at' timestamp.
+        most_recent_group = max(
+            patient_form_groups,
+            key=lambda g: datetime.strptime(g['created_at'], '%Y-%m-%d %H:%M:%S %z')
+        )
+    except ValueError as e:
+        # Handle cases where the date format might be wrong
+        print(f"Error parsing date: {e}")
+        return []  # Return empty on error
+
+
+    most_recent_answers = most_recent_group.get('form_answers', [])
+
+    patient_history = {
+        "hasPriorStroke": None,
+        "numOfPriorStrokes": None,
+        "priorHeadCT": None,
+        "hasChronicInfarct": None,
+        "atrialFibrillationHasHistory": None,
+        "ironDeficiencyAnemiaHasHistory": None,
+        "arterialClotsHasHistory": None,
+        "arterialClotsNumberOfOccurances": None,
+        "venousClotsHasHistory": None,
+        "venousClotsNumberOfOccurances": None,
+        "venousClotsPfoHasHistory": None,
+        "chfHasHistory": None,
+        "chfEf": None,
+        "carotidStenosisHasHistory": None,
+        "carotidStenosisDegree": None,
+        "osaHasHistory": None,
+        "osaSeverity": None,
+        "cadHasHistory": None,
+        "cadType": None,
+        "valvularHeartDiseaseHasHistory": None,
+        "ckdHasHistory": None
+    }
+
+    for answer in most_recent_answers:
+        question_id = answer.get("custom_module", {}).get("id")
+
+        patient_answer = answer.get("displayed_answer")
+        if not patient_answer or "null" in patient_answer:
+            continue
+
+        # Has prior stroke – parse "Yes\nNo"
+        if question_id == srs_attribute_to_question_id.get('hasPriorStroke'):
+            patient_history["hasPriorStroke"] = True if patient_answer == "Yes" else False
+
+        # Num of prior strokes – parse int
+        elif question_id == srs_attribute_to_question_id.get('numOfPriorStrokes'):
+            patient_history["numOfPriorStrokes"] = int(patient_answer)
+
+        # Has prior Head CT – parse "Yes\nNo\nUnsure"
+        elif question_id == srs_attribute_to_question_id.get('priorHeadCT'):
+            patient_history["priorHeadCT"] = True if patient_answer == "Yes" else False
+
+        # Has Chronic Infarct – parse "Yes\nNo\nUnsure"
+        elif question_id == srs_attribute_to_question_id.get('hasChronicInfarct'):
+            patient_history["hasChronicInfarct"] = True if patient_answer == "Yes" else False
+
+        # Get histories
+        elif question_id == srs_attribute_to_question_id.get('histories'):
+            patient_history["atrialFibrillationHasHistory"] = True if "Atrial Fibrillation" in patient_answer else False
+            patient_history["ironDeficiencyAnemiaHasHistory"] = True if "Iron" in patient_answer else False
+            patient_history["arterialClotsHasHistory"] = True if "Arterial Clots" in patient_answer else False
+            patient_history["venousClotsHasHistory"] = True if "Venous Clots" in patient_answer else False
+            patient_history["chfHasHistory"] = True if "CHF" in patient_answer else False
+            patient_history["carotidStenosisHasHistory"] = True if "Carotid Stenosis" in patient_answer else False
+            patient_history["osaHasHistory"] = True if "Obstructive Sleep Apnea" in patient_answer else False
+            patient_history["cadHasHistory"] = True if "CAD" in patient_answer else False
+            patient_history["valvularHeartDiseaseHasHistory"] = True if "Valvular Heart Disease" in patient_answer else False
+            patient_history["ckdHasHistory"] = True if "CKD" in patient_answer else False
+
+        # CAD type # parse "Symptomatic\nAsymptomatic single vessel \nAsymptomatic multivessel\nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('cadType'):
+            if "Symptomatic" in patient_answer:
+                patient_history["cadType"] = CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL
+            elif "Asymptomatic" in patient_answer:
+                if "multivessel" in patient_answer:
+                    patient_history["cadType"] = CADTypeOptions.ASYMPTOMATIC_MULTIVESSEL
+                else:
+                    patient_history["cadType"] = CADTypeOptions.ASYMPTOMATIC_SINGLE_VESSEL
+            else:
+                patient_history["cadType"] = CADTypeOptions.UNKNOWN
+
+        # EF levels # parse "EF <= 40%\nEF > 40%\nEF Unkown"
+        elif question_id == srs_attribute_to_question_id.get('chfEf'):
+            if "<=" in patient_answer:
+                patient_history["chfEf"] = EjectionFractionOptions.LESS_THAN_OR_EQUAL_40
+            elif ">" in patient_answer:
+                patient_history["chfEf"] = EjectionFractionOptions.GREATER_THAN_40
+            else:
+                patient_history["chfEf"] = EjectionFractionOptions.UNKNOWN
+
+        # Carotid Stenosis # parse – "50-70% stenosis\n> 70% stenosis\nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('carotidStenosisDegree'):
+            if "50" in patient_answer:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.FIFTY_TO_SEVENTY
+            elif "70" in patient_answer:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.GREATER_THAN_SEVENTY
+            else:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.UNKNOWN
+
+        # OSA # parse – "Mild\nModerate\nSevere\nUnkown"
+        elif question_id == srs_attribute_to_question_id.get('osaSeverity'):
+            if "Mild" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.MILD
+            elif "Moderate" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.MODERATE
+            elif "Severe" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.SEVERE
+            else:
+                patient_history["osaSeverity"] = OSASeverityOptions.UNKNOWN
+
+        # Arterial Clots – parse "Single prior event \nMultiple prior events\nUnkown"
+        elif question_id == srs_attribute_to_question_id.get('arterialClotsNumberOfOccurances'):
+            if "Single" in patient_answer:
+                patient_history["arterialClotsNumberOfOccurances"] = ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT
+            elif "Multiple" in patient_answer:
+                patient_history["arterialClotsNumberOfOccurances"] = ArterialClotOccurrencesOptions.MULTIPLE_PRIOR_EVENTS
+
+        # Venous Clots – parse "Single event\nMultiple events\nPFO treated\nPFO untreated \nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('venousClotsNumberOfOccurances'):
+            first_word = patient_answer.strip().split()[0]
+
+            if first_word == "Single":
+                patient_history["venousClotsNumberOfOccurances"] = VenousClotOccurrencesOptions.SINGLE
+            elif first_word == "Multiple":
+                patient_history["venousClotsNumberOfOccurances"] = VenousClotOccurrencesOptions.MULTIPLE
+
+            if "PFO" in patient_answer:
+                patient_history["venousClotsPfoHasHistory"] = PFOPresenceOptions.POSITIVE
+            else:
+                patient_history["venousClotsPfoHasHistory"] = PFOPresenceOptions.NEGATIVE
+
+    return patient_history
 
 
 # Get records using syntrillo_internal_key from srs_form_responses table
@@ -809,12 +1077,15 @@ def get_lab_data(healthie_utils: HealthieUtils, healthie_user_id: str) -> LabDat
 
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
     # data = aggregate_data(syntrillo_internal_key)
+    # syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") # Bob Barker – id 2315391
+    # data = aggregate_data(syntrillo_internal_key=syntrillo_internal_key, is_first=True)
     # print(data)
 
-    healthie_utils = HealthieUtils()
-    healthie_user_id = "1562903"
-    get_lab_data(healthie_utils, healthie_user_id)
+    # healthie_user_id = "2315391"
+    # healthie_utils = HealthieUtils()
+    # get_lab_data(healthie_utils, healthie_user_id)
 
+    # print(json.dumps(get_patient_history_data(healthie_user_id="2315391"), indent=4))
