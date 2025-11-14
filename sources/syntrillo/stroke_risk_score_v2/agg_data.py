@@ -1,17 +1,42 @@
+# import json
 from typing import Union
 import uuid
 from datetime import datetime
 from typing import List
 import pandas as pd
-
 from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
-from syntrillo.stroke_risk_score_v2.models.srs_form import SRSFormResponse
-from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
-from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
+from syntrillo.stroke_risk_score_v2.utils import get_biometric_data, fetch_all_form_responses_from_healthie
+from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.stroke_risk_score_v2.models.srs_form import (
+    SRSFormResponse,
+    GenderOptions,
+    VenousClotOccurrencesOptions,
+    EjectionFractionOptions,
+    PFOPresenceOptions,
+    CADTypeOptions,
+    StenosisPercentageOptions,
+    OSASeverityOptions,
+    ArterialClotOccurrencesOptions
+)
+from syntrillo.stroke_risk_score_v2.models.lab_data import LabData
+from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
 from syntrillo.remote_monitoring.constants import PULSE_METRIC_NAME
-from syntrillo.api_healthie.constants import RHR_CATEGORY, ENTRY_TYPE
+from syntrillo.api_healthie.constants import (
+    RHR_CATEGORY,
+    ENTRY_TYPE,
+    LDL_CATEGORY,
+    HDL_CATEGORY,
+    HGA1C_CATEGORY,
+    HSCRP_CATEGORY,
+    HEMOGLOBIN_CATEGORY,
+    CREATINTINE_CATEGORY,
+    HOURS_SITTING_CATEGORY,
+    PHYSICAL_ACTIVITY_MINS_CATEGORY,
+    SSQ_CATEGORY,
+)
 from syntrillo.bp_analysis.constants import (
     TIMESTAMP_LOCAL,
     SYSTOLIC,
@@ -44,8 +69,13 @@ from syntrillo.stroke_risk_score_v2.constants import (
     METRIC_STAT,
 )
 
+GENDER_MAPPING = {
+    "male": GenderOptions.MAN,
+    "female": GenderOptions.WOMAN,
+}
 
-def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
+
+def aggregate_data(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = False, gender: GenderOptions = GenderOptions.MAN) -> dict:
     """
     Aggregate data from Tenovi, Healthie, and SRS response data
 
@@ -58,45 +88,301 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID) -> dict:
             "tenovi_bp_data": tenovi_bp_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
-            "lab_data": {},
+            "lab_data": lab_data,
             "substance_use_data": {},
         }
     """
     try:
         logger.info(f"Beginning to aggregate data for patient with syntrillo_internal_key {syntrillo_internal_key} ...")
         db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+        healthie_utils = HealthieUtils()
 
         # Get healthie user id from lookup codes
         lookup_codes = LookUpCodesManagement()
         entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
+
+        if not entry:
+            return {}
         healthie_user_id = entry['healthie_user_id']
 
         tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
         tenovi_hr_data = get_tenovi_hr_data(db_manager)
-        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key)
-        srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
+        healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
+        lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
+
+        if is_ondemand_srs:
+            patient_history_data = get_patient_history_data(healthie_user_id=healthie_user_id)
+            srs_response_data = [
+                SRSFormResponse(
+                    syntrillo_internal_key_patient= str(syntrillo_internal_key),
+                    created_at=datetime.now(),
+                    Gender=gender,
+                )]
+            srs_response_data[0] = populate_with_patient_history(srs_response_data[0], patient_history_data, syntrillo_internal_key)
+        else:
+            srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
 
         return {
             "tenovi_bp_data": tenovi_bp_data,
             "tenovi_hr_data": tenovi_hr_data,
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
-            "lab_data": {},
+            "lab_data": lab_data,
             "substance_use_data": {},
         }
-
 
     except Exception as e:
         logger.error(f"Error aggregating SRS data: {e}")
         raise ValueError("Error aggregating SRS data")
 
+def populate_with_patient_history(srs_response_data: SRSFormResponse, patient_history_data: dict, syntrillo_internal_key):
+
+    srs_response_data.HasPreviousStroke = patient_history_data["hasPriorStroke"]
+    srs_response_data.NumberOfStrokes = patient_history_data["numOfPriorStrokes"]
+    srs_response_data.HasPriorHeadCT = patient_history_data["priorHeadCT"]
+    srs_response_data.ChronicInfarctPresent = patient_history_data["hasChronicInfarct"]
+    srs_response_data.HistoryOfAtrialFibrillation = patient_history_data["atrialFibrillationHasHistory"]
+    srs_response_data.HistoryOfIronDeficiencyAnemia = patient_history_data["ironDeficiencyAnemiaHasHistory"]
+    srs_response_data.HistoryOfArterialClots = patient_history_data["arterialClotsHasHistory"]
+    srs_response_data.ArterialClotOccurrences = patient_history_data["arterialClotsNumberOfOccurances"]
+    srs_response_data.HistoryOfVenousClots = patient_history_data["venousClotsHasHistory"]
+    srs_response_data.VenousClotOccurrences = patient_history_data["venousClotsNumberOfOccurances"]
+    srs_response_data.PFOPresence = patient_history_data["venousClotsPfoHasHistory"]
+    srs_response_data.HistoryOfCHF = patient_history_data["chfHasHistory"]
+    srs_response_data.EjectionFraction = patient_history_data["chfEf"]
+    srs_response_data.HistoryOfCarotidStenosis = patient_history_data["carotidStenosisHasHistory"]
+    srs_response_data.StenosisPercentage = patient_history_data["carotidStenosisDegree"]
+    srs_response_data.HistoryOfOSA = patient_history_data["osaHasHistory"]
+    srs_response_data.OSASeverity = patient_history_data["osaSeverity"]
+    srs_response_data.HistoryOfCAD = patient_history_data["cadHasHistory"]
+    srs_response_data.CADType = patient_history_data["cadType"]
+    srs_response_data.HistoryOfValvularHeartDisease = patient_history_data["valvularHeartDiseaseHasHistory"]
+    srs_response_data.HistoryOfCKD = patient_history_data["ckdHasHistory"]
+
+    # Get patient specific biometric data from Healthie
+    biometric_data = get_biometric_data(syntrillo_internal_key)
+    # Update SRSFormResponse object with new data
+    srs_response_data.Height = biometric_data.get("height", None)
+    srs_response_data.Gender = GENDER_MAPPING[biometric_data["gender"].lower() if biometric_data["gender"] else "male"]
+    srs_response_data.Weight = biometric_data.get("weight", None)
+    srs_response_data.BMI = biometric_data.get("bmi", None)
+
+    return srs_response_data
+
+
+
+
+# def initial_srs_calc(syntrillo_internal_key: uuid.UUID):
+#     logger.info(f"Beginning to aggregate data for patient with syntrillo_internal_key {syntrillo_internal_key} ...")
+#     db_manager = SyntrilloDatabaseManager(syntrillo_internal_key)
+#     healthie_utils = HealthieUtils()
+
+#     # Get healthie user id from lookup codes
+#     lookup_codes = LookUpCodesManagement()
+#     entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
+
+#     if not entry:
+#         return {}
+#     healthie_user_id = entry['healthie_user_id']
+
+#     tenovi_bp_data = get_tenovi_bp_data(syntrillo_internal_key)
+#     tenovi_hr_data = get_tenovi_hr_data(db_manager)
+#     healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
+#     lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
+#     patient_history_data = get_patient_history_data(healthie_user_id=healthie_user_id)
+
+
+
 #########################################################
 ####### HEALTHIE DATA ###################################
 #########################################################
 
+def get_patient_history_data(healthie_user_id: str):
+    """
+    """
+    # Fetch the patient's responses to the Healthie form "Onboarding Record Review w/ Patient [v9.2]"" (as of 11/12/25).
+
+    # Map Healthie form inputs to result object
+    srs_attribute_to_question_id = {
+        "hasPriorStroke": "19191897",
+        "numOfPriorStrokes": "19191898",
+        "priorHeadCT": "19191910",
+        "hasChronicInfarct": "19191912",
+        "histories": "19191917",
+        "arterialClotsNumberOfOccurances": "19191923",
+        "venousClotsNumberOfOccurances": "19191924",
+        "venousClotsPfoHasHistory": "19191924",
+        "chfEf": "19191920",
+        "carotidStenosisDegree": "19191921",
+        "osaSeverity": "19191922",
+        "cadType": "19191919",
+    }
+
+    secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
+    form_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
+
+    payload = fetch_all_form_responses_from_healthie(form_id=form_id)
+
+    all_form_groups = payload.get('formAnswerGroups', [])
+    if not all_form_groups:
+        return []
+
+    # 1. Filter for patient-specific form groups
+    patient_form_groups = []
+    for answer_group in all_form_groups:
+        # Check 'form_answers' exists and is not empty
+        if answer_group.get('form_answers'):
+            # Check the user_id of the first answer – assumeing all answers in a group have same user_id
+            first_answer = answer_group['form_answers'][0]
+            if first_answer.get('user_id') == healthie_user_id:
+                patient_form_groups.append(answer_group)
+
+    # If no forms were found for this patient, return an empty list
+    if not patient_form_groups:
+        return []
+
+    # 2. Filter for the most recent form response
+    try:
+        # Find the group with the maximum (latest) 'created_at' timestamp.
+        most_recent_group = max(
+            patient_form_groups,
+            key=lambda g: datetime.strptime(g['created_at'], '%Y-%m-%d %H:%M:%S %z')
+        )
+    except ValueError as e:
+        # Handle cases where the date format might be wrong
+        print(f"Error parsing date: {e}")
+        return []  # Return empty on error
+
+
+    most_recent_answers = most_recent_group.get('form_answers', [])
+
+    patient_history = {
+        "hasPriorStroke": None,
+        "numOfPriorStrokes": None,
+        "priorHeadCT": None,
+        "hasChronicInfarct": None,
+        "atrialFibrillationHasHistory": None,
+        "ironDeficiencyAnemiaHasHistory": None,
+        "arterialClotsHasHistory": None,
+        "arterialClotsNumberOfOccurances": None,
+        "venousClotsHasHistory": None,
+        "venousClotsNumberOfOccurances": None,
+        "venousClotsPfoHasHistory": None,
+        "chfHasHistory": None,
+        "chfEf": None,
+        "carotidStenosisHasHistory": None,
+        "carotidStenosisDegree": None,
+        "osaHasHistory": None,
+        "osaSeverity": None,
+        "cadHasHistory": None,
+        "cadType": None,
+        "valvularHeartDiseaseHasHistory": None,
+        "ckdHasHistory": None
+    }
+
+    for answer in most_recent_answers:
+        question_id = answer.get("custom_module", {}).get("id")
+
+        patient_answer = answer.get("displayed_answer")
+        if not patient_answer or "null" in patient_answer:
+            continue
+
+        # Has prior stroke – parse "Yes\nNo"
+        if question_id == srs_attribute_to_question_id.get('hasPriorStroke'):
+            patient_history["hasPriorStroke"] = True if patient_answer == "Yes" else False
+
+        # Num of prior strokes – parse int
+        elif question_id == srs_attribute_to_question_id.get('numOfPriorStrokes'):
+            patient_history["numOfPriorStrokes"] = int(patient_answer)
+
+        # Has prior Head CT – parse "Yes\nNo\nUnsure"
+        elif question_id == srs_attribute_to_question_id.get('priorHeadCT'):
+            patient_history["priorHeadCT"] = True if patient_answer == "Yes" else False
+
+        # Has Chronic Infarct – parse "Yes\nNo\nUnsure"
+        elif question_id == srs_attribute_to_question_id.get('hasChronicInfarct'):
+            patient_history["hasChronicInfarct"] = True if patient_answer == "Yes" else False
+
+        # Get histories
+        elif question_id == srs_attribute_to_question_id.get('histories'):
+            patient_history["atrialFibrillationHasHistory"] = True if "Atrial Fibrillation" in patient_answer else False
+            patient_history["ironDeficiencyAnemiaHasHistory"] = True if "Iron" in patient_answer else False
+            patient_history["arterialClotsHasHistory"] = True if "Arterial Clots" in patient_answer else False
+            patient_history["venousClotsHasHistory"] = True if "Venous Clots" in patient_answer else False
+            patient_history["chfHasHistory"] = True if "CHF" in patient_answer else False
+            patient_history["carotidStenosisHasHistory"] = True if "Carotid Stenosis" in patient_answer else False
+            patient_history["osaHasHistory"] = True if "Obstructive Sleep Apnea" in patient_answer else False
+            patient_history["cadHasHistory"] = True if "CAD" in patient_answer else False
+            patient_history["valvularHeartDiseaseHasHistory"] = True if "Valvular Heart Disease" in patient_answer else False
+            patient_history["ckdHasHistory"] = True if "CKD" in patient_answer else False
+
+        # CAD type # parse "Symptomatic\nAsymptomatic single vessel \nAsymptomatic multivessel\nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('cadType'):
+            if "Symptomatic" in patient_answer:
+                patient_history["cadType"] = CADTypeOptions.SYMPTOMATIC_MULTI_OR_SINGLE_VESSEL
+            elif "Asymptomatic" in patient_answer:
+                if "multivessel" in patient_answer:
+                    patient_history["cadType"] = CADTypeOptions.ASYMPTOMATIC_MULTIVESSEL
+                else:
+                    patient_history["cadType"] = CADTypeOptions.ASYMPTOMATIC_SINGLE_VESSEL
+            else:
+                patient_history["cadType"] = CADTypeOptions.UNKNOWN
+
+        # EF levels # parse "EF <= 40%\nEF > 40%\nEF Unkown"
+        elif question_id == srs_attribute_to_question_id.get('chfEf'):
+            if "<=" in patient_answer:
+                patient_history["chfEf"] = EjectionFractionOptions.LESS_THAN_OR_EQUAL_40
+            elif ">" in patient_answer:
+                patient_history["chfEf"] = EjectionFractionOptions.GREATER_THAN_40
+            else:
+                patient_history["chfEf"] = EjectionFractionOptions.UNKNOWN
+
+        # Carotid Stenosis # parse – "50-70% stenosis\n> 70% stenosis\nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('carotidStenosisDegree'):
+            if "50" in patient_answer:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.FIFTY_TO_SEVENTY
+            elif "70" in patient_answer:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.GREATER_THAN_SEVENTY
+            else:
+                patient_history["carotidStenosisDegree"] = StenosisPercentageOptions.UNKNOWN
+
+        # OSA # parse – "Mild\nModerate\nSevere\nUnkown"
+        elif question_id == srs_attribute_to_question_id.get('osaSeverity'):
+            if "Mild" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.MILD
+            elif "Moderate" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.MODERATE
+            elif "Severe" in patient_answer:
+                patient_history["osaSeverity"] = OSASeverityOptions.SEVERE
+            else:
+                patient_history["osaSeverity"] = OSASeverityOptions.UNKNOWN
+
+        # Arterial Clots – parse "Single prior event \nMultiple prior events\nUnkown"
+        elif question_id == srs_attribute_to_question_id.get('arterialClotsNumberOfOccurances'):
+            if "Single" in patient_answer:
+                patient_history["arterialClotsNumberOfOccurances"] = ArterialClotOccurrencesOptions.SINGLE_PRIOR_EVENT
+            elif "Multiple" in patient_answer:
+                patient_history["arterialClotsNumberOfOccurances"] = ArterialClotOccurrencesOptions.MULTIPLE_PRIOR_EVENTS
+
+        # Venous Clots – parse "Single event\nMultiple events\nPFO treated\nPFO untreated \nUnknown"
+        elif question_id == srs_attribute_to_question_id.get('venousClotsNumberOfOccurances'):
+            first_word = patient_answer.strip().split()[0]
+
+            if first_word == "Single":
+                patient_history["venousClotsNumberOfOccurances"] = VenousClotOccurrencesOptions.SINGLE
+            elif first_word == "Multiple":
+                patient_history["venousClotsNumberOfOccurances"] = VenousClotOccurrencesOptions.MULTIPLE
+
+            if "PFO" in patient_answer:
+                patient_history["venousClotsPfoHasHistory"] = PFOPresenceOptions.POSITIVE
+            else:
+                patient_history["venousClotsPfoHasHistory"] = PFOPresenceOptions.NEGATIVE
+
+    return patient_history
+
 
 # Get records using syntrillo_internal_key from srs_form_responses table
-def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
+def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID, healthie_utils: HealthieUtils) -> dict:
     """
     Get the data needed for SRS calculations that is stored in healthie from the healthie user id
     Args:
@@ -110,35 +396,44 @@ def get_srs_healthie_data(healthie_user_id: str, db_manager: SyntrilloDatabaseMa
             "average_rhr_prior": "average_rhr_prior",
             "inactivity_hours_answer": inactivity_hours_answer,
             "activity_minutes_answer": activity_minutes_answer,
+            "ssq_score": recent_ssq_entry.get("metric_stat"),
         }
     Raises:
         ValueError: If the healthie data is not valid
     """
     try:
-        logger.info(f"Fetching RHR and Activity data from Healthie...")
-        # Retreive resting hr from healthie
-        healthie_utils = HealthieUtils()
+        logger.info("Fetching RHR and Activity data from Healthie...")
 
+        # Retreive resting hr from healthie
         rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
-        rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else None
+        rhr_metadata = calc_rhr_metadata(rhr_data) if rhr_data else {}
 
         # Retreive the activity data
-        activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key)
+        # OLD ACTIVITY DATA RETRIEVAL METHOD --> activity_data = get_healthie_activity_data(db_manager, syntrillo_internal_key)
+        hours_sitting_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HOURS_SITTING_CATEGORY)
+        recent_hours_sitting_entry = hours_sitting_data[-1] if hours_sitting_data else {}
+
+        physical_activity_minutes_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=PHYSICAL_ACTIVITY_MINS_CATEGORY)
+        recent_physical_activity_minutes_entry = physical_activity_minutes_data[-1] if physical_activity_minutes_data else {}
+
+        recent_ssq_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=SSQ_CATEGORY)
+        recent_ssq_entry = recent_ssq_data[-1] if recent_ssq_data else {}
 
         # None value will be used to indicate that there is no data to calculate the metadata
         # and this will impact the risk score calculation as no data means more attention is needed.
-        logger.info(f"Successfully fetched RHR and Activity data from Healthie...")
+        logger.info("Successfully fetched RHR and Physical Activity data from Healthie...")
         return {
-            "average_rhr_baseline": rhr_metadata["average_rhr_baseline"] if rhr_metadata else None,
-            "average_rhr_trailing": rhr_metadata["average_rhr_trailing"] if rhr_metadata else None,
-            "average_rhr_prior": rhr_metadata["average_rhr_prior"] if rhr_metadata else None,
-            "inactivity_hours_answer": activity_data["inactivity_hours_answer"],
-            "activity_minutes_answer": activity_data["activity_minutes_answer"],
+            "average_rhr_baseline": rhr_metadata.get("average_rhr_baseline"),
+            "average_rhr_trailing": rhr_metadata.get("average_rhr_trailing"),
+            "average_rhr_prior": rhr_metadata.get("average_rhr_prior"),
+            "inactivity_hours_answer": recent_hours_sitting_entry.get("metric_stat"),
+            "activity_minutes_answer": recent_physical_activity_minutes_entry.get("metric_stat"),
+            "ssq_score": recent_ssq_entry.get("metric_stat")
         }
 
     except Exception as e:
-        logger.error(f"Error fetching RHR data from healthie: {e}")
-        raise ValueError("Error fetching RHR data from healthie")
+        logger.error(f"Error fetching RHR and/or Physical Activity data from healthie: {e}")
+        raise ValueError("Error fetching RHR and/or Physical Activity data from healthie")
 
 
 def get_healthie_activity_and_inactivity_module_ids(db_manager: SyntrilloDatabaseManager) -> dict:
@@ -168,7 +463,7 @@ def get_healthie_activity_and_inactivity_module_ids(db_manager: SyntrilloDatabas
     }
 
 
-def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> Union[int, None]:
+def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
     """
     Get the activity data from healthie
     Args:
@@ -176,13 +471,13 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         db_manager (SyntrilloDatabaseManager): The syntrillo database manager
 
     Returns:
-        inactivity_minutes_answer (int | None): The patient's inactivity minutes form response answer
+        inactivity_minutes_answer (dict | None): The patient's inactivity minutes form response answer
     Raises:
         ValueError: If the inactivity minutes answer is not valid
     """
 
     try:
-        logger.info(f"Fetching activity data from healthie...")
+        logger.info("Fetching activity data from healthie...")
 
         # Get the module ids for the intake and charting modules
         physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
@@ -191,12 +486,14 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
         module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
 
-        # Retreive the intake & charting inactivity value based on the module id and healthie user id
-        intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
-        charting_inactivity_hours_answer, charting_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, syntrillo_internal_key)
+        syntrillo_internal_key_str = str(syntrillo_internal_key)
 
-        intake_activity_minutes_answer, intake_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, syntrillo_internal_key)
-        charting_activity_minutes_answer, charting_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, syntrillo_internal_key)
+        # Retreive the intake & charting inactivity value based on the module id and healthie user id
+        intake_inactivity_hours_answer, intake_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_intake, syntrillo_internal_key_str)
+        charting_inactivity_hours_answer, charting_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_inactivity_charting, syntrillo_internal_key_str)
+
+        intake_activity_minutes_answer, intake_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_intake, syntrillo_internal_key_str)
+        charting_activity_minutes_answer, charting_activity_updated_at = db_manager.get_patient_form_response_by_module_id(module_id_activity_charting, syntrillo_internal_key_str)
 
         # Use the most recent answer from the intake or charting responses
         if not intake_inactivity_hours_answer and not charting_inactivity_hours_answer:
@@ -218,7 +515,7 @@ def get_healthie_activity_data(db_manager: SyntrilloDatabaseManager, syntrillo_i
         inactivity_hours_answer = float(inactivity_hours_answer)
         activity_minutes_answer = float(activity_minutes_answer)
 
-        logger.info(f"Successfully fetched activity data from healthie...")
+        logger.info("Successfully fetched activity data from healthie...")
         return {
             "inactivity_hours_answer": inactivity_hours_answer,
             "activity_minutes_answer": activity_minutes_answer,
@@ -240,7 +537,7 @@ def get_healthie_metric_data(healthie_utils: HealthieUtils, healthie_user_id: st
     Returns:
         all_metric_data (List[dict]): All metric data for the patient and
     """
-    logger.info(f"Fetching RHR data from healthie...")
+    logger.info("Fetching RHR data from healthie...")
     try:
         all_metric_data = []
         cursor = None
@@ -326,7 +623,7 @@ def calc_rhr_metadata(
         ValueError: If the RHR metadata is not valid
     """
     try:
-        logger.info(f"Calculating RHR metadata...")
+        logger.info("Calculating RHR metadata...")
         # Convert rhr_data to pandas dataframe
         rhr_df = pd.DataFrame(rhr_data)
 
@@ -367,7 +664,7 @@ def calc_rhr_metadata(
         else:
             logger.warning("Not enough data to calculate prior average...")
 
-        logger.info(f"Successfully calculated RHR metadata...")
+        logger.info("Successfully calculated RHR metadata...")
         # Return the metadata
         return {
             "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
@@ -386,12 +683,7 @@ def calc_rhr_metadata(
         raise ValueError("Error calculating RHR metadata")
 
 
-
-
-
-
-
-def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> SRSFormResponse:
+def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> Union[SRSFormResponse, None]:
     """
     Get the most recent srs form response from the syntrillo_internal_key
     Args:
@@ -430,7 +722,7 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         ValueError: If the hr data is not valid
     """
     try:
-        logger.info(f"Fetching Tenovi HR data...")
+        logger.info("Fetching Tenovi HR data...")
         hr_measurements, _ = db_manager.get_latest_measurements(metric_name=PULSE_METRIC_NAME)
         if len(hr_measurements) == 0:
             logger.warning("No Tenovi HR data found for the patient ...")
@@ -454,7 +746,7 @@ def get_tenovi_hr_data(db_manager: SyntrilloDatabaseManager) -> dict:
         trailing_hr_average = trailing_df[VALUE_1].mean() if not trailing_df.empty else None
         trailing_hr_variability = trailing_df[VALUE_1].std() if not trailing_df.empty else None
 
-        logger.info(f"Successfully fetched Tenovi HR data...")
+        logger.info("Successfully fetched Tenovi HR data...")
         return {
             "trailing_hr_variability": round(trailing_hr_variability, 2) if trailing_hr_variability else None,
             "trailing_hr_average": round(trailing_hr_average, 2) if trailing_hr_average else None,
@@ -500,7 +792,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
         ValueError: If the bp metadata is not valid
     """
     try:
-        logger.info(f"Beginning Tenovi BP data aggregation...")
+        logger.info("Beginning Tenovi BP data aggregation...")
         bp_analysis = BloodPressureAnalysis(syntrillo_internal_key)
         bp_df, _ = bp_analysis.get_blood_pressure_dataframe()
         if bp_df is None or bp_df.empty:
@@ -525,14 +817,14 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     },
                 }
             }
-        logger.info(f"Successfully fetched Tenovi BP data...")
+        logger.info("Successfully fetched Tenovi BP data...")
 
         # Get baseline start date as it used in both baseline and trailing dataframes
         # Baseline start date is the first timestamp in the bp_df
         baseline_start = bp_df[TIMESTAMP_LOCAL].min()
 
         # Get the baseline and trailing dataframes
-        logger.info(f"Getting baseline and trailing dataframes...")
+        logger.info("Getting baseline and trailing dataframes...")
         baseline_bp_df = get_baseline_bp_data(bp_df, baseline_start=baseline_start, baseline_weeks=BASELINE_NUM_WEEKS) # Get the baseline data
         trailing_bp_df = get_trailing_bp_data(bp_df, baseline_start=baseline_start, trailing_weeks=TRAILING_NUM_WEEKS, trailing_days=TRAILING_NUM_DAYS) # Get the trailing data
 
@@ -639,7 +931,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         ValueError: If the bp metadata is not valid
     """
     try:
-        logger.info(f"Calculating bp metadata...")
+        logger.info("Calculating bp metadata...")
         # Calculate the metadata for the trailing dataframe
         trailing_bp_metadata = bp_analysis.calculate_timeframe_metadata(trailing_bp_dataframe)
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
@@ -667,7 +959,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                 },
             },
         }
-        logger.info(f"Successfully calculated bp metadata...")
+        logger.info("Successfully calculated bp metadata...")
         return trimmed_bp_metadata
 
     except Exception as e:
@@ -735,10 +1027,65 @@ def is_valid_trailing_timeframe_dates(trailing_start: datetime, baseline_end: da
     """
     return trailing_start > baseline_end
 
+def get_lab_data(healthie_utils: HealthieUtils, healthie_user_id: str) -> LabData:
+    """
+    Retieves all the lab relevant data (metrics section) from Healthie.
+
+    Args:
+        healthie_utils (HealthieUtils): The healthie utils
+        healthie_user_id (str): The healthie user id
+    Returns:
+        lab_data (LabData):
+    Raises:
+        e (Exception): General error exception
+    """
+    try:
+        # 1. Get lab data from Healthie
+        ldl_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=LDL_CATEGORY)
+        hdl_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HDL_CATEGORY)
+        creatintine_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=CREATINTINE_CATEGORY)
+        hgA1c_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HGA1C_CATEGORY)
+        hsCRP_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HSCRP_CATEGORY)
+        hemoglobin_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=HEMOGLOBIN_CATEGORY)
+
+        recent_ldl_entry = ldl_data[-1] if ldl_data else {}
+        recent_hdl_entry = hdl_data[-1] if hdl_data else {}
+        recent_creatintine_entry = creatintine_data[-1] if creatintine_data else {}
+        recent_hgA1c_entry = hgA1c_data[-1] if hgA1c_data else {}
+        recent_hsCRP_entry = hsCRP_data[-1] if hsCRP_data else {}
+        recent_hemoglobin_entry = hemoglobin_data[-1] if hemoglobin_data else {}
+
+        lab_data_vals = {
+            "ldl_value": recent_ldl_entry.get("metric_stat"),
+            "hdl_value": recent_hdl_entry.get("metric_stat"),
+            "creatintine_value": recent_creatintine_entry.get("metric_stat"),
+            "hgA1c_value": recent_hgA1c_entry.get("metric_stat"),
+            "hsCRP_value": recent_hsCRP_entry.get("metric_stat"),
+            "hemoglobin_value": recent_hemoglobin_entry.get("metric_stat"),
+        }
+
+        # TODO -- 2. Get Zus lab data from internal DB
+
+        # Load data into LabData object
+        lab_data = LabData.model_validate(lab_data_vals)
+
+        return lab_data
+
+    except Exception as e:
+        logger.error(f"Error while retrieving lab data for SRS: {e}")
+        raise e
 
 
 
-if __name__ == "__main__":
-    syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
-    data = aggregate_data(syntrillo_internal_key)
-    print(data)
+# if __name__ == "__main__":
+    # syntrillo_internal_key = uuid.UUID("ff8d04c4-9307-4171-888b-447047d5fa36")
+    # data = aggregate_data(syntrillo_internal_key)
+    # syntrillo_internal_key = uuid.UUID("41ce2a96-a404-497c-835e-236a0f972a9d") # Bob Barker – id 2315391
+    # data = aggregate_data(syntrillo_internal_key=syntrillo_internal_key, is_first=True)
+    # print(data)
+
+    # healthie_user_id = "2315391"
+    # healthie_utils = HealthieUtils()
+    # get_lab_data(healthie_utils, healthie_user_id)
+
+    # print(json.dumps(get_patient_history_data(healthie_user_id="2315391"), indent=4))

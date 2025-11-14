@@ -90,6 +90,8 @@ def iframe_healthie_provider_tab_risk_score_data():
 
         if metrics['srs_response_data'] is not None:
             metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
+        if metrics['lab_data'] is not None:
+            metrics['lab_data'] = metrics['lab_data'].model_dump()
 
         # Return success response
         return jsonify({
@@ -324,7 +326,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         # Insert the SRS form response into the database
         response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="", data=form_data)
 
-        if log['success'] == True:
+        if log['success']:
             return jsonify({
                 'success': True,
                 'message': 'Charting note data received successfully',

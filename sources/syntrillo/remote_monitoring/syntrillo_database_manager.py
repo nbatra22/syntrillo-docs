@@ -1031,8 +1031,7 @@ class SyntrilloDatabaseManager:
             pymysql.MySQLError: If there is an error inserting the SRS form response.
             Exception: If there is an unexpected error during the insertion.
         """
-        logger.info(f"Performing insertion of SRS form response into RDS DB ...")
-        print(f"Performing insertion of SRS form response into RDS DB ...")
+        logger.info("Performing insertion of SRS form response into RDS DB ...")
         # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
         form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
         # Extract the compliance data from the SRS form response.
@@ -1061,7 +1060,7 @@ class SyntrilloDatabaseManager:
 
                 # 2. Insert into srs_compliance if compliance data exists
                 if compliance_data:
-                    logger.info(f"Performing insertion of compliance data into RDS DB ...")
+                    logger.info("Performing insertion of compliance data into RDS DB ...")
 
                     compliance_dict = compliance_data.model_dump(exclude_none=True)
                     compliance_dict['srs_form_response_id'] = srs_form_response_id
@@ -1241,9 +1240,9 @@ class SyntrilloDatabaseManager:
             CATEGORIES_WITH_GENDER = {"alcohol_use", "hdl"}
             with self.conn.cursor() as cursor, self.conn.cursor() as cursor_stroke_priority:
                 if value is not None:
-                    if type(value) == str:
+                    if type(value) is str:
                         query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND categorical_value = '{value}';"
-                    elif type(value) == float:
+                    elif type(value) is float:
                         query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND min_value <= {value} AND max_value >= {value};"
                     else:
                         raise ValueError(f"Invalid value type: {type(value)}")
