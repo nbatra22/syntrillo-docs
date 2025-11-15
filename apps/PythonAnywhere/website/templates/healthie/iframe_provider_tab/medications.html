@@ -54,6 +54,21 @@
         outline: 2px solid #1e40af;
     }
 
+    .no-medications {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        color: #f59e0b;
+        background-color: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 0.375rem;
+    }
+
+    .no-medications p {
+        color: #f59e0b;
+    }
+
     .meds-modal {
         position: fixed;
         top: 0;
@@ -138,10 +153,6 @@
     .meds-modal-subtitle {
         font-size: small;
         margin: 0 !important;
-    }
-
-    .required-field {
-        color: red;
     }
 
     .meds-data-container,
@@ -657,7 +668,8 @@
 
             // If no medications, show a message
             if (medications.length === 0) {
-                medicationsContainer.innerHTML += '<p>No medications found for this patient.</p>';
+                medicationsContainer.innerHTML += '<div class="no-medications"><i class="fa-solid fa-triangle-exclamation"></i><p>No medications found for this patient.</p></div>';
+                hideLoadingSpinner();
                 return;
             }
 
@@ -730,58 +742,95 @@
     }
 
     let keywordDebounceTimer;
-    let medicationKeywords = {};
-    let medicationKeywordByName = {};
+    let healthieMedicationKeywords = {};
+    let healthieMedicationKeywordByName = {};
+    let syntrilloMedicationKeywords = {};
+    let syntrilloMedicationKeywordByName = {};
 
-    function getMedicationKeywords(keyword) {
+    function getMedicationKeywords(origin, keyword) {
         // Clear previous timer
         clearTimeout(keywordDebounceTimer);
 
         // Don't search if keyword is too short
         if (keyword.length < 2) {
-            const datalist = document.getElementById('medication-suggestions');
-            datalist.innerHTML = '';
+            if (origin === 'healthie') {
+                const healthieDatalist = document.getElementById('healthie-medication-suggestions');
+                healthieDatalist.innerHTML = '';
+            } else {
+                const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
+                syntrilloDatalist.innerHTML = '';
+            }
+
             return;
         }
 
         // Debounce the search
         keywordDebounceTimer = setTimeout(() => {
             const encodedKeyword = encodeURIComponent(keyword);
-            fetch(`{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_keywords", keyword="") }}${encodedKeyword}`, {
+            const healthieURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_healthie_medication_keywords", keyword="") }}${encodedKeyword}`;
+            const syntrilloURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_syntrillo_medication_keywords", keyword="") }}${encodedKeyword}`;
+            fetch(origin === 'healthie' ? healthieURL : syntrilloURL, {
                 method: 'GET'
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Medication keywords:', data);
-                const datalist = document.getElementById('medication-suggestions');
+                // console.log('Medication keywords:', data);
+                const datalist = document.getElementById(`${origin}-medication-suggestions`);
                 datalist.innerHTML = '';
 
                 if (data.success && Object.keys(data.data).length > 0) {
-                    medicationKeywords = data.data;
-                    medicationKeywordByName = {};
-                    for (const [id, value] of Object.entries(medicationKeywords)) {
-                        const option = document.createElement('option');
-                        option.value = value.name;
-                        datalist.appendChild(option);
-                        // cache by name for lookup on selection
-                        medicationKeywordByName[value.name] = { id, ...value };
+
+                    if (origin === 'healthie') {
+                        healthieMedicationKeywords = data.data;
+                        healthieMedicationKeywordByName = {};
+                        console.log('Healthie Medication Keywords:', healthieMedicationKeywords);
+                        for (const [id, value] of Object.entries(healthieMedicationKeywords)) {
+                            const option = document.createElement('option');
+                            option.value = value.name;
+                            datalist.appendChild(option);
+                            // cache by name for lookup on selection
+                            healthieMedicationKeywordByName[value.name] = { id, ...value };
+                            console.log('Added Healthie option:', option);
+                        }
                     }
+
+                    if (origin === 'syntrillo') {
+                        syntrilloMedicationKeywords = data.data;
+                        syntrilloMedicationKeywordByName = {};
+                        for (const [id, value] of Object.entries(syntrilloMedicationKeywords)) {
+                            const option = document.createElement('option');
+                            option.value = value.name;
+                            option.id = id;
+                            datalist.appendChild(option);
+                            // cache by name for lookup on selection
+                            syntrilloMedicationKeywordByName[value.name] = { id, ...value };
+                        }
+                    }
+                } else {
+                    healthieMedicationKeywords = {};
+                    healthieMedicationKeywordByName = {};
+                    syntrilloMedicationKeywords = {};
+                    syntrilloMedicationKeywordByName = {};
                 }
             })
             .catch(error => console.error('Error fetching medication keywords:', error));
         }, 300); // Wait 300ms after user stops typing
     }
 
+    function getCommonMedicationKeywords(keyword) {
+        return;
+    }
+
     const medNameInput = document.getElementById('medication-name');
     medNameInput.addEventListener('input', function() {
-        getMedicationKeywords(this.value);
-        handleMedicationSelection();
+        getMedicationKeywords('healthie', this.value);
+        handleHealthieMedicationSelection();
     });
-    medNameInput.addEventListener('change', handleMedicationSelection);
+    medNameInput.addEventListener('change', handleHealthieMedicationSelection);
 
-    function handleMedicationSelection() {
+    function handleHealthieMedicationSelection() {
         const selected = medNameInput.value.trim();
-        const item = medicationKeywordByName[selected];
+        const item = healthieMedicationKeywordByName[selected];
         const doseContainer = document.getElementById('dose-suggestions-container');
         if (item) {
             // set hidden id and populate dose suggestions
@@ -793,6 +842,51 @@
             // not an exact match
             if (doseContainer) doseContainer.style.display = 'none';
         }
+    }
+
+    const commonNameInput = document.getElementById('medication-common-name');
+    commonNameInput.addEventListener('input', function() {
+        getMedicationKeywords('syntrillo', this.value);
+        handleSyntrilloMedicationSelection();
+    });
+
+    function handleSyntrilloMedicationSelection() {
+        const selected = commonNameInput.value.trim();
+        const item = syntrilloMedicationKeywordByName[selected];
+        const hiddenId = document.getElementById('common-medication-id');
+        const medicationCategorySelect = document.getElementById('medication-category');
+        const medicationSupercategorySelect = document.getElementById('medication-supercategory');
+        const medicationCustomContainer = document.getElementById('medication-custom-classification-container');
+        const medicationCustomCategoryInput = document.getElementById('medication-custom-category');
+        const medicationCustomSupercategoryInput = document.getElementById('medication-custom-supercategory');
+        if (item) {
+            // set hidden id and populate dose suggestions
+            hiddenId.value = item.id;
+            medicationCategorySelect.value = item.category;
+            medicationSupercategorySelect.value = item.supercategory;
+            if (item.category === 'Other' || item.supercategory === 'Other') {
+                // show custom inputs
+                medicationCustomCategoryInput.style.display = 'none';
+                medicationCustomSupercategoryInput.style.display = 'none';
+            }
+            if (item.category === 'Other') {
+                medicationCustomCategoryInput.style.display = 'block';
+            } else {
+                medicationCustomCategoryInput.style.display = 'none';
+            }
+            if (item.supercategory === 'Other') {
+                medicationCustomSupercategoryInput.style.display = 'block';
+            } else {
+                medicationCustomSupercategoryInput.style.display = 'none';
+            }
+            medicationCustomCategoryInput.value = item.custom_category || '';
+            medicationCustomSupercategoryInput.value = item.custom_supercategory || '';
+        } else {
+            // not an exact match
+            hiddenId.value = '';
+        }
+
+        console.log('Hidden ID:', hiddenId.value);
     }
 
     function populateDoseSuggestions(dosageOptions) {
@@ -905,10 +999,76 @@
         }
     }
 
+    async function createCommonMedication() {
+        const commonMedNameInput = document.getElementById('medication-common-name');
+        const commonMedName = commonMedNameInput.value.trim();
+        const categorySelect = document.getElementById('medication-category');
+        const supercategorySelect = document.getElementById('medication-supercategory');
+        const customCategoryInput = document.getElementById('medication-custom-category');
+        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+
+        if (commonMedName.length < 2) {
+            handleFormStatus('error', "Medication's common name is too short (min. 2 characters).");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('common_name', commonMedName);
+        formData.append('category', categorySelect.value);
+        formData.append('supercategory', supercategorySelect.value);
+        formData.append('category_custom', customCategoryInput.value);
+        formData.append('supercategory_custom', customSupercategoryInput.value);
+
+        try {
+            const resp = await fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_create_common_medication") }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+
+            if (resp.ok && data.success) {
+                handleFormStatus('success', 'Common medication created successfully!');
+                commonMedNameInput.value = '';
+                document.getElementById('common-medication-id').value = data.common_medication_id;
+                return data.common_medication_id;
+            } else {
+                handleFormStatus('error', 'Error creating common medication: ' + (data.message || data.error || 'Unknown'));
+                return null;
+            }
+        } catch (error) {
+            console.error('Error creating common medication:', error);
+            handleFormStatus('error', 'Error creating common medication. Please try again.');
+            return null;
+        }
+    }
+
     async function submitMedicationForm() {
-        const statusMessage = document.getElementById('form-status-message');
-        statusMessage.textContent = 'Submitting form data...';
-        statusMessage.className = 'pending';
+
+        const commonMedNameInput = document.getElementById('medication-common-name');
+        const categorySelect = document.getElementById('medication-category');
+        const supercategorySelect = document.getElementById('medication-supercategory');
+        const customCategoryInput = document.getElementById('medication-custom-category');
+        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+        const commonMedIDInput = document.getElementById('common-medication-id');
+
+        let commonMedID;
+
+        if (commonMedIDInput.value) {
+            handleFormStatus('pending', 'Saving medication data...');
+            commonMedID = commonMedIDInput.value;
+        } else {
+            handleFormStatus('pending', 'Saving common medication data...')
+            commonMedID = await createCommonMedication();
+        }
+
+        if (!commonMedID) {
+            handleFormStatus('error', 'Error saving common medication data. Please fix the errors and try again.');
+            return;
+        } else {
+            handleFormStatus('pending', 'Saving medication data...');
+        }
+
         const submitBtn = document.getElementById('medication-submit-btn');
         submitBtn.disabled = true;
 
@@ -921,9 +1081,12 @@
 
         const formData = new FormData(form);
 
+        console.log('Original Form Data:', formData.entries());
+
         // Filter out empty string values and convert is_active to boolean
         const cleanedFormData = new FormData();
         for (let [key, value] of formData.entries()) {
+            console.log(`Processing field: ${key} with value: ${value}`);
             // Skip empty strings for optional fields
             if (value === '' || value === null) {
                 continue;
@@ -951,8 +1114,7 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Medication updated:', data);
-                statusMessage.textContent = 'Medication updated successfully!';
-                statusMessage.className = 'success';
+                handleFormStatus('success', 'Medication updated successfully!');
                 submitBtn.disabled = false;
                 closeMedicationsModal();
                 showLoadingSpinner('Fetching updated medications...');
@@ -960,8 +1122,7 @@
             })
             .catch(error => {
                 console.error('Error updating medication:', error);
-                statusMessage.textContent = `Error (${error.status}) updating medication.`;
-                statusMessage.className = 'error';
+                handleFormStatus('error', 'Error updating medication. Please try again.');
                 submitBtn.disabled = false;
             })
         } else {
@@ -973,8 +1134,7 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Medication created:', data);
-                statusMessage.textContent = 'Medication created successfully!';
-                statusMessage.className = 'success';
+                handleFormStatus('success', 'Medication created successfully!');
                 submitBtn.disabled = false;
                 closeMedicationsModal();
                 showLoadingSpinner('Fetching updated medications...');
@@ -982,11 +1142,16 @@
             })
             .catch(error => {
                 console.error('Error creating medication:', error);
-                statusMessage.textContent = 'Error creating medication. Please try again.';
-                statusMessage.className = 'error';
+                handleFormStatus('error', 'Error creating medication. Please try again.');
                 submitBtn.disabled = false;
             })
         }
+    };
+
+    function handleFormStatus(status, message) {
+        const statusMessage = document.getElementById('form-status-message');
+        statusMessage.textContent = message;
+        statusMessage.className = status; // 'success', 'error', 'pending'
     }
 
     showLoadingSpinner('Fetching active medications...');

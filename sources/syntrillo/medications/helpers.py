@@ -10,7 +10,10 @@ def medication_from_dosing_schedule_rule(medication: MedicationRecord) -> Medica
     Returns:
         medication (MedicationRecord): The medication with the fields filled in.
     """
-    if medication.dosing_schedule_rule == DosingScheduleRule.BID:
+    if medication.dosing_schedule_rule == DosingScheduleRule.QD:
+        medication.frequency = Frequency.DAILY
+        medication.dosing_interval = 1
+    elif medication.dosing_schedule_rule == DosingScheduleRule.BID:
         medication.frequency = Frequency.DAILY
         medication.dosing_interval = 2
     elif medication.dosing_schedule_rule == DosingScheduleRule.TID:

@@ -4,15 +4,45 @@ from decimal import Decimal
 from datetime import datetime
 # from datetime import date # TESTING PURPOSES
 
-from syntrillo.medications.models import MedicationRecord, DosingScheduleRule
+from syntrillo.medications.models import MedicationRecord, DosingScheduleRule, CommonMedication
 from syntrillo.medications.helpers import medication_from_dosing_schedule_rule
-from syntrillo.api_healthie.utils import HealthieUtils
+from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
 from syntrillo.system.logger import logger
 from syntrillo.api_healthie.medications import HealthieMedications
 # from syntrillo.medications.models import DosingScheduleRule # TESTING PURPOSES
 # from syntrillo.medications.models import Frequency, TimeOfDay, DeliveryMethod # TESTING PURPOSES
+
+
+def create_common_medication(medication: CommonMedication) -> dict:
+    """
+    For a new common medication created via Syntrillo's Medications Form, this
+    function creates a common medication record in the common_medications table.
+
+    Args:
+        medication (CommonMedication): The common medication to create.
+
+    Returns:
+        response (dict): The response from the DB insertion attempt.
+    """
+    try:
+        db_manager = SyntrilloMedicationsDatabaseQueries()
+        record_id, log = db_manager.insert_common_medication_record(common_medication=medication)
+
+        if not log.get("success"):
+            raise Exception(log['error'])
+
+        logger.info(f"Successfully created common medication: {medication.common_name}")
+
+        return {
+            "common_medication_id": medication.id,
+            "log": log
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating common medication: {medication.common_name}: {e}")
+        raise e
 
 def create_medication(medication: MedicationRecord) -> None:
     """
@@ -42,8 +72,8 @@ def create_medication(medication: MedicationRecord) -> None:
         healthie_user_id = entry['healthie_user_id']
 
         # (1.) Create medication in Healthie's system
-        healthie_utils = HealthieUtils()
-        response = healthie_utils.create_medication(medication, healthie_user_id, start_date_str, end_date_str)
+        healthie_medications = HealthieMedications()
+        response = healthie_medications.create_medication(medication, healthie_user_id, start_date_str, end_date_str)
 
         # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
         db_manager = SyntrilloMedicationsDatabaseQueries()
@@ -80,11 +110,30 @@ def get_medication_info_by_keyword(keyword: str) -> List[dict]:
         e (Exception): exception raised while fetching Healthie medication results for keywords.
     """
     try:
-        healthie_utils = HealthieUtils()
-        response = healthie_utils.get_medication_info_by_keywords(keyword)
+        healthie_medications = HealthieMedications()
+        response = healthie_medications.get_medication_info_by_keywords(keyword)
         return response
     except Exception as e:
         logger.error(f"Error getting medication info by keyword: {keyword}: {e}")
+        raise e
+
+def get_common_medications_by_keyword(keyword: str) -> List[dict]:
+    """
+    Gets common medication info by keyword from Healthie's system.
+
+    Args:
+        keyword (str): The keyword to search for.
+    Returns:
+        response (dict): The common medication info.
+    Raises:
+        e (Exception): exception raised while fetching Healthie common medication results for keywords.
+    """
+    try:
+        medication_db_manager = SyntrilloMedicationsDatabaseQueries()
+        response = medication_db_manager.get_similar_medication_names(partial_name=keyword)
+        return response
+    except Exception as e:
+        logger.error(f"Error getting common medication info by keyword: {keyword}: {e}")
         raise e
 
 def get_medication_by_patient_id(syntrillo_internal_key: str):
@@ -120,8 +169,8 @@ def update_medication(medication_record: MedicationRecord) -> MedicationRecord:
         end_date_str = extracted_info.get("end_date", "")
 
         # 1.) Update with Healthie
-        healthie_utils = HealthieUtils()
-        data = healthie_utils.update_medication_record(
+        healthie_medications = HealthieMedications()
+        data = healthie_medications.update_medication_record(
             medication_record=medication_record,
             start_date=start_date_str,
             end_date=end_date_str
@@ -157,8 +206,8 @@ def delete_medication(medication_id: int, syntrillo_internal_key: str) -> bool:
         syntrillo_internal_key = syntrillo_internal_key
 
         # 1. Delete from Healthie
-        healthie_utils = HealthieUtils()
-        data = healthie_utils.delete_medication(medication_id=medication_id)
+        healthie_medications = HealthieMedications()
+        data = healthie_medications.delete_medication(medication_id=medication_id)
 
         #  If error in the healthie API call
         if data.get("messages"):

@@ -9,8 +9,8 @@ from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
 from syntrillo.study_outcomes.patient_study_outcomes import PatientStudyOutcomes
 from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
-from syntrillo.medications.models import MedicationRecord
-from syntrillo.medications.utils import create_medication, update_medication, delete_medication, get_medication_info_by_keyword
+from syntrillo.medications.models import MedicationRecord, CommonMedication
+from syntrillo.medications.utils import create_medication, update_medication, delete_medication, get_medication_info_by_keyword, get_common_medications_by_keyword, create_common_medication
 
 iframe_healthie_provider_tab_medications_bp = Blueprint('iframe_healthie_provider_tab_medications_bp', __name__)
 
@@ -85,8 +85,8 @@ def iframe_healthie_provider_tab_active_medications():
             'error': str(e)
         }), 500
 
-@iframe_healthie_provider_tab_medications_bp.route('/healthie/iframe_provider_tab/medications/keywords/<keyword>', methods=['GET','POST'])
-def iframe_healthie_provider_tab_keywords(keyword=''):
+@iframe_healthie_provider_tab_medications_bp.route('/healthie/iframe_provider_tab/medications/healthie_keywords/<keyword>', methods=['GET','POST'])
+def iframe_healthie_provider_tab_healthie_medication_keywords(keyword=''):
     """
     Returns list of keywords for a patient.
     """
@@ -94,7 +94,7 @@ def iframe_healthie_provider_tab_keywords(keyword=''):
         if keyword:
             keywords = get_medication_info_by_keyword(keyword=keyword)
             keyword_dict = {}
-            if len(keywords) > 0:
+            if keywords is not None and len(keywords) > 0:
                 for keyword in keywords:
                     keyword_dict[keyword['id']] = {
                         'name': keyword['name'],
@@ -109,6 +109,78 @@ def iframe_healthie_provider_tab_keywords(keyword=''):
     except Exception as e:
         return jsonify({
             'success': False,
+            'error': str(e)
+        }), 500
+
+@iframe_healthie_provider_tab_medications_bp.route('/healthie/iframe_provider_tab/medications/syntrillo_keywords/<keyword>', methods=['GET','POST'])
+def iframe_healthie_provider_tab_syntrillo_medication_keywords(keyword=''):
+    """
+    Returns list of keywords for a patient.
+    """
+    try:
+        if keyword:
+            similar_meds = get_common_medications_by_keyword(keyword=keyword)
+            keyword_dict = {}
+            if similar_meds is not None and len(similar_meds) > 0:
+                for medication in similar_meds:
+                    keyword_dict[medication['id']] = {
+                        'name': medication['common_name'],
+                        'category': medication['category'],
+                        'supercategory': medication['supercategory'],
+                        'category_custom': medication['category_custom'],
+                        'supercategory_custom': medication['supercategory_custom'],
+                    }
+        else:
+            keyword_dict = {}
+
+        return jsonify({
+            'success': True,
+            'data': keyword_dict
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@iframe_healthie_provider_tab_medications_bp.route('/healthie/iframe_provider_tab/medications/create_common_medication', methods=['GET','POST'])
+def iframe_healthie_provider_tab_create_common_medication():
+    """
+    Creates a common medication.
+    """
+    try:
+        common_name = request.form.get('common_name')
+        category = request.form.get('category')
+        supercategory = request.form.get('supercategory')
+        category_custom = request.form.get('category_custom')
+        supercategory_custom = request.form.get('supercategory_custom')
+
+        new_common_medication = CommonMedication(
+            common_name=common_name,
+            category=category,
+            supercategory=supercategory,
+            category_custom=category_custom,
+            supercategory_custom=supercategory_custom
+        )
+
+        response = create_common_medication(new_common_medication)
+
+        if response['log']['success']:
+            return jsonify({
+                'success': True,
+                'common_medication_id': response['common_medication_id']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'common_medication_id': None,
+                'error': response['log']['error']
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'common_medication_id': None,
             'error': str(e)
         }), 500
 
@@ -127,17 +199,23 @@ def iframe_healthie_provider_tab_create_medication():
         dosage_option_id = request.form.get('dosage_option_id')
         mirrored = request.form.get('mirrored')
         is_active = True if request.form.get('is_active') == 'yes' else False
+
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
-        dosage_amount = request.form.get('dosage_amount')
-        dosage_unit = request.form.get('dosage_unit')
         comment = request.form.get('comment')
         directions = request.form.get('directions')
+
+        common_medication_id = request.form.get('common_medication_id')
+        dosing_schedule_rule = request.form.get('dosing_schedule_rule')
+        total_daily_dosage = request.form.get('total_daily_dosage')
+        dosage_amount = request.form.get('dosage_amount')
+        dosage_unit = request.form.get('dosage_unit')
+        dose_count = request.form.get('dose_count')
         frequency = request.form.get('frequency')
         dosing_interval = request.form.get('dosing_interval')
-        dosing_schedule_rule = request.form.get('dosing_schedule_rule')
-        dose_count = request.form.get('dose_count')
         time_of_day = request.form.get('time_of_day')
+        day_period = request.form.getlist('day_period')
+        day_of_week = request.form.getlist('day_of_week')
 
         medication_record = MedicationRecord(
             syntrillo_internal_key=str(syntrillo_internal_key),
@@ -145,17 +223,24 @@ def iframe_healthie_provider_tab_create_medication():
             is_active=is_active,
             start_date=start_date,
             end_date=end_date,
-            dosage_amount=dosage_amount,
-            dosage_unit=dosage_unit,
             comment=comment,
             directions=directions,
-            frequency=frequency,
-            dosing_interval=dosing_interval,
+            mirrored=mirrored,
+            common_medication_id=common_medication_id,
             dosing_schedule_rule=dosing_schedule_rule,
+            total_daily_dosage=total_daily_dosage,
+            dosage_amount=dosage_amount,
+            dosage_unit=dosage_unit,
+            frequency=frequency,
             dose_count=dose_count,
+            dosing_interval=dosing_interval,
             time_of_day=time_of_day,
+            day_period=day_period,
+            day_of_week=day_of_week,
         )
+
         create_medication(medication_record)
+
         return jsonify({
             'success': True,
             'data': medication_record.model_dump()
