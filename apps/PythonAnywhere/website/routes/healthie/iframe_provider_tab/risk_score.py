@@ -61,20 +61,15 @@ def iframe_healthie_provider_tab_risk_score_data():
     if post_manager.patient_not_registered_at_syntrillo:
         return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
 
-    healthie_provider_id = request.form.get('healthie_provider_id')
-    healthie_user_id = request.form.get('healthie_user_id')
-    temporary_lookup_code = request.form.get('temporary_lookup_code')
-    patient_not_registered_at_syntrillo_str = request.form.get('patient_not_registered_at_syntrillo')
-
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
+    on_demand = (request.form.get('on_demand') == '1')
 
     try:
 
-        risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient)
-
+        risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient, is_ondemand_srs=on_demand)
         if risk_score is None and stroke_priority_score is None:
             return jsonify({
                 'success': True,

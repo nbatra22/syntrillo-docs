@@ -419,6 +419,46 @@ class SyntrilloDatabaseManager:
 
         return record, log
 
+    def get_first_tenovi_measurement(self) -> Tuple[dict, dict]:
+        """
+            Get the first record for a patient, based on ite timestamp_local.
+
+            For example used in pillbox data analysis to produce correct stats, based on usage duration.
+
+            Args:
+                None
+
+            Returns a tuple:
+                record (dict): The latest record for the device.
+                log (dict): The log of the request
+
+        """
+
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute(
+                    """
+                    SELECT *
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = %s
+                    ORDER BY timestamp_local ASC
+                    LIMIT 1
+                    """,
+                    (self.syntrillo_internal_key.bytes,)
+                )
+
+                record = cursor.fetchone()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            record = None
+
+        return record, log
 
     def get_tenovi_device_data(
         self,

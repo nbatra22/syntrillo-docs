@@ -82,6 +82,17 @@
         outline: none;
     }
 
+    #rs-refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;      /* equal width/height => circle */
+        height: 2rem;
+        padding: 0;       /* remove extra padding that would break the circle */
+        border-radius: 50%; /* or 9999px; both create a circle when width==height */
+        box-sizing: border-box;
+    }
+
     .rs-btn:hover {
         background-color: #D1D5DB;
     }
@@ -643,6 +654,9 @@
                     <h1 id="" class="">
                         Stroke Risk Score
                     </h1>
+                    <button id="rs-refresh-btn" class="rs-btn" onclick="getRiskScore(onDemand=true)" title="Refresh Risk Score Data">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
                 </div>
                 <h2 id="" class="">
                     <!-- Charting notes encompass all factors included in the stroke risk score calculation. To update
@@ -2903,7 +2917,7 @@
         getRiskScore();
     }
 
-    function getRiskScore() {
+    function getRiskScore(onDemand = false) {
         const errorMessage = document.getElementById("rs-error-message");
         const errorMessageText = document.getElementById("rs-error-message-text");
 
@@ -3131,6 +3145,7 @@
         formData.append('healthie_user_id', healthieUserId);
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        formData.append('on_demand', onDemand ? '1' : '0');
         // console.log("Fetching risk score data...");
         fetch("{{ url_for('iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_data') }}", {
             method: "POST",

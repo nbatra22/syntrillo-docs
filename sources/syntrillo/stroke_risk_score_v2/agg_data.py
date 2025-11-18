@@ -210,38 +210,8 @@ def get_patient_history_data(healthie_user_id: str):
     payload = fetch_all_form_responses_from_healthie(form_id=form_id)
 
     all_form_groups = payload.get('formAnswerGroups', [])
-    if not all_form_groups:
-        return []
 
-    # 1. Filter for patient-specific form groups
-    patient_form_groups = []
-    for answer_group in all_form_groups:
-        # Check 'form_answers' exists and is not empty
-        if answer_group.get('form_answers'):
-            # Check the user_id of the first answer – assumeing all answers in a group have same user_id
-            first_answer = answer_group['form_answers'][0]
-            if first_answer.get('user_id') == healthie_user_id:
-                patient_form_groups.append(answer_group)
-
-    # If no forms were found for this patient, return an empty list
-    if not patient_form_groups:
-        return []
-
-    # 2. Filter for the most recent form response
-    try:
-        # Find the group with the maximum (latest) 'created_at' timestamp.
-        most_recent_group = max(
-            patient_form_groups,
-            key=lambda g: datetime.strptime(g['created_at'], '%Y-%m-%d %H:%M:%S %z')
-        )
-    except ValueError as e:
-        # Handle cases where the date format might be wrong
-        print(f"Error parsing date: {e}")
-        return []  # Return empty on error
-
-
-    most_recent_answers = most_recent_group.get('form_answers', [])
-
+    # Initialize patient history dictionary with None values
     patient_history = {
         "hasPriorStroke": None,
         "numOfPriorStrokes": None,
@@ -265,6 +235,38 @@ def get_patient_history_data(healthie_user_id: str):
         "valvularHeartDiseaseHasHistory": None,
         "ckdHasHistory": None
     }
+
+    if not all_form_groups:
+        return patient_history
+
+    # 1. Filter for patient-specific form groups
+    patient_form_groups = []
+    for answer_group in all_form_groups:
+        # Check 'form_answers' exists and is not empty
+        if answer_group.get('form_answers'):
+            # Check the user_id of the first answer – assumeing all answers in a group have same user_id
+            first_answer = answer_group['form_answers'][0]
+            if first_answer.get('user_id') == healthie_user_id:
+                patient_form_groups.append(answer_group)
+
+    # If no forms were found for this patient, return an empty list
+    if not patient_form_groups:
+        return patient_history
+
+    # 2. Filter for the most recent form response
+    try:
+        # Find the group with the maximum (latest) 'created_at' timestamp.
+        most_recent_group = max(
+            patient_form_groups,
+            key=lambda g: datetime.strptime(g['created_at'], '%Y-%m-%d %H:%M:%S %z')
+        )
+    except ValueError as e:
+        # Handle cases where the date format might be wrong
+        print(f"Error parsing date: {e}")
+        return patient_history  # Return empty on error
+
+
+    most_recent_answers = most_recent_group.get('form_answers', [])
 
     for answer in most_recent_answers:
         question_id = answer.get("custom_module", {}).get("id")
