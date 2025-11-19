@@ -205,7 +205,26 @@ def get_patient_history_data(healthie_user_id: str):
     # Map Healthie form inputs to result object
     secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
     form_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
-    srs_attribute_to_question_id = json.loads(secrets.get_secret_value('healthie_ids', 'srs_charting_note_question_ids'))
+
+    # tolerant parsing: secret may be a dict (plaintext object), a JSON string, or bytes
+    raw_qids = secrets.get_secret_value('healthie_ids', 'srs_charting_note_question_ids')
+    if isinstance(raw_qids, dict):
+        srs_attribute_to_question_id = raw_qids
+    else:
+        if raw_qids is None:
+            srs_attribute_to_question_id = {}
+        else:
+            # decode bytes, strip accidental outer quotes, then try json.loads
+            try:
+                if isinstance(raw_qids, (bytes, bytearray)):
+                    raw_qids = raw_qids.decode()
+                srs_attribute_to_question_id = json.loads(raw_qids)
+            except Exception:
+                try:
+                    srs_attribute_to_question_id = json.loads(str(raw_qids).strip('\'"'))
+                except Exception:
+                    logger.warning("Could not parse srs_charting_note_question_ids secret; defaulting to empty dict")
+                    srs_attribute_to_question_id = {}
 
     payload = fetch_all_form_responses_from_healthie(form_id=form_id)
 
