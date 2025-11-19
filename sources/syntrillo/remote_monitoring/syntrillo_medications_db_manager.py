@@ -60,6 +60,7 @@ class SyntrilloMedicationsDatabaseQueries:
         # connect to our database
         db_conn = DatabaseConnection(DatabaseConnection.HEALTH_INFO_DB)
         self.conn, _ = db_conn.create_connection()
+        logger.info(f"DB connection info: host={getattr(self.conn,'host',None)} port={getattr(self.conn,'port',None)} user={getattr(self.conn,'user',None)} db={getattr(self.conn,'db',None)} autocommit={self.conn.get_autocommit() if hasattr(self.conn,'get_autocommit') else 'unknown'}")
 
     def get_similar_medication_names(self, partial_name: str) -> List[str]:
         """
@@ -114,6 +115,7 @@ class SyntrilloMedicationsDatabaseQueries:
         logger.info(f"Updating common medication for medication name: {common_medication.common_name}")
         try:
             self.conn.begin()
+
             with self.conn.cursor() as cursor:
                 # Get DB column names based on CommonMedication object keys
                 cols = ", ".join(data.keys())
@@ -126,6 +128,7 @@ class SyntrilloMedicationsDatabaseQueries:
                 new_id = cursor.lastrowid
 
             self.conn.commit()
+
             log = {"success": True, "error": None}
             logger.info(f"Successfully updated common medication record in internal DB...")
             return new_id, log
@@ -171,20 +174,20 @@ class SyntrilloMedicationsDatabaseQueries:
                 processed[k] = v
 
         try:
-            self.conn.begin()
+            # self.conn.begin()
+
             with self.conn.cursor() as cursor:
-                # Get DB column names based on MedicationRecord object keys
-                cols = ", ".join(data.keys())
-                placeholders = ", ".join(["%s"] * len(data))
-                sql = f"""
-                    INSERT INTO medications_records ({cols})
-                    VALUES ({placeholders});
-                """
-                # print("SQL:", sql)
+                # Use processed keys (the exact values we're sending) to build columns/placeholders
+                cols = ", ".join(processed.keys())
+                placeholders = ", ".join(["%s"] * len(processed))
+                sql = f"INSERT INTO patient_medications ({cols}) VALUES ({placeholders});"
+                logger.info(f"Executing SQL: {sql} | cols: {cols} | params: {placeholders}")
                 cursor.execute(sql, list(processed.values()))
                 new_id = cursor.lastrowid
             # breakpoint()
+
             self.conn.commit()
+
             log = {"success": True, "error": None}
             logger.info("Successfully updated medication record in internal DB...")
             return new_id, log
@@ -224,7 +227,7 @@ class SyntrilloMedicationsDatabaseQueries:
             with self.conn.cursor(DictCursor) as cursor:
                 query = """
                     SELECT *
-                    FROM medications_records
+                    FROM patient_medications
                     WHERE syntrillo_internal_key = %s
                     ORDER BY medication_id, created_at DESC;
                 """
@@ -309,7 +312,7 @@ class SyntrilloMedicationsDatabaseQueries:
             self.conn.begin()
             with self.conn.cursor() as cursor:
 
-                query = "DELETE FROM medications_records WHERE medication_id = %s"
+                query = "DELETE FROM patient_medications WHERE medication_id = %s"
                 # The execute method returns the number of affected rows
                 rows_affected = cursor.execute(query, (medication_id,))
 

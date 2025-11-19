@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS common_medications (
 
 
 -- Medications Records Table
-CREATE TABLE IF NOT EXISTS medications_records (
+CREATE TABLE IF NOT EXISTS patient_medications (
     medication_record_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
 
     -- HEALTHIE FIELDS
