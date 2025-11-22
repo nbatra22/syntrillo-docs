@@ -14,7 +14,7 @@ from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSe
 # -------------------------------------------------
 iframe_healthie_provider_tab_index_bp = Blueprint('iframe_healthie_provider_tab_index', __name__)
 
-@iframe_healthie_provider_tab_index_bp.route('/iframe_healthie_provider_tab', methods=['GET'])
+@iframe_healthie_provider_tab_index_bp.route('/iframe_healthie_provider_tab', methods=['GET', 'POST'])
 def iframe_healthie_provider_tab_index():
     """
     iframe displayed in :

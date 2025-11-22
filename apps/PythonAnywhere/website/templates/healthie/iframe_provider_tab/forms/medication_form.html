@@ -113,7 +113,8 @@
             appear in the patient's medication list on the Healthie's 'Overview' tab.
         </p>
 
-        <input type="hidden" id="medication-id" name="medication_id">
+        <input type="hidden" id="syntrillo-medication-id" name="id">
+        <input type="hidden" id="healthie-medication-id" name="healthie_medication_id">
         <input type="hidden" id="medication-dosage-option-id" name="dosage_option_id">
         <input type="hidden" id="medication-mirrored" name="mirrored">
 
@@ -185,6 +186,8 @@
                     <option value="">-- Select Category --</option>
                     <option value="antiplatelet">Antiplatelet</option>
                     <option value="antihypertensive">Antihypertensive</option>
+                    <option value="anticoagulant">Anticoagulant</option>
+                    <option value="antihistamine">Antihistamine</option>
                     <option value="statin">Statin</option>
                     <option value="hypoglycemic-agent">Hypoglycemic Agent</option>
                     <option value="ace_inhibitor">ACE Inhibitor</option>
@@ -203,21 +206,20 @@
                     <option value="cholesterol_medication">Cholesterol Medication</option>
                     <option value="diabetes_medication">Diabetes Medication</option>
                     <option value="blood_pressure_medication">Blood Pressure Medication</option>
+                    <option value="pain_reliever">Pain Reliever</option>
                     <option value="other">Other</option>
                 </select>
             </div>
         </div>
 
-        <div id="medication-custom-classification-container" class="form-group-container-2" style="display: none; min-width: 100%;">
-            <div id="medication-custom-category-container" class="form-group" style="display: none; min-width: 50%;">
-                <label for="medication-custom-category">Custom Category <span id="medication-custom-category-required-tag" class="required-field">*</span></label>
-                <input type="text" id="medication-custom-category" name="category_custom"
-                    placeholder="Please specify category..." />
+        <div id="medication-custom-classification-container" class="form-group-container-2">
+            <div id="medication-custom-category-container" class="form-group">
+                <label for="medication-custom-category">Custom Category <span id="medication-custom-category-required-tag" class="required-field" style="display: none;">*</span></label>
+                <input type="text" id="medication-custom-category" name="category_custom" disabled />
             </div>
-            <div id="medication-custom-supercategory-container" class="form-group" style="display: none; min-width: 50%;">
-                <label for="medication-custom-supercategory">Custom Supercategory <span id="medication-custom-supercategory-required-tag" class="required-field">*</span></label>
-                <input type="text" id="medication-custom-supercategory" name="supercategory_custom"
-                    placeholder="Please specify supercategory..." />
+            <div id="medication-custom-supercategory-container" class="form-group">
+                <label for="medication-custom-supercategory">Custom Supercategory <span id="medication-custom-supercategory-required-tag" class="required-field" style="display: none;">*</span></label>
+                <input type="text" id="medication-custom-supercategory" name="supercategory_custom" disabled />
             </div>
         </div>
 
@@ -409,28 +411,40 @@
     });
 
     document.getElementById('medication-category').addEventListener('change', function () {
-        const customContainer = document.getElementById('medication-custom-classification-container');
-        const categoryCustomContainer = document.getElementById('medication-custom-category-container');
+        const customCategoryInput = document.getElementById('medication-custom-category');
+        const customCategoryRequiredTag = document.getElementById('medication-custom-category-required-tag');
         if (this.value === 'other') {
-            customContainer.style.display = 'flex';
-            categoryCustomContainer.style.display = 'block';
+            customCategoryInput.disabled = false;
+            customCategoryInput.style.display = 'block';
+            customCategoryRequiredTag.style.display = 'inline';
+            customCategoryInput.ariaPlaceholder = 'Please specify category...';
+            document.getElementById('medication-custom-classification-container').style.display = 'grid';
         } else {
-            customContainer.style.display = 'none';
-            categoryCustomContainer.style.display = 'none';
-            document.getElementById('medication-custom-category').value = '';
+            customCategoryInput.value = '';
+            customCategoryInput.disabled = true;
+            customCategoryInput.style.display = 'none';
+            customCategoryRequiredTag.style.display = 'none';
+            customCategoryInput.ariaPlaceholder = '';
+            document.getElementById('medication-custom-classification-container').style.display = 'none';
         }
     });
 
     document.getElementById('medication-supercategory').addEventListener('change', function () {
-        const customContainer = document.getElementById('medication-custom-classification-container');
-        const supercategoryCustomContainer = document.getElementById('medication-custom-supercategory-container');
+        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+        const customSupercategoryRequiredTag = document.getElementById('medication-custom-supercategory-required-tag');
         if (this.value === 'other') {
-            customContainer.style.display = 'grid';
-            supercategoryCustomContainer.style.display = 'block';
+            customSupercategoryInput.disabled = false;
+            customSupercategoryInput.style.display = 'block';
+            customSupercategoryRequiredTag.style.display = 'inline';
+            customSupercategoryInput.ariaPlaceholder = 'Please specify supercategory...';
+            document.getElementById('medication-custom-classification-container').style.display = 'grid';
         } else {
-            customContainer.style.display = 'none';
-            supercategoryCustomContainer.style.display = 'none';
-            document.getElementById('medication-custom-supercategory').value = '';
+            customSupercategoryInput.value = '';
+            customSupercategoryInput.disabled = true;
+            customSupercategoryInput.style.display = 'none';
+            customSupercategoryRequiredTag.style.display = 'none';
+            customSupercategoryInput.ariaPlaceholder = '';
+            document.getElementById('medication-custom-classification-container').style.display = 'none';
         }
     });
 

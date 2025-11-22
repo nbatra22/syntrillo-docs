@@ -28,7 +28,7 @@ def create_common_medication(medication: CommonMedication) -> dict:
     """
     try:
         db_manager = SyntrilloMedicationsDatabaseQueries()
-        record_id, log = db_manager.insert_common_medication_record(common_medication=medication)
+        record_id, log = db_manager.insert_common_medication(common_medication=medication)
 
         if not log.get("success"):
             raise Exception(log['error'])
@@ -83,7 +83,7 @@ def create_medication(medication: MedicationRecord) -> None:
                 raise Exception("Missing required patient-medication specific identifier from Healthie response...")
 
             medication.medication_id = int(medication_id) # convert to int for Syntrillo DB column type
-            record_id, log = db_manager.insert_medication_record(medication_record=medication)
+            record_id, log = db_manager.insert_patient_medication(medication_record=medication)
 
             if not log.get("success"):
                 raise Exception(log['error'])
@@ -189,7 +189,7 @@ def update_medication(medication_record: MedicationRecord) -> MedicationRecord:
         logger.error(f"Error in update medication function: {e}")
         raise Exception(f"Error while updating medication record: {e}")
 
-def delete_medication(medication_id: int, syntrillo_internal_key: str) -> bool:
+def delete_medication(syntrillo_internal_key: str, medication_id: str, healthie_medication_id: str) -> bool:
     """
     Deletes requested medication in both Healthie and Syntrillo's DB.
     CAUTION: This function will delete ALL records in Syntrillo's DB for the given medication_id.
@@ -207,7 +207,7 @@ def delete_medication(medication_id: int, syntrillo_internal_key: str) -> bool:
 
         # 1. Delete from Healthie
         healthie_medications = HealthieMedications()
-        data = healthie_medications.delete_medication(medication_id=medication_id)
+        data = healthie_medications.delete_medication(medication_id=healthie_medication_id)
 
         #  If error in the healthie API call
         if data.get("messages"):
@@ -215,7 +215,7 @@ def delete_medication(medication_id: int, syntrillo_internal_key: str) -> bool:
 
         # 2. If Healthie deletion successful, delete all records from Syntrillo's DB.
         db_manager = SyntrilloMedicationsDatabaseQueries()
-        is_delete_successful, log = db_manager.delete_medication_records(medication_id=str(medication_id))
+        is_delete_successful, log = db_manager.delete_patient_medication(medication_id=str(medication_id))
 
         if not log.get("success"):
             raise Exception(f"{log.get('error')}")
@@ -351,7 +351,7 @@ def merge_medication_old_new_record(incomplete_record: MedicationRecord) -> Medi
 
     db_manager = SyntrilloMedicationsDatabaseQueries()
     try:
-        medication_records, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key=syntrillo_internal_key)
+        medication_records, log = db_manager.get_patient_medications(syntrillo_internal_key=syntrillo_internal_key)
         if log.get("error"):
             err_msg = log.get("error")
             logger.error(f"Error while retrieving medication records from DB: {err_msg}")

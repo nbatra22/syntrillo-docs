@@ -102,7 +102,65 @@ class SyntrilloMedicationsDatabaseQueries:
             logger.error(f"An error occurred while fetching similar medication names: {e}")
             return []
 
-    def insert_common_medication_record(self, common_medication) -> Tuple[Optional[int], dict]:
+    def get_patient_medications(self, syntrillo_internal_key: str) -> Tuple[Dict[int, Dict[str, Any]], dict]:
+        """
+        Fetches and structures medication records for a patient.
+
+        The records are grouped by medication_id, with the most recent record
+        separated from its historical versions.
+
+        Args:
+            syntrillo_internal_key (str): Internal patient identifier.
+
+        Returns:
+            medications_data (Dict[int, Dict[str, Any]]): A dictionary where keys are medication_ids.
+                                    Each value contains the 'current' record
+                                    and a 'history' list of older records.
+            log (dict): The logs for the DB operation.
+        """
+        medications_data = {}
+
+        try:
+            with self.conn.cursor(DictCursor) as cursor:
+                query = """
+                    SELECT *
+                    FROM patient_medications
+                    WHERE syntrillo_internal_key = %s
+                    ORDER BY created_at ASC;
+                """
+                cursor.execute(query, (syntrillo_internal_key,))
+                records = cursor.fetchall() # Fetches all rows as a list of dicts
+
+                # Retrieve common medication info for each record
+                for record in records:
+                    healthie_medication_id = record['healthie_medication_id']
+                    common_medication_id = record['common_medication_id']
+
+                    # Fetch common medication details
+                    common_med_query = """
+                        SELECT *
+                        FROM common_medications
+                        WHERE id = %s;
+                    """
+                    cursor.execute(common_med_query, (common_medication_id,))
+                    common_med = cursor.fetchone()
+
+                    if common_med:
+                        record = {**record, **common_med}
+
+                    medications_data[healthie_medication_id] = record
+
+            log = {"success": True, "error": None}
+            return medications_data, log
+
+        except Exception as e:
+            self.conn.rollback()
+            logger.error(f"An error occurred: {e}")
+
+            log = {"success": False, "error": str(e)}
+            return {}, log
+
+    def insert_common_medication(self, common_medication) -> Tuple[Optional[int], dict]:
         """
         Insert a record taken from the Medications form into the common_medications table in DB.
 
@@ -112,7 +170,7 @@ class SyntrilloMedicationsDatabaseQueries:
             Tuple[Optional[int], dict]
         """
         data = common_medication.model_dump(exclude_none=True)
-        logger.info(f"Updating common medication for medication name: {common_medication.common_name}")
+        logger.info(f"Creating common medication for medication name: {common_medication.common_name}")
         try:
             self.conn.begin()
 
@@ -145,7 +203,7 @@ class SyntrilloMedicationsDatabaseQueries:
             logger.error("Error while updating common medication record in internal DB...")
             return None, log
 
-    def insert_medication_record(self, medication_record: MedicationRecord) -> Tuple[Optional[int], dict]:
+    def insert_patient_medication(self, medication_record: MedicationRecord) -> Tuple[Optional[int], dict]:
         """
         Insert a record taken from the Medications form into the medications_records table in DB.
 
@@ -155,8 +213,8 @@ class SyntrilloMedicationsDatabaseQueries:
             Tuple[Optional[int], dict]
         """
         data = medication_record.model_dump(exclude_none=True)
-        logger.info(f"Updating medication for medication id: {medication_record.medication_id}")
-        print("data:", data)
+        # logger.info(f"Creating medication for medication id: {medication_record.medication_id}")
+        # print("data:", data)
 
         processed = {}
         for k, v in data.items():
@@ -175,7 +233,7 @@ class SyntrilloMedicationsDatabaseQueries:
 
         try:
             # self.conn.begin()
-
+            logger.info(f"Inserting medication record into DB for medication: {medication_record}")
             with self.conn.cursor() as cursor:
                 # Use processed keys (the exact values we're sending) to build columns/placeholders
                 cols = ", ".join(processed.keys())
@@ -204,96 +262,51 @@ class SyntrilloMedicationsDatabaseQueries:
             logger.error("Error while updating medication record in internal DB...")
             return None, log
 
-
-    def get_medication_records_for_patient(self, syntrillo_internal_key: str) -> Tuple[Dict[int, Dict[str, Any]], dict]:
+    def update_patient_medication(self, id: int, updated_fields: Dict[str, Any]) -> Tuple[bool, dict]:
         """
-        Fetches and structures medication records for a patient.
-
-        The records are grouped by medication_id, with the most recent record
-        separated from its historical versions.
+        Update specific fields of a medication record in the medications_records table.
 
         Args:
-            syntrillo_internal_key (str): Internal patient identifier.
-
+            id (int): The unique identifier of the medication record to update.
+            updated_fields (Dict[str, Any]): A dictionary of fields to update with their new values.
         Returns:
-            medications_data (Dict[int, Dict[str, Any]]): A dictionary where keys are medication_ids.
-                                    Each value contains the 'current' record
-                                    and a 'history' list of older records.
-            log (dict): The logs for the DB operation.
+            Tuple[bool, dict]: A tuple containing a boolean indicating success (True) or failure (False),
+                               and a log dictionary with operation details.
         """
-        medications_data = {}
-
         try:
-            with self.conn.cursor(DictCursor) as cursor:
-                query = """
-                    SELECT *
-                    FROM patient_medications
-                    WHERE syntrillo_internal_key = %s
-                    ORDER BY medication_id, created_at DESC;
+            logger.info(f"Attempting to update medication record ID {id} with fields: {updated_fields}")
+            self.conn.begin()
+            with self.conn.cursor() as cursor:
+                # Build the SET clause dynamically based on updated_fields
+                set_clause = ", ".join([f"{key} = %s" for key in updated_fields.keys()])
+                sql = f"""
+                    UPDATE patient_medications
+                    SET {set_clause}
+                    WHERE id = %s;
                 """
-                cursor.execute(query, (syntrillo_internal_key,))
-                records = cursor.fetchall() # Fetches all rows as a list of dicts
-                print("records:", records)
-                # for record_tuple in records:
-                #     record_tuple = dict(zip(self.MED_DB_COLUMN_NAMES, record_tuple))
-                #     # Validate and convert the raw dictionary into a Pydantic model
-                #     record_obj = MedicationRecord.model_validate(record_tuple)
-                #     med_id = record_obj.medication_id
+                logger.info(f"Executing SQL: {sql} | params: {list(updated_fields.values()) + [id]}")
+                params = list(updated_fields.values()) + [id]
+                cursor.execute(sql, params)
 
-                #     # If we haven't seen this medication_id yet, this is the most recent record
-                #     # because of the ORDER BY clause.
-                #     if med_id not in medications_data:
-                #         medications_data[med_id] = {
-                #             "current": record_obj.model_dump(), # Use .model_dump() for serialization
-                #             "history": []
-                #         }
-                #     # If we have already seen this med_id, this record is an older one.
-                #     else:
-                #         medications_data[med_id]["history"].append(record_obj.model_dump())
-
-                # for row in records:
-                #     # Normalize to dict regardless of cursor type
-                #     if isinstance(row, dict):
-                #         record_dict = row
-                #     else:
-                #         record_dict = dict(zip(self.MED_DB_COLUMN_NAMES, row))
-
-                #     # Ensure JSON columns are proper Python lists before validation
-                #     for json_col in ("day_period", "day_of_week"):
-                #         val = record_dict.get(json_col)
-                #         if isinstance(val, str):
-                #             try:
-                #                 parsed = json.loads(val)
-                #                 record_dict[json_col] = parsed if isinstance(parsed, list) else []
-                #             except Exception:
-                #                 record_dict[json_col] = []
-                #         elif val is None:
-                #             record_dict[json_col] = []
-
-                #     # Validate/convert with Pydantic
-                #     record_obj = MedicationRecord.model_validate(record_dict)
-                #     med_id = record_obj.medication_id
-
-                #     if med_id not in medications_data:
-                #         medications_data[med_id] = {
-                #             "current": record_obj.model_dump(),
-                #             "history": []
-                #         }
-                #     else:
-                #         medications_data[med_id]["history"].append(record_obj.model_dump())
+            self.conn.commit()
 
             log = {"success": True, "error": None}
-            return records, log
+            logger.info(f"Successfully updated medication record ID {id} in internal DB...")
+            return True, log
+
+        except pymysql.MySQLError as e:
+            self.conn.rollback()
+            log = {"success": False, "error": str(e)}
+            logger.error(f"Error while updating medication record ID {medication_record_id} in internal DB...")
+            return False, log
 
         except Exception as e:
             self.conn.rollback()
-            logger.error(f"An error occurred: {e}")
-
             log = {"success": False, "error": str(e)}
-            return {}, log
+            logger.error(f"Error while updating medication record ID {medication_record_id} in internal DB...")
+            return False, log
 
-
-    def delete_medication_records(self, medication_id: str) -> Tuple[bool, dict]:
+    def delete_patient_medication(self, medication_id: str) -> Tuple[bool, dict]:
         """
         Deletes ALL records associated with a given medication_id.
 
@@ -312,7 +325,7 @@ class SyntrilloMedicationsDatabaseQueries:
             self.conn.begin()
             with self.conn.cursor() as cursor:
 
-                query = "DELETE FROM patient_medications WHERE medication_id = %s"
+                query = "DELETE FROM patient_medications WHERE id = %s"
                 # The execute method returns the number of affected rows
                 rows_affected = cursor.execute(query, (medication_id,))
 

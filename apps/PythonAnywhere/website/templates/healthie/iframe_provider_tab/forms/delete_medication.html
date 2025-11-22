@@ -1,0 +1,63 @@
+{% extends "healthie/iframe_provider_tab/forms/index_form.html" %}
+
+{% block extra_head %}
+    <style>
+        .disabled-button {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <form method="post" id="delete-medication-form" onsubmit="">
+        <div id="delete-medication-form-content" class="form-content">
+            <input type="hidden" id="delete-medication-id" name="syntrillo_id" value="">
+            <input type="hidden" id="delete-medication-healthie-id" name="healthie_id" value="">
+            <input type="hidden" id="delete-medication-name" name="medication_name" value="">
+            <p id="delete-medication-description" class="inputs-description">
+                <span><i class="fa-solid fa-circle-exclamation"></i></span> Deleting this medication will remove it permanantly from Syntrillo and Healthie's database. This action cannot be undone. To deactive, please edit the medication and set the active status to "No".
+            </p>
+            <div class="form-group">
+                <label id="delete-medication-confirmation-label"></label>
+                <input type="text" id="delete-medication-confirmation" placeholder="" required>
+            </div>
+        </div>
+
+        <div class="form-submit-footer">
+            <h3 id="delete-medication-error-message" class="error-message" style="display: none;"></h3>
+            <button type="submit" class="btn btn-danger" id="delete-medication-submit-button" disabled
+            onclick="event.preventDefault(); confirmDeleteMedication()">
+                Delete Medication
+            </button>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById('delete-medication-confirmation').addEventListener('input', function() {
+            if (this.value === `Delete ${document.getElementById('delete-medication-name').value}`) {
+                document.getElementById('delete-medication-submit-button').disabled = false;
+                document.getElementById('delete-medication-submit-button').classList.remove('disabled-button');
+            } else {
+                document.getElementById('delete-medication-submit-button').disabled = true;
+                document.getElementById('delete-medication-submit-button').classList.add('disabled-button');
+            }
+        });
+    </script>
+{% endblock %}

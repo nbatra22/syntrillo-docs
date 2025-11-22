@@ -102,16 +102,6 @@ CREATE TABLE IF NOT EXISTS module_label_look_up (
   module_id VARCHAR(255) NOT NULL
 );
 
--- DROP TABLE IF EXISTS patient_medications;
-CREATE TABLE IF NOT EXISTS patient_medications (
-    syntrillo_internal_key VARCHAR(255) NOT NULL,
-    med_name VARCHAR(255) NOT NULL,
-    med_dosage VARCHAR(255),
-    directions VARCHAR(255),
-    compliance VARCHAR(255),
-    PRIMARY KEY (syntrillo_internal_key, med_name)
-);
-
 CREATE TABLE IF NOT EXISTS billing_records (
     service_line_id VARCHAR(255) NOT NULL,
     claim_id VARCHAR(255) NOT NULL,
@@ -239,36 +229,18 @@ CREATE TABLE IF NOT EXISTS srs_independent_risk_values (
 CREATE TABLE IF NOT EXISTS common_medications (
   id VARCHAR(32) PRIMARY KEY, -- nanoid
   common_name VARCHAR(255) NOT NULL,
-  category ENUM(
-    'antiplatelet',
-    'antihypertensive',
-    'statin',
-    'hypoglycemic_agent',
-    'ace_inhibitor',
-    'arb',
-    'beta_blocker',
-    'calcium_channel_blocker',
-    'diuretic',
-    'vitamin',
-    'other'
-  ),
-  supercategory ENUM(
-    'blood_thinner',
-    'cholesterol_medication',
-    'diabetes_medication',
-    'blood_pressure_medication',
-    'other'
-  ),
+  category VARCHAR(255),
+  supercategory VARCHAR(255),
   category_custom VARCHAR(255),
   supercategory_custom VARCHAR(255),
   UNIQUE (common_name),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+-- DROP TABLE IF EXISTS patient_medications;
 -- Medications Records Table
 CREATE TABLE IF NOT EXISTS patient_medications (
-    medication_record_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+    id  VARCHAR(32) PRIMARY KEY, -- nanoid
 
     -- HEALTHIE FIELDS
     medication_name        VARCHAR(255) NOT NULL,
@@ -276,7 +248,7 @@ CREATE TABLE IF NOT EXISTS patient_medications (
     is_active              BOOLEAN NOT NULL DEFAULT TRUE,
     created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    dosage_option_id       VARCHAR(255) NOT NULL,
+    dosage_option_id       VARCHAR(255),
     start_date             DATE,
     end_date               DATE,
     comment                TEXT,
@@ -290,21 +262,13 @@ CREATE TABLE IF NOT EXISTS patient_medications (
         ON DELETE SET NULL
         ON UPDATE CASCADE,
 
-    delivery_method ENUM(
-        'cream',
-        'pill/tablet/capsule',
-        'implant',
-        'inhaler',
-        'suppositories',
-        'injection',
-        'other'
-    ),
-    dosing_schedule_rule ENUM('QD', 'BID', 'TID', 'QID', 'PRN'),
+    delivery_method VARCHAR(55),
+    dosing_schedule_rule VARCHAR(32),
     total_daily_dose FLOAT,
     dosage_amount FLOAT,
     dosage_unit VARCHAR(32),
     dose_count INT,
-    frequency ENUM('as-needed', 'hourly', 'daily', 'weekly', 'monthly', 'one-time'),
+    frequency VARCHAR(32),
     dosing_interval INT,
     time_of_day TIME,
 

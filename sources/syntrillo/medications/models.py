@@ -51,6 +51,8 @@ class DeliveryMethod(str, Enum):
 class DrugCategory(str, Enum): # Mechanism of Action (MOA)
     ANTI_PLATELET = "antiplatelet"
     ANTI_HYPERTENSIVE = "antihypertensive"
+    ANTI_COAGULANT = "anticoagulant"
+    ANTI_HISTAMINE = "antihistamine"
     STATIN = "statin"
     HYPOLYCEMIC_AGENT = "hypoglycemic_agent"
     ACE_INHIBITOR = "ace_inhibitor"
@@ -66,6 +68,7 @@ class DrugSupercategory(str, Enum):
     CHOLESTEROL_MEDICATION = "cholesterol_medication"
     DIABETES_MEDICATION = "diabetes_medication"
     BLOOD_PRESSURE_MEDICATION = "blood_pressure_medication"
+    PAIN_RELIEVER = "pain_reliever"
     OTHER = "other"
 
 class CommonMedication(BaseModel):
@@ -90,16 +93,18 @@ class MedicationRecord(BaseModel):
     This model validates the data type and constraints for one medication entry.
     """
     # Required Fields (NOT NULL)
+    id: str = Field(default_factory=lambda: generate(size=10))  # Unique nanoid
     syntrillo_internal_key: str = Field(..., max_length=255)
     medication_name: str = Field(..., max_length=255)
-    medication_id: int = 0
+    healthie_medication_id: int = 0
     is_active: bool = True
-    dosage_option_id: str = Field(default=None, max_length=255) # type: ignore # default=None bc. of merge_medication_records func.
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Nullable Fields
+    # dosage_option_id: Optional[str] = Field(default=None, max_length=255) # type: ignore # default=None bc. of merge_medication_records func.
+    dosage_option_id: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     comment: Optional[str] = None

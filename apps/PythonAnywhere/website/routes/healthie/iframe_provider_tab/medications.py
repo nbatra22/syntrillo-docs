@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
+from syntrillo.medications.helpers import sync_healthie_medications
 
 from .post_management import PostManager
 
@@ -11,6 +12,7 @@ from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
 from syntrillo.medications.models import MedicationRecord, CommonMedication
 from syntrillo.medications.utils import create_medication, update_medication, delete_medication, get_medication_info_by_keyword, get_common_medications_by_keyword, create_common_medication
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 iframe_healthie_provider_tab_medications_bp = Blueprint('iframe_healthie_provider_tab_medications_bp', __name__)
 
@@ -58,16 +60,43 @@ def iframe_healthie_provider_tab_active_medications():
     """
 
     try:
-        healthie_user_id = request.form.get('healthie_user_id')
-
         post_manager = PostManager()
         post_manager.get_pseudonyms_from_tab_post(request)
 
         syntrillo_internal_key = post_manager.syntrillo_internal_key
 
+        lookup_codes_manager = LookUpCodesManagement()
+        entry = lookup_codes_manager.retrieve_entry_by_internal_key(syntrillo_internal_key)
+
+        if entry is None:
+            raise Exception(f"No pseudonym entry found for internal key: {syntrillo_internal_key}")
+
+        healthie_user_id = entry.get('healthie_user_id')
+
         db_manager = SyntrilloMedicationsDatabaseQueries()
-        medications_data, log = db_manager.get_medication_records_for_patient(syntrillo_internal_key)
-        # print(f"***** MEDICATIONS DATA *****: {medications_data}")
+        medications_data, log = db_manager.get_patient_medications(syntrillo_internal_key)
+        syntrillo_medication_ids = set(medications_data.keys())
+
+        healthie_manager = HealthieMedications()
+        response, log_healthie = healthie_manager.list_user_medications(healthie_user_id, active=True)
+        healthie_medications = response.get('medications', []) if log_healthie['success'] else []
+        logger.info(f"Fetched {len(healthie_medications)} active medications from Healthie for user {healthie_user_id}")
+
+        if len(healthie_medications) > 0:
+            sync_log = sync_healthie_medications(
+                syntrillo_internal_key=syntrillo_internal_key,
+                healthie_medications=healthie_medications,
+                syntrillo_medication_ids=syntrillo_medication_ids
+            )
+
+            logger.info(f"Synced medications log: {sync_log}")
+
+            if sync_log['medications_added'] > 0:
+                # Refresh medications data after sync
+                refreshed_db_manager = SyntrilloMedicationsDatabaseQueries()
+                medications_data, log = refreshed_db_manager.get_patient_medications(syntrillo_internal_key)
+
+
         if log['success']:
             return jsonify({
                 'success': True,
@@ -261,49 +290,34 @@ def iframe_healthie_provider_tab_update_medication():
         post_manager.get_pseudonyms_from_tab_post(request)
 
         syntrillo_internal_key = post_manager.syntrillo_internal_key
+        syntrillo_medication_id = request.form.get('id')
 
-        medication_id = request.form.get('medication_id')
-        dosage_option_id = request.form.get('dosage_option_id')
-        mirrored = request.form.get('mirrored')
-        medication_name = request.form.get('medication_name')
-        # category = request.form.get('category')
-        is_active = True if request.form.get('is_active') == 'yes' else False
-        start_date = request.form.get('start_date')
-        end_date = request.form.get('end_date')
-        dosage_amount = request.form.get('dosage_amount')
-        dosage_unit = request.form.get('dosage_unit')
-        comment = request.form.get('comment')
-        directions = request.form.get('directions')
-        frequency = request.form.get('frequency')
-        dosing_interval = request.form.get('dosing_interval')
-        dosing_schedule_rule = request.form.get('dosing_schedule_rule')
-        dose_count = request.form.get('dose_count')
-        time_of_day = request.form.get('time_of_day')
+        updated_fields = {}
 
-        medication_record = MedicationRecord(
-            medication_id=medication_id,
-            syntrillo_internal_key=str(syntrillo_internal_key),
-            medication_name=medication_name,
-            # dosage_option_id=dosage_option_id,
-            # medication_category=medication_category,
-            is_active=is_active,
-            start_date=start_date,
-            end_date=end_date,
-            dosage_amount=dosage_amount,
-            dosage_unit=dosage_unit,
-            comment=comment,
-            directions=directions,
-            frequency=frequency,
-            dosing_interval=dosing_interval,
-            dosing_schedule_rule=dosing_schedule_rule,
-            dose_count=dose_count,
-            time_of_day=time_of_day,
-            mirrored=mirrored,
+        for field in [
+            'medication_name', 'dosage_option_id', 'mirrored', 'is_active',
+            'start_date', 'end_date', 'comment', 'directions', 'delivery_method',
+            'common_medication_id', 'dosing_schedule_rule', 'total_daily_dosage',
+            'dosage_amount', 'dosage_unit', 'dose_count', 'frequency',
+            'dosing_interval', 'time_of_day', 'day_period', 'day_of_week'
+        ]:
+            value = request.form.get(field)
+            if value is not None:
+                updated_fields[field] = value
+
+        db_manager = SyntrilloMedicationsDatabaseQueries()
+
+        response, log = db_manager.update_patient_medication(
+            id=syntrillo_medication_id,
+            updated_fields=updated_fields
         )
-        update_medication(medication_record)
+
+        if log['success']:
+            medications, log = db_manager.get_patient_medications(syntrillo_internal_key)
+
         return jsonify({
             'success': True,
-            'data': medication_record.model_dump()
+            'data': medications
         })
     except Exception as e:
         return jsonify({
@@ -320,8 +334,10 @@ def iframe_healthie_provider_tab_delete_medication():
         post_manager = PostManager()
         post_manager.get_pseudonyms_from_tab_post(request)
         syntrillo_internal_key = post_manager.syntrillo_internal_key
-        medication_id = request.form.get('medication_id')
-        delete_medication(medication_id, syntrillo_internal_key)
+        medication_id = request.form.get('id')
+        healthie_medication_id = request.form.get('healthie_medication_id')
+        delete_medication(syntrillo_internal_key, medication_id, healthie_medication_id)
+
         return jsonify({
             'success': True,
             'data': medication_id
