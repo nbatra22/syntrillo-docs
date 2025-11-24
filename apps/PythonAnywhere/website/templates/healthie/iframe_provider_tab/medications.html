@@ -467,6 +467,49 @@
                     <i class="fas fa-chevron-down"></i> <span>Show Legend</span>
                 </div>
             </button>
+            <!-- <div id="meds-view-toggle-container" class="">
+                <button id="meds-view-toggle" class="meds-header-button" onclick="toggleMedsView()">
+                    <i class="fa-solid fa-eye"></i>
+                    View
+                </button>
+                <div id="meds-view-options" class="meds-view-options hidden">
+                    <h4 class="meds-view-title">Filter:</h4>
+                    <ul id="meds-view-filter-options" class="meds-view-ul">
+                        <li class="meds-view-li" onclick="setMedsView('all')">
+                            <input type="radio" name="meds-view" value="all" id="meds-view-all">
+                            <label for="meds-view-all">All Medications</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsView('active')">
+                            <input type="radio" name="meds-view" value="active" id="meds-view-active" checked>
+                            <label for="meds-view-active">Active Medications</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsView('inactive')">
+                            <input type="radio" name="meds-view" value="inactive" id="meds-view-inactive">
+                            <label for="meds-view-inactive">Inactive Medications</label>
+                        </li>
+                    </ul>
+                    <h4 class="meds-view-title">Sort:</h4>
+                    <ul id="meds-view-sort-options" class="meds-view-ul">
+                        <li class="meds-view-li" onclick="setMedsSort('start_date_desc')">
+                            <input type="radio" name="meds-sort" value="start_date_desc" id="meds-sort-start-date-desc" checked>
+                            <label for="meds-sort-start-date-desc">Start Date (Newest)</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsSort('start_date_asc')">
+                            <input type="radio" name="meds-sort" value="start_date_asc" id="meds-sort-start-date-asc">
+                            <label for="meds-sort-start-date-asc">Start Date (Oldest)</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsSort('name_asc')">
+                            <input type="radio" name="meds-sort" value="name_asc" id="meds-sort-name-asc">
+                            <label for="meds-sort-name-asc">Name (A-Z)</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsSort('name_desc')">
+                            <input type="radio" name="meds-sort" value="name_desc" id="meds-sort-name-desc">
+                            <label for="meds-sort-name-desc">Name (Z-A)</label>
+                        </li>
+                    </ul>
+                </div>
+            </div> -->
+            <!-- <div style="flex-grow: 1;"></div> -->
         </div>
     </section>
 
@@ -576,6 +619,8 @@
     var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     let currentMedication = null;
+    let allMedications = {};
+    let displayedMedications = [];
 
     function toggleLegend() {
         const legendContainerWrapper = document.getElementById('medication-legend-container-wrapper');
@@ -602,6 +647,16 @@
         } else {
             extraInfoContainer.style.display = 'none';
         }
+    }
+
+    function setMedsSort(sortOption) {
+        // Implement sorting logic here
+        console.log("Sorting medications by:", sortOption);
+    }
+
+    function setMedsFilter(filterOption) {
+        // Implement filtering logic here
+        console.log("Filtering medications by:", filterOption);
     }
 
     function openMedicationsModal(formType, medication = null) {
