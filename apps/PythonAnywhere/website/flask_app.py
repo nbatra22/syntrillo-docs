@@ -85,8 +85,10 @@ app.register_blueprint(iframe_healthie_provider_sidebar_system_bp)
 
 # ----------- patient sidebar ---------------------
 from routes.healthie.iframe_patient_sidebar.index import iframe_healthie_patient_sidebar_bp
+from routes.healthie.iframe_patient_sidebar.data import iframe_healthie_patient_sidebar_data_bp
 
 app.register_blueprint(iframe_healthie_patient_sidebar_bp)
+app.register_blueprint(iframe_healthie_patient_sidebar_data_bp)
 
 # ==================================================================================================================
 # Jinja2 filters

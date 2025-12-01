@@ -46,7 +46,9 @@ def iframe_healthie_patient_sidebar():
         else:
             # healthie_user_id = '-1'
             # healthie_user_id = "1035117" # with onboarding forms
-            healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "1209727" # with syntrillo_internal_key
+            healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
+            # healthie_user_id = "2315391" # Bob Barker
             # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
             # healthie_user_id = "dummy456456" # without syntrillo_internal_key
             # healthie_user_id = "1051529" # Omar's "Patient One" with devices
@@ -71,7 +73,7 @@ def iframe_healthie_patient_sidebar():
         temporary_lookup_code = temporary_lookup_codes_management.create_temporary_pseudo_code(
             syntrillo_internal_key=syntrillo_internal_key,
             purpose=TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME
-            )
+        )
     else:
         temporary_lookup_code = None
 
@@ -114,6 +116,4 @@ def iframe_healthie_patient_sidebar():
             patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
             healthie_user_id=healthie_user_id,
             temporary_lookup_code=temporary_lookup_code
-            )
-
-
+        )
