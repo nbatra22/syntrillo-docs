@@ -215,7 +215,6 @@ def iframe_healthie_provider_tab_download_bp_pdf():
 
     # Obtain form variables
     file_name = request.form.get("file-name").strip() or "BP-report.pdf"
-    report_title = request.form.get("report-title") or "Blood Pressure"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
@@ -233,7 +232,6 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     # Establish connection to BloodPressureAnalysis class
     bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
     summary_stats = bp_analysis.calculate_summary_stats(hide_intervention=True)
-    # bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
 
     bp_report_manager = BloodPressureReport(
         logo=None,

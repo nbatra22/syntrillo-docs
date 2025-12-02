@@ -507,9 +507,9 @@
                     <p class="bp-summary-targets-value">
                         Symptomatic Hypotensive Episodes: 0
                     </p>
-                    <p class="bp-summary-targets-value">
+                    <!-- <p class="bp-summary-targets-value">
                         Near-Hypotensive Episodes: 0
-                    </p>
+                    </p> -->
                 </div>
             </div>
             <div id="bp-summary-right-container" class="bp-summary-subcontainer">
@@ -550,12 +550,12 @@
                             Symptomatic Hypotensive Episodes: <span id="bp-summary-symptomatic-hypotension-count"></span>
                         </p>
                     </div>
-                    <div class="bp-summary-metric-container">
+                    <!-- <div class="bp-summary-metric-container">
                         <span id="bp-summary-near-hypotensive-grade"></span>
                         <p class="bp-summary-metrics-value">
                             Near-Hypotensive Episodes: <span id="bp-summary-near-hypotensive-count"></span>
                         </p>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -920,7 +920,7 @@
                     document.getElementById("bp-summary-peak-sbp").textContent = data.summary_stats.peak_sbp.value;
                     document.getElementById("bp-summary-low-sbp").textContent = data.summary_stats.low_sbp.value;
                     document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = data.summary_stats.symptomatic_hypotension.value;
-                    document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
+                    // document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
 
                     const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: red;"></i>`
                     const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: orange;"></i>`
@@ -932,7 +932,7 @@
                     document.getElementById("bp-summary-peak-sbp-grade").innerHTML = data.summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-low-sbp-grade").innerHTML = data.summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = data.summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? orangeExclamation : greenCheck;
+                    // document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? orangeExclamation : greenCheck;
 
                     document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
                     document.getElementById("bp-summary-metrics-container").style.display = "flex";
