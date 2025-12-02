@@ -1,5 +1,6 @@
 import uuid
 import pandas as pd
+import re
 from datetime import datetime, timezone
 from typing import Tuple
 import textwrap
@@ -9,9 +10,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
-import plotly.io as pio
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 matplotlib.use('Agg')
 
@@ -356,7 +354,7 @@ class BloodPressureAnalysis:
         return data
 
 
-    def calculate_summary_stats(self) -> dict:
+    def calculate_summary_stats(self, hide_intervention = True) -> dict:
         """
         Calculate summary statistics from data.
 
@@ -365,8 +363,8 @@ class BloodPressureAnalysis:
             AVG_SBP: {
                 0: (0, 125),
                 1: (125, 130),
-                2: (130, 140),
-                3: (140, 300),
+                2: (130, 135),
+                3: (135, 300),
             },
             AVG_DBP: {
                 0: (0, 80),
@@ -374,14 +372,21 @@ class BloodPressureAnalysis:
                 3: (90, 200),
             },
             PEAK_SBP: 165,
-            LOW_SBP: 95,
+            LOW_SBP: 90,
         }
 
-        status_message = {
+        status_message_with_intervention = {
             0: "Optimal",
             1: "Within Target - Minor Adjustment",
             2: "Out of Target - Moderate Intervention",
             3: "Out of Target - Aggressive Intervention",
+        }
+
+        status_message_without_intervention = {
+            0: "Optimal",
+            1: "Within Target",
+            2: "Out of Target",
+            3: "Out of Target",
         }
 
         if self.metadata is None:
@@ -513,7 +518,7 @@ class BloodPressureAnalysis:
         else:
             data["peak_sbp"]['grade'] = 0
 
-        if low_sbp <= thresholds[LOW_SBP]:
+        if low_sbp < thresholds[LOW_SBP]:
             data["low_sbp"]['grade'] = 3
         else:
             data["low_sbp"]['grade'] = 0
@@ -524,9 +529,11 @@ class BloodPressureAnalysis:
             data["avg_dbp"]['grade'],
             data["peak_sbp"]['grade'],
             data["low_sbp"]['grade'],
-            data["symptomatic_hypotension"]['grade'],
-            data["near_hypotensive"]['grade']
+            data["symptomatic_hypotension"]['grade']
+            # data["near_hypotensive"]['grade'] # removed as of 12/25
         )
+
+        status_message = status_message_with_intervention if not hide_intervention else status_message_without_intervention
         data["status"]['value'] = status_message[data["status"]['grade']]
 
         return data
@@ -1039,144 +1046,194 @@ class BloodPressureAnalysis:
         """Manually inserts line breaks to wrap text in table headers."""
         return "\n".join(textwrap.wrap(text, width))
 
-    @staticmethod
-    def save_to_pdf(analysis, extremes, report_title="Report"):
-        """
-        Saves analysis and extremes tables as a PDF with conditional cell coloring.
-        :param analysis: DataFrame containing analysis data
-        :param extremes: DataFrame containing extreme values
-        :param report_title: Title for the report
-        :return: BytesIO buffer containing the PDF
-        """
-        pdf_buffer = io.BytesIO()  # Create an in-memory buffer
+    def save_to_pdf(self, analysis: pd.DataFrame, extremes: pd.DataFrame, report_title="Report"):
+        pdf_buffer = io.BytesIO()
+
+         # Footnote / superscript characters to strip anywhere in the cell
+        _FOOTNOTE_CHARS_PATTERN = re.compile(r'[\*\†\‡\¹\²\³\⁴\⁵\⁶\⁷\⁸\⁹\⁰]+')
+
+        def clean_cell(v):
+            if v is None:
+                return ""
+            if isinstance(v, str):
+                # Remove ANY occurrence of footnote markers or superscript digits
+                v = _FOOTNOTE_CHARS_PATTERN.sub('', v).strip()
+            elif isinstance(v, (int, float)):
+                v = f"{v:.4f}".rstrip('0').rstrip('.')
+            return str(v)
+
+        def style_table(table):
+            # Apply styling to the matplotlib table
+            for (r, c), cell in table.get_celld().items():
+                if r == 0:
+                    cell.set_facecolor("lightgray")  # distinct blue header
+                    cell.set_text_props(weight='bold')  # bold header
+                elif c == 0:
+                    cell.set_fontsize(9)
+                    cell.set_text_props(weight='bold')  # bold metric names
+
+            return table
+
+        # Work on a copy
+        pruned = analysis.copy()
+
+        # Drop columns containing "Since"
+        cols_to_drop = [c for c in pruned.columns if "Since" in c]
+        pruned.drop(columns=cols_to_drop, inplace=True, errors='ignore')
+
+        # Drop rows containing specified keywords
+        rows_delete_keywords = ['Progress', 'Engagement', 'Near']
+        rows_to_drop = [idx for idx in pruned.index if any(kw in str(idx) for kw in rows_delete_keywords)]
+        pruned.drop(index=rows_to_drop, inplace=True, errors='ignore')
+
+        # Rebuild cleaned display dataframe
+        display_df = pruned.reset_index().apply(lambda s: s.map(clean_cell))
+        table_data = display_df.values.tolist()
+        col_labels = ['Metric'] + list(pruned.columns)
 
         with PdfPages(pdf_buffer) as pdf:
-            wrapped_col_labels = ['Metric'] + list(analysis.columns)
+            # === Summary page (distinct styling) ===
+            summary_stats = self.calculate_summary_stats()
+            if summary_stats:
+                # Define display order and labels
+                label_map = {
+                    "date_range": "Date Range",
+                    "status": "Status",
+                    "avg_sbp": "Avg SBP (mmHg)",
+                    "avg_dbp": "Avg DBP (mmHg)",
+                    "peak_sbp": "Peak SBP (mmHg)",
+                    "low_sbp": "Low SBP (mmHg)",
+                    "symptomatic_hypotension": "Symptomatic Hypotension (# of episodes)",
+                    # "near_hypotensive": "Near-Hypotensive (# of episodes)"
+                }
+                # Targets to mirror the UI targets in #bp-summary-targets-container
+                target_map = {
+                    "avg_sbp": "Less than 125 mmHg",
+                    "avg_dbp": "Less than 80 mmHg",
+                    "peak_sbp": "Less than 165 mmHg",
+                    "low_sbp": "Greater than 90 mmHg",
+                    "symptomatic_hypotension": "0 episodes",
+                    # "near_hypotensive": "0 episodes",
+                }
+                order = [
+                    "date_range",
+                    "status",
+                    "avg_sbp",
+                    "avg_dbp",
+                    "peak_sbp",
+                    "low_sbp",
+                    "symptomatic_hypotension",
+                    # "near_hypotensive",
+                ]
 
-            # Create figure for analysis table
-            fig, ax = plt.subplots(figsize=(10, 6))
+                rows = []
+                for key in order:
+                    if key not in summary_stats:
+                        continue
+                    label = label_map.get(key, key)
+                    val = summary_stats[key]
+                    # Values may be plain or {"value": ..., "grade": ...}
+                    value_str = clean_cell(val.get("value")) if isinstance(val, dict) else clean_cell(val)
+                    target_str = target_map.get(key, "")
+                    rows.append([label, target_str, value_str])
+
+                fig_s, ax_s = plt.subplots(figsize=(8.5, 11))  # portrait (letter size)
+                ax_s.axis('off')
+                ax_s.axis('tight')
+                table_s = ax_s.table(
+                    cellText=rows,
+                    colLabels=["Metric", "Targets", "Value"],
+                    cellLoc='center',
+                    loc='upper center'  # place table higher on page
+                )
+                table_s.auto_set_font_size(False)
+                table_s.set_fontsize(10)
+                table_s.scale(1, 1.8)  # taller rows for readability
+
+                # Distinct header color + bold
+                table_s = style_table(table_s)
+
+                # Title with custom styling
+                ax_s.set_title(f"{report_title} - Summary", fontsize=14, weight='bold', pad=20)
+
+                # Add a horizontal line below title for visual separation
+                # Draw horizontal line in axes coordinates (below title)
+                ax_s.plot([0, 1], [0.95, 0.95], color='gray', linewidth=1.5, transform=ax_s.transAxes, clip_on=False)
+
+                pdf.savefig(fig_s, bbox_inches='tight')
+                plt.close(fig_s)
+
+            # === Analysis/Metrics page (standard styling) ===
+            fig, ax = plt.subplots(figsize=(11, 8.5))  # landscape for wide metrics table
             ax.axis('off')
             ax.axis('tight')
 
-            # Convert DataFrame to a 2D list for the table
-            table_data = analysis.reset_index().values.tolist()
+            table_a = ax.table(
+                cellText=table_data,
+                colLabels=col_labels,
+                cellLoc='center',
+                loc='center'
+            )
+            table_a.auto_set_font_size(False)
+            table_a.set_fontsize(8)
+            table_a.scale(1.2, 1.2)
 
-            # Create the table
-            table = ax.table(cellText=table_data,
-                            colLabels=wrapped_col_labels,
-                            cellLoc='center', loc='center')
+            # Standard gray header
+            table = style_table(table_a)
 
-            table.auto_set_font_size(False)
-            table.scale(1.2, 1.2)
+            ax.set_title(report_title, fontsize=12, weight='bold')
 
-            # Regex pattern to detect only `+`, `-`, or `=`
-            trend_symbol_pattern = re.compile(r'^[+=/-]+$')
-
-            # Apply cell color logic
-            for (row, col), cell in table.get_celld().items():
-                if row == 0:  # Header row
-                    cell.set_fontsize(8)
-                    cell.set_facecolor("lightgray")
-                elif col == 0:  # Row labels
-                    cell.set_fontsize(8)
-                else:  # Data cells
-                    metric = analysis.index[row - 1] if row > 0 else None
-                    value = analysis.iloc[row - 1, col - 1] if row > 0 and col > 0 else None
-
-                    # Ensure `value` is a valid string before calling `.strip()`**
-                    if isinstance(value, str):
-                        value = value.strip()
-
-                        # Skip styling if the cell is empty or contains only `+`, `-`, `=`**
-                        if value == "" or trend_symbol_pattern.fullmatch(value):
-                            continue  # Leave these cells white (default)
-
-                        # Convert string-based numbers to numeric values safely
-                        value = pd.to_numeric(value.replace('+', '').replace('-', '').replace('/', '').replace('=', ''), errors='coerce')
-
-                    # *Skip `None` values completely (leave them white)**
-                    if value is None or pd.isna(value):
-                        continue
-
-                    # Default cell color
-                    color = "white"
-
-                    # Apply color coding for specific metrics
-                    if metric == 'Avg SBP (mmHg)':
-                        color = 'lightgreen' if value < 130 else 'yellow' if value <= 139 else 'lightcoral'
-                    elif metric == 'Avg DBP (mmHg)':
-                        color = 'lightgreen' if value < 80 else 'yellow' if value <= 89 else 'lightcoral'
-                    elif metric == 'SBP SD (mmHg)':
-                        color = 'lightgreen' if value < 7.5 else 'yellow' if value < 15 else 'lightcoral'
-                    elif metric == 'DBP SD (mmHg)':
-                        color = 'lightgreen' if value < 5 else 'yellow' if value < 11.5 else 'lightcoral'
-                    elif metric == 'SBP CV (%)':
-                        color = 'lightgreen' if value < 5.5 else 'yellow' if value < 11 else 'lightcoral'
-                    elif metric == 'DBP CV (%)':
-                        color = 'lightgreen' if value < 6 else 'yellow' if value < 13 else 'lightcoral'
-                    elif metric == 'Peak SBP² (mmHg)':
-                        color = 'lightgreen' if value < 170 else 'lightcoral'
-                    elif metric == 'Peak DBP² (mmHg)':
-                        color = 'lightgreen' if value < 110 else 'lightcoral'
-
-                    cell.set_facecolor(color)
-
-            ax.set_title(report_title)
-
-            # Dynamically position footnotes below the table
-            table_bbox = table.get_window_extent(ax.figure.canvas.get_renderer()).transformed(ax.transAxes.inverted())
-            table_bottom = table_bbox.y0  # Get table's bottom y-coordinate
-            footnote_y_offset = 0.03  # Space between table and footnotes
-
-            # ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹
+            # Footnotes below table
             footnotes = [
-                '¹ "+" or "-" indicates the progress point allocation. "=" or blank cells indicate no points were allocated for the respective metric.',
-                "² 'Peak' values represent the average of the three highest values in the timeframe.",
-                "³ 'Low' values represent the single lowest value in the timeframe.",
-                "⁴ 'Hypotensive Count' indicates the number of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
+                "- 'Peak' values represent the average of the three highest values in the timeframe.",
+                "- 'Low' values represent the average of the three lowest values in the timeframe.",
+                "- 'Hypotensive Count' indicates the number of systolic BP values <= 95 mmHg with a hypothetical average decrease of 5 mmHg."
             ]
-
-            # Add footnotes below the table
+            table_bbox = table.get_window_extent(ax.figure.canvas.get_renderer()).transformed(ax.transAxes.inverted())
+            y0 = table_bbox.y0
+            offset = 0.03
             for i, text in enumerate(footnotes):
-                ax.text(0, table_bottom - (i + 1) * footnote_y_offset, text,
-                        fontsize=8, transform=ax.transAxes, ha='left', va='top')
+                ax.text(0, y0 - (i + 1) * offset, text, fontsize=7, transform=ax.transAxes, ha='left', va='top')
 
-            pdf.savefig(fig)
+            pdf.savefig(fig, bbox_inches='tight')
             plt.close(fig)
 
-            # Handle extremes table
+            # === Extremes pages (existing code unchanged) ===
             if extremes.empty:
                 fig, ax = plt.subplots(figsize=(10, 6))
                 ax.axis('off')
-                ax.axis('tight')
-                ax.text(0.5, 0.5, 'No extreme values found', transform=ax.transAxes, ha='center', va='center')
+                ax.text(0.5, 0.5, 'No extreme values found', ha='center', va='center', transform=ax.transAxes)
                 ax.set_title(f"{report_title} - Extremes")
                 pdf.savefig(fig)
                 plt.close(fig)
             else:
                 rows_per_page = 25
-                total_rows = len(extremes)
-                num_pages = (total_rows // rows_per_page) + (1 if total_rows % rows_per_page != 0 else 0)
-
-                for page in range(num_pages):
-                    start_row = page * rows_per_page
-                    end_row = min(start_row + rows_per_page, total_rows)
+                total = len(extremes)
+                pages = (total + rows_per_page - 1) // rows_per_page
+                for p in range(pages):
+                    sl = slice(p * rows_per_page, min((p + 1) * rows_per_page, total))
+                    subset = extremes.iloc[sl]
                     fig, ax = plt.subplots(figsize=(10, 6))
                     ax.axis('off')
                     ax.axis('tight')
-
-                    subset = extremes.iloc[start_row:end_row]
-                    ax.table(cellText=subset.values,
-                            colLabels=['Date', 'Systolic BP', 'Diastolic BP'],
-                            cellLoc='center', loc='center')
-
-                    ax.set_title(f"{report_title} - Extremes (Page {page + 1} of {num_pages})")
+                    table_e = ax.table(
+                        cellText=subset.values,
+                        colLabels=subset.columns.tolist(),
+                        cellLoc='center',
+                        loc='center'
+                    )
+                    # Set column header cell color
+                    # No colorization - just set font sizes
+                    table_e = style_table(table_e)
+                    ax.set_title(f"{report_title} - Extremes (Page {p + 1} of {pages})")
                     pdf.savefig(fig)
                     plt.close(fig)
 
-        pdf_buffer.seek(0)  # Reset buffer position to the beginning
+        pdf_buffer.seek(0)
         return pdf_buffer
 
+    def generate_bp_report(self):
+        return
 
     def get_time_distribution_graph(self) -> str:
         if self.bpm_df is None or self.bpm_df.empty:

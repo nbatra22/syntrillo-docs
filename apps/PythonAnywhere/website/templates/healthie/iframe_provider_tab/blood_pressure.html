@@ -641,7 +641,7 @@
                                 Download file name will default to "BP-Report.pdf" if value is blank.
                             </p>
                         </div>
-                        <div id="bp-form-title-container" class="bp-form-input-container">
+                        <!-- <div id="bp-form-title-container" class="bp-form-input-container">
                             <label for="file-name" class="">
                                 Title
                             </label>
@@ -651,10 +651,13 @@
                                 <i class="fa-solid fa-circle-info"></i>
                                 Report title will default to "Blood Pressure Analysis" if value is blank.
                             </p>
-                        </div>
+                        </div> -->
                         <div id="hidden-inputs" class="hidden">
+                            <input type="hidden" name="temporary_lookup_code" id="temporary_lookup_code"
+                                value="{{ temporary_lookup_code }}" />
                             <input type="hidden" name="analysis_json" id="analysis_json" value="{{ analysis_json }}" />
                             <input type="hidden" name="extremes_json" id="extremes_json" value="{{ extremes_json }}" />
+                            <!-- <input type="hidden" name="summary_stats" id="summary-stats" value="{{ summary_stats }}" /> -->
                         </div>
                         <button type="submit" class="bp-form-submit-button" id="bp-download-button">
                             <span class="icon-container">

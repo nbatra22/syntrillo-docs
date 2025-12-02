@@ -1,13 +1,18 @@
-from flask import Blueprint, render_template, request, jsonify, abort, send_file
+from flask import Blueprint, render_template, request, jsonify, abort, send_file, current_app
 import pandas as pd
 import io
+from io import BytesIO
+import os
 from datetime import datetime
+
 
 from .post_management import PostManager
 
 from syntrillo.api_healthie.constants import RHR_CATEGORY, WEIGHT_CATEGORY
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
+from syntrillo.bp_analysis.bp_report import BloodPressureReport
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
@@ -109,7 +114,7 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     # Generate analysis + extremes table using BloodPressureAnalysis class methods
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
-    summary_stats = data_reporting_blood_pressure.calculate_summary_stats() # Calculates summary stats for each timeframe
+    summary_stats = data_reporting_blood_pressure.calculate_summary_stats(hide_intervention=False) # Calculates summary stats for each timeframe
     analysis_table = data_reporting_blood_pressure.get_analysis_table() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
 
@@ -210,14 +215,34 @@ def iframe_healthie_provider_tab_download_bp_pdf():
 
     # Obtain form variables
     file_name = request.form.get("file-name").strip() or "BP-report.pdf"
-    report_title = request.form.get("report-title") or "Blood Pressure Analysis"
+    report_title = request.form.get("report-title") or "Blood Pressure"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
-    # Establish connection to BloodPressureAnalysis class
-    data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
+    # Retrieve logo path
+    logo_filename = "syntrillo_logo.png"
+    logo_path = os.path.join(current_app.static_folder, logo_filename)
+    if not os.path.exists(logo_path):
+        logger.warning(f"Logo not found at {logo_path}; proceeding without logo.")
+        logo_path = None
 
-    bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
+    # Retrieve patient info from Healthie
+    healthie_user = HealthieUser(post_manager.pseudonyms['healthie_user_id'])
+    patient_info = healthie_user._patient_information
+
+    # Establish connection to BloodPressureAnalysis class
+    bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
+    summary_stats = bp_analysis.calculate_summary_stats(hide_intervention=True)
+    # bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
+
+    bp_report_manager = BloodPressureReport(
+        logo=None,
+        patient_info_dict=patient_info,
+        summary_dict=summary_stats,
+        timeframed_df=analysis,
+        extremes_df=extremes
+    )
+    bp_pdf = bp_report_manager.generate_pdf_report()
 
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
 
