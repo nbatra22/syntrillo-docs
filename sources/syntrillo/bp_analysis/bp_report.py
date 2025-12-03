@@ -32,17 +32,21 @@ class BloodPressureReport:
         doc = SimpleDocTemplate(
             pdf_buffer,
             pagesize=letter,
-            topMargin=60,     # space for header block (~40pt) plus padding
-            bottomMargin=78,  # space for line, footer paragraph, and page number
+            topMargin=72,     # normal space for header
+            bottomMargin=32,  # space for line, footer paragraph, and page number
             leftMargin=32,
             rightMargin=32
         )
 
         elements = []
-        # Header/footer will be drawn by onFirstPage/onLaterPages; content frame respects margins
+
+        # First page: intro section with access code and message
+        elements.extend(self._build_intro_section())
+
+        # Content sections
         elements.extend(self._build_summary_section())
-        elements.extend(self._build_analysis_section())
         elements.append(PageBreak())
+        elements.extend(self._build_analysis_section())
         elements.extend(self._build_extremes_section())
 
         # Ensure header/footer on every page
@@ -55,19 +59,158 @@ class BloodPressureReport:
         pdf_buffer.seek(0)
         return pdf_buffer
 
+    def _build_intro_section(self):
+        """
+        Build the intro section that appears only on the first page.
+        Contains access code, contact info, main message, referral info, and signature.
+        """
+        story = []
+        styles = getSampleStyleSheet()
+
+        # Access code and website (two columns)
+        access_style = ParagraphStyle(
+            name="Access",
+            parent=styles["Normal"],
+            fontSize=10,
+            leftIndent=0,
+            firstLineIndent=0,
+        )
+
+        access_code_para = Paragraph(
+            f"<b>Access Code:</b> <font name='Courier-Bold'>{self.report_code}</font>",
+            access_style
+        )
+        website_para = Paragraph(
+            "<b>Website:</b> https://www.syntrillo.com/providers",
+            access_style
+        )
+
+        # Phone and email (two columns)
+        phone_para = Paragraph("<b>Phone:</b> 434-202-3450", access_style)
+        email_para = Paragraph("<b>Email:</b> providers@syntrillo.com", access_style)
+
+        contact_table = Table(
+            [
+                [access_code_para, website_para],
+                [phone_para, email_para]
+            ],
+            colWidths=[275, 275],
+            style=[
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("ALIGN", (0, 0), (0, -1), "LEFT"),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+        story.append(contact_table)
+        story.append(Spacer(1, 12))
+
+        # Main message paragraph
+        message_style = ParagraphStyle(
+            name="IntroMessage",
+            parent=styles["Normal"],
+            fontSize=10,  # increased from 8
+            leftIndent=0,
+            firstLineIndent=0,
+            leading=12,
+        )
+
+        main_message = (
+            f"I've included an up-to-date blood pressure report for our mutual patient. If you would like to "
+            f"continue to receive blood pressure reports, you can text us at 434-202-3450 or email us at "
+            f"providers@syntrillo.com with the following code <font name='Courier-Bold'>{self.report_code}</font> "
+            f"and the frequency you prefer the reports sent (e.g. monthly). Please do not share any Personally "
+            f"Identifiable Information in the text or email."
+        )
+
+        message_table = Table(
+            [[Paragraph(main_message, message_style)]],
+            colWidths=[550],
+            style=[
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+        story.append(message_table)
+        story.append(Spacer(1, 12))
+
+        # Referral paragraph
+        referral_message = (
+            "If you have other patients who may benefit from our service, whether stroke survivors or other "
+            "high risk patients, you can refer them through our website- https://www.syntrillo.com/providers."
+        )
+
+        referral_table = Table(
+            [[Paragraph(referral_message, message_style)]],
+            colWidths=[550],
+            style=[
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+        story.append(referral_table)
+        story.append(Spacer(1, 12))
+
+        # Signature
+        signature_style = ParagraphStyle(
+            name="Signature",
+            parent=styles["Normal"],
+            fontSize=10,
+            leftIndent=0,
+            firstLineIndent=0,
+        )
+
+        signature_table = Table(
+            [
+                [Paragraph("Mark McDonald, MD, MS", signature_style)],
+                [Paragraph("Neurologist at Syntrillo", signature_style)]
+            ],
+            colWidths=[550],
+            style=[
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]
+        )
+        story.append(signature_table)
+
+        # Separator line
+        separator_line = Table(
+            [[""]],
+            colWidths=[550],
+            style=[
+                ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.black),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+        story.append(separator_line)
+        story.append(Spacer(1, 18))
+
+        return story
+
     def _draw_header_footer(self, canvas, doc):
         """
-        Draw header and footer on every page using canvas text (no tables).
+        Draw simple header and footer on every page.
         - Header stays within top margin and does not overlap content
         - Header/footer use doc.leftMargin/doc.width (same as inner content)
-        - Footer line is above footer text and aligned to content width
-        - Page number is centered below footer with spacing
+        - Page number is centered at bottom
         """
         left = doc.leftMargin
         right = doc.leftMargin + doc.width
 
-        # Header block inside top margin
-        header_block_h = 54
+        # Header block
+        header_block_h = 60
         page_top_y = doc.bottomMargin + doc.height + doc.topMargin
         y1 = page_top_y - header_block_h + 22  # first header line
         y2 = page_top_y - header_block_h + 8   # second header line
@@ -79,13 +222,11 @@ class BloodPressureReport:
         dob = (self.patient_info_dict or {}).get("dob") or "N/A"
 
         canvas.saveState()
+
+        # Line 1: Title and Patient
         canvas.setFont("Helvetica-Bold", 12)
         canvas.drawString(left, y1, "Syntrillo - Blood Pressure Report")
-        canvas.setFont("Helvetica", 10)
-        canvas.drawString(left, y2, f"As of {today_str}")
         if patient_name:
-            # Draw bold label + regular value aligned to the right
-            # Patient line
             label = "Patient: "
             canvas.setFont("Helvetica-Bold", 10)
             label_width = canvas.stringWidth(label, "Helvetica-Bold", 10)
@@ -95,7 +236,10 @@ class BloodPressureReport:
             canvas.setFont("Helvetica", 10)
             canvas.drawString(x + label_width, y1, patient_name)
 
-            # DOB line
+        # Line 2: Date and DOB
+        canvas.setFont("Helvetica", 10)
+        canvas.drawString(left, y2, f"As of {today_str}")
+        if patient_name:
             label = "DOB: "
             canvas.setFont("Helvetica-Bold", 10)
             label_width = canvas.stringWidth(label, "Helvetica-Bold", 10)
@@ -104,47 +248,18 @@ class BloodPressureReport:
             canvas.drawString(x, y2, label)
             canvas.setFont("Helvetica", 10)
             canvas.drawString(x + label_width, y2, dob)
+
         canvas.restoreState()
 
-        # Header line below header block
-        line_y = page_top_y - header_block_h + 4
+        # Header line below entire header block
+        line_y = page_top_y - header_block_h
         canvas.saveState()
         canvas.setLineWidth(0.5)
         canvas.line(left, line_y, right, line_y)
         canvas.restoreState()
 
-        # Footer line above text, aligned to content width
-        line_y = doc.bottomMargin - 12
-        canvas.saveState()
-        canvas.setLineWidth(0.5)
-        canvas.line(left, line_y, right, line_y)
-        canvas.restoreState()
-
-        # Footer paragraph wrapped to content width, placed below the line
-        footer_text = (
-            f"If you would like to continue to receive blood pressure reports, text (434) 202-3450 or email "
-            f"providers@syntrillo.com with code <b>{self.report_code}</b> and preferred frequency (e.g., monthly). "
-            f"Please do not share any Personally Identifiable Information via text or email. If you would like to refer patients to us, you can "
-            f"do so through our website at www.syntrillo.com/providers."
-        )
-        styles = getSampleStyleSheet()
-        footer_style = ParagraphStyle(
-            name="Footer",
-            parent=styles["Normal"],
-            alignment=TA_LEFT,
-            fontSize=8,
-            leftIndent=0,
-            firstLineIndent=0,
-            spaceBefore=0,
-            spaceAfter=0,
-        )
-        footer_para = Paragraph(footer_text, footer_style)
-        fw, fh = footer_para.wrap(doc.width, doc.bottomMargin)
-        footer_y = line_y - fh - 6
-        footer_para.drawOn(canvas, left, footer_y)
-
-        # Centered page number below footer
-        page_num_y = footer_y - 16
+        # Centered page number at bottom
+        page_num_y = doc.bottomMargin - 16
         page_num_x = left + (doc.width / 2.0)
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
@@ -181,7 +296,7 @@ class BloodPressureReport:
             ]
         )
         story.append(title_table)
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 12))
 
         # Date Range and Status (if present)
         date_range = self.summary_dict.get("date_range")
@@ -283,7 +398,35 @@ class BloodPressureReport:
         ]))
 
         story.append(summary_table)
-        story.append(Spacer(1, 18))
+        story.append(Spacer(1, 12))
+
+        # Add footnotes
+        footnote_style = ParagraphStyle(
+            name="Footnote",
+            parent=styles["Normal"],
+            fontSize=8,
+            leftIndent=2,
+            firstLineIndent=0,
+        )
+        footnotes = [
+            "¹Peak values represent the average of the three highest values in the timeframe.",
+            "²Low values represent the average of the three lowest values in the timeframe.",
+            "³Hypotensive Count indicates the number of systolic BP values ≤ 90 mmHg."
+        ]
+
+        for footnote in footnotes:
+            footnote_table = Table(
+                [[Paragraph(f"{footnote}", footnote_style)]],
+                colWidths=[550],
+                style=[
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                ]
+            )
+            story.append(footnote_table)
+
 
         return story
 
@@ -315,7 +458,7 @@ class BloodPressureReport:
             ]
         )
         story.append(title_table)
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 18))
 
         # Prepare the dataframe for the table
         if self.timeframed_df is None or self.timeframed_df.empty:
@@ -391,7 +534,7 @@ class BloodPressureReport:
         ]))
 
         story.append(analysis_table)
-        story.append(Spacer(1, 18))
+        story.append(Spacer(1, 12))
 
         # Add footnotes
         footnote_style = ParagraphStyle(
@@ -419,6 +562,8 @@ class BloodPressureReport:
                 ]
             )
             story.append(footnote_table)
+
+        story.append(Spacer(1, 24))
 
         return story
 
@@ -451,7 +596,7 @@ class BloodPressureReport:
             ]
         )
         story.append(title_table)
-        story.append(Spacer(1, 12))
+        story.append(Spacer(1, 18))
 
         # Check if extremes data exists
         if self.extremes_df is None or self.extremes_df.empty:
