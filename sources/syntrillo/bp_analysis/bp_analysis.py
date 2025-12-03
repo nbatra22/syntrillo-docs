@@ -349,7 +349,7 @@ class BloodPressureAnalysis:
         data[SBP_COUNT_175] = len(df[df[SYSTOLIC] >= 175])
         data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD])
 
-        data[ENGAGEMENT] = self.calculate_engagement(df=df)
+        data[ENGAGEMENT] = self.calculate_engagement(df=df) or 0 # default to 0 if None
 
         return data
 
@@ -548,6 +548,10 @@ class BloodPressureAnalysis:
         Returns:
             A float value representing the engagement.
         """
+        # Ensure timestamp_local is datetime
+        df = df.copy()
+        df['timestamp_local'] = pd.to_datetime(df['timestamp_local'], errors='coerce')
+
         start_date = df['timestamp_local'].min()
         end_date = df['timestamp_local'].max()
         total_days = (end_date - start_date).days
