@@ -4,7 +4,8 @@ import io
 from io import BytesIO
 import os
 from datetime import datetime
-
+import secrets
+import string
 
 from .post_management import PostManager
 
@@ -214,7 +215,7 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     post_manager.get_pseudonyms_from_tab_post(request)
 
     # Obtain form variables
-    file_name = request.form.get("file-name").strip() or "BP-report.pdf"
+    file_name = request.form.get("file-name").strip() or "BP-Report"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
@@ -233,16 +234,23 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
     summary_stats = bp_analysis.calculate_summary_stats(hide_intervention=True)
 
+    # Generate 5-character nanoid (URL-safe)
+    alphabet = string.ascii_letters + string.digits
+    nanoid = ''.join(secrets.choice(alphabet) for _ in range(5))
+    file_name = f"{file_name}-{nanoid}"
+
     bp_report_manager = BloodPressureReport(
         logo=None,
         patient_info_dict=patient_info,
         summary_dict=summary_stats,
         timeframed_df=analysis,
-        extremes_df=extremes
+        extremes_df=extremes,
+        report_code=nanoid
     )
-    bp_pdf = bp_report_manager.generate_pdf_report()
+    # bp_pdf = bp_report_manager.generate_pdf_report()
+    bp_pdf = bp_report_manager.generate_pdf_report_with_header_footer()
 
-    return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
+    return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}.pdf", mimetype="application/pdf")
 
 @iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/metrics', methods=['GET','POST'])
 def iframe_healthie_provider_tab_get_metrics():

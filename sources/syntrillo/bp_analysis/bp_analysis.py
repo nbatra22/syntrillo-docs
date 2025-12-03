@@ -347,7 +347,7 @@ class BloodPressureAnalysis:
         # Calculate threshold counts
         data[SBP_COUNT_170] = len(df[df[SYSTOLIC] >= 170])
         data[SBP_COUNT_175] = len(df[df[SYSTOLIC] >= 175])
-        data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD + 5])
+        data[HYPOTENSIVE_COUNT] = len(df[df[SYSTOLIC] <= self.HYPOTENSION_SBP_THRESHOLD])
 
         data[ENGAGEMENT] = self.calculate_engagement(df=df)
 
