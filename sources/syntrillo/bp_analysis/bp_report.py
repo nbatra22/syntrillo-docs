@@ -404,7 +404,7 @@ class BloodPressureReport:
         footnotes = [
             "¹Peak values represent the average of the three highest values in the timeframe.",
             "²Low values represent the average of the three lowest values in the timeframe.",
-            "³Hypotensive Count indicates the number of systolic BP values ≤ 95 mmHg."
+            "³Hypotensive Count indicates the number of systolic BP values ≤ 90 mmHg."
         ]
 
         for footnote in footnotes:
