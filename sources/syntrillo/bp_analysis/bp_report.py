@@ -119,11 +119,11 @@ class BloodPressureReport:
         )
 
         main_message = (
-            f"I've included an up-to-date blood pressure report for our mutual patient. If you would like to "
-            f"continue to receive blood pressure reports, you can text us at 434-202-3450 or email us at "
-            f"providers@syntrillo.com with the following code <font name='Courier-Bold'>{self.report_code}</font> "
-            f"and the frequency you prefer the reports sent (e.g. monthly). Please do not share any Personally "
-            f"Identifiable Information in the text or email."
+            f"If you would like to continue to receive blood pressure reports, "
+            f"you can text us at 434-202-3450 or email us at providers@syntrillo.com with "
+            f"the following code <font name='Courier-Bold'>{self.report_code}</font> "
+            f"and the frequency you prefer the reports sent (e.g. monthly). "
+            f"Please do not share any Personally Identifiable Information in the text or email."
         )
 
         message_table = Table(
@@ -139,49 +139,6 @@ class BloodPressureReport:
         story.append(message_table)
         story.append(Spacer(1, 12))
 
-        # Referral paragraph
-        referral_message = (
-            "If you have other patients who may benefit from our service, whether stroke survivors or other "
-            "high risk patients, you can refer them through our website- https://www.syntrillo.com/providers."
-        )
-
-        referral_table = Table(
-            [[Paragraph(referral_message, message_style)]],
-            colWidths=[550],
-            style=[
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                ("TOPPADDING", (0, 0), (-1, -1), 0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ]
-        )
-        story.append(referral_table)
-        story.append(Spacer(1, 12))
-
-        # Signature
-        signature_style = ParagraphStyle(
-            name="Signature",
-            parent=styles["Normal"],
-            fontSize=10,
-            leftIndent=0,
-            firstLineIndent=0,
-        )
-
-        signature_table = Table(
-            [
-                [Paragraph("Mark McDonald, MD, MS", signature_style)],
-                [Paragraph("Neurologist at Syntrillo", signature_style)]
-            ],
-            colWidths=[550],
-            style=[
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                ("TOPPADDING", (0, 0), (-1, -1), 0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-            ]
-        )
-        story.append(signature_table)
-
         # Separator line
         separator_line = Table(
             [[""]],
@@ -190,7 +147,7 @@ class BloodPressureReport:
                 ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.black),
                 ("LEFTPADDING", (0, 0), (-1, -1), 0),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
             ]
         )
