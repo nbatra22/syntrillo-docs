@@ -34,7 +34,7 @@ def handler(event, context):
 
         # Existing measurement validation
         db_manager = SyntrilloDatabaseManager(uuid.UUID(syntrillo_internal_key))
-        record, log = db_manager.get_first_tenovi_measurement(device_name='Tenovi BPM - L')
+        record, log = db_manager.get_first_tenovi_measurement()
         if not log['success']:
             return {
                 'success': False,
