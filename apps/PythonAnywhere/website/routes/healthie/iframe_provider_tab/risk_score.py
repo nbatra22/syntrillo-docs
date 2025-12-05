@@ -319,7 +319,7 @@ def iframe_healthie_provider_tab_risk_score_charting_note():
         # current_app.logger.info(f"Processed charting note data: {processed_data}")
 
         # Insert the SRS form response into the database
-        response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="", data=form_data)
+        response_id, log = insert_srs_iframe_data(syntrillo_internal_key_patient, syntrillo_internal_key_clinician="Unknown", data=form_data)
 
         if log['success']:
             return jsonify({
