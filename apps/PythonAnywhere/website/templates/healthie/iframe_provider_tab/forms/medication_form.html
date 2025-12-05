@@ -169,6 +169,11 @@
             <span><i class="fa-solid fa-circle-exclamation"></i></span> The inputs listed below are used for internal purposes only and will not be synced with external providers (Healthie, DoseSpot, etc.). These are not required fields but are highly recommended to ensure accurate medication tracking within Syntrillo.
         </p>
 
+        <div id="medication-pin-container" class="form-group-horizontal">
+            <input type="checkbox" id="medication-pin" name="pinned" />
+            <label for="medication-pin">Pin this medication</label>
+        </div>
+
         <div id="medication-common-name-container" class="form-group">
             <label for="medication-common-name">Common Name</label>
             <input type="text" id="medication-common-name" name="common_name" placeholder="e.g. 'Aspirin'" list="syntrillo-medication-suggestions" />
@@ -370,6 +375,17 @@
                         <label for="time-sunday">Sunday</label>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="medication-delete-container" class="form-group">
+            <label for="medication-delete">If you would like to delete this medication, please confirm by typing <span id="medication-to-delete"></span> below. Beware that deleting this medication will erase all history for this medication from both Healthie and Syntrillo systems.</label>
+            <div id="medication-delete-input-container" class="">
+                <input type="text" id="medication-delete" name="delete_reason" />
+                <button type="button" id="medication-delete-btn" class="form-delete-btn"
+                    onclick="event.preventDefault(); deleteMedication()">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </div>
         </div>
 
