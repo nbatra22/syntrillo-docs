@@ -44,6 +44,7 @@
         text-decoration: none;
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
         outline: none;
+        cursor: pointer;
     }
 
     .meds-header-button:hover {
@@ -51,6 +52,93 @@
     }
 
     .meds-header-button:focus {
+        outline: 2px solid #1e40af;
+    }
+
+    #meds-view-toggle-container {
+        position: relative;
+    }
+
+    .meds-view-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        min-width: 280px;
+        z-index: 100;
+    }
+
+    .meds-view-options.hidden {
+        display: none;
+    }
+
+    .meds-view-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .meds-view-ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+
+    .meds-view-ul:last-child {
+        margin-bottom: 0;
+    }
+
+    .meds-view-li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        cursor: pointer;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+    }
+
+    .meds-view-li:hover {
+        background-color: #f3f4f6;
+    }
+
+    .meds-view-li input[type="radio"] {
+        cursor: pointer;
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .meds-view-li label {
+        cursor: pointer;
+        font-size: 0.875rem;
+        margin: 0;
+        flex: 1;
+        white-space: nowrap;
+    }
+
+    .medication-search-input {
+        padding: 0.5rem 0.75rem;
+        border: none;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s;
+        max-width: 200px;
+    }
+
+    .medication-search-input:focus {
+        border-color: #1e40af;
         outline: 2px solid #1e40af;
     }
 
@@ -67,6 +155,7 @@
 
     .no-medications p {
         color: #f59e0b;
+        margin: 0;
     }
 
     .meds-modal {
@@ -467,7 +556,7 @@
                     <i class="fas fa-chevron-down"></i> <span>Show Legend</span>
                 </div>
             </button>
-            <!-- <div id="meds-view-toggle-container" class="">
+            <div id="meds-view-toggle-container">
                 <button id="meds-view-toggle" class="meds-header-button" onclick="toggleMedsView()">
                     <i class="fa-solid fa-eye"></i>
                     View
@@ -475,15 +564,15 @@
                 <div id="meds-view-options" class="meds-view-options hidden">
                     <h4 class="meds-view-title">Filter:</h4>
                     <ul id="meds-view-filter-options" class="meds-view-ul">
-                        <li class="meds-view-li" onclick="setMedsView('all')">
+                        <li class="meds-view-li" onclick="setMedsFilter('all')">
                             <input type="radio" name="meds-view" value="all" id="meds-view-all">
                             <label for="meds-view-all">All Medications</label>
                         </li>
-                        <li class="meds-view-li" onclick="setMedsView('active')">
+                        <li class="meds-view-li" onclick="setMedsFilter('active')">
                             <input type="radio" name="meds-view" value="active" id="meds-view-active" checked>
                             <label for="meds-view-active">Active Medications</label>
                         </li>
-                        <li class="meds-view-li" onclick="setMedsView('inactive')">
+                        <li class="meds-view-li" onclick="setMedsFilter('inactive')">
                             <input type="radio" name="meds-view" value="inactive" id="meds-view-inactive">
                             <label for="meds-view-inactive">Inactive Medications</label>
                         </li>
@@ -508,8 +597,9 @@
                         </li>
                     </ul>
                 </div>
-            </div> -->
-            <!-- <div style="flex-grow: 1;"></div> -->
+            </div>
+            <div style="flex-grow: 1;"></div>
+            <input type="text" id="medication-search-input" class="medication-search-input" placeholder="Search by name..." oninput="handleMedicationSearch()" />
         </div>
     </section>
 
@@ -619,8 +709,240 @@
     var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     let currentMedication = null;
-    let allMedications = {};
-    let displayedMedications = [];
+
+    // State management object
+    const medicationsState = {
+        allMedications: {},
+        displayedMedications: [],
+        filters: {
+            status: 'active', // 'all', 'active', 'inactive'
+            searchTerm: ''
+        },
+        sort: {
+            field: 'start_date', // 'start_date', 'name'
+            direction: 'desc' // 'asc', 'desc'
+        },
+
+        setAllMedications(meds) {
+            this.allMedications = meds;
+            this.applyFiltersAndSort();
+        },
+
+        updateMedication(id, updates) {
+            if (this.allMedications[id]) {
+                this.allMedications[id] = { ...this.allMedications[id], ...updates };
+                this.applyFiltersAndSort();
+            }
+        },
+
+        deleteMedication(id) {
+            delete this.allMedications[id];
+            this.applyFiltersAndSort();
+        },
+
+        addMedication(medication) {
+            this.allMedications[medication.healthie_medication_id] = medication;
+            this.applyFiltersAndSort();
+        },
+
+        setFilter(filterType, value) {
+            this.filters[filterType] = value;
+            this.applyFiltersAndSort();
+        },
+
+        setSort(field, direction) {
+            this.sort.field = field;
+            this.sort.direction = direction;
+            this.applyFiltersAndSort();
+        },
+
+        applyFiltersAndSort() {
+            let filtered = Object.values(this.allMedications);
+
+            // Apply status filter
+            if (this.filters.status === 'active') {
+                filtered = filtered.filter(med => med.is_active);
+            } else if (this.filters.status === 'inactive') {
+                filtered = filtered.filter(med => !med.is_active);
+            }
+
+            // Apply search filter
+            if (this.filters.searchTerm) {
+                const searchLower = this.filters.searchTerm.toLowerCase();
+                filtered = filtered.filter(med => {
+                    const medName = (med.medication_name || '').toLowerCase();
+                    const commonName = (med.common_name || '').toLowerCase();
+                    return medName.includes(searchLower) || commonName.includes(searchLower);
+                });
+            }
+
+            // Apply sorting
+            filtered.sort((a, b) => {
+                let compareA, compareB;
+
+                if (this.sort.field === 'start_date') {
+                    compareA = new Date(a.start_date || 0);
+                    compareB = new Date(b.start_date || 0);
+                } else if (this.sort.field === 'name') {
+                    compareA = (a.medication_name || '').toLowerCase();
+                    compareB = (b.medication_name || '').toLowerCase();
+                }
+
+                if (this.sort.direction === 'asc') {
+                    return compareA > compareB ? 1 : -1;
+                } else {
+                    return compareA < compareB ? 1 : -1;
+                }
+            });
+
+            this.displayedMedications = filtered;
+            renderMedications();
+        }
+    };
+
+    // Toggle view menu
+    function toggleMedsView() {
+        const viewOptions = document.getElementById('meds-view-options');
+        viewOptions.classList.toggle('hidden');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const viewContainer = document.getElementById('meds-view-toggle-container');
+        const viewOptions = document.getElementById('meds-view-options');
+
+        if (!viewContainer.contains(event.target)) {
+            viewOptions.classList.add('hidden');
+        }
+    });
+
+    // Show loading spinner
+    function showLoadingSpinner(text) {
+        const loadingContainer = document.getElementById('loading-medications-container');
+        const loadingText = document.getElementById('loading-medications-text');
+        loadingText.textContent = text;
+        loadingContainer.style.display = 'flex';
+    }
+
+    function hideLoadingSpinner() {
+        const loadingContainer = document.getElementById('loading-medications-container');
+        loadingContainer.style.display = 'none';
+    }
+
+    // Filter medications
+    function setMedsFilter(filterOption) {
+        medicationsState.setFilter('status', filterOption);
+
+        // Update radio button
+        document.getElementById(`meds-view-${filterOption}`).checked = true;
+    }
+
+    // Sort medications
+    function setMedsSort(sortOption) {
+        // sortOption is like "start_date_desc" or "name_asc"
+        // Split only on the last underscore to handle "start_date"
+        const parts = sortOption.split('_');
+        const direction = parts.pop(); // 'desc' or 'asc'
+        const field = parts.join('_'); // 'start_date' or 'name'
+
+        medicationsState.setSort(field, direction);
+
+        // Update radio button - use the full sortOption as-is
+        const radioButton = document.getElementById(`meds-sort-${sortOption.replace(/_/g, '-')}`);
+        if (radioButton) {
+            radioButton.checked = true;
+        }
+    }
+
+    // Search medications
+    function handleMedicationSearch() {
+        const searchInput = document.getElementById('medication-search-input');
+        const searchTerm = searchInput.value.trim();
+        medicationsState.setFilter('searchTerm', searchTerm);
+    }
+
+    function renderMedications() {
+        const medicationsContainer = document.getElementById('active-medications-container');
+        medicationsContainer.innerHTML = '';
+
+        const medications = medicationsState.displayedMedications;
+
+        // If no medications, show a message
+        if (medications.length === 0) {
+            const hasSearchTerm = medicationsState.filters.searchTerm.length > 0;
+            const message = hasSearchTerm
+                ? 'No medications match your search.'
+                : 'No medications found for this patient.';
+            medicationsContainer.innerHTML = `<div class="no-medications"><i class="fa-solid fa-triangle-exclamation"></i><p>${message}</p></div>`;
+            return;
+        }
+
+        // Helper functions
+        const safeDisplay = (value, defaultText = '') => value || defaultText;
+        const cleanDisplay = (value) => {
+            if (!value) return '';
+            return String(value).replace(/_/g, ' ');
+        };
+        const formatDate = (dateStr) => {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+
+        medications.forEach(medication => {
+            const medicationHTML = `
+                <div id="med-${medication.id}" class="medication-container" onclick="toggleExtraInfo('${medication.healthie_medication_id}')" title="Click to show more">
+                    <div id="medication-${medication.healthie_medication_id}-main-container" class="medication-main-container">
+                        <div class="medication-info-container">
+                            <div class="medication-title-container">
+                                <h3 class="medication-title">${safeDisplay(medication.medication_name, 'Unnamed Medication')}</h3>
+                                ${((medication.category && medication.category !== 'other') ? `<p class="medication-category">${cleanDisplay(medication.category)}</p>` : (medication.category === 'other' && medication.custom_category) ? `<p class="medication-category">${cleanDisplay(medication.custom_category)}</p>` : '')}
+                                ${((medication.supercategory && medication.supercategory !== 'other') ? `<p class="medication-supercategory">${cleanDisplay(medication.supercategory)}</p>` : (medication.supercategory === 'other' && medication.custom_supercategory) ? `<p class="medication-supercategory">${cleanDisplay(medication.custom_supercategory)}</p>` : '')}
+                            </div>
+                            <div class="medication-dosage-info-container">
+                                <div class="medication-dosage-info">
+                                    ${(medication.dosage_amount && medication.dosage_unit) ? `<p id="medication-dosage-value" class="medication-dosage-info-value">${safeDisplay(medication.dosage_amount, '')} ${safeDisplay(medication.dosage_unit, '')}</p>` : ''}
+                                    ${medication.dosing_schedule_rule ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dosing_schedule_rule}</p>` : medication.frequency ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dose_count ? `${medication.dose_count}x ` : ''}${medication.frequency}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medication-date-container">
+                            <p class="medication-start-date-title">START DATE</p>
+                            <p class="medication-start-date">${formatDate(medication.start_date)}</p>
+                        </div>
+                        <div class="medication-actions-container">
+                            <button class="medication-action-button" title="Edit Medication" onclick="event.stopPropagation(); editMedication('${medication.healthie_medication_id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="medication-action-button" title="Delete Medication" onclick="event.stopPropagation(); deleteMedication('${medication.healthie_medication_id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="medication-${medication.healthie_medication_id}-extra-container" class="medication-extra-info-container" style="display: none;">
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">COMMON NAME</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.common_name, '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DELIVERY METHOD</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? medication.delivery_method.toUpperCase() : '-', '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">COMMENTS</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.comment, '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DIRECTIONS</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.directions, '-')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            medicationsContainer.innerHTML += medicationHTML;
+        });
+    }
 
     function toggleLegend() {
         const legendContainerWrapper = document.getElementById('medication-legend-container-wrapper');
@@ -649,93 +971,6 @@
         }
     }
 
-    function setMedsSort(sortOption) {
-        // Implement sorting logic here
-        console.log("Sorting medications by:", sortOption);
-    }
-
-    function setMedsFilter(filterOption) {
-        // Implement filtering logic here
-        console.log("Filtering medications by:", filterOption);
-    }
-
-    function openMedicationsModal(formType, medication = null) {
-        currentMedication = medication;
-        const modal = document.getElementById('meds-modal');
-        modal.style.display = 'flex';
-
-        const deleteContent = document.getElementById('delete-medication-content');
-        const medicationContent = document.getElementById('medication-content');
-        const modalTitle = document.getElementById('meds-modal-title');
-        const modalSubtitle = document.getElementById('meds-modal-subtitle');
-
-        if (formType === 'delete') {
-            deleteContent.style.display = 'flex';
-            medicationContent.style.display = 'none';
-            modalTitle.textContent = 'Delete Medication';
-            populateDeleteMedicationForm(medication);
-        } else {
-            deleteContent.style.display = 'none';
-            medicationContent.style.display = 'flex';
-            // If editing, populate form with medication data
-            if (medication) {
-                modalTitle.textContent = 'Edit Medication';
-                // TODO: Populate form fields with medication data
-                populateMedicationForm(medication);
-            } else {
-                const modalTitle = document.getElementById('meds-modal-title');
-                modalTitle.textContent = 'Add Medication';
-                populateMedicationForm(null);
-            }
-        }
-
-    }
-
-    function closeMedicationsModal() {
-        const modal = document.getElementById('meds-modal');
-        modal.style.display = 'none';
-        currentMedication = null;
-        const statusMessage = document.getElementById('form-status-message');
-        statusMessage.textContent = '';
-        statusMessage.className = '';
-        const doseSuggestionsContainer = document.getElementById('dose-suggestions-container');
-        doseSuggestionsContainer.style.display = 'none';
-        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
-        doseSuggestionsList.innerHTML = '';
-    }
-
-    function editMedication(medicationId) {
-        // Find the medication from the current data
-        const medication = window.medicationsData[medicationId];
-        if (medication) {
-            openMedicationsModal('edit', medication);
-        }
-    }
-
-    function deleteMedication(medicationId) {
-        // Find the medication from the current data
-        const medication = window.medicationsData[medicationId];
-        if (medication) {
-            openMedicationsModal('delete', medication);
-        }
-    }
-
-    function showLoadingSpinner(message) {
-        const activeMedicationsContainer = document.getElementById('active-medications-container');
-        activeMedicationsContainer.innerHTML = '';
-        const loadingContainer = document.getElementById('loading-medications-container');
-        loadingContainer.style.display = 'flex';
-        const loadingText = document.getElementById('loading-medications-text');
-        loadingText.textContent = message;
-    }
-
-    function hideLoadingSpinner() {
-        const loadingContainer = document.getElementById('loading-medications-container');
-        loadingContainer.style.display = 'none';
-        const loadingText = document.getElementById('loading-medications-text');
-        loadingText.textContent = '';
-    }
-
     function getMedicationsData() {
         const formData = new FormData();
         formData.append('healthie_provider_id', healthieProviderId);
@@ -750,96 +985,14 @@
         .then(response => response.json())
         .then(data => {
             const medicationsObj = data.data;
-            const medications = Object.values(medicationsObj);
 
-            // console.log('Medications data:', data);
-            // console.log('Medications object:', medicationsObj);
-            // console.log('Medications array:', medications);
+            // Update state instead of directly rendering
+            medicationsState.setAllMedications(medicationsObj);
 
-            // Store data globally for edit/delete operations
+            // Store globally for backward compatibility
             window.medicationsData = medicationsObj;
 
-            // Convert the dictionary to an array of medication objects
-            const medicationsContainer = document.getElementById('active-medications-container');
-
-            // If no medications, show a message
-            if (medications.length === 0) {
-                medicationsContainer.innerHTML += '<div class="no-medications"><i class="fa-solid fa-triangle-exclamation"></i><p>No medications found for this patient.</p></div>';
-                hideLoadingSpinner();
-                return;
-            }
-
-            medications.forEach(medication => {
-
-                // console.log('Medication:', medication);
-
-                // Helper function to safely display values
-                const safeDisplay = (value, defaultText = '') => value || defaultText;
-                const cleanDisplay = (value) => {
-                    if (!value) return '';
-                    return String(value).replace(/_/g, ' ');
-                };
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return 'N/A';
-                    const date = new Date(dateStr);
-                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                };
-
-                const medicationHTML = `
-                    <div id="med-${medication.id}" class="medication-container" onclick="toggleExtraInfo('${medication.healthie_medication_id}')" title="Click to show more">
-                        <div id="medication-${medication.healthie_medication_id}-main-container" class="medication-main-container">
-                            <div class="medication-info-container">
-                                <div class="medication-title-container">
-                                    <h3 class="medication-title">${safeDisplay(medication.medication_name, 'Unnamed Medication')}</h3>
-                                    ${((medication.category && medication.category !== 'other') ? `<p class="medication-category">${cleanDisplay(medication.category)}</p>` : (medication.category === 'other' && medication.custom_category) ? `<p class="medication-category">${cleanDisplay(medication.custom_category)}</p>` : '')}
-                                    ${((medication.supercategory && medication.supercategory !== 'other') ? `<p class="medication-supercategory">${cleanDisplay(medication.supercategory)}</p>` : (medication.supercategory === 'other' && medication.custom_supercategory) ? `<p class="medication-supercategory">${cleanDisplay(medication.custom_supercategory)}</p>` : '')}
-                                </div>
-                                <div class="medication-dosage-info-container">
-                                    <div class="medication-dosage-info">
-                                        ${(medication.dosage_amount && medication.dosage_unit) ? `<p id="medication-dosage-value" class="medication-dosage-info-value">${safeDisplay(medication.dosage_amount, '')} ${safeDisplay(medication.dosage_unit, '')}</p>` : ''}
-                                        ${medication.dosing_schedule_rule ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dosing_schedule_rule}</p>` : medication.frequency ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dose_count ? `${medication.dose_count}x ` : ''}${medication.frequency}</p>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="medication-date-container">
-                                <p class="medication-start-date-title">START DATE</p>
-                                <p class="medication-start-date">${formatDate(medication.start_date)}</p>
-                            </div>
-                            <div class="medication-actions-container">
-                                <button class="medication-action-button" title="Edit Medication" onclick="event.stopPropagation(); editMedication('${medication.healthie_medication_id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="medication-action-button" title="Delete Medication" onclick="event.stopPropagation(); deleteMedication('${medication.healthie_medication_id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="medication-${medication.healthie_medication_id}-extra-container" class="medication-extra-info-container" style="display: none;">
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">COMMON NAME</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.common_name, '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">DELIVERY METHOD</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? medication.delivery_method.toUpperCase() : '-', '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">COMMENTS</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.comment, '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">DIRECTIONS</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.directions, '-')}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                medicationsContainer.innerHTML += medicationHTML;
-            });
-
             hideLoadingSpinner();
-
         })
         .catch(error => {
             console.error('Error:', error);
@@ -1384,6 +1537,24 @@
         statusMessage.className = status; // 'success', 'error', 'pending'
     }
 
-    showLoadingSpinner('Fetching active medications...');
-    getMedicationsData();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const medicationModal = document.getElementById('medication-modal');
+        const deleteMedicationModal = document.getElementById('delete-medication-modal');
+
+        // Close modals when clicking outside of them
+        window.onclick = function(event) {
+            if (event.target === medicationModal) {
+                closeMedicationsModal();
+            }
+            if (event.target === deleteMedicationModal) {
+                closeMedicationsModal();
+            }
+        };
+    });
+
+    $(document).ready(function() {
+        showLoadingSpinner('Fetching active medications...');
+        getMedicationsData();
+    })
 </script>
