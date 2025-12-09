@@ -335,23 +335,27 @@ def iframe_healthie_provider_tab_get_hr_data():
     # Get baseline (first 2 weeks), prior (2 weeks before current), and current (latest 2 weeks) RHR data
     healthie_utils = HealthieUtils()
     rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
-    rhr_metadata = calc_rhr_metadata(
-        rhr_data=rhr_data,
+    pulse_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category="Pulse")
+
+    hr_data = rhr_data if len(rhr_data) >= len(pulse_data) else pulse_data
+
+    hr_metadata = calc_rhr_metadata(
+        rhr_data=hr_data,
         baseline_num_weeks=2,
         trailing_num_weeks=2,
         prior_num_weeks= 2
-    ) if rhr_data else {}
+    ) if hr_data else {}
 
     return jsonify({
-        'average_rhr_baseline': rhr_metadata.get('average_rhr_baseline'),
-        'average_rhr_trailing': rhr_metadata.get('average_rhr_trailing'),
-        'average_rhr_prior': rhr_metadata.get('average_rhr_prior'),
-        "baseline_start_date": rhr_metadata.get('baseline_start_date'),
-        "baseline_end_date": rhr_metadata.get('baseline_end_date'),
-        "prior_start_date": rhr_metadata.get('prior_start_date'),
-        "prior_end_date": rhr_metadata.get('prior_end_date'),
-        "current_start_date": rhr_metadata.get('current_start_date'),
-        "current_end_date": rhr_metadata.get('current_end_date'),
+        'average_rhr_baseline': hr_metadata.get('average_rhr_baseline'),
+        'average_rhr_trailing': hr_metadata.get('average_rhr_trailing'),
+        'average_rhr_prior': hr_metadata.get('average_rhr_prior'),
+        "baseline_start_date": hr_metadata.get('baseline_start_date'),
+        "baseline_end_date": hr_metadata.get('baseline_end_date'),
+        "prior_start_date": hr_metadata.get('prior_start_date'),
+        "prior_end_date": hr_metadata.get('prior_end_date'),
+        "current_start_date": hr_metadata.get('current_start_date'),
+        "current_end_date": hr_metadata.get('current_end_date'),
     })
 
 
@@ -377,35 +381,72 @@ def iframe_healthie_provider_tab_get_biometrics_data():
     # module_id_inactivity_charting = physical_activity_module_ids["module_id_inactivity_charting"]
     # module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
 
-    physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
-    module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
-    module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
+    # physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
+    # module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
+    # module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
 
-    inactivity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
-    activity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_activity_intake, syntrillo_internal_key)
+    # inactivity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
+    # activity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_activity_intake, syntrillo_internal_key)
 
-    inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
-    # Need minimum of 3 responses for baseline, prior, and current
-    if inactivity_data and len(inactivity_data) >= 3:
-        inactivity_baseline, inactivity_prior, inactivity_current = inactivity_data[-1], inactivity_data[1], inactivity_data[0]
-    elif inactivity_data and len(inactivity_data) == 2:
-        inactivity_baseline, inactivity_current = inactivity_data[-1], inactivity_data[0]
-    elif inactivity_data and len(inactivity_data) == 1:
-        inactivity_baseline = inactivity_data[0]
+    # inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
+    # # Need minimum of 3 responses for baseline, prior, and current
+    # if inactivity_data and len(inactivity_data) >= 3:
+    #     inactivity_baseline, inactivity_prior, inactivity_current = inactivity_data[-1], inactivity_data[1], inactivity_data[0]
+    # elif inactivity_data and len(inactivity_data) == 2:
+    #     inactivity_baseline, inactivity_current = inactivity_data[-1], inactivity_data[0]
+    # elif inactivity_data and len(inactivity_data) == 1:
+    #     inactivity_baseline = inactivity_data[0]
+    # else:
+    #     logger.warning("Patient does not have at least 1 inactivity response...")
+
+
+    # activity_baseline, activity_prior, activity_current = None, None, None
+    # # Need minimum of 3 responses for baseline, prior, and current
+    # if activity_data and len(activity_data) >= 3:
+    #     activity_baseline, activity_prior, activity_current = activity_data[-1], activity_data[1], activity_data[0]
+    # elif activity_data and len(activity_data) == 2:
+    #     activity_baseline, activity_current = activity_data[-1], activity_data[0]
+    # elif activity_data and len(activity_data) == 1:
+    #     activity_baseline = activity_data[0]
+    # else:
+    #     logger.warning("Patient does not have at least 1 activity response...")
+
+
+    physical_activity_form_id, physical_activity_module_id = db_manager.get_form_module_ids_by_module_label("activity_questionnaire_intake")
+    inactivity_form_id, inactivity_module_id = db_manager.get_form_module_ids_by_module_label("inactivity_questionnaire_intake")
+
+    activity_form_responses = HealthieForms().get_form_answers(
+        user_id=healthie_user_id,
+        custom_module_form_id=physical_activity_form_id,
+    )
+
+    activity_form_responses_list = activity_form_responses.get('formAnswerGroups', []) if activity_form_responses else []
+
+    if len(activity_form_responses_list) == 0:
+        activity_baseline, activity_prior, activity_current = None, None, None
+        inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
     else:
-        logger.warning("Patient does not have at least 1 inactivity response...")
+        # Need minimum of 3 responses for baseline, prior, and current
+        if len(activity_form_responses_list) >= 3:
+            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
+            activity_prior = activity_form_responses_list[-2]['custom_module_answers'].get(str(physical_activity_module_id), None)
+            activity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(physical_activity_module_id), None)
 
+            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
+            inactivity_prior = activity_form_responses_list[-2]['custom_module_answers'].get(str(inactivity_module_id), None)
+            inactivity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(inactivity_module_id), None)
 
-    activity_baseline, activity_prior, activity_current = None, None, None
-    # Need minimum of 3 responses for baseline, prior, and current
-    if activity_data and len(activity_data) >= 3:
-        activity_baseline, activity_prior, activity_current = activity_data[-1], activity_data[1], activity_data[0]
-    elif activity_data and len(activity_data) == 2:
-        activity_baseline, activity_current = activity_data[-1], activity_data[0]
-    elif activity_data and len(activity_data) == 1:
-        activity_baseline = activity_data[0]
-    else:
-        logger.warning("Patient does not have at least 1 activity response...")
+        elif len(activity_form_responses_list) == 2:
+            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
+            activity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(physical_activity_module_id), None)
+
+            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
+            inactivity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(inactivity_module_id), None)
+
+        elif len(activity_form_responses_list) == 1:
+            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
+            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
+
 
     physical_activity_data = {
         "inactive": {

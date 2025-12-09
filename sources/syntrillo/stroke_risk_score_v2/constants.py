@@ -6,6 +6,7 @@ METRIC_STAT = "metric_stat"
 TYPE_BP = "bp"
 TYPE_RHR = "rhr"
 TYPE_HR = "hr"
+TYPE_PULSE = "Pulse"
 
 INACTIVITY_INTAKE_MODULE_LABEL = "inactivity_questionnaire_intake"
 INACTIVITY_CHARTING_MODULE_LABEL = "inactivity_questionnaire_charting"

@@ -57,6 +57,7 @@ from syntrillo.stroke_risk_score_v2.constants import (
     TYPE_BP,
     TYPE_RHR,
     TYPE_HR,
+    TYPE_PULSE,
     TIMESTAMP,
     VALUE_1,
     INACTIVITY_INTAKE_MODULE_LABEL,
@@ -689,6 +690,82 @@ def calc_rhr_metadata(
         logger.error(f"Error calculating RHR metadata: {e}")
         raise ValueError("Error calculating RHR metadata")
 
+def calc_pulse_metadata(
+    pulse_data: list[dict],
+    baseline_num_weeks: int = BASELINE_NUM_WEEKS,
+    trailing_num_weeks: int = TRAILING_NUM_WEEKS,
+    prior_num_weeks: int = 2
+    ) -> dict:
+    """
+    Calculate the RHR metadata from the rhr_data
+    Args:
+        rhr_data (list[dict]): The rhr data
+        baseline_start (datetime): The baseline start date
+        baseline_end (datetime): The baseline end date
+    Returns:
+        dict: The RHR metadata
+    Raises:
+        ValueError: If the RHR metadata is not valid
+    """
+    try:
+        logger.info("Calculating RHR metadata...")
+        # Convert pulse_data to pandas dataframe
+        pulse_df = pd.DataFrame(pulse_data)
+
+        # Clean the pulse_data
+        pulse_df = pulse_df.drop(columns=['third_party_source', 'source', 'cursor', 'metric_stat_string', 'category'])
+        pulse_df[CREATED_AT] = pd.to_datetime(pulse_df[CREATED_AT], errors='coerce') # ensure the created_at is a datetime
+        # BASELINE DATAFRAME
+        # Determine the baseline start and end dates
+        baseline_start = pulse_df[CREATED_AT].min()
+        baseline_end = baseline_start + pd.Timedelta(weeks=baseline_num_weeks)
+
+        # Ensure the baseline dataframe is valid
+        baseline_df = get_timeframed_data(pulse_df, baseline_start, baseline_end, TYPE_PULSE)
+        baseline_average = baseline_df[METRIC_STAT].mean() if not baseline_df.empty else None
+
+
+        # TRAILING DATAFRAME
+        # Determine the trailing start and end dates
+        trailing_end = pd.Timestamp.now().tz_localize('UTC').tz_convert('America/New_York')
+        trailing_start = trailing_end - pd.Timedelta(weeks=trailing_num_weeks)
+        trailing_average = None
+        if is_valid_trailing_timeframe_dates(trailing_start, baseline_end):
+            trailing_df = get_timeframed_data(pulse_df, trailing_start, trailing_end, TYPE_PULSE)
+            trailing_average = trailing_df[METRIC_STAT].mean() if not trailing_df.empty else None # Calculate the average trailing for the rhr_data
+        else:
+            logger.warning("Not enough data to calculate trailing average...")
+
+        # PRIOR DATAFRAME
+        # Trailing > Prior > Baseline (this is an addition for the BP dashboard 9/8/25)
+        prior_end = trailing_start - pd.Timedelta(days=1) # Get day before start of trailing period
+        prior_start = prior_end - pd.Timedelta(weeks=prior_num_weeks)
+        prior_average = None
+        # Check if the baseline timeframe overlaps with the prior timeframe
+        if is_valid_trailing_timeframe_dates(prior_start, baseline_end):
+            prior_df = get_timeframed_data(pulse_df, prior_start, prior_end, TYPE_PULSE)
+            prior_average = prior_df[METRIC_STAT].mean() if not prior_df.empty else None # Calculate the average prior for the rhr_data
+        else:
+            logger.warning("Not enough data to calculate prior average...")
+
+        logger.info("Successfully calculated RHR metadata...")
+        # Return the metadata
+        return {
+            "average_rhr_baseline": round(baseline_average, 2) if baseline_average else None,
+            "average_rhr_trailing": round(trailing_average, 2) if trailing_average else None,
+            "average_rhr_prior": round(prior_average, 2) if prior_average else None,
+            "baseline_start_date": baseline_start if baseline_start else None,
+            "baseline_end_date": baseline_end if baseline_end else None,
+            "prior_start_date": prior_start if prior_start else None,
+            "prior_end_date": prior_end if prior_end else None,
+            "current_start_date": trailing_start if trailing_start else None,
+            "current_end_date": trailing_end if trailing_end else None,
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating RHR metadata: {e}")
+        raise ValueError("Error calculating RHR metadata")
+
 
 def get_srs_response_data(syntrillo_internal_key: uuid.UUID, db_manager: SyntrilloDatabaseManager) -> Union[SRSFormResponse, None]:
     """
@@ -991,7 +1068,7 @@ def get_timeframed_data(dataframe: pd.DataFrame, timeframe_start: datetime, time
     try:
         if measurement_type == TYPE_BP:
             timeframe_df = dataframe[(dataframe[TIMESTAMP_LOCAL] >= timeframe_start) & (dataframe[TIMESTAMP_LOCAL] < timeframe_end)]
-        elif measurement_type == TYPE_RHR:
+        elif measurement_type == TYPE_RHR or measurement_type == TYPE_PULSE:
             timeframe_df = dataframe[(dataframe[CREATED_AT] >= timeframe_start) & (dataframe[CREATED_AT] < timeframe_end)]
         elif measurement_type == TYPE_HR:
             timeframe_df = dataframe[(dataframe[TIMESTAMP] >= timeframe_start) & (dataframe[TIMESTAMP] < timeframe_end)]
