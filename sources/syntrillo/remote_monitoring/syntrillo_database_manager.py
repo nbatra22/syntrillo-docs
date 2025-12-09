@@ -1233,11 +1233,11 @@ class SyntrilloDatabaseManager:
                 query = """
                     SELECT
                         answer,
-                        updated_at
+                        created_at
                     FROM
                         healthie_form_responses
                     WHERE module_id = %s AND syntrillo_internal_key = %s
-                    ORDER BY updated_at DESC;
+                    ORDER BY created_at DESC;
                 """
                 cursor.execute(query, (module_id, syntrillo_internal_key))
                 db_response = cursor.fetchall()

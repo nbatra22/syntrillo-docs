@@ -83,19 +83,6 @@ class HealthieAuth:
         ) -> Tuple[dict, dict]:
         """
         Sends a GraphQL query to the Healthie API.
-
-        Parameters:
-            query (str): The GraphQL query string.
-            variables (dict, optional): Variables to be passed with the query (default: {}).
-
-        Returns a tupple:
-            dict: The JSON response 'data' from the API.
-            dict: The log of the request.
-
-        Raises:
-            requests.exceptions.HTTPError: If the API request fails.
-            requests.exceptions.RequestException: For other request errors.
-            Exception if the response contains an 'errors' or does not contain 'data'
         """
 
         logger.debug(f"Sending GraphQL query to Healthie API: {query}, {variables}")
@@ -109,8 +96,7 @@ class HealthieAuth:
             'AuthorizationSource': 'API'
         }
 
-        # Try converting the data to a JSON string. If this fails, return an error log.
-        #   : this will fail if the data is not JSON serializable, for example if it includes uuid objects
+        # Try converting the data to a JSON string
         try:
             temp = json.dumps(variables)
         except Exception as e:
@@ -121,9 +107,23 @@ class HealthieAuth:
             }
             return None, log
 
+        # Prepare the request payload
+        payload = {'query': query, 'variables': variables}
+
+        # Log the exact payload being sent
+        logger.debug(f"Request payload: {json.dumps(payload, indent=2)}")
+        # logger.debug(f"Request headers: {headers}")
+        logger.debug(f"Request URL: {self.url}")
+
         try:
             # Make the HTTP POST request to the Healthie API
-            response = requests.post(self.url, json={'query': query, 'variables': variables}, headers=headers, proxies={})
+            response = requests.post(self.url, json=payload, headers=headers, proxies={})
+
+            # Log raw response for debugging
+            logger.debug(f"Response status code: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+            logger.debug(f"Response text: {response.text}")
+
             response.raise_for_status()  # Raise an HTTPError for non-2xx responses
 
             # Parse response data as JSON
@@ -159,6 +159,7 @@ class HealthieAuth:
             log = {
                 'success': False,
                 'message': f"HTTP Error: {errh} in {caller}",
+                'response_text': response.text if 'response' in locals() else 'No response available'
             }
 
         except requests.exceptions.RequestException as err:
@@ -184,5 +185,3 @@ if __name__ == "__main__":
     response, log = healthie_api.send_query(query='query { organization { id name } }')
     HealthieAuth.print_pretty_json(response)
     HealthieAuth.print_pretty_json(log)
-
-
