@@ -420,33 +420,58 @@ def iframe_healthie_provider_tab_get_biometrics_data():
         custom_module_form_id=physical_activity_form_id,
     )
 
+    activity_module_ids = [physical_activity_module_id, inactivity_module_id]
     activity_form_responses_list = activity_form_responses.get('formAnswerGroups', []) if activity_form_responses else []
 
-    if len(activity_form_responses_list) == 0:
-        activity_baseline, activity_prior, activity_current = None, None, None
-        inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
-    else:
+    activity_baseline, activity_prior, activity_current = None, None, None
+    inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
+
+    if len(activity_form_responses_list) > 0:
+        activity_form_responses_list_cleaned = [
+            {
+                'created_at': response['created_at'],
+                'activity_minutes': next(
+                    (answer['answer'] for answer in response['form_answers']
+                    if answer['custom_module_id'] == str(physical_activity_module_id)),
+                    None
+                ),
+                'inactivity_hours': next(
+                    (answer['answer'] for answer in response['form_answers']
+                    if answer['custom_module_id'] == str(inactivity_module_id)),
+                    None
+                )
+            }
+            for response in activity_form_responses_list
+        ]
+        print("============= activity_form_responses_list:", activity_form_responses_list)
+        print("============= activity_form_responses_list_cleaned:", activity_form_responses_list_cleaned)
         # Need minimum of 3 responses for baseline, prior, and current
-        if len(activity_form_responses_list) >= 3:
-            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
-            activity_prior = activity_form_responses_list[-2]['custom_module_answers'].get(str(physical_activity_module_id), None)
-            activity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(physical_activity_module_id), None)
+        if len(activity_form_responses_list_cleaned) >= 3:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = activity_form_responses_list_cleaned[-2]['activity_minutes'], activity_form_responses_list_cleaned[-2]['created_at']
+            activity_current = activity_form_responses_list_cleaned[0]['activity_minutes'], activity_form_responses_list_cleaned[0]['created_at']
 
-            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
-            inactivity_prior = activity_form_responses_list[-2]['custom_module_answers'].get(str(inactivity_module_id), None)
-            inactivity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(inactivity_module_id), None)
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = (activity_form_responses_list_cleaned[-2]['inactivity_hours'], activity_form_responses_list_cleaned[-2]['created_at'])
+            inactivity_current = (activity_form_responses_list_cleaned[0]['inactivity_hours'], activity_form_responses_list_cleaned[0]['created_at'])
 
-        elif len(activity_form_responses_list) == 2:
-            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
-            activity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(physical_activity_module_id), None)
+        elif len(activity_form_responses_list_cleaned) == 2:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = None
+            activity_current = (activity_form_responses_list_cleaned[0]['activity_minutes'], activity_form_responses_list_cleaned[0]['created_at'])
 
-            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
-            inactivity_current = activity_form_responses_list[0]['custom_module_answers'].get(str(inactivity_module_id), None)
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = None
+            inactivity_current = (activity_form_responses_list_cleaned[0]['inactivity_hours'], activity_form_responses_list_cleaned[0]['created_at'])
 
-        elif len(activity_form_responses_list) == 1:
-            activity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(physical_activity_module_id), None)
-            inactivity_baseline = activity_form_responses_list[-1]['custom_module_answers'].get(str(inactivity_module_id), None)
+        elif len(activity_form_responses_list_cleaned) == 1:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = None
+            activity_current = None
 
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = None
+            inactivity_current = None
 
     physical_activity_data = {
         "inactive": {

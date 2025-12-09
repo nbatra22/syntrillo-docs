@@ -1141,7 +1141,7 @@
                 // Populate Physical Activity data
                 if (activityBaseline) {
                     const activityData = data.physical_activity_data?.active?.activity_baseline;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1151,7 +1151,7 @@
 
                 if (activityPrior) {
                     const activityData = data.physical_activity_data?.active?.activity_prior;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1161,7 +1161,7 @@
 
                 if (activityCurrent) {
                     const activityData = data.physical_activity_data?.active?.activity_current;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1172,7 +1172,7 @@
                 // Populate Physical Inactivity data
                 if (inactivityBaseline) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_baseline;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {
@@ -1182,7 +1182,7 @@
 
                 if (inactivityPrior) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_prior;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {
@@ -1192,7 +1192,7 @@
 
                 if (inactivityCurrent) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_current;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {
