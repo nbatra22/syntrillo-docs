@@ -78,12 +78,7 @@ def create_medication(medication: MedicationRecord) -> None:
         # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
         db_manager = SyntrilloMedicationsDatabaseQueries()
         if response:
-            medication_id = response.get('id')
-            if not medication_id:
-                raise Exception("Missing required patient-medication specific identifier from Healthie response...")
-
-            medication.medication_id = int(medication_id) # convert to int for Syntrillo DB column type
-            record_id, log = db_manager.insert_patient_medication(medication_record=medication)
+            new_record, log = db_manager.insert_patient_medication(medication_record=medication)
 
             if not log.get("success"):
                 raise Exception(log['error'])
@@ -92,6 +87,8 @@ def create_medication(medication: MedicationRecord) -> None:
             raise Exception(response['error_message'])
 
         logger.info(f"Successfully created medication for syntrillo_internal_key: {syntrillo_internal_key}")
+
+        return new_record, log
 
     except Exception as e:
         logger.error(f"Error creating medication for syntrillo_internal_key: {syntrillo_internal_key}: {e}")
@@ -242,7 +239,7 @@ def validate_medication_record(medication_record: MedicationRecord, is_creation:
     """
     try:
     # To update medication in Healthie's system, the patient-medication specific id is required.
-        if not medication_record.medication_id and not is_creation:
+        if not medication_record.healthie_medication_id and not is_creation:
             raise Exception("Missing required patient-medication specific identifier from Healthie response...")
 
 
@@ -253,7 +250,7 @@ def validate_medication_record(medication_record: MedicationRecord, is_creation:
             raise Exception("End/start date is required based on active status.")
 
         # Update the medication record if a shorthand scheduling rule was used (BID, TID, QID, PRN)
-        if medication_record.dosing_schedule_rule:
+        if medication_record.dosing_schedule_rule and not (medication_record.frequency and medication_record.dosing_interval):
             medication_record = medication_from_dosing_schedule_rule(medication_record)
 
         return medication_record

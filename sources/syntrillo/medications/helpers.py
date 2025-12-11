@@ -35,8 +35,8 @@ def medication_from_dosing_schedule_rule(medication: MedicationRecord) -> Medica
 
 def sync_healthie_medications(
     syntrillo_internal_key: str,
-    healthie_medications: list[dict],
-    syntrillo_medication_ids: set[int]
+    healthie_medications: list[dict], # list of medications from Healthie API
+    syntrillo_medication_ids: set[int] # set of healthie_medication_id already in Syntrillo
 ) -> dict:
     """
     Syncs Healthie medications to Syntrillo medications.

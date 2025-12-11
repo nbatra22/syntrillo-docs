@@ -45,7 +45,8 @@ class SyntrilloMedicationsDatabaseQueries:
         'dosing_interval',
         'time_of_day',
         'day_period',
-        'day_of_week'
+        'day_of_week',
+        'pinned'
     ]
 
     def __init__(self) -> None:
@@ -133,7 +134,7 @@ class SyntrilloMedicationsDatabaseQueries:
 
                 # Retrieve common medication info for each record
                 for record in records:
-                    healthie_medication_id = record['healthie_medication_id']
+                    id = record['id']
                     common_medication_id = record['common_medication_id']
 
                     # Fetch common medication details
@@ -145,10 +146,18 @@ class SyntrilloMedicationsDatabaseQueries:
                     cursor.execute(common_med_query, (common_medication_id,))
                     common_med = cursor.fetchone()
 
+
                     if common_med:
+                        del common_med['created_at']  # remove unneeded field
+                        del common_med['id']  # remove unneeded field
                         record = {**record, **common_med}
 
-                    medications_data[healthie_medication_id] = record
+                    if record['day_period']:
+                        record['day_period'] = json.loads(record['day_period'])
+                    if record['day_of_week']:
+                        record['day_of_week'] = json.loads(record['day_of_week'])
+
+                    medications_data[id] = record
 
             log = {"success": True, "error": None}
             return medications_data, log
@@ -159,6 +168,55 @@ class SyntrilloMedicationsDatabaseQueries:
 
             log = {"success": False, "error": str(e)}
             return {}, log
+
+    def get_medication_record_by_id(self, medication_id: str) -> Tuple[Optional[Dict[str, Any]], dict]:
+        """
+        Fetches a single medication record by its unique identifier.
+
+        Args:
+            medication_id (str): The unique identifier of the medication record.
+        Returns:
+            Tuple[Optional[Dict[str, Any]], dict]: A tuple containing the medication record as a dictionary
+                                                   (or None if not found) and a log dictionary.
+        """
+        try:
+            with self.conn.cursor(DictCursor) as cursor:
+                query = """
+                    SELECT *
+                    FROM patient_medications
+                    WHERE id = %s;
+                """
+                cursor.execute(query, (medication_id,))
+                record = cursor.fetchone()  # Fetches the row as a dict
+
+                if record:
+                    if record['day_period']:
+                        record['day_period'] = json.loads(record['day_period'])
+                    if record['day_of_week']:
+                        record['day_of_week'] = json.loads(record['day_of_week'])
+
+                if record['common_medication_id']:
+                    # Fetch common medication details
+                    common_med_query = """
+                        SELECT *
+                        FROM common_medications
+                        WHERE id = %s;
+                    """
+                    cursor.execute(common_med_query, (record['common_medication_id'],))
+                    common_med = cursor.fetchone()
+
+                    if common_med:
+                        del common_med['created_at']  # remove unneeded field
+                        del common_med['id']  # remove unneeded field
+                        record = {**record, **common_med}
+
+            log = {"success": True, "error": None}
+            return record, log
+
+        except Exception as e:
+            logger.error(f"An error occurred while fetching medication record ID {medication_id}: {e}")
+            log = {"success": False, "error": str(e)}
+            return None, log
 
     def insert_common_medication(self, common_medication) -> Tuple[Optional[int], dict]:
         """
@@ -246,9 +304,11 @@ class SyntrilloMedicationsDatabaseQueries:
 
             self.conn.commit()
 
+            new_record, log = self.get_medication_record_by_id(new_id)
+
             log = {"success": True, "error": None}
-            logger.info("Successfully updated medication record in internal DB...")
-            return new_id, log
+            logger.info("Successfully inserted medication record in internal DB...")
+            return new_record, log
 
         except pymysql.MySQLError as e:
             self.conn.rollback()
@@ -291,19 +351,23 @@ class SyntrilloMedicationsDatabaseQueries:
             self.conn.commit()
 
             log = {"success": True, "error": None}
-            logger.info(f"Successfully updated medication record ID {id} in internal DB...")
-            return True, log
+
+            updated_record, log = self.get_medication_record_by_id(id)
+
+            logger.info(f"Updated record: {updated_record}")
+
+            return updated_record, log
 
         except pymysql.MySQLError as e:
             self.conn.rollback()
             log = {"success": False, "error": str(e)}
-            logger.error(f"Error while updating medication record ID {medication_record_id} in internal DB...")
+            logger.error(f"Error while updating medication record ID {id} in internal DB...")
             return False, log
 
         except Exception as e:
             self.conn.rollback()
             log = {"success": False, "error": str(e)}
-            logger.error(f"Error while updating medication record ID {medication_record_id} in internal DB...")
+            logger.error(f"Error while updating medication record ID {id} in internal DB...")
             return False, log
 
     def delete_patient_medication(self, medication_id: str) -> Tuple[bool, dict]:
