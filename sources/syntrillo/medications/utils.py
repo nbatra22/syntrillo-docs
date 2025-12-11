@@ -71,13 +71,15 @@ def create_medication(medication: MedicationRecord) -> None:
         entry = lookup_codes.retrieve_entry_by_internal_key(syntrillo_internal_key=syntrillo_internal_key)
         healthie_user_id = entry['healthie_user_id']
 
-        # (1.) Create medication in Healthie's system
+        # (1.) Create medication in Healthie's system and attach healthie_medication_id to medication record
         healthie_medications = HealthieMedications()
         response = healthie_medications.create_medication(medication, healthie_user_id, start_date_str, end_date_str)
 
-        # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
-        db_manager = SyntrilloMedicationsDatabaseQueries()
         if response:
+            medication.healthie_medication_id = response.get("id")
+
+            # (2.) Create medication record in Syntrillo's system (If successful creation in Healthie)
+            db_manager = SyntrilloMedicationsDatabaseQueries()
             new_record, log = db_manager.insert_patient_medication(medication_record=medication)
 
             if not log.get("success"):

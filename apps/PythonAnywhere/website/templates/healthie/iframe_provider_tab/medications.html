@@ -312,9 +312,10 @@
     }
 
     @media (max-width: 992px) {
-        .medication-main-container{
+        .medication-main-container {
             align-items: flex-start;
         }
+
         .medication-title-container {
             flex-direction: column;
             align-items: flex-start;
@@ -325,11 +326,13 @@
             flex-direction: row;
         }
 
-        #create-med-btn, #meds-view-toggle-btn {
+        #create-med-btn,
+        #meds-view-toggle-btn {
             padding: 0.71rem;
         }
 
-        #create-med-text, #meds-view-toggle-text {
+        #create-med-text,
+        #meds-view-toggle-text {
             display: none;
         }
     }
@@ -522,6 +525,7 @@
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
@@ -607,7 +611,8 @@
                     <h4 class="meds-view-title">Sort:</h4>
                     <ul id="meds-view-sort-options" class="meds-view-ul">
                         <li class="meds-view-li" onclick="setMedsSort('start_date_desc')">
-                            <input type="radio" name="meds-sort" value="start_date_desc" id="meds-sort-start-date-desc" checked>
+                            <input type="radio" name="meds-sort" value="start_date_desc" id="meds-sort-start-date-desc"
+                                checked>
                             <label for="meds-sort-start-date-desc">Start Date (Newest)</label>
                         </li>
                         <li class="meds-view-li" onclick="setMedsSort('start_date_asc')">
@@ -630,13 +635,15 @@
                 <span id="med-legend-text">Show Legend</span>
             </button>
             <div style="flex-grow: 1;"></div>
-            <input type="text" id="medication-search-input" class="medication-search-input" placeholder="Search by name..." oninput="handleMedicationSearch()" />
+            <input type="text" id="medication-search-input" class="medication-search-input"
+                placeholder="Search by name..." oninput="handleMedicationSearch()" />
         </div>
     </section>
 
     <section id="meds-data-container" class="meds-data-container">
         <div id="medication-legend-container-wrapper" class="collapsed">
-            <div id="medication-legend-container" class="medication-container" onclick="toggleExtraInfo('legend')" title="Show more">
+            <div id="medication-legend-container" class="medication-container" onclick="toggleExtraInfo('legend')"
+                title="Show more">
                 <div id="medication-legend-main-container" class="medication-main-container">
                     <div class="medication-info-container">
                         <div class="medication-title-container">
@@ -668,7 +675,8 @@
                         </div>
                     </div>
                     <div id="medication-actions-container" class="medication-actions-container">
-                        <button id="medication-legend-pin" class="medication-action-button" title="Pin Medication" onclick="toggleLegendPin()">
+                        <button id="medication-legend-pin" class="medication-action-button" title="Pin Medication"
+                            onclick="toggleLegendPin()">
                             <i class="fa-solid fa-thumbtack"></i>
                         </button>
                         <button id="medication-legend-edit" class="medication-action-button" title="Edit Medication">
@@ -679,7 +687,8 @@
                         </button> -->
                     </div>
                 </div>
-                <div id="medication-legend-extra-container" class="medication-extra-info-container" style="display: none;">
+                <div id="medication-legend-extra-container" class="medication-extra-info-container"
+                    style="display: none;">
                     <div id="medication-legend-common-name-container" class="medication-data-block">
                         <p class="medication-data-block-title">COMMON NAME</p>
                         <p class="medication-data-block-value">[Common Name]</p>
@@ -783,7 +792,9 @@
         },
 
         addMedication(medication) {
+            console.log('Adding medication:', medication);
             this.allMedications[medication.id] = medication;
+            console.log('Updated medications state:', this.allMedications); 
             this.applyFiltersAndSort();
         },
 
@@ -892,7 +903,7 @@
     }
 
     // Close menu when clicking outside
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         const viewContainer = document.getElementById('meds-view-toggle-container');
         const viewOptions = document.getElementById('meds-view-options');
 
@@ -1110,6 +1121,11 @@
         }
 
         // Helper functions
+        String.prototype.toTitleCase = function () {
+            return this.toLowerCase().split(' ').map(word => {
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join(' ');
+        };
         const safeDisplay = (value, defaultText = '') => value || defaultText;
         const cleanDisplay = (value) => {
             if (!value) return '';
@@ -1124,6 +1140,10 @@
             if (!dateStr) return 'N/A';
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        const deliveryCleaned = (method) => {
+            if (!method) return '-';
+            return method.replace(/_+/g, ' ').replace(/\//g, ', ').toTitleCase();
         };
 
         medications.forEach(medication => {
@@ -1169,7 +1189,7 @@
                         </div>
                         <div class="medication-data-block">
                             <p class="medication-data-block-title">DELIVERY METHOD</p>
-                            <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? medication.delivery_method.toUpperCase() : '-', '-')}</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? deliveryCleaned(medication.delivery_method) : '-', '-')}</p>
                         </div>
                         <div class="medication-data-block">
                             <p class="medication-data-block-title">COMMENTS</p>
@@ -1236,32 +1256,32 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            const medicationsObj = data.data;
+            .then(response => response.json())
+            .then(data => {
+                const medicationsObj = data.data;
 
-            // Initialize pinned medications from backend data
-            medicationsState.pinnedMedications.clear();
-            Object.values(medicationsObj).forEach(med => {
-                if (med.pinned) {
-                    medicationsState.pinnedMedications.add(med.id);
-                }
+                // Initialize pinned medications from backend data
+                medicationsState.pinnedMedications.clear();
+                Object.values(medicationsObj).forEach(med => {
+                    if (med.pinned) {
+                        medicationsState.pinnedMedications.add(med.id);
+                    }
+                });
+
+                // Update state instead of directly rendering
+                medicationsState.setAllMedications(medicationsObj);
+                console.log('All medications state: ', medicationsState.allMedications);
+
+                // Store globally for backward compatibility
+                window.medicationsData = medicationsObj;
+
+                hideLoadingSpinner();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const medicationsContainer = document.getElementById('meds-data-container');
+                medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
             });
-
-            // Update state instead of directly rendering
-            medicationsState.setAllMedications(medicationsObj);
-            console.log('All medications state: ', medicationsState.allMedications);
-
-            // Store globally for backward compatibility
-            window.medicationsData = medicationsObj;
-
-            hideLoadingSpinner();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const medicationsContainer = document.getElementById('meds-data-container');
-            medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
-        });
     }
 
     let keywordDebounceTimer;
@@ -1271,81 +1291,88 @@
     let syntrilloMedicationKeywordByName = {};
 
     function getMedicationKeywords(origin, keyword) {
-        // Clear previous timer
-        clearTimeout(keywordDebounceTimer);
+        // Return a Promise
+        return new Promise((resolve, reject) => {
+            // Clear previous timer
+            clearTimeout(keywordDebounceTimer);
 
-        // Don't search if keyword is too short
-        if (keyword.length < 2) {
-            if (origin === 'healthie') {
-                const healthieDatalist = document.getElementById('healthie-medication-suggestions');
-                healthieDatalist.innerHTML = '';
-            } else {
-                const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
-                syntrilloDatalist.innerHTML = '';
+            // Add null/undefined check
+            if (!keyword || typeof keyword !== 'string') {
+                resolve();
+                return;
             }
 
-            return;
-        }
-
-        // Debounce the search
-        keywordDebounceTimer = setTimeout(() => {
-            const encodedKeyword = encodeURIComponent(keyword);
-            const healthieURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_healthie_medication_keywords", keyword="") }}${encodedKeyword}`;
-            const syntrilloURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_syntrillo_medication_keywords", keyword="") }}${encodedKeyword}`;
-            fetch(origin === 'healthie' ? healthieURL : syntrilloURL, {
-                method: 'GET'
-            })
-            .then(response => response.json())
-            .then(data => {
-                // console.log('Medication keywords:', data);
-                const datalist = document.getElementById(`${origin}-medication-suggestions`);
-                datalist.innerHTML = '';
-
-                if (data.success && Object.keys(data.data).length > 0) {
-
-                    if (origin === 'healthie') {
-                        healthieMedicationKeywords = data.data;
-                        healthieMedicationKeywordByName = {};
-                        console.log('Healthie Medication Keywords:', healthieMedicationKeywords);
-                        for (const [id, value] of Object.entries(healthieMedicationKeywords)) {
-                            const option = document.createElement('option');
-                            option.value = value.name;
-                            datalist.appendChild(option);
-                            // cache by name for lookup on selection
-                            healthieMedicationKeywordByName[value.name] = { id, ...value };
-                            console.log('Added Healthie option:', option);
-                        }
-                    }
-
-                    if (origin === 'syntrillo') {
-                        syntrilloMedicationKeywords = data.data;
-                        syntrilloMedicationKeywordByName = {};
-                        for (const [id, value] of Object.entries(syntrilloMedicationKeywords)) {
-                            const option = document.createElement('option');
-                            option.value = value.name;
-                            option.id = id;
-                            datalist.appendChild(option);
-                            // cache by name for lookup on selection
-                            syntrilloMedicationKeywordByName[value.name] = { id, ...value };
-                        }
-                    }
+            // Don't search if keyword is too short
+            if (keyword.length < 2) {
+                if (origin === 'healthie') {
+                    const healthieDatalist = document.getElementById('healthie-medication-suggestions');
+                    if (healthieDatalist) healthieDatalist.innerHTML = '';
                 } else {
-                    healthieMedicationKeywords = {};
-                    healthieMedicationKeywordByName = {};
-                    syntrilloMedicationKeywords = {};
-                    syntrilloMedicationKeywordByName = {};
+                    const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
+                    if (syntrilloDatalist) syntrilloDatalist.innerHTML = '';
                 }
-            })
-            .catch(error => console.error('Error fetching medication keywords:', error));
-        }, 300); // Wait 300ms after user stops typing
-    }
+                resolve(); // Resolve immediately if keyword too short
+                return;
+            }
 
-    function getCommonMedicationKeywords(keyword) {
-        return;
-    }
+            // Debounce the search
+            keywordDebounceTimer = setTimeout(() => {
+                const encodedKeyword = encodeURIComponent(keyword);
+                const healthieURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_healthie_medication_keywords", keyword="") }}${encodedKeyword}`;
+                const syntrilloURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_syntrillo_medication_keywords", keyword="") }}${encodedKeyword}`;
 
+                fetch(origin === 'healthie' ? healthieURL : syntrilloURL, {
+                    method: 'GET'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const datalist = document.getElementById(`${origin}-medication-suggestions`);
+                        if (datalist) datalist.innerHTML = '';
+
+                        if (data.success && Object.keys(data.data).length > 0) {
+
+                            if (origin === 'healthie') {
+                                healthieMedicationKeywords = data.data;
+                                healthieMedicationKeywordByName = {};
+                                for (const [id, value] of Object.entries(healthieMedicationKeywords)) {
+                                    const option = document.createElement('option');
+                                    option.value = value.name;
+                                    if (datalist) datalist.appendChild(option);
+                                    healthieMedicationKeywordByName[value.name] = { id, ...value };
+                                }
+                            }
+
+                            if (origin === 'syntrillo') {
+                                syntrilloMedicationKeywords = data.data;
+                                syntrilloMedicationKeywordByName = {};
+                                for (const [id, value] of Object.entries(syntrilloMedicationKeywords)) {
+                                    const option = document.createElement('option');
+                                    option.value = value.name;
+                                    option.id = id;
+                                    // option.onclick = () => {
+                                    //     document.getElementById('healthie-medication-id').value = id;
+                                    // };
+                                    if (datalist) datalist.appendChild(option);
+                                    syntrilloMedicationKeywordByName[value.name] = { id, ...value };
+                                }
+                            }
+                        } else {
+                            healthieMedicationKeywords = {};
+                            healthieMedicationKeywordByName = {};
+                            syntrilloMedicationKeywords = {};
+                            syntrilloMedicationKeywordByName = {};
+                        }
+                        resolve(); // Resolve after successful fetch
+                    })
+                    .catch(error => {
+                        console.error('Error fetching medication keywords:', error);
+                        reject(error); // Reject on error
+                    });
+            }, 300); // Wait 300ms after user stops typing
+        });
+    }
     const medNameInput = document.getElementById('medication-name');
-    medNameInput.addEventListener('input', function() {
+    medNameInput.addEventListener('input', function () {
         getMedicationKeywords('healthie', this.value);
         handleHealthieMedicationSelection();
     });
@@ -1377,7 +1404,7 @@
     });
 
     const commonNameInput = document.getElementById('medication-common-name');
-    commonNameInput.addEventListener('input', function() {
+    commonNameInput.addEventListener('input', function () {
         getMedicationKeywords('syntrillo', this.value);
         handleSyntrilloMedicationSelection();
     });
@@ -1572,6 +1599,39 @@
                 }
             }
         }
+
+        // Check if dosage info is missing and show suggestions if available
+        const doseContainer = document.getElementById('dose-suggestions-container');
+        const hasNoDosageInfo = !medication.dosage_amount && !medication.dosage_unit;
+
+        if (hasNoDosageInfo && medication.medication_name) {
+            // Fetch and display dosage options since dosage info is missing
+            getMedicationKeywords('healthie', medication.medication_name)
+                .then(() => {
+                    const item = healthieMedicationKeywordByName[medication.medication_name];
+                    if (item && item.dosage_options && item.dosage_options.length > 0) {
+                        populateDoseSuggestions(item.dosage_options);
+                        if (doseContainer) {
+                            doseContainer.style.display = 'flex';
+                        }
+                    } else {
+                        if (doseContainer) {
+                            doseContainer.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching medication keywords:', error);
+                    if (doseContainer) {
+                        doseContainer.style.display = 'none';
+                    }
+                });
+        } else {
+            // Has dosage info, hide suggestions
+            if (doseContainer) {
+                doseContainer.style.display = 'none';
+            }
+        }
     }
 
     async function createCommonMedication() {
@@ -1633,8 +1693,8 @@
         const validCommonName = commonMedNameInput.value.length > 2;
         const validCategory = categorySelect.value !== '';
         const validSupercategory = supercategorySelect.value !== '';
-        const validCustomCategory = categorySelect.value === 'other' && customCategoryInput.value.length > 2;
-        const validCustomSupercategory = supercategorySelect.value === 'other' && customSupercategoryInput.value.length > 2;
+        const validCustomCategory = categorySelect.value !== 'other' || (categorySelect.value === 'other' && customCategoryInput.value.length > 2);
+        const validCustomSupercategory = supercategorySelect.value !== 'other' || (supercategorySelect.value === 'other' && customSupercategoryInput.value.length > 2);
 
         const validCommonMedication = validCommonName && validCategory && validSupercategory && validCustomCategory && validCustomSupercategory
 
@@ -1688,15 +1748,6 @@
         cleanedFormData.append('temporary_lookup_code', temporaryLookupCode);
         cleanedFormData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
 
-        // Track which fields are multi-select
-        const multiSelectFields = ['day_of_week', 'day_period'];
-        const multiSelectData = {};
-
-        // Initialize multi-select arrays
-        multiSelectFields.forEach(field => {
-            multiSelectData[field] = [];
-        });
-
         for (let [key, value] of formData.entries()) {
             // console.log(`Processing field: ${key} with value: ${value}`);
             // Skip empty strings for optional fields
@@ -1710,22 +1761,8 @@
                 continue;
             }
 
-            if (multiSelectFields.includes(key)) {
-                // Collect multi-select values into arrays
-                multiSelectData[key].push(value);
-            } else {
-                // Add non-multi-select fields directly
-                cleanedFormData.append(key, value);
-            }
+            cleanedFormData.append(key, value);
         }
-
-        // Add multi-select arrays to the cleaned form data
-        multiSelectFields.forEach(field => {
-            if (multiSelectData[field].length > 0) {
-                // Send as JSON string array
-                cleanedFormData.append(field, JSON.stringify(multiSelectData[field]));
-            }
-        });
 
         // Debug: Log cleaned form data
         console.log('Cleaned Form Data:');
@@ -1769,7 +1806,7 @@
                     medicationsState.addMedication(med);
                 }
 
-                console.log('Updated medications state:', medicationsState.allMedications);
+                // console.log('Updated medications state:', medicationsState.allMedications);
             } else {
                 handleFormStatus('error', `Error saving medication: ` + (data.message || data.error || 'Unknown'));
                 submitBtn.disabled = false;
@@ -1802,22 +1839,22 @@
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Medication deleted:', data);
-            if (data.success) {
-                handleFormStatus('success', 'Medication deleted successfully!');
-                medicationsState.deleteMedication(currentMedication.id);
-                closeMedicationsModal();
-                medicationsState.currentMedication = null;
-            } else {
-                handleFormStatus('error', 'Error deleting medication: ' + (data.message || data.error || 'Unknown'));
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting medication:', error);
-            handleFormStatus('error', 'Error deleting medication. Please try again.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medication deleted:', data);
+                if (data.success) {
+                    handleFormStatus('success', 'Medication deleted successfully!');
+                    medicationsState.deleteMedication(currentMedication.id);
+                    closeMedicationsModal();
+                    medicationsState.currentMedication = null;
+                } else {
+                    handleFormStatus('error', 'Error deleting medication: ' + (data.message || data.error || 'Unknown'));
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting medication:', error);
+                handleFormStatus('error', 'Error deleting medication. Please try again.');
+            });
     }
 
     function handleFormStatus(status, message) {
@@ -1832,23 +1869,160 @@
         statusMessage.className = '';
     }
 
+    function resetMedicationForm() {
+        const form = document.getElementById('medication-form');
 
-    document.addEventListener('DOMContentLoaded', function() {
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        // Reset all form fields to their default values
+        form.reset();
+
+        // Clear hidden inputs explicitly
+        document.getElementById('syntrillo-medication-id').value = '';
+        document.getElementById('healthie-medication-id').value = '';
+        document.getElementById('medication-dosage-option-id').value = '';
+        document.getElementById('medication-mirrored').value = '';
+        document.getElementById('common-medication-id').value = '';
+
+        // Set default radio button values
+        document.getElementById('medication-is-active-yes').checked = true;
+        document.getElementById('medication-is-active-no').checked = false;
+
+        // Clear all checkboxes (day of week and day period)
+        const dayCheckboxes = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        dayCheckboxes.forEach(day => {
+            const checkbox = document.getElementById(`day-${day}`);
+            if (checkbox) checkbox.checked = false;
+        });
+
+        const periodCheckboxes = ['morning', 'afternoon', 'evening', 'night'];
+        periodCheckboxes.forEach(period => {
+            const checkbox = document.getElementById(`time-${period}`);
+            if (checkbox) checkbox.checked = false;
+        });
+
+        // Clear pinned checkbox
+        const pinnedCheckbox = document.getElementById('medication-pin-checkbox');
+        if (pinnedCheckbox) pinnedCheckbox.checked = false;
+
+        // Reset select dropdowns to first option (empty/default)
+        document.getElementById('medication-category').value = '';
+        document.getElementById('medication-supercategory').value = '';
+        document.getElementById('medication-delivery-method').value = '';
+        document.getElementById('medication-frequency').value = '';
+        document.getElementById('medication-time-of-day').value = '';
+
+        // Hide and clear custom category/supercategory fields
+        const customCategoryInput = document.getElementById('medication-custom-category');
+        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+        const customContainer = document.getElementById('medication-custom-classification-container');
+
+        if (customCategoryInput) {
+            customCategoryInput.value = '';
+            customCategoryInput.disabled = true;
+            customCategoryInput.style.display = 'none';
+        }
+
+        if (customSupercategoryInput) {
+            customSupercategoryInput.value = '';
+            customSupercategoryInput.disabled = true;
+            customSupercategoryInput.style.display = 'none';
+        }
+
+        if (customContainer) {
+            customContainer.style.display = 'none';
+        }
+
+        // Hide required tags for conditional fields
+        document.getElementById('medication-end-date-required-tag').style.display = 'none';
+        document.getElementById('medication-category-required-tag').style.display = 'none';
+        document.getElementById('medication-supercategory-required-tag').style.display = 'none';
+        document.getElementById('medication-custom-category-required-tag').style.display = 'none';
+        document.getElementById('medication-custom-supercategory-required-tag').style.display = 'none';
+
+        // Disable end date field (since default is active)
+        const endDateInput = document.getElementById('medication-end-date');
+        if (endDateInput) {
+            endDateInput.disabled = true;
+            endDateInput.value = '';
+        }
+
+        // Hide dose suggestions container
+        const doseContainer = document.getElementById('dose-suggestions-container');
+        if (doseContainer) {
+            doseContainer.style.display = 'none';
+        }
+
+        // Clear dose suggestions list
+        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
+        if (doseSuggestionsList) {
+            doseSuggestionsList.innerHTML = '';
+        }
+
+        // Clear medication name in delete section
+        const medToDelete = document.getElementById('medication-to-delete');
+        if (medToDelete) {
+            medToDelete.innerHTML = '';
+        }
+
+        // Clear the delete confirmation input
+        const deleteInput = document.getElementById('medication-delete');
+        if (deleteInput) {
+            deleteInput.value = '';
+        }
+
+        // Disable delete button
+        const deleteBtn = document.getElementById('medication-delete-btn');
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add('medication-btn-disabled');
+        }
+
+        // Clear datalist suggestions
+        const healthieDatalist = document.getElementById('healthie-medication-suggestions');
+        const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
+        if (healthieDatalist) healthieDatalist.innerHTML = '';
+        if (syntrilloDatalist) syntrilloDatalist.innerHTML = '';
+
+        // Reset keyword caches
+        healthieMedicationKeywords = {};
+        healthieMedicationKeywordByName = {};
+        syntrilloMedicationKeywords = {};
+        syntrilloMedicationKeywordByName = {};
+
+        // Clear form status message
+        clearFormStatus();
+
+        // Re-enable submit button and trigger validation check
+        const submitBtn = document.getElementById('medication-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true; // Will be re-enabled by checkRequiredFields if valid
+            submitBtn.classList.add('medication-btn-disabled');
+        }
+
+        // Trigger validation check to update submit button state
+        if (typeof checkRequiredFields === 'function') {
+            checkRequiredFields();
+        }
+
+        // console.log('Medication form reset successfully');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
         const medicationModal = document.getElementById('medication-modal');
-        const deleteMedicationModal = document.getElementById('delete-medication-modal');
 
         // Close modals when clicking outside of them
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target === medicationModal) {
-                closeMedicationsModal();
-            }
-            if (event.target === deleteMedicationModal) {
                 closeMedicationsModal();
             }
         };
     });
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         showLoadingSpinner('Fetching patient medications...');
         getMedicationsData();
     })

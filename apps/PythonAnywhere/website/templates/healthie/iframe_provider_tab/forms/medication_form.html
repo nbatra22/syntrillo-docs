@@ -129,6 +129,14 @@
         background-color: #9ca3af !important;
         cursor: not-allowed !important;
     }
+
+    #medication-pin-container {
+        margin-bottom: 0.5rem;
+    }
+
+    #medication-pin-container label {
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
@@ -444,63 +452,72 @@
 
 {% block scripts %}
 <script>
+    // Define checkRequiredFields globally so it can be called from anywhere
+    function checkRequiredFields() {
+        const submitBtn = document.getElementById('medication-submit-btn');
+        if (!submitBtn) return; // Guard clause
 
-    document.addEventListener('DOMContentLoaded', function () {
-        // Function to check if all required fields are filled
-        function checkRequiredFields() {
-            const submitBtn = document.getElementById('medication-submit-btn');
+        // Get all required fields
+        const medicationName = document.getElementById('medication-name').value.trim();
+        const isActiveYes = document.getElementById('medication-is-active-yes').checked;
+        const isActiveNo = document.getElementById('medication-is-active-no').checked;
+        const isActiveSelected = isActiveYes || isActiveNo;
+        const startDate = document.getElementById('medication-start-date').value;
+        const endDate = document.getElementById('medication-end-date').value;
+        const endDateRequired = isActiveNo;
 
-            // Get all required fields
-            const medicationName = document.getElementById('medication-name').value.trim();
-            const isActive = document.querySelector('input[name="is_active"]:checked');
-            const startDate = document.getElementById('medication-start-date').value;
-            const endDate = document.getElementById('medication-end-date').value;
-            const endDateRequired = !document.getElementById('medication-end-date').disabled;
+        // Check conditionally required fields
+        const commonName = document.getElementById('medication-common-name').value.trim();
+        const category = document.getElementById('medication-category').value;
+        const supercategory = document.getElementById('medication-supercategory').value;
+        const categoryRequired = commonName.length >= 2;
 
-            // Check conditionally required fields
-            const commonName = document.getElementById('medication-common-name').value.trim();
-            const category = document.getElementById('medication-category').value;
-            const supercategory = document.getElementById('medication-supercategory').value;
-            const categoryRequired = commonName.length >= 2;
+        // Check custom category/supercategory if "other" is selected
+        const customCategory = document.getElementById('medication-custom-category').value.trim();
+        const customSupercategory = document.getElementById('medication-custom-supercategory').value.trim();
+        const customCategoryRequired = category === 'other';
+        const customSupercategoryRequired = supercategory === 'other';
 
-            // Check custom category/supercategory if "other" is selected
-            const customCategory = document.getElementById('medication-custom-category').value.trim();
-            const customSupercategory = document.getElementById('medication-custom-supercategory').value.trim();
-            const customCategoryRequired = category === 'other';
-            const customSupercategoryRequired = supercategory === 'other';
+        // Check if all required fields are filled
+        let allRequiredFilled = medicationName && isActiveSelected && startDate;
 
-            // Check if all required fields are filled
-            let allRequiredFilled = medicationName && isActive && startDate;
+        // Add end date check if inactive
+        if (endDateRequired) {
+            allRequiredFilled = allRequiredFilled && endDate;
+        }
 
-            // Add end date check if inactive
-            if (endDateRequired) {
-                allRequiredFilled = allRequiredFilled && endDate;
+        // Add category/supercategory check if common name is provided
+        if (categoryRequired) {
+            allRequiredFilled = allRequiredFilled && category && supercategory;
+
+            if (customCategoryRequired) {
+                allRequiredFilled = allRequiredFilled && customCategory;
             }
-
-            // Add category/supercategory check if common name is provided
-            if (categoryRequired) {
-                allRequiredFilled = allRequiredFilled && category && supercategory;
-
-                // Check custom fields if "other" is selected
-                if (customCategoryRequired) {
-                    allRequiredFilled = allRequiredFilled && customCategory;
-                }
-                if (customSupercategoryRequired) {
-                    allRequiredFilled = allRequiredFilled && customSupercategory;
-                }
-            }
-
-            // Enable/disable submit button
-            if (allRequiredFilled) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('medication-btn-disabled');
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('medication-btn-disabled');
+            if (customSupercategoryRequired) {
+                allRequiredFilled = allRequiredFilled && customSupercategory;
             }
         }
 
-        // Add event listeners to all form inputs that affect required state
+        console.log('Validation check:', {
+            medicationName,
+            isActiveSelected,
+            startDate,
+            endDateRequired,
+            endDate,
+            allRequiredFilled
+        });
+
+        // Enable/disable submit button
+        if (allRequiredFilled) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('medication-btn-disabled');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('medication-btn-disabled');
+        }
+    }
+
+        // Add event listeners for validation
         document.getElementById('medication-name').addEventListener('input', checkRequiredFields);
         document.getElementById('medication-is-active-yes').addEventListener('change', checkRequiredFields);
         document.getElementById('medication-is-active-no').addEventListener('change', checkRequiredFields);
@@ -512,89 +529,87 @@
         document.getElementById('medication-custom-category').addEventListener('input', checkRequiredFields);
         document.getElementById('medication-custom-supercategory').addEventListener('input', checkRequiredFields);
 
-        // Initial check on page load
-        checkRequiredFields();
+        // is_active "No" handler
+        document.getElementById('medication-is-active-no').addEventListener('change', function () {
+            document.getElementById('medication-end-date').disabled = false;
+            document.getElementById('medication-end-date-required-tag').style.display = 'inline';
+            checkRequiredFields();
+        });
 
-    });
+        // is_active "Yes" handler
+        document.getElementById('medication-is-active-yes').addEventListener('change', function () {
+            document.getElementById('medication-end-date').disabled = true;
+            document.getElementById('medication-end-date').value = '';
+            document.getElementById('medication-end-date-required-tag').style.display = 'none';
+            checkRequiredFields();
+        });
 
-    document.getElementById('medication-is-active-no').addEventListener('input', function () {
-        document.getElementById('medication-end-date').disabled = false;
-        document.getElementById('medication-end-date-required-tag').style.display = 'inline';
-    });
+        // Medication name handler
+        document.getElementById('medication-name').addEventListener('input', function () {
+            document.getElementById('dose-suggestions-container').style.display = 'block';
+        });
 
-    document.getElementById('medication-is-active-yes').addEventListener('input', function () {
-        document.getElementById('medication-end-date').disabled = true;
-        document.getElementById('medication-end-date').value = ''; // Clear end date when switching to active
-        document.getElementById('medication-end-date-required-tag').style.display = 'none';
-    });
+        // Common name handler
+        document.getElementById('medication-common-name').addEventListener('input', function () {
+            if (this.value.length < 2) {
+                document.getElementById('medication-category-required-tag').style.display = 'none';
+                document.getElementById('medication-supercategory-required-tag').style.display = 'none';
+            } else {
+                document.getElementById('medication-category-required-tag').style.display = 'inline';
+                document.getElementById('medication-supercategory-required-tag').style.display = 'inline';
+            }
+        });
 
-    document.getElementById('medication-name').addEventListener('input', function () {
-        document.getElementById('dose-suggestions-container').style.display = 'block';
-    });
+        // Category handler
+        document.getElementById('medication-category').addEventListener('change', function () {
+            const customCategoryInput = document.getElementById('medication-custom-category');
+            const customCategoryRequiredTag = document.getElementById('medication-custom-category-required-tag');
+            if (this.value === 'other') {
+                customCategoryInput.disabled = false;
+                customCategoryInput.style.display = 'block';
+                customCategoryRequiredTag.style.display = 'inline';
+                customCategoryInput.ariaPlaceholder = 'Please specify category...';
+                document.getElementById('medication-custom-classification-container').style.display = 'grid';
+            } else {
+                customCategoryInput.value = '';
+                customCategoryInput.disabled = true;
+                customCategoryInput.style.display = 'none';
+                customCategoryRequiredTag.style.display = 'none';
+                customCategoryInput.ariaPlaceholder = '';
+            }
+        });
 
-    document.getElementById('medication-common-name').addEventListener('input', function () {
-        if (this.value.length < 2) {
-            document.getElementById('medication-category-required-tag').style.display = 'none';
-            document.getElementById('medication-supercategory-required-tag').style.display = 'none';
-        } else {
-            document.getElementById('medication-category-required-tag').style.display = 'inline';
-            document.getElementById('medication-supercategory-required-tag').style.display = 'inline';
-        }
-    });
+        // Supercategory handler
+        document.getElementById('medication-supercategory').addEventListener('change', function () {
+            const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+            const customSupercategoryRequiredTag = document.getElementById('medication-custom-supercategory-required-tag');
+            if (this.value === 'other') {
+                customSupercategoryInput.disabled = false;
+                customSupercategoryInput.style.display = 'block';
+                customSupercategoryRequiredTag.style.display = 'inline';
+                customSupercategoryInput.ariaPlaceholder = 'Please specify supercategory...';
+                document.getElementById('medication-custom-classification-container').style.display = 'grid';
+            } else {
+                customSupercategoryInput.value = '';
+                customSupercategoryInput.disabled = true;
+                customSupercategoryInput.style.display = 'none';
+                customSupercategoryRequiredTag.style.display = 'none';
+                customSupercategoryInput.ariaPlaceholder = '';
+            }
+        });
 
-    document.getElementById('medication-category').addEventListener('change', function () {
-        const customCategoryInput = document.getElementById('medication-custom-category');
-        const customCategoryRequiredTag = document.getElementById('medication-custom-category-required-tag');
-        if (this.value === 'other') {
-            customCategoryInput.disabled = false;
-            customCategoryInput.style.display = 'block';
-            // customCategoryRequiredTag.style.display = 'inline';
-            customCategoryInput.ariaPlaceholder = 'Please specify category...';
-            document.getElementById('medication-custom-classification-container').style.display = 'grid';
-        } else {
-            customCategoryInput.value = '';
-            customCategoryInput.disabled = true;
-            // customCategoryInput.style.display = 'none';
-            customCategoryRequiredTag.style.display = 'none';
-            customCategoryInput.ariaPlaceholder = '';
-            // if (document.getElementById('medication-supercategory').value !== 'other') {
-            //     document.getElementById('medication-custom-classification-container').style.display = 'none';
-            // }
-        }
-    });
-
-    document.getElementById('medication-supercategory').addEventListener('change', function () {
-        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
-        const customSupercategoryRequiredTag = document.getElementById('medication-custom-supercategory-required-tag');
-        if (this.value === 'other') {
-            customSupercategoryInput.disabled = false;
-            // customSupercategoryInput.style.display = 'block';
-            customSupercategoryRequiredTag.style.display = 'inline';
-            customSupercategoryInput.ariaPlaceholder = 'Please specify supercategory...';
-            document.getElementById('medication-custom-classification-container').style.display = 'grid';
-        } else {
-            customSupercategoryInput.value = '';
-            customSupercategoryInput.disabled = true;
-            // customSupercategoryInput.style.display = 'none';
-            customSupercategoryRequiredTag.style.display = 'none';
-            customSupercategoryInput.ariaPlaceholder = '';
-            // if (document.getElementById('medication-category').value !== 'other') {
-            //     document.getElementById('medication-custom-classification-container').style.display = 'none';
-            // }
-        }
-    });
-
-    document.getElementById('medication-delete').addEventListener('input', function () {
-        const deleteBtn = document.getElementById('medication-delete-btn');
-        const medicationName = document.getElementById('medication-name').value;
-        if (this.value === medicationName) {
-            deleteBtn.disabled = false;
-            deleteBtn.classList.remove('medication-btn-disabled');
-        } else {
-            deleteBtn.disabled = true;
-            deleteBtn.classList.add('medication-btn-disabled');
-        }
-    });
+        // Delete confirmation handler
+        document.getElementById('medication-delete').addEventListener('input', function () {
+            const deleteBtn = document.getElementById('medication-delete-btn');
+            const medicationName = document.getElementById('medication-name').value;
+            if (this.value === medicationName) {
+                deleteBtn.disabled = false;
+                deleteBtn.classList.remove('medication-btn-disabled');
+            } else {
+                deleteBtn.disabled = true;
+                deleteBtn.classList.add('medication-btn-disabled');
+            }
+        });
 
 </script>
 {% endblock %}

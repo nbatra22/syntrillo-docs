@@ -186,7 +186,7 @@ class HealthieMedications:
             # Retrieve the current set of responses
             response, log = self.auth.send_query(graphql_query, variables)
             data = response.get("createMedication", {}).get("medication", {})
-            logger.info("Successfully created medication in Healthie...")
+            logger.info(f"Successfully created medication in Healthie: {data.get('id')}")
 
             return data
 
