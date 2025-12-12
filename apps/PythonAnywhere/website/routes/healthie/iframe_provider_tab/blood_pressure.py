@@ -1,13 +1,19 @@
-from flask import Blueprint, render_template, request, jsonify, abort, send_file
+from flask import Blueprint, render_template, request, jsonify, abort, send_file, current_app
 import pandas as pd
 import io
+from io import BytesIO
+import os
 from datetime import datetime
+import secrets
+import string
 
 from .post_management import PostManager
 
 from syntrillo.api_healthie.constants import RHR_CATEGORY, WEIGHT_CATEGORY
 from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
+from syntrillo.bp_analysis.bp_report import BloodPressureReport
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
@@ -109,9 +115,14 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
 
     # Generate analysis + extremes table using BloodPressureAnalysis class methods
     timeframes = data_reporting_blood_pressure.calculate_timeframes() # Sorts and separates data by Baseline, Prior, & Current, in two week increments
-    summary_stats = data_reporting_blood_pressure.calculate_summary_stats() # Calculates summary stats for each timeframe
+    summary_stats = data_reporting_blood_pressure.calculate_summary_stats(hide_intervention=False) # Calculates summary stats for each timeframe
     analysis_table = data_reporting_blood_pressure.get_analysis_table() # Calculates row values for each timeframe
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
+
+    # Remove specific rows from analysis_table
+    rows_to_remove = ['SBP SD (mmHg)', 'DBP SD (mmHg)', 'SBP CV (%)', 'DBP CV (%)', 'SBP Count (>= 175)']
+    analysis_table = analysis_table[~analysis_table.index.isin(rows_to_remove)]
+
     extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
 
     num_columns = len(analysis_table.columns)
@@ -204,17 +215,42 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     post_manager.get_pseudonyms_from_tab_post(request)
 
     # Obtain form variables
-    file_name = request.form.get("file-name").strip() or "BP-report.pdf"
-    report_title = request.form.get("report-title") or "Blood Pressure Analysis"
+    file_name = request.form.get("file-name").strip() or "BP-Report"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
+    # Retrieve logo path
+    logo_filename = "syntrillo_logo.png"
+    logo_path = os.path.join(current_app.static_folder, logo_filename)
+    if not os.path.exists(logo_path):
+        logger.warning(f"Logo not found at {logo_path}; proceeding without logo.")
+        logo_path = None
+
+    # Retrieve patient info from Healthie
+    healthie_user = HealthieUser(post_manager.pseudonyms['healthie_user_id'])
+    patient_info = healthie_user._patient_information
+
     # Establish connection to BloodPressureAnalysis class
-    data_reporting_blood_pressure = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
+    bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
+    summary_stats = bp_analysis.calculate_summary_stats(hide_intervention=True)
 
-    bp_pdf = data_reporting_blood_pressure.save_to_pdf(analysis=analysis, extremes=extremes, report_title=report_title)
+    # Generate 5-character nanoid (URL-safe)
+    alphabet = string.ascii_letters + string.digits
+    nanoid = ''.join(secrets.choice(alphabet) for _ in range(5))
+    file_name = f"{file_name}-{nanoid}"
 
-    return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}", mimetype="application/pdf")
+    bp_report_manager = BloodPressureReport(
+        logo=None,
+        patient_info_dict=patient_info,
+        summary_dict=summary_stats,
+        timeframed_df=analysis,
+        extremes_df=extremes,
+        report_code=nanoid
+    )
+    # bp_pdf = bp_report_manager.generate_pdf_report()
+    bp_pdf = bp_report_manager.generate_pdf_report_with_header_footer()
+
+    return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}.pdf", mimetype="application/pdf")
 
 @iframe_healthie_provider_tab_bp_analysis_bp.route('/healthie/iframe_provider_tab/blood_pressure/metrics', methods=['GET','POST'])
 def iframe_healthie_provider_tab_get_metrics():
@@ -299,23 +335,27 @@ def iframe_healthie_provider_tab_get_hr_data():
     # Get baseline (first 2 weeks), prior (2 weeks before current), and current (latest 2 weeks) RHR data
     healthie_utils = HealthieUtils()
     rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
-    rhr_metadata = calc_rhr_metadata(
-        rhr_data=rhr_data,
+    pulse_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category="Pulse")
+
+    hr_data = rhr_data if len(rhr_data) >= len(pulse_data) else pulse_data
+
+    hr_metadata = calc_rhr_metadata(
+        rhr_data=hr_data,
         baseline_num_weeks=2,
         trailing_num_weeks=2,
         prior_num_weeks= 2
-    ) if rhr_data else {}
+    ) if hr_data else {}
 
     return jsonify({
-        'average_rhr_baseline': rhr_metadata.get('average_rhr_baseline'),
-        'average_rhr_trailing': rhr_metadata.get('average_rhr_trailing'),
-        'average_rhr_prior': rhr_metadata.get('average_rhr_prior'),
-        "baseline_start_date": rhr_metadata.get('baseline_start_date'),
-        "baseline_end_date": rhr_metadata.get('baseline_end_date'),
-        "prior_start_date": rhr_metadata.get('prior_start_date'),
-        "prior_end_date": rhr_metadata.get('prior_end_date'),
-        "current_start_date": rhr_metadata.get('current_start_date'),
-        "current_end_date": rhr_metadata.get('current_end_date'),
+        'average_rhr_baseline': hr_metadata.get('average_rhr_baseline'),
+        'average_rhr_trailing': hr_metadata.get('average_rhr_trailing'),
+        'average_rhr_prior': hr_metadata.get('average_rhr_prior'),
+        "baseline_start_date": hr_metadata.get('baseline_start_date'),
+        "baseline_end_date": hr_metadata.get('baseline_end_date'),
+        "prior_start_date": hr_metadata.get('prior_start_date'),
+        "prior_end_date": hr_metadata.get('prior_end_date'),
+        "current_start_date": hr_metadata.get('current_start_date'),
+        "current_end_date": hr_metadata.get('current_end_date'),
     })
 
 
@@ -341,35 +381,97 @@ def iframe_healthie_provider_tab_get_biometrics_data():
     # module_id_inactivity_charting = physical_activity_module_ids["module_id_inactivity_charting"]
     # module_id_activity_charting = physical_activity_module_ids["module_id_activity_charting"]
 
-    physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
-    module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
-    module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
+    # physical_activity_module_ids = get_healthie_activity_and_inactivity_module_ids(db_manager=db_manager)
+    # module_id_inactivity_intake = physical_activity_module_ids["module_id_inactivity_intake"]
+    # module_id_activity_intake = physical_activity_module_ids["module_id_activity_intake"]
 
-    inactivity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
-    activity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_activity_intake, syntrillo_internal_key)
+    # inactivity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_inactivity_intake, syntrillo_internal_key)
+    # activity_data = db_manager.get_all_patient_form_responses_by_module_id(module_id_activity_intake, syntrillo_internal_key)
 
-    inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
-    # Need minimum of 3 responses for baseline, prior, and current
-    if inactivity_data and len(inactivity_data) >= 3:
-        inactivity_baseline, inactivity_prior, inactivity_current = inactivity_data[-1], inactivity_data[1], inactivity_data[0]
-    elif inactivity_data and len(inactivity_data) == 2:
-        inactivity_baseline, inactivity_current = inactivity_data[-1], inactivity_data[0]
-    elif inactivity_data and len(inactivity_data) == 1:
-        inactivity_baseline = inactivity_data[0]
-    else:
-        logger.warning("Patient does not have at least 1 inactivity response...")
+    # inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
+    # # Need minimum of 3 responses for baseline, prior, and current
+    # if inactivity_data and len(inactivity_data) >= 3:
+    #     inactivity_baseline, inactivity_prior, inactivity_current = inactivity_data[-1], inactivity_data[1], inactivity_data[0]
+    # elif inactivity_data and len(inactivity_data) == 2:
+    #     inactivity_baseline, inactivity_current = inactivity_data[-1], inactivity_data[0]
+    # elif inactivity_data and len(inactivity_data) == 1:
+    #     inactivity_baseline = inactivity_data[0]
+    # else:
+    #     logger.warning("Patient does not have at least 1 inactivity response...")
 
+
+    # activity_baseline, activity_prior, activity_current = None, None, None
+    # # Need minimum of 3 responses for baseline, prior, and current
+    # if activity_data and len(activity_data) >= 3:
+    #     activity_baseline, activity_prior, activity_current = activity_data[-1], activity_data[1], activity_data[0]
+    # elif activity_data and len(activity_data) == 2:
+    #     activity_baseline, activity_current = activity_data[-1], activity_data[0]
+    # elif activity_data and len(activity_data) == 1:
+    #     activity_baseline = activity_data[0]
+    # else:
+    #     logger.warning("Patient does not have at least 1 activity response...")
+
+
+    physical_activity_form_id, physical_activity_module_id = db_manager.get_form_module_ids_by_module_label("activity_questionnaire_intake")
+    inactivity_form_id, inactivity_module_id = db_manager.get_form_module_ids_by_module_label("inactivity_questionnaire_intake")
+
+    activity_form_responses = HealthieForms().get_form_answers(
+        user_id=healthie_user_id,
+        custom_module_form_id=physical_activity_form_id,
+    )
+
+    activity_module_ids = [physical_activity_module_id, inactivity_module_id]
+    activity_form_responses_list = activity_form_responses.get('formAnswerGroups', []) if activity_form_responses else []
 
     activity_baseline, activity_prior, activity_current = None, None, None
-    # Need minimum of 3 responses for baseline, prior, and current
-    if activity_data and len(activity_data) >= 3:
-        activity_baseline, activity_prior, activity_current = activity_data[-1], activity_data[1], activity_data[0]
-    elif activity_data and len(activity_data) == 2:
-        activity_baseline, activity_current = activity_data[-1], activity_data[0]
-    elif activity_data and len(activity_data) == 1:
-        activity_baseline = activity_data[0]
-    else:
-        logger.warning("Patient does not have at least 1 activity response...")
+    inactivity_baseline, inactivity_prior, inactivity_current = None, None, None
+
+    if len(activity_form_responses_list) > 0:
+        activity_form_responses_list_cleaned = [
+            {
+                'created_at': response['created_at'],
+                'activity_minutes': next(
+                    (answer['answer'] for answer in response['form_answers']
+                    if answer['custom_module_id'] == str(physical_activity_module_id)),
+                    None
+                ),
+                'inactivity_hours': next(
+                    (answer['answer'] for answer in response['form_answers']
+                    if answer['custom_module_id'] == str(inactivity_module_id)),
+                    None
+                )
+            }
+            for response in activity_form_responses_list
+        ]
+        print("============= activity_form_responses_list:", activity_form_responses_list)
+        print("============= activity_form_responses_list_cleaned:", activity_form_responses_list_cleaned)
+        # Need minimum of 3 responses for baseline, prior, and current
+        if len(activity_form_responses_list_cleaned) >= 3:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = activity_form_responses_list_cleaned[-2]['activity_minutes'], activity_form_responses_list_cleaned[-2]['created_at']
+            activity_current = activity_form_responses_list_cleaned[0]['activity_minutes'], activity_form_responses_list_cleaned[0]['created_at']
+
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = (activity_form_responses_list_cleaned[-2]['inactivity_hours'], activity_form_responses_list_cleaned[-2]['created_at'])
+            inactivity_current = (activity_form_responses_list_cleaned[0]['inactivity_hours'], activity_form_responses_list_cleaned[0]['created_at'])
+
+        elif len(activity_form_responses_list_cleaned) == 2:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = None
+            activity_current = (activity_form_responses_list_cleaned[0]['activity_minutes'], activity_form_responses_list_cleaned[0]['created_at'])
+
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = None
+            inactivity_current = (activity_form_responses_list_cleaned[0]['inactivity_hours'], activity_form_responses_list_cleaned[0]['created_at'])
+
+        elif len(activity_form_responses_list_cleaned) == 1:
+            activity_baseline = (activity_form_responses_list_cleaned[-1]['activity_minutes'], activity_form_responses_list_cleaned[-1]['created_at'])
+            activity_prior = None
+            activity_current = None
+
+            inactivity_baseline = (activity_form_responses_list_cleaned[-1]['inactivity_hours'], activity_form_responses_list_cleaned[-1]['created_at'])
+            inactivity_prior = None
+            inactivity_current = None
 
     physical_activity_data = {
         "inactive": {

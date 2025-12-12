@@ -59,6 +59,7 @@
         font-size: 0.875rem;
         font-weight: 500;
         color: #6b7280;
+        text-decoration: underline;
     }
 
     .bp-summary-status-container {
@@ -506,9 +507,9 @@
                     <p class="bp-summary-targets-value">
                         Symptomatic Hypotensive Episodes: 0
                     </p>
-                    <p class="bp-summary-targets-value">
+                    <!-- <p class="bp-summary-targets-value">
                         Near-Hypotensive Episodes: 0
-                    </p>
+                    </p> -->
                 </div>
             </div>
             <div id="bp-summary-right-container" class="bp-summary-subcontainer">
@@ -549,12 +550,12 @@
                             Symptomatic Hypotensive Episodes: <span id="bp-summary-symptomatic-hypotension-count"></span>
                         </p>
                     </div>
-                    <div class="bp-summary-metric-container">
+                    <!-- <div class="bp-summary-metric-container">
                         <span id="bp-summary-near-hypotensive-grade"></span>
                         <p class="bp-summary-metrics-value">
                             Near-Hypotensive Episodes: <span id="bp-summary-near-hypotensive-count"></span>
                         </p>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -637,10 +638,10 @@
                                 placeholder="Enter file name" />
                             <p class="">
                                 <i class="fa-solid fa-circle-info"></i>
-                                Download file name will default to "BP-Report.pdf" if value is blank.
+                                Download file name will default to "BP-Report" if value is blank.
                             </p>
                         </div>
-                        <div id="bp-form-title-container" class="bp-form-input-container">
+                        <!-- <div id="bp-form-title-container" class="bp-form-input-container">
                             <label for="file-name" class="">
                                 Title
                             </label>
@@ -650,10 +651,13 @@
                                 <i class="fa-solid fa-circle-info"></i>
                                 Report title will default to "Blood Pressure Analysis" if value is blank.
                             </p>
-                        </div>
+                        </div> -->
                         <div id="hidden-inputs" class="hidden">
+                            <input type="hidden" name="temporary_lookup_code" id="temporary_lookup_code"
+                                value="{{ temporary_lookup_code }}" />
                             <input type="hidden" name="analysis_json" id="analysis_json" value="{{ analysis_json }}" />
                             <input type="hidden" name="extremes_json" id="extremes_json" value="{{ extremes_json }}" />
+                            <!-- <input type="hidden" name="summary_stats" id="summary-stats" value="{{ summary_stats }}" /> -->
                         </div>
                         <button type="submit" class="bp-form-submit-button" id="bp-download-button">
                             <span class="icon-container">
@@ -909,26 +913,26 @@
                     document.getElementById("bp-summary-status").style.fontWeight = "bold";
                     document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
                     document.getElementById("bp-summary-status").style.textAlign = "center";
-                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "#16a34a" : data.summary_stats.status.grade === 1 ? "#f59e0b" : data.summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
+                    document.getElementById("bp-summary-status").style.color = data.summary_stats.status.grade === 0 ? "green" : data.summary_stats.status.grade === 1 ? "yellow" : data.summary_stats.status.grade === 2 ? "orange" : "red";
 
                     document.getElementById("bp-summary-avg-sbp").textContent = data.summary_stats.avg_sbp.value;
                     document.getElementById("bp-summary-avg-dbp").textContent = data.summary_stats.avg_dbp.value;
                     document.getElementById("bp-summary-peak-sbp").textContent = data.summary_stats.peak_sbp.value;
                     document.getElementById("bp-summary-low-sbp").textContent = data.summary_stats.low_sbp.value;
                     document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = data.summary_stats.symptomatic_hypotension.value;
-                    document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
+                    // document.getElementById("bp-summary-near-hypotensive-count").textContent = data.summary_stats.near_hypotensive.value;
 
-                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
-                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
-                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
-                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
+                    const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: red;"></i>`
+                    const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: orange;"></i>`
+                    const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: yellow;"></i>`
+                    const greenCheck = `<i class="fa-solid fa-circle-check" style="color: green;"></i>`
 
                     document.getElementById("bp-summary-avg-sbp-grade").innerHTML = data.summary_stats.avg_sbp.grade === 0 ? greenCheck : data.summary_stats.avg_sbp.grade === 1 ? yellowExclamation : data.summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
                     document.getElementById("bp-summary-avg-dbp-grade").innerHTML = data.summary_stats.avg_dbp.grade === 0 ? greenCheck : data.summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
                     document.getElementById("bp-summary-peak-sbp-grade").innerHTML = data.summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-low-sbp-grade").innerHTML = data.summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = data.summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+                    // document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = data.summary_stats.near_hypotensive.value > 0 ? orangeExclamation : greenCheck;
 
                     document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
                     document.getElementById("bp-summary-metrics-container").style.display = "flex";
@@ -1137,7 +1141,7 @@
                 // Populate Physical Activity data
                 if (activityBaseline) {
                     const activityData = data.physical_activity_data?.active?.activity_baseline;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1147,7 +1151,7 @@
 
                 if (activityPrior) {
                     const activityData = data.physical_activity_data?.active?.activity_prior;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1157,7 +1161,7 @@
 
                 if (activityCurrent) {
                     const activityData = data.physical_activity_data?.active?.activity_current;
-                    if (activityData && activityData[0]) {
+                    if (activityData && activityData.length === 2) {
                         const date = activityData[1] ? formatDate(activityData[1]) : '';
                         activityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${activityData[0]}</div>`;
                     } else {
@@ -1168,7 +1172,7 @@
                 // Populate Physical Inactivity data
                 if (inactivityBaseline) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_baseline;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityBaseline.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {
@@ -1178,7 +1182,7 @@
 
                 if (inactivityPrior) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_prior;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityPrior.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {
@@ -1188,7 +1192,7 @@
 
                 if (inactivityCurrent) {
                     const inactivityData = data.physical_activity_data?.inactive?.inactivity_current;
-                    if (inactivityData && inactivityData[0]) {
+                    if (inactivityData && inactivityData.length === 2) {
                         const date = inactivityData[1] ? formatDate(inactivityData[1]) : '';
                         inactivityCurrent.innerHTML = `<h4>As of ${date}:</h4><div style="font-size: 16px;">${inactivityData[0]}</div>`;
                     } else {

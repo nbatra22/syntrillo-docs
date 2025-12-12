@@ -753,10 +753,6 @@
 </div>
 
 <script>
-    var healthieProviderId = "{{ healthie_provider_id }}";
-    var healthieUserId = "{{ healthie_user_id }}";
-    var temporaryLookupCode = "{{ temporary_lookup_code }}";
-    var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     // Medications state object
     const medicationsState = {
@@ -794,7 +790,7 @@
         addMedication(medication) {
             console.log('Adding medication:', medication);
             this.allMedications[medication.id] = medication;
-            console.log('Updated medications state:', this.allMedications); 
+            console.log('Updated medications state:', this.allMedications);
             this.applyFiltersAndSort();
         },
 
@@ -825,7 +821,7 @@
 
             // Apply status filter
             if (this.filters.status === 'pinned') {
-                filtered = filtered.filter(med => this.pinnedMedications.has(med.healthie_medication_id));
+                filtered = filtered.filter(med => this.pinnedMedications.has(med.id));
             } else if (this.filters.status === 'active') {
                 filtered = filtered.filter(med => med.is_active);
             } else if (this.filters.status === 'inactive') {
@@ -847,8 +843,8 @@
             let unpinned = [];
 
             if (this.filters.status !== 'pinned') {
-                pinned = filtered.filter(med => this.pinnedMedications.has(med.healthie_medication_id));
-                unpinned = filtered.filter(med => !this.pinnedMedications.has(med.healthie_medication_id));
+                pinned = filtered.filter(med => this.pinnedMedications.has(med.id));
+                unpinned = filtered.filter(med => !this.pinnedMedications.has(med.id));
             } else {
                 pinned = filtered;
             }
@@ -1037,10 +1033,10 @@
         const formData = new FormData();
         formData.append('medication_id', medicationId);
         formData.append('pinned', isPinned ? '1' : '0');
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        formData.append('healthie_provider_id', '{{ healthie_provider_id }}');
+        formData.append('healthie_user_id', '{{ healthie_user_id }}');
+        formData.append('temporary_lookup_code', '{{ temporary_lookup_code }}');
+        formData.append('patient_not_registered_at_syntrillo', '{{ patient_not_registered_at_syntrillo }}');
 
         try {
             const response = await fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_update_medication_pin") }}', {
@@ -1243,45 +1239,6 @@
             legendIcon.className = 'fas fa-chevron-down';
             legendText.textContent = 'Show Legend';
         }
-    }
-
-    function getMedicationsData() {
-        const formData = new FormData();
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
-
-        fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_all_medications") }}', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                const medicationsObj = data.data;
-
-                // Initialize pinned medications from backend data
-                medicationsState.pinnedMedications.clear();
-                Object.values(medicationsObj).forEach(med => {
-                    if (med.pinned) {
-                        medicationsState.pinnedMedications.add(med.id);
-                    }
-                });
-
-                // Update state instead of directly rendering
-                medicationsState.setAllMedications(medicationsObj);
-                console.log('All medications state: ', medicationsState.allMedications);
-
-                // Store globally for backward compatibility
-                window.medicationsData = medicationsObj;
-
-                hideLoadingSpinner();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const medicationsContainer = document.getElementById('meds-data-container');
-                medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
-            });
     }
 
     let keywordDebounceTimer;
@@ -1678,6 +1635,48 @@
         }
     }
 
+    function getMedicationsData() {
+        const formData = new FormData();
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        formData.append('healthie_user_id', "{{ healthie_user_id }}");
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
+
+        fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_all_medications") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                const medicationsObj = data.data;
+
+                // Update state instead of directly rendering
+                medicationsState.setAllMedications(medicationsObj);
+                console.log('All medications state: ', medicationsState.allMedications);
+
+                // Initialize pinned medications from backend data
+                medicationsState.pinnedMedications.clear();
+                Object.values(medicationsObj).forEach(med => {
+                    if (med.pinned) {
+                        console.log('Pinning medication on load: ', med);
+                        medicationsState.pinnedMedications.add(med.id);
+                    }
+                });
+
+
+
+                // Store globally for backward compatibility
+                window.medicationsData = medicationsObj;
+
+                hideLoadingSpinner();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const medicationsContainer = document.getElementById('meds-data-container');
+                medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
+            });
+    }
+
     async function submitMedicationForm() {
 
         const commonMedNameInput = document.getElementById('medication-common-name');
@@ -1743,10 +1742,10 @@
         // Filter out empty string values and convert is_active to boolean
         const cleanedFormData = new FormData();
 
-        cleanedFormData.append('healthie_provider_id', healthieProviderId);
-        cleanedFormData.append('healthie_user_id', healthieUserId);
-        cleanedFormData.append('temporary_lookup_code', temporaryLookupCode);
-        cleanedFormData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        cleanedFormData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        cleanedFormData.append('healthie_user_id', "{{ healthie_user_id }}");
+        cleanedFormData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        cleanedFormData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
 
         for (let [key, value] of formData.entries()) {
             // console.log(`Processing field: ${key} with value: ${value}`);
@@ -1830,10 +1829,10 @@
         const formData = new FormData();
         formData.append('id', currentMedication.id);
         formData.append('healthie_medication_id', currentMedication.healthie_medication_id);
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        formData.append('healthie_user_id', "{{ healthie_user_id }}");
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
 
         fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_delete_medication") }}', {
             method: 'POST',

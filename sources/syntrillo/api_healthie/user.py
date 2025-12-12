@@ -398,7 +398,7 @@ class HealthieUser:
         except Exception as e:
             logger.error(f"Error fetching user information from Healthie: {e}")
 
-    def get_user_groups_by_healthie_user_id(self) -> list:
+    def get_user_group_by_healthie_user_id(self) -> list:
         """
         Get the user groups for a given healthie user id using the Healthie API
         Args:
@@ -411,7 +411,7 @@ class HealthieUser:
                 query getUser($id: ID) {
                     user(id: $id) {
                         id
-                        user_groups {
+                        user_group {
                             id
                             name
                         }
@@ -423,7 +423,7 @@ class HealthieUser:
             }
 
             output: dict = HealthieUtils.run_graphql_query(query, variables)
-            return output['user']['user_groups']
+            return output['user']['user_group']
 
         except Exception as e:
             logger.error(f"Error fetching user groups from Healthie: {e}")
