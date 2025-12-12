@@ -12,6 +12,7 @@ from syntrillo.api_healthie.medications import HealthieMedications
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
 from syntrillo.medications.models import MedicationRecord, CommonMedication
 from syntrillo.medications.utils import create_medication, update_medication, delete_medication, get_medication_info_by_keyword, get_common_medications_by_keyword, create_common_medication
+from syntrillo.medications.helpers import generate_nanoid
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 iframe_healthie_provider_tab_medications_bp = Blueprint('iframe_healthie_provider_tab_medications_bp', __name__)
@@ -185,6 +186,7 @@ def iframe_healthie_provider_tab_create_common_medication():
         supercategory_custom = request.form.get('supercategory_custom')
 
         new_common_medication = CommonMedication(
+            id=generate_nanoid(),
             common_name=common_name,
             category=category,
             supercategory=supercategory,
@@ -247,6 +249,7 @@ def iframe_healthie_provider_tab_create_medication():
         day_of_week = request.form.getlist('day_of_week')
 
         medication_record = MedicationRecord(
+            id=generate_nanoid(),
             syntrillo_internal_key=str(syntrillo_internal_key),
             medication_name=medication_name,
             is_active=is_active,

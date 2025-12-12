@@ -531,7 +531,7 @@
         }
     }
 
-    #form-status-message {
+    #med-form-status-message {
         display: flex;
         align-items: center;
         margin: 0;
@@ -543,19 +543,19 @@
         min-height: 3rem !important;
     }
 
-    #form-status-message.success {
+    #med-form-status-message.success {
         color: #10b981;
         background-color: #f0fdf4;
         border: 1px solid #bbf7d0;
     }
 
-    #form-status-message.pending {
+    #med-form-status-message.pending {
         color: #3b82f6;
         background-color: #eff6ff;
         border: 1px solid #bfdbfe;
     }
 
-    #form-status-message.error {
+    #med-form-status-message.error {
         color: #ef4444;
         background-color: #fef2f2;
         border: 1px solid #fecaca;
@@ -1857,7 +1857,7 @@
     }
 
     function handleFormStatus(status, message) {
-        const statusMessage = document.getElementById('form-status-message');
+        const statusMessage = document.getElementById('med-form-status-message');
         statusMessage.textContent = message;
         statusMessage.className = status; // 'success', 'error', 'pending'
     }
