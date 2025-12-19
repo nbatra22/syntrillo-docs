@@ -34,13 +34,13 @@ def handler(event, context):
 
         # Existing measurement validation
         db_manager = SyntrilloDatabaseManager(uuid.UUID(syntrillo_internal_key))
-        record, log = db_manager.get_first_tenovi_device_data(device_name='Tenovi BPM - L')
+        record, log = db_manager.get_first_tenovi_measurement()
         if not log['success']:
             return {
                 'success': False,
                 'error': log['error'],
                 'statusCode': 500,
-                'body': json.dumps({'error': log['error']})
+                'body': json.dumps({'error': log['error'], "syntrillo_internal_key": syntrillo_internal_key})
             }
 
         if record is None:
@@ -82,7 +82,7 @@ def handler(event, context):
         logger.exception(f"An unexpected error occurred: {e}")
         return {
             'success': False,
-            'error': f'An internal server error occurred: {e}',
+            'error': f'An internal server error occurred for patient {syntrillo_internal_key}: {e}',
             'statusCode': 500,
             'body': json.dumps({'error': f'An internal server error occurred: {e}'})
         }
@@ -113,7 +113,7 @@ def list_patients():
             })
             logger.info(f"Found patient {str(entry['syntrillo_internal_key'])} in lookup")
         else:
-            logger.error("Failed to find patient. No entry found in lookup")
+            logger.error("Failed to find patient. No entry found in lookup for healthie_user_id: " + str(patient["id"]))
 
 
     lookup_codes.close_connection()

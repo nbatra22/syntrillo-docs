@@ -2,19 +2,141 @@
 
 {% block extra_head %}
 <style>
+    #medication-form-content {
+        height: 500px;
+        overflow: scroll;
+    }
 
-#medication-form-content {
-    height: 500px;
-    overflow: scroll;
-}
+    .form-group-container-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        width: 100%;
+    }
 
-.form-group-container-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    width: 100%;
-}
+    .medication-keywords-container {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        margin-top: 0.25rem;
+    }
 
+    .medication-keywords-container p {
+        margin: 0;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        color: #16284a;
+        border-bottom: 1px solid #d1d5db;
+        cursor: pointer;
+    }
+
+    .medication-keywords-container p:hover {
+        background-color: #f3f4f6;
+    }
+
+    .medication-keywords-container p:last-child {
+        border-bottom: none;
+    }
+
+    .dose-suggestions-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        border-radius: 0.375rem;
+        background-color: #f3f4f6;
+    }
+
+    .dose-suggestions-container h3 {
+        margin: 0;
+        font-weight: 600;
+        color: #16284a;
+        font-size: small;
+    }
+
+    .dose-suggestions-container ul {
+        margin: 0;
+        padding: 0;
+        font-size: small;
+    }
+
+    .dose-suggestions-container li {
+        margin-left: 1rem;
+        padding: 0;
+        font-size: small;
+        list-style-type: disc;
+        list-style-position: inside;
+    }
+
+    .inputs-description {
+        color: #6b7280;
+        font-size: small;
+        margin-bottom: 0.5rem;
+    }
+
+    .medication-checkbox-group {
+        margin-left: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .medication-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .medication-checkbox input {
+        width: fit-content !important;
+    }
+
+    .medication-checkbox label {
+        font-weight: normal;
+        margin: 0;
+    }
+
+    .required-field {
+        color: red;
+    }
+
+    .medication-delete-input-container {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .medication-delete-input-container input {
+        flex-grow: 1;
+    }
+
+    #medication-delete-btn {
+        background-color: #dc2626;
+        cursor: pointer;
+        border-radius: 0.375rem;
+        padding: 0.5rem 1rem;
+        color: white;
+        border: none !important;
+    }
+
+    #medication-delete-btn:hover {
+        background-color: #b91c1c !important;
+    }
+
+    .medication-btn-disabled {
+        background-color: #9ca3af !important;
+        cursor: not-allowed !important;
+    }
+
+    #medication-pin-container {
+        margin-bottom: 0.5rem;
+    }
+
+    #medication-pin-container label {
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
@@ -22,34 +144,30 @@
 {% block content %}
 <form id="medication-form" class="form-subcontainer" onsubmit="">
     <div id="medication-form-content" class="form-content">
-        <input type="hidden" id="medication-id" name="medication_id">
-        <input type="hidden" id="medication-syntrillo-internal-key" name="syntrillo_internal_key">
+
+        <p id="healthie-medication-inputs-description" class="inputs-description">
+            <span><i class="fa-solid fa-circle-exclamation"></i></span> This section contains inputs that are synced
+            with Healthie's medication database. Changes made within this form will also
+            appear in the patient's medication list on the Healthie's 'Overview' tab.
+        </p>
+
+        <input type="hidden" id="syntrillo-medication-id" name="id">
+        <input type="hidden" id="healthie-medication-id" name="healthie_medication_id">
         <input type="hidden" id="medication-dosage-option-id" name="dosage_option_id">
         <input type="hidden" id="medication-mirrored" name="mirrored">
 
         <div id="medication-name-container" class="form-group">
             <label for="medication-name">Medication Name <span class="required-field">*</span></label>
-            <input type="text" id="medication-name" name="medication_name" required>
-        </div>
-
-        <div id="medication-category-container" class="form-group">
-            <label for="medication-category">Category</label>
-            <select id="medication-category" name="category">
-                <option value="antiplatelet">Antiplatelet</option>
-                <option value="antihypertensive">Antihypertensive</option>
-                <option value="statin">Statin</option>
-                <option value="hypoglycemic-agent">Hypoglycemic Agent</option>
-                <option value="ace_inhibitor">ACE Inhibitor</option>
-                <option value="arb">ARB</option>
-                <option value="beta_blocker">Beta Blocker</option>
-                <option value="calcium_channel_blocker">Calcium Channel Blocker (CCB)</option>
-                <option value="diuretic">Diuretic</option>
-                <option value="other">Other</option>
-            </select>
+            <input type="text" id="medication-name" name="medication_name" list="healthie-medication-suggestions"
+                required autocomplete="off" placeholder="Start typing medication name...">
+            <datalist id="healthie-medication-suggestions">
+                <!-- Options populated dynamically -->
+            </datalist>
         </div>
 
         <div id="medication-is-active-container" class="form-group">
-            <label for="medication-is-active">Is this medication currently being taken by the patient? <span class="required-field">*</span></label>
+            <label for="medication-is-active">Is this medication currently being taken by the patient? <span
+                    class="required-field">*</span></label>
             <div class="input-button-group">
                 <div class="input-button-group-item">
                     <input type="radio" id="medication-is-active-yes" name="is_active" value="yes" default>
@@ -64,69 +182,269 @@
 
         <div class="form-group-container-2">
             <div id="medication-start-date-container" class="form-group">
-                <label for="medication-start-date">Start Date</label>
+                <label for="medication-start-date">Start Date <span class="required-field">*</span></label>
                 <input type="date" id="medication-start-date" name="start_date">
             </div>
             <div id="medication-end-date-container" class="form-group">
-                <label for="medication-end-date">End Date</label>
-                <input type="date" id="medication-end-date" name="end_date">
+                <label for="medication-end-date">End Date <span id="medication-end-date-required-tag"
+                        class="required-field" style="display: none;">*</span></label>
+                <input type="date" id="medication-end-date" name="end_date" disabled=True>
             </div>
         </div>
+
+        <div id="medication-comment-container" class="form-group">
+            <label for="medication-comment">Comment</label>
+            <textarea id="medication-comment" name="comment"
+                placeholder="Enter any additional information about the medication"></textarea>
+        </div>
+
+        <div id="medication-directions-container" class="form-group">
+            <label for="medication-directions">Directions</label>
+            <textarea id="medication-directions" name="directions"
+                placeholder="Enter any additional directions about the medication"></textarea>
+        </div>
+
+        <p id="syntrillo-medication-inputs-description" class="inputs-description">
+            <span><i class="fa-solid fa-circle-exclamation"></i></span> The inputs listed below are used for internal
+            purposes only and will not be synced with external providers (Healthie, DoseSpot, etc.). These are not
+            required fields but are highly recommended to ensure accurate medication tracking within Syntrillo.
+        </p>
+
+        <div id="medication-pin-container" class="medication-checkbox">
+            <input type="checkbox" id="medication-pin-checkbox" name="pinned" />
+            <label for="medication-pin-checkbox">Pin this medication</label>
+        </div>
+
+        <div id="medication-common-name-container" class="form-group">
+            <label for="medication-common-name">Common Name</label>
+            <input type="text" id="medication-common-name" name="common_name" placeholder="e.g. 'Aspirin'"
+                list="syntrillo-medication-suggestions" />
+            <datalist id="syntrillo-medication-suggestions">
+                <!-- Options populated dynamically -->
+            </datalist>
+        </div>
+
+        <input type="hidden" id="common-medication-id" name="common_medication_id" value="" />
 
         <div class="form-group-container-2">
-            <div id="medication-dose-container" class="form-group">
-                <label for="medication-dose">Dosage <span class="required-field">*</span></label>
-                <input type="number" id="medication-dose" name="dosage_amount" step="0.1" min="0.1" required>
+            <div id="medication-category-container" class="form-group">
+                <label for="medication-category">Category <span id="medication-category-required-tag"
+                        class="required-field" style="display: none;">*</span></label>
+                <select id="medication-category" name="category">
+                    <option value="">-- Select Category --</option>
+                    <option value="antiplatelet">Antiplatelet</option>
+                    <option value="antihypertensive">Antihypertensive</option>
+                    <option value="anticoagulant">Anticoagulant</option>
+                    <option value="antihistamine">Antihistamine</option>
+                    <option value="statin">Statin</option>
+                    <option value="hypoglycemic-agent">Hypoglycemic Agent</option>
+                    <option value="ace_inhibitor">ACE Inhibitor</option>
+                    <option value="arb">ARB</option>
+                    <option value="beta_blocker">Beta Blocker</option>
+                    <option value="calcium_channel_blocker">Calcium Channel Blocker (CCB)</option>
+                    <option value="diuretic">Diuretic</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
-            <div id="medication-dose-unit-container" class="form-group">
-                <label for="medication-dose-unit">Unit <span class="required-field">*</span></label>
-                <input type="text" id="medication-dose-unit" name="dosage_unit" placeholder="e.g. mg, g, mL, etc." required>
+            <div id="medication-supercategory-container" class="form-group">
+                <label for="medication-supercategory">Supercategory <span id="medication-supercategory-required-tag"
+                        class="required-field" style="display: none;">*</span></label>
+                <select id="medication-supercategory" name="supercategory">
+                    <option value="">-- Select Supercategory --</option>
+                    <option value="blood_thinner">Blood Thinner</option>
+                    <option value="cholesterol_medication">Cholesterol Medication</option>
+                    <option value="diabetes_medication">Diabetes Medication</option>
+                    <option value="blood_pressure_medication">Blood Pressure Medication</option>
+                    <option value="pain_reliever">Pain Reliever</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
         </div>
 
-        <div class="form-group-container-2">
-            <div id="medication-count-container" class="form-group">
-                <label for="medication-count">Count (# of doses per intake) <span class="required-field">*</span></label>
-                <input type="number" id="medication-count" name="dose_count" step="1" min="1" required>
+        <div id="medication-custom-classification-container" class="form-group-container-2">
+            <div id="medication-custom-category-container" class="form-group">
+                <label for="medication-custom-category">Custom Category <span
+                        id="medication-custom-category-required-tag" class="required-field"
+                        style="display: none;">*</span></label>
+                <input type="text" id="medication-custom-category" name="category_custom" disabled />
             </div>
-            <div id="medication-frequency-container" class="form-group">
-                <label for="medication-frequency">Frequency <span class="required-field">*</span></label>
-                <input type="text" id="medication-frequency" name="frequency" placeholder="e.g. daily, weekly, as needed, etc." required>
+            <div id="medication-custom-supercategory-container" class="form-group">
+                <label for="medication-custom-supercategory">Custom Supercategory <span
+                        id="medication-custom-supercategory-required-tag" class="required-field"
+                        style="display: none;">*</span></label>
+                <input type="text" id="medication-custom-supercategory" name="supercategory_custom" disabled />
             </div>
-        </div>
-
-        <div id="medication-time-of-day-container" class="form-group">
-            <label for="medication-time-of-day">Time of Day <span class="required-field">*</span></label>
-            <input type="text" id="medication-time-of-day" name="time_of_day" placeholder="e.g. morning, afternoon, evening, etc." required>
         </div>
 
         <div id="medication-delivery-method-container" class="form-group">
-            <label for="medication-delivery-method">Delivery Method <span class="required-field">*</span></label>
-            <select id="medication-delivery-method" name="delivery_method" required>
-                <option value="tablet-capsule-pill" selected>Tablet/Capsule/Pill</option>
+            <label for="medication-delivery-method">Delivery Method</label>
+            <select id="medication-delivery-method" name="delivery_method">
+                <option value="">-- Select Delivery Method --</option>
+                <option value="pill/tablet/capsule">Pill/Tablet/Capsule</option>
                 <option value="cream">Cream</option>
                 <option value="implant">Implant</option>
                 <option value="inhaler">Inhaler</option>
-                <option value="suppository">Suppository</option>
+                <option value="suppositories">Suppositories</option>
                 <option value="injection">Injection</option>
                 <option value="other">Other</option>
             </select>
         </div>
 
-        <div id="medication-comment-container" class="form-group">
-            <label for="medication-comment">Comment <span class="required-field">*</span></label>
-            <textarea id="medication-comment" name="comment" placeholder="Enter any additional information about the medication"></textarea>
+        <div class="form-group-container-2">
+            <div id="medication-dosing-schedule-rule-container" class="form-group">
+                <label for="medication-dosing-schedule-rule">Dosing Schedule Rule</label>
+                <select id="medication-dosing-schedule-rule" name="dosing_schedule_rule">
+                    <option value="">-- Select Dosing Schedule Rule --</option>
+                    <option value="QD">QD</option>
+                    <option value="BID">BID</option>
+                    <option value="TID">TID</option>
+                    <option value="QID">QID</option>
+                    <option value="PRN">PRN</option>
+                </select>
+            </div>
+            <div id="medication-total-dose-container" class="form-group">
+                <label for="medication-total-daily-dose">Total Daily Dose</label>
+                <input type="number" id="medication-total-daily-dose" name="total_daily_dose" step="0.1" min="0.1"
+                    required>
+            </div>
         </div>
 
-        <div id="medication-directions-container" class="form-group">
-            <label for="medication-directions">Directions <span class="required-field">*</span></label>
-            <textarea id="medication-directions" name="directions" placeholder="Enter any additional directions about the medication"></textarea>
+        <div id="dose-suggestions-container" class="dose-suggestions-container" style="display: none;">
+            <h3>The following are suggested dosages from Healthie's medication database:</h3>
+            <ul id="dose-suggestions-list">
+                <!-- Options populated dynamically -->
+            </ul>
         </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-dose-container" class="form-group">
+                <label for="medication-dose">Dosage
+                    <input type="number" id="medication-dose" name="dosage_amount" step="0.1" min="0.1" required>
+            </div>
+            <div id="medication-dose-unit-container" class="form-group">
+                <label for="medication-dose-unit">Unit
+                    <input type="text" id="medication-dose-unit" name="dosage_unit" placeholder="e.g. mg, g, mL, etc."
+                        required>
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-count-container" class="form-group">
+                <label for="medication-count">Count (# of doses per intake)</label>
+                <input type="number" id="medication-count" name="dose_count" step="0.5" min="0.5"
+                    placeholder="e.g. 0.5, 1, 2">
+            </div>
+            <div id="medication-frequency-container" class="form-group">
+                <label for="medication-frequency">Frequency</label>
+                <select id="medication-frequency" name="frequency">
+                    <option value="">-- Select Frequency --</option>
+                    <option value="as-needed">As Needed</option>
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="one-time">One-time</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-dosing-interval-container" class="form-group">
+                <label for="medication-dosing-interval">Dosing Interval</label>
+                <input type="number" id="medication-dosing-interval" name="dosing_interval" step="1" min="1"
+                    placeholder="e.g. 1, 2, 3">
+            </div>
+            <div id="medication-time-of-day-container" class="form-group">
+                <label for="medication-time-of-day">Time of Day</label>
+                <input type="time" id="medication-time-of-day" name="time_of_day">
+            </div>
+        </div>
+
+        <div class="form-group-container-2">
+            <div id="medication-day-period-container" class="form-group">
+                <label>Day Period</label>
+                <div class="medication-checkbox-group">
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-morning" name="day_period" value="morning">
+                        <label for="time-morning">Morning</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-noon" name="day_period" value="noon">
+                        <label for="time-noon">Noon</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-afternoon" name="day_period" value="afternoon">
+                        <label for="time-afternoon">Afternoon</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-evening" name="day_period" value="evening">
+                        <label for="time-evening">Evening</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-night" name="day_period" value="night">
+                        <label for="time-night">Night</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="time-bedtime" name="day_period" value="bedtime">
+                        <label for="time-bedtime">Bedtime</label>
+                    </div>
+                </div>
+            </div>
+            <div id="medication-day-of-week-container" class="form-group">
+                <label>Day of Week</label>
+                <div class="medication-checkbox-group">
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-monday" name="day_of_week" value="monday">
+                        <label for="day-monday">Monday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-tuesday" name="day_of_week" value="tuesday">
+                        <label for="day-tuesday">Tuesday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-wednesday" name="day_of_week" value="wednesday">
+                        <label for="day-wednesday">Wednesday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-thursday" name="day_of_week" value="thursday">
+                        <label for="day-thursday">Thursday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-friday" name="day_of_week" value="friday">
+                        <label for="day-friday">Friday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-saturday" name="day_of_week" value="saturday">
+                        <label for="day-saturday">Saturday</label>
+                    </div>
+                    <div class="medication-checkbox">
+                        <input type="checkbox" id="day-sunday" name="day_of_week" value="sunday">
+                        <label for="day-sunday">Sunday</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="medication-delete-container" class="form-group">
+            <label for="medication-delete">If you would like to delete this medication, please confirm by typing "<span
+                    id="medication-to-delete"></span>" below. Please note that deleting this medication will erase all
+                history for this medication from both Healthie and Syntrillo systems.</label>
+            <div id="" class="medication-delete-input-container">
+                <input type="text" id="medication-delete" name="delete_reason" />
+                <button type="button" id="medication-delete-btn" class="form-delete-btn medication-btn-disabled"
+                    disabled onclick="event.preventDefault(); confirmDeleteMedication()">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 
     <div class="form-submit-footer">
-        <div id="form-status-message"></div>
-        <button type="submit" class="form-submit-btn" onclick="event.preventDefault(); submitMedicationForm()">Submit</button>
+        <h3 id="med-form-status-message"></h3>
+        <button type="submit" id="medication-submit-btn" class="form-submit-btn"
+            onclick="event.preventDefault(); submitMedicationForm()">Submit</button>
     </div>
 </form>
 {% endblock %}
@@ -134,5 +452,164 @@
 
 {% block scripts %}
 <script>
+    // Define checkRequiredFields globally so it can be called from anywhere
+    function checkRequiredFields() {
+        const submitBtn = document.getElementById('medication-submit-btn');
+        if (!submitBtn) return; // Guard clause
+
+        // Get all required fields
+        const medicationName = document.getElementById('medication-name').value.trim();
+        const isActiveYes = document.getElementById('medication-is-active-yes').checked;
+        const isActiveNo = document.getElementById('medication-is-active-no').checked;
+        const isActiveSelected = isActiveYes || isActiveNo;
+        const startDate = document.getElementById('medication-start-date').value;
+        const endDate = document.getElementById('medication-end-date').value;
+        const endDateRequired = isActiveNo;
+
+        // Check conditionally required fields
+        const commonName = document.getElementById('medication-common-name').value.trim();
+        const category = document.getElementById('medication-category').value;
+        const supercategory = document.getElementById('medication-supercategory').value;
+        const categoryRequired = commonName.length >= 2;
+
+        // Check custom category/supercategory if "other" is selected
+        const customCategory = document.getElementById('medication-custom-category').value.trim();
+        const customSupercategory = document.getElementById('medication-custom-supercategory').value.trim();
+        const customCategoryRequired = category === 'other';
+        const customSupercategoryRequired = supercategory === 'other';
+
+        // Check if all required fields are filled
+        let allRequiredFilled = medicationName && isActiveSelected && startDate;
+
+        // Add end date check if inactive
+        if (endDateRequired) {
+            allRequiredFilled = allRequiredFilled && endDate;
+        }
+
+        // Add category/supercategory check if common name is provided
+        if (categoryRequired) {
+            allRequiredFilled = allRequiredFilled && category && supercategory;
+
+            if (customCategoryRequired) {
+                allRequiredFilled = allRequiredFilled && customCategory;
+            }
+            if (customSupercategoryRequired) {
+                allRequiredFilled = allRequiredFilled && customSupercategory;
+            }
+        }
+
+        console.log('Validation check:', {
+            medicationName,
+            isActiveSelected,
+            startDate,
+            endDateRequired,
+            endDate,
+            allRequiredFilled
+        });
+
+        // Enable/disable submit button
+        if (allRequiredFilled) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('medication-btn-disabled');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('medication-btn-disabled');
+        }
+    }
+
+        // Add event listeners for validation
+        document.getElementById('medication-name').addEventListener('input', checkRequiredFields);
+        document.getElementById('medication-is-active-yes').addEventListener('change', checkRequiredFields);
+        document.getElementById('medication-is-active-no').addEventListener('change', checkRequiredFields);
+        document.getElementById('medication-start-date').addEventListener('input', checkRequiredFields);
+        document.getElementById('medication-end-date').addEventListener('input', checkRequiredFields);
+        document.getElementById('medication-common-name').addEventListener('input', checkRequiredFields);
+        document.getElementById('medication-category').addEventListener('change', checkRequiredFields);
+        document.getElementById('medication-supercategory').addEventListener('change', checkRequiredFields);
+        document.getElementById('medication-custom-category').addEventListener('input', checkRequiredFields);
+        document.getElementById('medication-custom-supercategory').addEventListener('input', checkRequiredFields);
+
+        // is_active "No" handler
+        document.getElementById('medication-is-active-no').addEventListener('change', function () {
+            document.getElementById('medication-end-date').disabled = false;
+            document.getElementById('medication-end-date-required-tag').style.display = 'inline';
+            checkRequiredFields();
+        });
+
+        // is_active "Yes" handler
+        document.getElementById('medication-is-active-yes').addEventListener('change', function () {
+            document.getElementById('medication-end-date').disabled = true;
+            document.getElementById('medication-end-date').value = '';
+            document.getElementById('medication-end-date-required-tag').style.display = 'none';
+            checkRequiredFields();
+        });
+
+        // Medication name handler
+        document.getElementById('medication-name').addEventListener('input', function () {
+            document.getElementById('dose-suggestions-container').style.display = 'block';
+        });
+
+        // Common name handler
+        document.getElementById('medication-common-name').addEventListener('input', function () {
+            if (this.value.length < 2) {
+                document.getElementById('medication-category-required-tag').style.display = 'none';
+                document.getElementById('medication-supercategory-required-tag').style.display = 'none';
+            } else {
+                document.getElementById('medication-category-required-tag').style.display = 'inline';
+                document.getElementById('medication-supercategory-required-tag').style.display = 'inline';
+            }
+        });
+
+        // Category handler
+        document.getElementById('medication-category').addEventListener('change', function () {
+            const customCategoryInput = document.getElementById('medication-custom-category');
+            const customCategoryRequiredTag = document.getElementById('medication-custom-category-required-tag');
+            if (this.value === 'other') {
+                customCategoryInput.disabled = false;
+                customCategoryInput.style.display = 'block';
+                customCategoryRequiredTag.style.display = 'inline';
+                customCategoryInput.ariaPlaceholder = 'Please specify category...';
+                document.getElementById('medication-custom-classification-container').style.display = 'grid';
+            } else {
+                customCategoryInput.value = '';
+                customCategoryInput.disabled = true;
+                customCategoryInput.style.display = 'none';
+                customCategoryRequiredTag.style.display = 'none';
+                customCategoryInput.ariaPlaceholder = '';
+            }
+        });
+
+        // Supercategory handler
+        document.getElementById('medication-supercategory').addEventListener('change', function () {
+            const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+            const customSupercategoryRequiredTag = document.getElementById('medication-custom-supercategory-required-tag');
+            if (this.value === 'other') {
+                customSupercategoryInput.disabled = false;
+                customSupercategoryInput.style.display = 'block';
+                customSupercategoryRequiredTag.style.display = 'inline';
+                customSupercategoryInput.ariaPlaceholder = 'Please specify supercategory...';
+                document.getElementById('medication-custom-classification-container').style.display = 'grid';
+            } else {
+                customSupercategoryInput.value = '';
+                customSupercategoryInput.disabled = true;
+                customSupercategoryInput.style.display = 'none';
+                customSupercategoryRequiredTag.style.display = 'none';
+                customSupercategoryInput.ariaPlaceholder = '';
+            }
+        });
+
+        // Delete confirmation handler
+        document.getElementById('medication-delete').addEventListener('input', function () {
+            const deleteBtn = document.getElementById('medication-delete-btn');
+            const medicationName = document.getElementById('medication-name').value;
+            if (this.value === medicationName) {
+                deleteBtn.disabled = false;
+                deleteBtn.classList.remove('medication-btn-disabled');
+            } else {
+                deleteBtn.disabled = true;
+                deleteBtn.classList.add('medication-btn-disabled');
+            }
+        });
+
 </script>
 {% endblock %}

@@ -65,9 +65,6 @@ def iframe_healthie_provider_tab_study_outcomes_data():
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
     healthie_user_id = post_manager.pseudonyms['healthie_user_id']
 
-    local_environment_and_secrets = LocalEnvironmentAndSecrets()
-    is_production = local_environment_and_secrets.is_production()
-
     study_outcomes = PatientStudyOutcomes(syntrillo_internal_key_patient, healthie_user_id)
     primary_prevention_study_groups = study_outcomes.primary_prevention_study_group
     secondary_prevention_study_groups = study_outcomes.secondary_prevention_study_group

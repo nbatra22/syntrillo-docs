@@ -335,58 +335,56 @@ class HealthieConversations:
         Returns:
             str: The conversation id
         """
-        graphql_query = '''
-            query conversationMemberships(
-            $keywords: String
-            $provider_id: ID
-            ) {
-            conversationMembershipsCount(
-                keywords: $keywords
-                provider_id: $provider_id
-
-            )
-            conversationMemberships(
-                keywords: $keywords
-                provider_id: $provider_id
-            ) {
-                id
-                display_name
-                convo {
-                id
-                conversation_memberships_count
-                }
-            }
-        }
-        '''
-        '''
-        Example output:
-        {
-            "data": {
-                "conversationMembershipsCount": 1,
-                "conversationMemberships": [
-                    {
-                        "id": "15583438",
-                        "display_name": "Multiple_users_01",
-                        "archived": false,
-                        "viewed": true,
-                        "convo": {
-                            "id": "2776123",
-                            "conversation_memberships_count": 3
-                        }
-                    }
-                ]
-            }
-        }
-        '''
         try:
             variables = {
                 "keywords": alert_title,
                 "provider_id": messenger_id
             }
-            output: dict = self.healthie_utils.run_graphql_query(graphql_query, variables)
-            logger.info(f"Successfully retrieved conversation memberships from Healthie")
 
-            conversation_id = output.get('conversationMemberships', {})[0].get('convo', {}).get('id', None)
+            # Use self.auth.send_query instead of self.healthie_utils.run_graphql_query
+            response, log = self.auth.send_query(
+                query="""
+                    query conversationMemberships($keywords: String, $provider_id: ID) {
+                        conversationMembershipsCount(
+                            keywords: $keywords
+                            provider_id: $provider_id
+                        )
+                        conversationMemberships(
+                            keywords: $keywords
+                            provider_id: $provider_id
+                        ) {
+                            id
+                            display_name
+                            convo {
+                                id
+                                conversation_memberships_count
+                            }
+                        }
+                    }
+                """,
+                variables=variables
+            )
+
+            # Check if the query was successful
+            if not log['success'] or response is None:
+                logger.error(f"Query failed: {log.get('message', 'Unknown error')}")
+                return None
+
+            # Get conversation memberships from the response
+            conversation_memberships = response.get('conversationMemberships', [])
+
+            if not conversation_memberships:
+                logger.warning(f"No conversation found with title: {alert_title}")
+                return None
+
+            # Get the first conversation ID
+            conversation_id = conversation_memberships[0].get('convo', {}).get('id', None)
+
+            if conversation_id:
+                logger.info(f"Successfully retrieved conversation ID: {conversation_id}")
+            else:
+                logger.warning(f"Conversation found but no ID available")
+
             return conversation_id
 
         except Exception as e:

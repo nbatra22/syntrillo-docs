@@ -82,6 +82,17 @@
         outline: none;
     }
 
+    #rs-refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;      /* equal width/height => circle */
+        height: 2rem;
+        padding: 0;       /* remove extra padding that would break the circle */
+        border-radius: 50%; /* or 9999px; both create a circle when width==height */
+        box-sizing: border-box;
+    }
+
     .rs-btn:hover {
         background-color: #D1D5DB;
     }
@@ -643,6 +654,9 @@
                     <h1 id="" class="">
                         Stroke Risk Score
                     </h1>
+                    <button id="rs-refresh-btn" class="rs-btn" onclick="getRiskScore(onDemand=true)" title="Refresh Risk Score Data">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
                 </div>
                 <h2 id="" class="">
                     <!-- Charting notes encompass all factors included in the stroke risk score calculation. To update
@@ -702,12 +716,6 @@
                         </div>
                     </div>
                 </div>
-                <div id="rs-error-message" class="rs-error-message" style="display: none;">
-                    <div class="rs-error-content">
-                        <i class="fa-solid fa-exclamation-triangle"></i>
-                        <span id="rs-error-message-text" class="rs-error-text"></span>
-                    </div>
-                </div>
             </div>
         </div>
         <div id="" class="rs-scores-container">
@@ -733,6 +741,13 @@
                     Calculating...
                 </h3> -->
             </div>
+        </div>
+    </div>
+
+    <div id="rs-error-message" class="rs-error-message" style="display: none;">
+        <div class="rs-error-content">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <span id="rs-error-message-text" class="rs-error-text"></span>
         </div>
     </div>
 
@@ -2825,6 +2840,7 @@
     const PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
     let srsData = null;
+    let labData = null
 
     function showSpinner(targetElement) {
         targetElement.innerHTML = "";
@@ -2902,7 +2918,7 @@
         getRiskScore();
     }
 
-    function getRiskScore() {
+    function getRiskScore(onDemand = false) {
         const errorMessage = document.getElementById("rs-error-message");
         const errorMessageText = document.getElementById("rs-error-message-text");
 
@@ -3130,6 +3146,7 @@
         formData.append('healthie_user_id', healthieUserId);
         formData.append('temporary_lookup_code', temporaryLookupCode);
         formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        formData.append('on_demand', onDemand ? '1' : '0');
         // console.log("Fetching risk score data...");
         fetch("{{ url_for('iframe_healthie_provider_tab_risk_score_bp.iframe_healthie_provider_tab_risk_score_data') }}", {
             method: "POST",
@@ -3272,6 +3289,16 @@
                         }
                     }
 
+                    // Populate Lab Data Values on the SRS overview
+                    if (metrics.lab_data) {
+                        const lab_data = metrics.lab_data;
+
+                        if (lab_data.hemoglobin_value) ha1c.innerHTML = lab_data.hemoglobin_value ? Math.round(lab_data.hemoglobin_value * 10) / 10 : missingDataIcon;
+                        if (lab_data.ldl_value) ldl.innerHTML = lab_data.ldl_value ? Math.round(lab_data.ldl_value * 10) / 10 : missingDataIcon;
+                        if (lab_data.hdl_value) hdl.innerHTML = lab_data.hdl_value ? Math.round(lab_data.hdl_value * 10) / 10 : missingDataIcon;
+                        if (lab_data.creatintine_value) creatinine.innerHTML = lab_data.creatintine_value ? Math.round(lab_data.creatintine_value * 10) / 10 : missingDataIcon;
+                    }
+
                     if (data.data.risk_score === null || data.data.priority_score === null) {
                         errorMessage.style.display = 'block';
                         errorMessageText.textContent = `No charting note data available`;
@@ -3285,6 +3312,7 @@
                     }
 
                     srsData = metrics.srs_response_data;
+                    labData = metrics.lab_data;
 
                     // Update total score
                     if (riskScore) {
@@ -3339,11 +3367,7 @@
                         if (physicalInactivityLevel) physicalInactivityLevel.innerHTML = srs.PhysicalInactivityLevel || missingDataIcon;
 
                         // Lab Values
-                        if (ha1c) ha1c.innerHTML = srs.HemoglobinA1c ? Math.round(srs.HemoglobinA1c * 10) / 10 : missingDataIcon;
-                        if (ldl) ldl.innerHTML = srs.LDL ? Math.round(srs.LDL * 10) / 10 : missingDataIcon;
-                        if (hdl) hdl.innerHTML = srs.HDL ? Math.round(srs.HDL * 10) / 10 : missingDataIcon;
                         if (triglycerides) triglycerides.innerHTML = srs.Triglycerides ? Math.round(srs.Triglycerides * 10) / 10 : missingDataIcon;
-                        if (creatinine) creatinine.innerHTML = srs.Creatinine ? Math.round(srs.Creatinine * 10) / 10 : missingDataIcon;
 
                         // Patient History
                         if (!srs.HasPreviousStroke && !srs.ScreenedForTIA && !srs.ChronicInfarctPresent) {
@@ -4582,26 +4606,25 @@
                 }
             }
         }
-
         // 5. Lab Values Section
-        if (srsData.HemoglobinA1c) {
+        if (labData.hemoglobin_value) {
             const ha1cInput = document.querySelector('input[name="HemoglobinA1c"]');
             if (ha1cInput) {
-                ha1cInput.value = srsData.HemoglobinA1c;
+                ha1cInput.value = labData.hemoglobin_value;
             }
         }
 
-        if (srsData.LDL) {
+        if (labData.ldl_value) {
             const ldlInput = document.querySelector('input[name="LDL"]');
             if (ldlInput) {
-                ldlInput.value = srsData.LDL;
+                ldlInput.value = labData.ldl_value;
             }
         }
 
-        if (srsData.HDL) {
+        if (labData.hdl_value) {
             const hdlInput = document.querySelector('input[name="HDL"]');
             if (hdlInput) {
-                hdlInput.value = srsData.HDL;
+                hdlInput.value = labData.hdl_value;
             }
         }
 
@@ -4612,10 +4635,10 @@
             }
         }
 
-        if (srsData.Creatinine) {
+        if (labData.hemoglobin_value) {
             const creatinineInput = document.querySelector('input[name="Creatinine"]');
             if (creatinineInput) {
-                creatinineInput.value = srsData.Creatinine;
+                creatinineInput.value = labData.creatintine_value;
             }
         }
 

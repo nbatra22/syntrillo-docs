@@ -66,7 +66,7 @@ def get_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID) -> Tuple[list
     return srs_form_responses, log
 
 
-def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_internal_key_clinician: uuid.UUID, data: dict) -> Tuple[Optional[int], dict]:
+def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_internal_key_clinician: str, data: dict) -> Tuple[Optional[int], dict]:
     """
     Insert SRS form responses and compliance data into the database
 
@@ -94,7 +94,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
         # Insert SRS form responses
         srs_form_response = SRSFormResponse(
             syntrillo_internal_key_patient=str(syntrillo_internal_key_patient),
-            syntrillo_internal_key_clinician=str(syntrillo_internal_key_clinician),
+            syntrillo_internal_key_clinician=syntrillo_internal_key_clinician,
             created_at=datetime.now(),
             **data
         )
@@ -107,6 +107,7 @@ def insert_srs_iframe_data(syntrillo_internal_key_patient: uuid.UUID, syntrillo_
                     category=RISK_VALUE_MAPPING[value_field],
                     gender=srs_form_response.Gender
                 )
+                # Hyperlipidemia is if any of the specific lab values are within a dangerour range – Ask Omar if unsure.
                 if categorical_value:
                     srs_form_response.HistoryOfHyperlipidemia = True
                 setattr(srs_form_response, categorical_field, categorical_value)
