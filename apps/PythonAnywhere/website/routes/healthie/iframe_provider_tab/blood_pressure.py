@@ -214,8 +214,15 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     post_manager = PostManager()
     post_manager.get_pseudonyms_from_tab_post(request)
 
+    # Retrieve patient info from Healthie
+    healthie_user = HealthieUser(post_manager.pseudonyms['healthie_user_id'])
+    patient_info = healthie_user._patient_information
+    first_initial = (patient_info or {}).get("first_name")[0] if (patient_info or {}).get("first_name") else ""
+    last_initial = (patient_info or {}).get("last_name")[0] if (patient_info or {}).get("last_name") else ""
+    date_str = datetime.now().strftime("%y%m%d")
+
     # Obtain form variables
-    file_name = request.form.get("file-name").strip() or "BP-Report"
+    file_name = request.form.get("file-name").strip() or f"{first_initial}{last_initial}-{date_str}"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
 
@@ -225,10 +232,6 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     if not os.path.exists(logo_path):
         logger.warning(f"Logo not found at {logo_path}; proceeding without logo.")
         logo_path = None
-
-    # Retrieve patient info from Healthie
-    healthie_user = HealthieUser(post_manager.pseudonyms['healthie_user_id'])
-    patient_info = healthie_user._patient_information
 
     # Establish connection to BloodPressureAnalysis class
     bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
