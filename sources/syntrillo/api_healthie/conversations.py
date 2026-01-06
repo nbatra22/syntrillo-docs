@@ -414,7 +414,7 @@ class HealthieConversations:
             else:
                 logger.info(f"Updating conversation {conversation_id} members...")
 
-                updated_memberships = self.update_conversation_memberships(conversation_id, list(valid_member_ids))
+                updated_memberships = self.update_conversation_memberships(conversation_id, valid_members)
 
                 if not updated_memberships:
                     logger.error(f"Failed to update conversation {conversation_id} members.")
