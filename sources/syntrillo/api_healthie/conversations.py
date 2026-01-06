@@ -426,7 +426,7 @@ class HealthieConversations:
             logger.error(f"Error validating conversation members for conversation {conversation_id}: {e}")
             return False
 
-    def update_conversation_memberships(self, conversation_id: str, members_ids: list):
+    def update_conversation_memberships(self, conversation_id: str, members_ids):
         """
         Update conversation memberships to ensure they are current.
         """
@@ -439,21 +439,21 @@ class HealthieConversations:
                     $id: ID,
                     $simple_added_users: String,
                 ) {
-                updateConversation(
-                    input: {
-                        id: $id,
-                        simple_added_users: $simple_added_users
+                    updateConversation(
+                        input: {
+                            id: $id,
+                            simple_added_users: $simple_added_users
+                        }
+                    ) {
+                        conversation {
+                            id
+                            conversation_memberships_count
+                        }
                     }
-                ) {
-                    conversation {
-                        id
-                        conversation_memberships_count
-                    }
-                }
                 }
             """, variables={
                 'id': conversation_id,
-                'simple_added_users': ','.join(str(member_id) for member_id in members_ids)
+                'simple_added_users': members_ids
             })
 
             if not log['success']:
