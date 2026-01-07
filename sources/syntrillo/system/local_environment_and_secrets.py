@@ -42,6 +42,7 @@ class LocalEnvironmentAndSecrets:
             'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
             'physicians'    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
+            'patient_dashboard_ids' : ( 'HEALTHIE_PATIENT_DASHBOARD_IDS', 'patient_dashboard_ids')
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),

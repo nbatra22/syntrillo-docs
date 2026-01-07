@@ -120,42 +120,11 @@
     }
 </style>
 
-<div id="" class="">
-    <div id="bp-hr-spinner-container"></div>
-    <div id="bp-hr-error-container" class="bp-error-container">
-        <i class="fa-solid fa-circle-exclamation"></i>
-        <h2 class="bp-hr-error"></h2>
-    </div>
-    <table id="bp-hr-table" class="bp-biometric-table">
-        <thead>
-            <tr>
-                <td></td>
-                <td>Baseline</td>
-                <td>Prior</td>
-                <td>Latest</td>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong>Date Range</strong></td>
-                <td id="bp-rhr-date-baseline"></td>
-                <td id="bp-rhr-date-prior"></td>
-                <td id="bp-rhr-date-trailing"></td>
-            </tr>
-            <tr>
-                <td><strong>Average RHR</strong></td>
-                <td id="bp-avg-rhr-baseline"></td>
-                <td id="bp-avg-rhr-prior"></td>
-                <td id="bp-avg-rhr-trailing"></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
 
 <div id="" class="">
     <div id="bp-biometrics-spinner-container"></div>
     <div id="bp-biometrics-error-container" class="bp-error-container">
-        <i class="fa-solid fa-circle-exclamation"></i>
+        <!-- <i class="fa-solid fa-circle-exclamation"></i> -->
         <h2 class="bp-no-data-error"></h2>
     </div>
     <table id="bp-biometrics-table" class="bp-biometric-table">
@@ -168,6 +137,12 @@
             </tr>
         </thead>
         <tbody>
+            <tr>
+                <td><strong>Avg. Resting Heart Rate (bpm)</strong></td>
+                <td id="bp-biometric-rhr-baseline"></td>
+                <td id="bp-biometric-rhr-prior"></td>
+                <td id="bp-biometric-rhr-current"></td>
+            </tr>
             <tr>
                 <td><strong>Body mass index (kg/m²)</strong></td>
                 <td id="bp-biometric-bmi-baseline"></td>
@@ -205,19 +180,12 @@
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        const hrSpinnerContainer = document.getElementById("bp-hr-spinner-container");
-        const hrErrorContainer = document.getElementById("bp-hr-error-container");
-        const hrContent = document.getElementById("bp-hr-table");
-        const rhrBaselineDate = document.getElementById("bp-rhr-date-baseline");
-        const rhrPriorDate = document.getElementById("bp-rhr-date-prior");
-        const rhrTrailingDate = document.getElementById("bp-rhr-date-trailing");
-        const rhrBaseline = document.getElementById("bp-avg-rhr-baseline");
-        const rhrPrior = document.getElementById("bp-avg-rhr-prior");
-        const rhrTrailing = document.getElementById("bp-avg-rhr-trailing");
+        // Biometrics table RHR cells
+        const biometricRhrBaseline = document.getElementById("bp-biometric-rhr-baseline");
+        const biometricRhrPrior = document.getElementById("bp-biometric-rhr-prior");
+        const biometricRhrCurrent = document.getElementById("bp-biometric-rhr-current");
 
         // Hide HR table and show spinner initially until data is successfully fetched
-        hrContent.style.display = "none";
-        showSpinner(hrSpinnerContainer);
         fetch("{{ url_for('iframe_healthie_patient_sidebar_data_bp.healthie_iframe_patient_sidebar_heart_rate') }}", {
             method: "POST",
             body: formData
@@ -237,36 +205,32 @@
                     });
                 };
 
-                // Populate date ranges
-                if (rhrBaselineDate) {
-                    rhrBaselineDate.textContent = data.baseline_start_date && data.baseline_end_date
+                // Populate average RHR values in biometrics table
+                if (biometricRhrBaseline && data.average_rhr_baseline) {
+                    const date = data.baseline_start_date && data.baseline_end_date
                         ? `${formatDate(data.baseline_start_date)} - ${formatDate(data.baseline_end_date)}`
-                        : '-';
+                        : '';
+                    biometricRhrBaseline.innerHTML = `${date.length ? `<h4>From ${date}:</h4>` : ''}<div style="font-size: 16px;">${data.average_rhr_baseline.toFixed(1)}</div>`;
+                } else if (biometricRhrBaseline) {
+                    biometricRhrBaseline.textContent = '-';
                 }
 
-                if (rhrPriorDate) {
-                    rhrPriorDate.textContent = data.prior_start_date && data.prior_end_date
+                if (biometricRhrPrior && data.average_rhr_prior) {
+                    const date = data.prior_start_date && data.prior_end_date
                         ? `${formatDate(data.prior_start_date)} - ${formatDate(data.prior_end_date)}`
-                        : '-';
+                        : '';
+                    biometricRhrPrior.innerHTML = `${date.length ? `<h4>From ${date}:</h4>` : ''}<div style="font-size: 16px;">${data.average_rhr_prior.toFixed(1)}</div>`;
+                } else if (biometricRhrPrior) {
+                    biometricRhrPrior.textContent = '-';
                 }
 
-                if (rhrTrailingDate) {
-                    rhrTrailingDate.textContent = data.current_start_date && data.current_end_date
+                if (biometricRhrCurrent && data.average_rhr_trailing) {
+                    const date = data.current_start_date && data.current_end_date
                         ? `${formatDate(data.current_start_date)} - ${formatDate(data.current_end_date)}`
-                        : '-';
-                }
-
-                // Populate average RHR values
-                if (rhrBaseline) {
-                    rhrBaseline.textContent = data.average_rhr_baseline ? `${data.average_rhr_baseline.toFixed(1)} bpm` : '-';
-                }
-
-                if (rhrPrior) {
-                    rhrPrior.textContent = data.average_rhr_prior ? `${data.average_rhr_prior.toFixed(1)} bpm` : '-';
-                }
-
-                if (rhrTrailing) {
-                    rhrTrailing.textContent = data.average_rhr_trailing ? `${data.average_rhr_trailing.toFixed(1)} bpm` : '-';
+                        : '';
+                    biometricRhrCurrent.innerHTML = `${date.length ? `<h4>From ${date}:</h4>` : ''}<div style="font-size: 16px;">${data.average_rhr_trailing.toFixed(1)}</div>`;
+                } else if (biometricRhrCurrent) {
+                    biometricRhrCurrent.textContent = '-';
                 }
 
                 // Show table and hide spinner

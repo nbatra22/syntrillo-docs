@@ -8,7 +8,7 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.api_healthie.user import HealthieUser
-
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 # -------------------------------------------------
 
@@ -78,12 +78,6 @@ def iframe_healthie_patient_sidebar():
         temporary_lookup_code = None
 
     # --------------------------------------------------------------------
-    # We do not pass healthie_user_id if the patient is registered at Syntrillo
-    if syntrillo_internal_key is not None:
-        healthie_user_id = "Not transmitted"
-
-
-    # --------------------------------------------------------------------
     # is it a demo or test mode?
 
     # get user tag
@@ -110,10 +104,21 @@ def iframe_healthie_patient_sidebar():
     else:
 
         # --------------------------------------------------------------------
+        secrets = LocalEnvironmentAndSecrets()
+        healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
 
-        return render_template(
-            'healthie/iframe_patient_sidebar/index.html',
-            patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
-            healthie_user_id=healthie_user_id,
-            temporary_lookup_code=temporary_lookup_code
-        )
+        if healthie_user_id in healthie_patient_dashboard_ids.split(','):
+            healthie_user_id = "Not transmitted"
+            return render_template(
+                'healthie/iframe_patient_sidebar/index.html',
+                patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
+                healthie_user_id=healthie_user_id,
+                temporary_lookup_code=temporary_lookup_code
+            )
+        else:
+            healthie_user_id = "Not transmitted"
+            return render_template(
+                'healthie/iframe_patient_sidebar/coming_soon.html',
+                healthie_user_id=healthie_user_id,
+                temporary_lookup_code=temporary_lookup_code
+            )

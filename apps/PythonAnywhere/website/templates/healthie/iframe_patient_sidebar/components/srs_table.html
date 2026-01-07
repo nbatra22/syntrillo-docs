@@ -1,0 +1,61 @@
+<style>
+    .srf-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .srf-blurb {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .srf-blurb p {
+        color: #16284a;
+        font-size: 16px !important;
+    }
+</style>
+
+<div id="" class="srf-container">
+    <div id="" class="srf-blurb">
+        <p>
+            Based on current risk models for cardiovascular disease such as the American Heart Association PREVENT score and the data you have provided, we estimate your 10-year risk of stroke to be 2.99%. This means that over the next 10 years, your chances of having a stroke is about 3%.
+        </p>
+        <p>
+            The following risk factors or conditions are contributing the most to your current risk of stroke. Addressing these risk factors can help lower your overall risk of stroke.
+        </p>
+    </div>
+</div>
+
+<script>
+
+    function getRiskScoreData() {
+        let formData = new FormData()
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}")
+        formData.append('healthie_user_id', "{{ healthie_user_id }}")
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
+
+        fetch("{{ url_for('iframe_healthie_patient_sidebar_data_bp.healthie_iframe_patient_sidebar_stroke_risk_factors') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Process and display the risk score data
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error fetching risk score data:', error);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        getRiskScoreData();
+    });
+
+</script>

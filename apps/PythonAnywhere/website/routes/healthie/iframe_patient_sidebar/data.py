@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, abort, send_file
+from flask import Blueprint, render_template, request, jsonify, abort, send_file, current_app
 import pandas as pd
 import io
 from datetime import datetime
@@ -21,6 +21,7 @@ from syntrillo.stroke_risk_score_v2.agg_data import (
     calc_rhr_metadata,
     get_healthie_activity_and_inactivity_module_ids
 )
+from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 
 iframe_healthie_patient_sidebar_data_bp = Blueprint('iframe_healthie_patient_sidebar_data_bp', __name__)
 
@@ -241,3 +242,58 @@ def healthie_iframe_patient_sidebar_biometrics():
         "bmi_data": bmi_data,
         "ssq_data": ssq_data
     })
+
+@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe/patient_sidebar/stroke_risk_factors', methods=['POST'])
+def healthie_iframe_patient_sidebar_stroke_risk_factors():
+    """
+    This endpoint is used to retrieve stroke risk factor data for a patient.
+    """
+
+    post_manager = PostManager()
+    post_manager.get_pseudonyms_from_tab_post(request)
+
+    # Deal with patients not registered at Syntrillo
+    if post_manager.patient_not_registered_at_syntrillo:
+        return render_template('healthie/iframe_provider_tab/patient_not_registered.html')
+
+    syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
+
+    try:
+
+        risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient)
+
+        if risk_score is None and stroke_priority_score is None:
+            return jsonify({
+                'success': True,
+                'message': 'No data available',
+                'data': {
+                    'risk_score': risk_score,
+                    'metrics': metrics,
+                    'priority_score': stroke_priority_score,
+                    'independent_risk_variable_scores': independent_risk_variable_scores,
+                    'dependent_risk_variable_contributions': dependent_risk_variable_contributions
+                }
+            })
+
+        if metrics['srs_response_data'] is not None:
+            metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
+
+        # Return success response
+        return jsonify({
+            'success': True,
+            'message': 'Charting note data received successfully',
+            'data': {
+                'risk_score': risk_score,
+                'metrics': metrics,
+                'priority_score': stroke_priority_score,
+                'independent_risk_variable_scores': independent_risk_variable_scores,
+                'dependent_risk_variable_contributions': dependent_risk_variable_contributions
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Error retrieving risk score data: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Internal server error: {str(e)}'
+        }), 500
