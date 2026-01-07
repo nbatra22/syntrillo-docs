@@ -120,8 +120,18 @@ def iframe_healthie_provider_tab_blood_pressure_analysis():
     # analysis_table_with_inception = data_reporting_blood_pressure.calculate_since_baseline(metadata, analysis_table) # Appends 3 additional columns for lifetime calculations
 
     # Remove specific rows from analysis_table
-    rows_to_remove = ['SBP SD (mmHg)', 'DBP SD (mmHg)', 'SBP CV (%)', 'DBP CV (%)', 'SBP Count (>= 175)']
+    rows_to_remove = [
+        # 'SBP SD (mmHg)',
+        # 'DBP SD (mmHg)',
+        'SBP CV (%)',
+        'DBP CV (%)',
+        'SBP Count (>= 175)'
+    ]
     analysis_table = analysis_table[~analysis_table.index.isin(rows_to_remove)]
+
+    analysis_table.rename(index={
+        'Hypotensive Count⁴': 'Near-Hypotensive Events⁴'
+    }, inplace=True)
 
     extremes = data_reporting_blood_pressure.calculate_extremes().reset_index(drop=True) # Returns table for all rows (timestamp, sbp, dbp) deemed extreme
 
