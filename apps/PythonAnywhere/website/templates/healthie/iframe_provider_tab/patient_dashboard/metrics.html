@@ -23,8 +23,8 @@
     }
 
     /* Spinner containers should not take up space when empty */
-    #pd-hr-spinner-container,
-    #pd-biometrics-spinner-container {
+    #bp-hr-spinner-container,
+    #bp-biometrics-spinner-container {
         display: none;
         margin: 0;
         padding: 0;
@@ -32,14 +32,14 @@
         overflow: hidden;
     }
 
-    #pd-hr-spinner-container:not(:empty),
-    #pd-biometrics-spinner-container:not(:empty) {
+    #bp-hr-spinner-container:not(:empty),
+    #bp-biometrics-spinner-container:not(:empty) {
         height: auto;
         padding: 1rem;
         margin-bottom: 1rem;
     }
 
-    .pd-biometric-table {
+    .bp-biometric-table {
         /* display: none; */
         display: block;
         width: 100%;
@@ -52,23 +52,22 @@
         /* box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); */
     }
 
-    .pd-biometric-table tr {
+    .bp-biometric-table tr {
         border-bottom: 1px solid black;
-        width: 100%;
     }
 
-    /* .pd-biometric-table tr:last-child {
+    /* .bp-biometric-table tr:last-child {
         border-bottom: none;
     } */
 
-    .pd-biometric-table td {
+    .bp-biometric-table td {
         padding: 1rem;
         text-align: left;
         vertical-align: top;
         border: 1px solid black;
     }
 
-    .pd-biometric-table td:first-child {
+    .bp-biometric-table td:first-child {
         font-weight: bold;
         color: #374151;
         width: 40%;
@@ -77,9 +76,9 @@
     }
 
     /* Special styling for heart rate table with multiple columns */
-    .pd-biometric-table td:nth-child(2),
-    .pd-biometric-table td:nth-child(3),
-    .pd-biometric-table td:nth-child(4) {
+    .bp-biometric-table td:nth-child(2),
+    .bp-biometric-table td:nth-child(3),
+    .bp-biometric-table td:nth-child(4) {
         width: 20%;
         /* font-weight: bold; */
         color: #374151;
@@ -87,34 +86,34 @@
         text-align: center;
     }
 
-    .pd-biometric-table th {
+    .bp-biometric-table th {
         font-weight: bold;
         color: #374151;
         background-color: #f9fafb;
         border-right: 1px solid black;
     }
 
-    .pd-biometric-table h3 {
+    .bp-biometric-table h3 {
         margin: 0 0 0.5rem 0;
         font-size: 1rem;
         font-weight: 500;
         color: #16284a;
     }
 
-    .pd-biometric-table h4 {
+    .bp-biometric-table h4 {
         margin: 0 0 0.5rem 0;
         font-size: 0.875rem;
         font-weight: 500;
         color: #6b7280;
     }
 
-    .pd-biometric-table ul {
+    .bp-biometric-table ul {
         margin: 0;
         padding-left: 1rem;
         list-style-type: disc;
     }
 
-    .pd-biometric-table li {
+    .bp-biometric-table li {
         font-size: 1rem;
         margin-bottom: 0.25rem;
         color: #16284a;
@@ -123,12 +122,12 @@
 
 
 <div id="" class="">
-    <div id="pd-biometrics-spinner-container"></div>
-    <div id="pd-biometrics-error-container" class="pd-error-container">
+    <div id="bp-biometrics-spinner-container"></div>
+    <div id="bp-biometrics-error-container" class="bp-error-container">
         <!-- <i class="fa-solid fa-circle-exclamation"></i> -->
-        <h2 class="pd-no-data-error"></h2>
+        <h2 class="bp-no-data-error"></h2>
     </div>
-    <table id="pd-biometrics-table" class="pd-biometric-table">
+    <table id="bp-biometrics-table" class="bp-biometric-table">
         <thead>
             <tr>
                 <td></td>
@@ -140,33 +139,33 @@
         <tbody>
             <tr>
                 <td><strong>Avg. Resting Heart Rate (bpm)</strong></td>
-                <td id="pd-biometric-rhr-baseline"></td>
-                <td id="pd-biometric-rhr-prior"></td>
-                <td id="pd-biometric-rhr-current"></td>
+                <td id="bp-biometric-rhr-baseline"></td>
+                <td id="bp-biometric-rhr-prior"></td>
+                <td id="bp-biometric-rhr-current"></td>
             </tr>
             <tr>
                 <td><strong>Body mass index (kg/m²)</strong></td>
-                <td id="pd-biometric-bmi-baseline"></td>
-                <td id="pd-biometric-bmi-prior"></td>
-                <td id="pd-biometric-bmi-current"></td>
+                <td id="bp-biometric-bmi-baseline"></td>
+                <td id="bp-biometric-bmi-prior"></td>
+                <td id="bp-biometric-bmi-current"></td>
             </tr>
             <tr>
                 <td><strong>Physical Activity (min/week)</strong></td>
-                <td id="pd-biometric-activity-baseline"></td>
-                <td id="pd-biometric-activity-prior"></td>
-                <td id="pd-biometric-activity-current"></td>
+                <td id="bp-biometric-activity-baseline"></td>
+                <td id="bp-biometric-activity-prior"></td>
+                <td id="bp-biometric-activity-current"></td>
             </tr>
             <tr>
                 <td><strong>Physical Inactivity (hours/day)</strong></td>
-                <td id="pd-biometric-inactivity-baseline"></td>
-                <td id="pd-biometric-inactivity-prior"></td>
-                <td id="pd-biometric-inactivity-current"></td>
+                <td id="bp-biometric-inactivity-baseline"></td>
+                <td id="bp-biometric-inactivity-prior"></td>
+                <td id="bp-biometric-inactivity-current"></td>
             </tr>
             <tr>
                 <td><strong>Sodium consumer status</strong></td>
-                <td id="pd-biometric-sodium-baseline"></td>
-                <td id="pd-biometric-sodium-prior"></td>
-                <td id="pd-biometric-sodium-current"></td>
+                <td id="bp-biometric-sodium-baseline"></td>
+                <td id="bp-biometric-sodium-prior"></td>
+                <td id="bp-biometric-sodium-current"></td>
             </tr>
         </tbody>
     </table>
@@ -182,9 +181,9 @@
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
         // Biometrics table RHR cells
-        const biometricRhrBaseline = document.getElementById("pd-biometric-rhr-baseline");
-        const biometricRhrPrior = document.getElementById("pd-biometric-rhr-prior");
-        const biometricRhrCurrent = document.getElementById("pd-biometric-rhr-current");
+        const biometricRhrBaseline = document.getElementById("bp-biometric-rhr-baseline");
+        const biometricRhrPrior = document.getElementById("bp-biometric-rhr-prior");
+        const biometricRhrCurrent = document.getElementById("bp-biometric-rhr-current");
 
         // Hide HR table and show spinner initially until data is successfully fetched
         fetch("{{ url_for('iframe_healthie_patient_sidebar_data_bp.healthie_iframe_patient_sidebar_heart_rate') }}", {
@@ -245,7 +244,7 @@
 
                 // Show table and hide spinners on error
                 hideSpinner(hrSpinnerContainer);
-                hrErrorContainer.querySelector(".pd-hr-error").textContent = "Error fetching HR data for patient: " + e;
+                hrErrorContainer.querySelector(".bp-hr-error").textContent = "Error fetching HR data for patient: " + e;
                 hrErrorContainer.style.display = "flex";
             })
             .finally(() => {
@@ -262,26 +261,26 @@
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        const metricsSpinnerContainer = document.getElementById("pd-biometrics-spinner-container");
-        const metricsErrorContainer = document.getElementById("pd-biometrics-error-container");
-        const metricsTable = document.getElementById("pd-biometrics-table");
+        const metricsSpinnerContainer = document.getElementById("bp-biometrics-spinner-container");
+        const metricsErrorContainer = document.getElementById("bp-biometrics-error-container");
+        const metricsTable = document.getElementById("bp-biometrics-table");
 
         // BMI content
-        const bmiBaseline = document.getElementById("pd-biometric-bmi-baseline");
-        const bmiPrior = document.getElementById("pd-biometric-bmi-prior");
-        const bmiCurrent = document.getElementById("pd-biometric-bmi-current");
+        const bmiBaseline = document.getElementById("bp-biometric-bmi-baseline");
+        const bmiPrior = document.getElementById("bp-biometric-bmi-prior");
+        const bmiCurrent = document.getElementById("bp-biometric-bmi-current");
         // Activity content
-        const activityBaseline = document.getElementById("pd-biometric-activity-baseline");
-        const activityPrior = document.getElementById("pd-biometric-activity-prior");
-        const activityCurrent = document.getElementById("pd-biometric-activity-current");
+        const activityBaseline = document.getElementById("bp-biometric-activity-baseline");
+        const activityPrior = document.getElementById("bp-biometric-activity-prior");
+        const activityCurrent = document.getElementById("bp-biometric-activity-current");
         // Inactivity content
-        const inactivityBaseline = document.getElementById("pd-biometric-inactivity-baseline");
-        const inactivityPrior = document.getElementById("pd-biometric-inactivity-prior");
-        const inactivityCurrent = document.getElementById("pd-biometric-inactivity-current");
+        const inactivityBaseline = document.getElementById("bp-biometric-inactivity-baseline");
+        const inactivityPrior = document.getElementById("bp-biometric-inactivity-prior");
+        const inactivityCurrent = document.getElementById("bp-biometric-inactivity-current");
         // Sodium content
-        const sodiumBaseline = document.getElementById("pd-biometric-sodium-baseline");
-        const sodiumPrior = document.getElementById("pd-biometric-sodium-prior");
-        const sodiumCurrent = document.getElementById("pd-biometric-sodium-current");
+        const sodiumBaseline = document.getElementById("bp-biometric-sodium-baseline");
+        const sodiumPrior = document.getElementById("bp-biometric-sodium-prior");
+        const sodiumCurrent = document.getElementById("bp-biometric-sodium-current");
 
         // Hide table and show spinner initially
         metricsTable.style.display = "none";
@@ -446,7 +445,7 @@
 
                 // Show error container and hide spinner
                 hideSpinner(metricsSpinnerContainer);
-                metricsErrorContainer.querySelector(".pd-no-data-error").textContent = "Error fetching biometrics data for patient: " + error;
+                metricsErrorContainer.querySelector(".bp-no-data-error").textContent = "Error fetching biometrics data for patient: " + error;
                 metricsErrorContainer.style.display = "flex";
             })
             .finally(() => {
