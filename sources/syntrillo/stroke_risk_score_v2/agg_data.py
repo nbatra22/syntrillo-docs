@@ -969,7 +969,8 @@ def get_trailing_bp_data(bp_dataframe: pd.DataFrame, baseline_start: datetime, t
 
         if not is_valid_trailing_timeframe_dates(trailing_start, baseline_start):
             logger.error("Trailing data is not valid")
-            raise ValueError("Trailing data is not valid")
+            # raise ValueError("Trailing data is not valid")
+            return None
 
         # Get the trailing dataframe
         trailing_df = get_timeframed_data(bp_dataframe, trailing_start, trailing_end, TYPE_BP)
@@ -1017,7 +1018,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
     try:
         logger.info("Calculating bp metadata...")
         # Calculate the metadata for the trailing dataframe
-        trailing_bp_metadata = bp_analysis.calculate_timeframe_metadata(trailing_bp_dataframe)
+        trailing_bp_metadata = bp_analysis.calculate_timeframe_metadata(trailing_bp_dataframe) if trailing_bp_dataframe is not None else {}
         # NOT CURRENTLY USED BUT CAN BE USED IN FUTURE – baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
         baseline_bp_metadata = bp_analysis.calculate_timeframe_metadata(baseline_bp_dataframe)
 
@@ -1025,10 +1026,10 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
         trimmed_bp_metadata = {
             SYSTOLIC: {
                 TRAILING: {
-                    SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]), # Considered the "PEAK" BP value for SRS
-                    VARIABILITY: trailing_bp_metadata[SBP_SD],
-                    AVERAGE: trailing_bp_metadata[AVG_SBP],
-                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
+                    SBP_COUNT_175: float(trailing_bp_metadata[SBP_COUNT_175]) if SBP_COUNT_175 in trailing_bp_metadata else None, # Considered the "PEAK" BP value for SRS
+                    VARIABILITY: trailing_bp_metadata[SBP_SD] if SBP_SD in trailing_bp_metadata else None,
+                    AVERAGE: trailing_bp_metadata[AVG_SBP] if AVG_SBP in trailing_bp_metadata else None,
+                    PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP] if PEAK_SBP in trailing_bp_metadata else None,
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
@@ -1036,7 +1037,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
             },
             DIASTOLIC: {
                 TRAILING: {
-                    AVERAGE: trailing_bp_metadata[AVG_DBP],
+                    AVERAGE: trailing_bp_metadata[AVG_DBP] if AVG_DBP in trailing_bp_metadata else None,
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_DBP],

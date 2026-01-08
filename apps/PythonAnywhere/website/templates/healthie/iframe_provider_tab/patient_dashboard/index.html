@@ -1,6 +1,12 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_patient_sidebar/index.html -->
 
 <style>
+    .pd-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
     .pd-header {
         display: flex;
         flex-direction: column;
@@ -8,7 +14,7 @@
 
     .pd-header h2 {
         margin: 0 !important;
-        font-size: 20;
+        font-size: 20px !important;
         font-weight: bold;
     }
 
@@ -54,7 +60,7 @@
     }
 </style>
 
-<div>
+<div class="pd-container">
     <div id="patient-dashboard-header" class="pd-header">
         <h2>Patient Dashboard</h2>
         <p id="" class="">
@@ -80,7 +86,7 @@
             </h2>
         </div>
         <div class="pd-section-content" id="commentary-container">
-            <!-- {% include 'healthie/iframe_provider_tab/patient_dashboard/physician_commentary.html' %} -->
+            {% include 'healthie/iframe_provider_tab/patient_dashboard/physician_commentary.html' %}
         </div>
     </section>
 

@@ -42,7 +42,7 @@ class LocalEnvironmentAndSecrets:
             'messenger_id'                  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
             'clinicians'                    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
             'physicians'                    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
-            'patient_dashboard_ids' : ( 'HEALTHIE_PATIENT_DASHBOARD_IDS', 'patient_dashboard_ids')
+            'patient_dashboard_ids' : ( 'HEALTHIE_PATIENT_DASHBOARD_IDS', 'patient_dashboard_ids'),
             'srs_charting_note_id'          : ( 'HEALTHIE_CHARTING_NOTE_ID',  'srs_charting_note_id'),
             'srs_charting_note_question_ids': ( 'HEALTHIE_CHARTING_QUESTION_IDS',  'srs_charting_note_question_ids'),
         },
