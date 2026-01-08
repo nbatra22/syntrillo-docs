@@ -38,11 +38,13 @@ class LocalEnvironmentAndSecrets:
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
         },
         'healthie_ids' : {
-            'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
-            'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
-            'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
-            'physicians'    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
+            'excluded_patients'             : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
+            'messenger_id'                  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
+            'clinicians'                    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
+            'physicians'                    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
             'patient_dashboard_ids' : ( 'HEALTHIE_PATIENT_DASHBOARD_IDS', 'patient_dashboard_ids')
+            'srs_charting_note_id'          : ( 'HEALTHIE_CHARTING_NOTE_ID',  'srs_charting_note_id'),
+            'srs_charting_note_question_ids': ( 'HEALTHIE_CHARTING_QUESTION_IDS',  'srs_charting_note_question_ids'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
@@ -295,9 +297,12 @@ if __name__ == '__main__':
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
     healthie_organization = secrets.get_secret_value('healthie', 'organization')
-    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
+
+    healthie_excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie_ids', 'clinicians')
+    healthie_charting_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
+    healthie_charting_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_question_ids')
 
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')
@@ -366,10 +371,12 @@ class LocalEnvironmentAndSecretsNoCache:
             'api_key'       : ( 'HEALTHIE_API_KEY',      'healthieApiKey'        ),
         },
         'healthie_ids' : {
-            'excluded_patients' : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
-            'messenger_id'  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
-            'clinicians'    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
-            'physicians'    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
+            'excluded_patients'             : ( 'HEALTHIE_EXCLUDED_PATIENTS',  'excluded_patients'),
+            'messenger_id'                  : ( 'HEALTHIE_MESSENGER',  'messenger_id'),
+            'clinicians'                    : ( 'HEALTHIE_CLINICIANS',  'clinicians'),
+            'physicians'                    : ( 'HEALTHIE_PHYSICIANS',  'physicians'),
+            'srs_charting_note_id'          : ( 'HEALTHIE_CHARTING_NOTE_ID',  'srs_charting_note_id'),
+            'srs_charting_note_question_ids': ( 'HEALTHIE_CHARTING_QUESTION_IDS',  'srs_charting_note_question_ids'),
         },
         'tenovi_hwi' : {
             'client_domain' : ( 'TENOVI_CLIENT_DOMAIN',  'tenoviHwiClientDomain' ),
@@ -625,9 +632,13 @@ if __name__ == '__main__':
     # get the secrets
     healthie_api_key = secrets.get_secret_value('healthie', 'api_key')
     healthie_organization = secrets.get_secret_value('healthie', 'organization')
-    healthie_excluded_patients = secrets.get_secret_value('healthie', 'excluded_patients')
-    healthie_messenger_id = secrets.get_secret_value('healthie', 'messenger_id')
-    healthie_clinicians = secrets.get_secret_value('healthie', 'clinicians')
+
+    healthie_excluded_patients = secrets.get_secret_value('healthie_ids', 'excluded_patients')
+    healthie_messenger_id = secrets.get_secret_value('healthie_ids', 'messenger_id')
+    healthie_clinicians = secrets.get_secret_value('healthie_ids', 'clinicians')
+    healthie_charting_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_id')
+    healthie_charting_id = secrets.get_secret_value('healthie_ids', 'srs_charting_note_question_ids')
+
 
     tenovi_api_key = secrets.get_secret_value('tenovi_hwi', 'api_key')
     tenovi_client_domain = secrets.get_secret_value('tenovi_hwi', 'client_domain')

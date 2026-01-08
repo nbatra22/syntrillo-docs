@@ -419,6 +419,46 @@ class SyntrilloDatabaseManager:
 
         return record, log
 
+    def get_first_tenovi_measurement(self) -> Tuple[dict, dict]:
+        """
+            Get the first record for a patient, based on ite timestamp_local.
+
+            For example used in pillbox data analysis to produce correct stats, based on usage duration.
+
+            Args:
+                None
+
+            Returns a tuple:
+                record (dict): The latest record for the device.
+                log (dict): The log of the request
+
+        """
+
+        try:
+            with self.conn.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute(
+                    """
+                    SELECT *
+                    FROM tenovi_raw_measurements
+                    WHERE syntrillo_internal_key = %s
+                    ORDER BY timestamp_local ASC
+                    LIMIT 1
+                    """,
+                    (self.syntrillo_internal_key.bytes,)
+                )
+
+                record = cursor.fetchone()
+                log = {
+                    "success": True,
+                }
+        except pymysql.MySQLError as e:
+            log = {
+                "success": False,
+                "error": str(e)
+            }
+            record = None
+
+        return record, log
 
     def get_tenovi_device_data(
         self,
@@ -1031,8 +1071,7 @@ class SyntrilloDatabaseManager:
             pymysql.MySQLError: If there is an error inserting the SRS form response.
             Exception: If there is an unexpected error during the insertion.
         """
-        logger.info(f"Performing insertion of SRS form response into RDS DB ...")
-        print(f"Performing insertion of SRS form response into RDS DB ...")
+        logger.info("Performing insertion of SRS form response into RDS DB ...")
         # Exclude the compliance and srs_form_response_id fields from the form data for srs response insertion.
         form_data = srs_form_response.model_dump(exclude={'compliance', 'srs_form_response_id'}, exclude_none=True)
         # Extract the compliance data from the SRS form response.
@@ -1061,7 +1100,7 @@ class SyntrilloDatabaseManager:
 
                 # 2. Insert into srs_compliance if compliance data exists
                 if compliance_data:
-                    logger.info(f"Performing insertion of compliance data into RDS DB ...")
+                    logger.info("Performing insertion of compliance data into RDS DB ...")
 
                     compliance_dict = compliance_data.model_dump(exclude_none=True)
                     compliance_dict['srs_form_response_id'] = srs_form_response_id
@@ -1194,11 +1233,11 @@ class SyntrilloDatabaseManager:
                 query = """
                     SELECT
                         answer,
-                        updated_at
+                        created_at
                     FROM
                         healthie_form_responses
                     WHERE module_id = %s AND syntrillo_internal_key = %s
-                    ORDER BY updated_at DESC;
+                    ORDER BY created_at DESC;
                 """
                 cursor.execute(query, (module_id, syntrillo_internal_key))
                 db_response = cursor.fetchall()
@@ -1241,9 +1280,9 @@ class SyntrilloDatabaseManager:
             CATEGORIES_WITH_GENDER = {"alcohol_use", "hdl"}
             with self.conn.cursor() as cursor, self.conn.cursor() as cursor_stroke_priority:
                 if value is not None:
-                    if type(value) == str:
+                    if type(value) is str:
                         query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND categorical_value = '{value}';"
-                    elif type(value) == float:
+                    elif type(value) is float:
                         query = f"SELECT risk_value FROM srs_independent_risk_values WHERE category = '{category}' AND min_value <= {value} AND max_value >= {value};"
                     else:
                         raise ValueError(f"Invalid value type: {type(value)}")

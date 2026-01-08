@@ -173,7 +173,7 @@ class BloodPressureAlertManager:
         """
         Handles logic to determine whether analysis should be ran for a specific patient.
         """
-        logger.info(f"Starting 2-week BP analysis...")
+        logger.info(f"Starting 2-week BP analysis for patient {self.syntrillo_internal_key}...")
 
         db_manager = SyntrilloDatabaseManager(self.syntrillo_internal_key)
 
@@ -202,7 +202,7 @@ class BloodPressureAlertManager:
         if days_since_first > 28 and days_since_first % 14 == 0:
             self.handle_two_week_summary_stats()
 
-            self.handle_two_week_avg_sbp()
+            # self.handle_two_week_avg_sbp()
             # self.handle_two_week_status()
             return {
                 'success': True,

@@ -1,7 +1,14 @@
 import datetime
+import secrets
+import string
 from syntrillo.medications.models import MedicationRecord, DosingScheduleRule, Frequency
 from syntrillo.system.logger import logger
 from syntrillo.remote_monitoring.syntrillo_medications_db_manager import SyntrilloMedicationsDatabaseQueries
+
+def generate_nanoid():
+    alphabet = string.ascii_letters + string.digits
+    nanoid = ''.join(secrets.choice(alphabet) for _ in range(12))
+    return nanoid
 
 def medication_from_dosing_schedule_rule(medication: MedicationRecord) -> MedicationRecord:
     """
@@ -35,8 +42,8 @@ def medication_from_dosing_schedule_rule(medication: MedicationRecord) -> Medica
 
 def sync_healthie_medications(
     syntrillo_internal_key: str,
-    healthie_medications: list[dict],
-    syntrillo_medication_ids: set[int]
+    healthie_medications: list[dict], # list of medications from Healthie API
+    syntrillo_medication_ids: set[int] # set of healthie_medication_id already in Syntrillo
 ) -> dict:
     """
     Syncs Healthie medications to Syntrillo medications.
@@ -117,6 +124,7 @@ def sync_healthie_medications(
 
 
         medication_record = MedicationRecord(
+            id=generate_nanoid(),
             syntrillo_internal_key=str(syntrillo_internal_key),
             healthie_medication_id=int(hid),
             medication_name=healthie_medication.get('name'),

@@ -6,6 +6,7 @@ METRIC_STAT = "metric_stat"
 TYPE_BP = "bp"
 TYPE_RHR = "rhr"
 TYPE_HR = "hr"
+TYPE_PULSE = "Pulse"
 
 INACTIVITY_INTAKE_MODULE_LABEL = "inactivity_questionnaire_intake"
 INACTIVITY_CHARTING_MODULE_LABEL = "inactivity_questionnaire_charting"
@@ -26,7 +27,6 @@ HIGH_EFFICACY = "high_efficacy"
 # SRS Independent Risk Factors
 AVG_SBP = "avg_sbp"
 RHR = "rhr"
-HEMOGLOBIN_A1C = "hemoglobin_a1c"
 PHYSICAL_INACTIVITY = "physical_inactivity"
 PHYSICAL_ACTIVITY = "physical_activity"
 CIGARETTE_USE = "cigarette_use"
@@ -35,7 +35,14 @@ MARIJUANA_USE = "marijuana_use"
 SBP_STD = "sbp_std"
 AVG_PEAK_SBP = "avg_peak_sbp"
 AVG_DBP = "avg_dbp"
+
+# Lab Values
+HEMOGLOBIN_A1C = "hemoglobin_a1c"
 CREATININE = "creatinine"
+LDL = "ldl"
+HDL = "hdl"
+HGA1C = "hgA1C"
+HSCRP = "hsCRP"
 
 BASELINE_NUM_WEEKS = 2
 TRAILING_NUM_WEEKS = 4

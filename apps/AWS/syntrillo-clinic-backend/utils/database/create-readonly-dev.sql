@@ -8,3 +8,9 @@ GRANT SELECT ON syntrillo$PseudonymManagement.* TO 'syntrillo_clinic_readonly_de
 FLUSH PRIVILEGES;
 GRANT SELECT ON syntrillo$ChatbotsInformation.* TO 'syntrillo_clinic_readonly_dev'@'%';
 FLUSH PRIVILEGES;
+
+GRANT CREATE ON syntrillo$HealthInformation.* TO 'syntrillo_clinic_readonly_dev'@'%';
+FLUSH PRIVILEGES;
+GRANT ALTER ON syntrillo$HealthInformation.* TO 'syntrillo_clinic_readonly_dev'@'%';
+FLUSH PRIVILEGES;
+

@@ -44,6 +44,7 @@
         text-decoration: none;
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
         outline: none;
+        cursor: pointer;
     }
 
     .meds-header-button:hover {
@@ -51,6 +52,93 @@
     }
 
     .meds-header-button:focus {
+        outline: 2px solid #1e40af;
+    }
+
+    #meds-view-toggle-container {
+        position: relative;
+    }
+
+    .meds-view-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 0.5rem;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        min-width: 280px;
+        z-index: 100;
+    }
+
+    .meds-view-options.hidden {
+        display: none;
+    }
+
+    .meds-view-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .meds-view-ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+
+    .meds-view-ul:last-child {
+        margin-bottom: 0;
+    }
+
+    .meds-view-li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.5rem;
+        cursor: pointer;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+    }
+
+    .meds-view-li:hover {
+        background-color: #f3f4f6;
+    }
+
+    .meds-view-li input[type="radio"] {
+        cursor: pointer;
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .meds-view-li label {
+        cursor: pointer;
+        font-size: 0.875rem;
+        margin: 0;
+        flex: 1;
+        white-space: nowrap;
+    }
+
+    .medication-search-input {
+        padding: 0.5rem 0.75rem;
+        border: none;
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s;
+        max-width: 200px;
+    }
+
+    .medication-search-input:focus {
+        border-color: #1e40af;
         outline: 2px solid #1e40af;
     }
 
@@ -67,6 +155,7 @@
 
     .no-medications p {
         color: #f59e0b;
+        margin: 0;
     }
 
     .meds-modal {
@@ -222,6 +311,39 @@
         gap: 1rem;
     }
 
+    @media (max-width: 992px) {
+        .medication-main-container {
+            align-items: flex-start;
+        }
+
+        .medication-title-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .medication-classification-container {
+            flex-direction: row;
+        }
+
+        #create-med-btn,
+        #meds-view-toggle-btn {
+            padding: 0.71rem;
+        }
+
+        #create-med-text,
+        #meds-view-toggle-text {
+            display: none;
+        }
+    }
+
+    .medication-classification-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     .medication-title {
         font-size: 1rem;
         font-weight: 600;
@@ -357,6 +479,7 @@
 
     /* Responsive design for smaller screens */
     @media (max-width: 768px) {
+
         .medication-container {
             flex-direction: column;
             align-items: flex-start;
@@ -402,12 +525,13 @@
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
     }
 
-    #form-status-message {
+    #med-form-status-message {
         display: flex;
         align-items: center;
         margin: 0;
@@ -419,19 +543,19 @@
         min-height: 3rem !important;
     }
 
-    #form-status-message.success {
+    #med-form-status-message.success {
         color: #10b981;
         background-color: #f0fdf4;
         border: 1px solid #bbf7d0;
     }
 
-    #form-status-message.pending {
+    #med-form-status-message.pending {
         color: #3b82f6;
         background-color: #eff6ff;
         border: 1px solid #bfdbfe;
     }
 
-    #form-status-message.error {
+    #med-form-status-message.error {
         color: #ef4444;
         background-color: #fef2f2;
         border: 1px solid #fecaca;
@@ -455,35 +579,31 @@
             <p>The medications listed below are sourced from the patient's Healthie account.</p>
         </div>
         <div class="meds-header-buttons">
-            <button class="meds-header-button" onclick="openMedicationsModal('add')">
+            <button id="create-med-btn" class="meds-header-button" onclick="openMedicationModal('add')">
                 <i class="fas fa-plus"></i>
-                Add Medication
+                <span id="create-med-text">Add Medication</span>
             </button>
-            <button id="legend-toggle-button" class="meds-header-button" onclick="toggleLegend()">
-                <div id="hide-legend" style="display: none;">
-                    <i class="fas fa-chevron-up"></i> <span>Hide Legend</span>
-                </div>
-                <div id="show-legend" style="display: block;">
-                    <i class="fas fa-chevron-down"></i> <span>Show Legend</span>
-                </div>
-            </button>
-            <!-- <div id="meds-view-toggle-container" class="">
-                <button id="meds-view-toggle" class="meds-header-button" onclick="toggleMedsView()">
-                    <i class="fa-solid fa-eye"></i>
-                    View
+            <div id="meds-view-toggle-container">
+                <button id="meds-view-toggle-btn" class="meds-header-button" onclick="toggleMedsView()">
+                    <i class="fa-solid fa-arrow-down-wide-short"></i>
+                    <span id="meds-view-toggle-text">Filter & Sort</span>
                 </button>
                 <div id="meds-view-options" class="meds-view-options hidden">
                     <h4 class="meds-view-title">Filter:</h4>
                     <ul id="meds-view-filter-options" class="meds-view-ul">
-                        <li class="meds-view-li" onclick="setMedsView('all')">
+                        <li class="meds-view-li" onclick="setMedsFilter('all')">
                             <input type="radio" name="meds-view" value="all" id="meds-view-all">
                             <label for="meds-view-all">All Medications</label>
                         </li>
-                        <li class="meds-view-li" onclick="setMedsView('active')">
+                        <li class="meds-view-li" onclick="setMedsFilter('pinned')">
+                            <input type="radio" name="meds-view" value="pinned" id="meds-view-pinned">
+                            <label for="meds-view-pinned">Pinned Medications</label>
+                        </li>
+                        <li class="meds-view-li" onclick="setMedsFilter('active')">
                             <input type="radio" name="meds-view" value="active" id="meds-view-active" checked>
                             <label for="meds-view-active">Active Medications</label>
                         </li>
-                        <li class="meds-view-li" onclick="setMedsView('inactive')">
+                        <li class="meds-view-li" onclick="setMedsFilter('inactive')">
                             <input type="radio" name="meds-view" value="inactive" id="meds-view-inactive">
                             <label for="meds-view-inactive">Inactive Medications</label>
                         </li>
@@ -491,7 +611,8 @@
                     <h4 class="meds-view-title">Sort:</h4>
                     <ul id="meds-view-sort-options" class="meds-view-ul">
                         <li class="meds-view-li" onclick="setMedsSort('start_date_desc')">
-                            <input type="radio" name="meds-sort" value="start_date_desc" id="meds-sort-start-date-desc" checked>
+                            <input type="radio" name="meds-sort" value="start_date_desc" id="meds-sort-start-date-desc"
+                                checked>
                             <label for="meds-sort-start-date-desc">Start Date (Newest)</label>
                         </li>
                         <li class="meds-view-li" onclick="setMedsSort('start_date_asc')">
@@ -508,20 +629,29 @@
                         </li>
                     </ul>
                 </div>
-            </div> -->
-            <!-- <div style="flex-grow: 1;"></div> -->
+            </div>
+            <button id="legend-toggle-button" class="meds-header-button" onclick="toggleLegend()">
+                <i id="med-legend-icon" class="fa fa-chevron-down"></i>
+                <span id="med-legend-text">Show Legend</span>
+            </button>
+            <div style="flex-grow: 1;"></div>
+            <input type="text" id="medication-search-input" class="medication-search-input"
+                placeholder="Search by name..." oninput="handleMedicationSearch()" />
         </div>
     </section>
 
     <section id="meds-data-container" class="meds-data-container">
         <div id="medication-legend-container-wrapper" class="collapsed">
-            <div id="medication-legend-container" class="medication-container" onclick="toggleExtraInfo('legend')" title="Show more">
+            <div id="medication-legend-container" class="medication-container" onclick="toggleExtraInfo('legend')"
+                title="Show more">
                 <div id="medication-legend-main-container" class="medication-main-container">
                     <div class="medication-info-container">
                         <div class="medication-title-container">
                             <h3 class="medication-title">[Medication Name]</h3>
-                            <p class="medication-category">[Category]</p>
-                            <p class="medication-supercategory">[Supercategory]</p>
+                            <div class="medication-classification-container">
+                                <p class="medication-category">[Category]</p>
+                                <p class="medication-supercategory">[Supercategory]</p>
+                            </div>
                         </div>
                         <div class="medication-dosage-info-container">
                             <div class="medication-dosage-info">
@@ -545,18 +675,20 @@
                         </div>
                     </div>
                     <div id="medication-actions-container" class="medication-actions-container">
-                        <button class="medication-action-button" title="Edit Medication">
+                        <button id="medication-legend-pin" class="medication-action-button" title="Pin Medication"
+                            onclick="toggleLegendPin()">
+                            <i class="fa-solid fa-thumbtack"></i>
+                        </button>
+                        <button id="medication-legend-edit" class="medication-action-button" title="Edit Medication">
                             <i class="fas fa-edit"></i>
                         </button>
                         <!-- <button class="medication-action-button" title="Delete Medication">
                             <i class="fas fa-trash"></i>
                         </button> -->
-                        <button class="medication-action-button" title="Medication to Track">
-                            <i class="fa-solid fa-flag"></i>
-                        </button>
                     </div>
                 </div>
-                <div id="medication-legend-extra-container" class="medication-extra-info-container" style="display: none;">
+                <div id="medication-legend-extra-container" class="medication-extra-info-container"
+                    style="display: none;">
                     <div id="medication-legend-common-name-container" class="medication-data-block">
                         <p class="medication-data-block-title">COMMON NAME</p>
                         <p class="medication-data-block-value">[Common Name]</p>
@@ -572,6 +704,14 @@
                     <div id="medication-legend-directions-container" class="medication-data-block">
                         <p class="medication-data-block-title">DIRECTIONS</p>
                         <p class="medication-data-block-value">[Directions]</p>
+                    </div>
+                    <div id="medication-legend-day-of-week-container" class="medication-data-block">
+                        <p class="medication-data-block-title">DAY(S) OF WEEK</p>
+                        <p class="medication-data-block-value">[Day(s) of Week]</p>
+                    </div>
+                    <div id="medication-legend-day-period-container" class="medication-data-block">
+                        <p class="medication-data-block-title">DAY PERIOD</p>
+                        <p class="medication-data-block-value">[Day Period]</p>
                     </div>
                 </div>
             </div>
@@ -613,35 +753,468 @@
 </div>
 
 <script>
-    var healthieProviderId = "{{ healthie_provider_id }}";
-    var healthieUserId = "{{ healthie_user_id }}";
-    var temporaryLookupCode = "{{ temporary_lookup_code }}";
-    var PatientNotRegisteredAtSyntrillo = "{{ patient_not_registered_at_syntrillo }}";
 
-    let currentMedication = null;
-    let allMedications = {};
-    let displayedMedications = [];
+    // Medications state object
+    const medicationsState = {
+        currentMedication: null,
+        allMedications: {},
+        displayedMedications: [],
+        pinnedMedications: new Set(), // Track pinned medication IDs
+        filters: {
+            status: 'active',
+            searchTerm: ''
+        },
+        sort: {
+            field: 'start_date',
+            direction: 'desc'
+        },
 
-    function toggleLegend() {
-        const legendContainerWrapper = document.getElementById('medication-legend-container-wrapper');
-        const hideLegend = document.getElementById('hide-legend');
-        const showLegend = document.getElementById('show-legend');
+        setAllMedications(meds) {
+            this.allMedications = meds;
+            this.applyFiltersAndSort();
+        },
 
-        if (legendContainerWrapper.classList.contains('collapsed')) {
-            // Show the legend with slide down effect
-            legendContainerWrapper.classList.remove('collapsed');
-            hideLegend.style.display = 'flex';
-            showLegend.style.display = 'none';
+        updateMedication(id, updates) {
+            if (this.allMedications[id]) {
+                this.allMedications[id] = { ...this.allMedications[id], ...updates };
+                this.applyFiltersAndSort();
+            }
+        },
+
+        deleteMedication(id) {
+            delete this.allMedications[id];
+            this.pinnedMedications.delete(id);
+            this.applyFiltersAndSort();
+        },
+
+        addMedication(medication) {
+            console.log('Adding medication:', medication);
+            this.allMedications[medication.id] = medication;
+            console.log('Updated medications state:', this.allMedications);
+            this.applyFiltersAndSort();
+        },
+
+        togglePin(medicationId) {
+            if (this.pinnedMedications.has(medicationId)) {
+                this.pinnedMedications.delete(medicationId);
+            } else {
+                this.pinnedMedications.add(medicationId);
+            }
+            // Update backend silently
+            updateMedicationPin(medicationId, this.pinnedMedications.has(medicationId));
+            // Don't call applyFiltersAndSort here - let the backend response handle it
+        },
+
+        setFilter(filterType, value) {
+            this.filters[filterType] = value;
+            this.applyFiltersAndSort();
+        },
+
+        setSort(field, direction) {
+            this.sort.field = field;
+            this.sort.direction = direction;
+            this.applyFiltersAndSort();
+        },
+
+        applyFiltersAndSort() {
+            let filtered = Object.values(this.allMedications);
+
+            // Apply status filter
+            if (this.filters.status === 'pinned') {
+                filtered = filtered.filter(med => this.pinnedMedications.has(med.id));
+            } else if (this.filters.status === 'active') {
+                filtered = filtered.filter(med => med.is_active);
+            } else if (this.filters.status === 'inactive') {
+                filtered = filtered.filter(med => !med.is_active);
+            }
+
+            // Apply search filter
+            if (this.filters.searchTerm) {
+                const searchLower = this.filters.searchTerm.toLowerCase();
+                filtered = filtered.filter(med => {
+                    const medName = (med.medication_name || '').toLowerCase();
+                    const commonName = (med.common_name || '').toLowerCase();
+                    return medName.includes(searchLower) || commonName.includes(searchLower);
+                });
+            }
+
+            // Separate pinned and unpinned medications
+            let pinned = [];
+            let unpinned = [];
+
+            if (this.filters.status !== 'pinned') {
+                pinned = filtered.filter(med => this.pinnedMedications.has(med.id));
+                unpinned = filtered.filter(med => !this.pinnedMedications.has(med.id));
+            } else {
+                pinned = filtered;
+            }
+
+            // Apply sorting
+            const sortFn = (a, b) => {
+                let compareA, compareB;
+
+                if (this.sort.field === 'start_date') {
+                    compareA = new Date(a.start_date || 0);
+                    compareB = new Date(b.start_date || 0);
+                } else if (this.sort.field === 'name') {
+                    compareA = (a.medication_name || '').toLowerCase();
+                    compareB = (b.medication_name || '').toLowerCase();
+                }
+
+                if (this.sort.direction === 'asc') {
+                    return compareA > compareB ? 1 : -1;
+                } else {
+                    return compareA < compareB ? 1 : -1;
+                }
+            };
+
+            pinned.sort(sortFn);
+            unpinned.sort(sortFn);
+
+            this.displayedMedications = [...pinned, ...unpinned];
+            renderMedications();
+        }
+    };
+
+    let legendPin = true;
+
+    // Fix 1: Update toggleLegendPin function to properly change icon
+    function toggleLegendPin() {
+        event.stopPropagation();
+        const pinButton = document.getElementById('medication-legend-pin');
+
+        if (legendPin) {
+            pinButton.innerHTML = '<i class="fa-solid fa-thumbtack-slash"></i>';
+            legendPin = false;
         } else {
-            // Hide the legend with slide up effect
-            legendContainerWrapper.classList.add('collapsed');
-            hideLegend.style.display = 'none';
-            showLegend.style.display = 'flex';
+            pinButton.innerHTML = '<i class="fa-solid fa-thumbtack"></i>';
+            legendPin = true;
         }
     }
 
-    function toggleExtraInfo(healthieMedicationId = null) {
-        const extraInfoContainer = document.getElementById(`medication-${healthieMedicationId}-extra-container`);
+    // Toggle view menu
+    function toggleMedsView() {
+        const viewOptions = document.getElementById('meds-view-options');
+        viewOptions.classList.toggle('hidden');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function (event) {
+        const viewContainer = document.getElementById('meds-view-toggle-container');
+        const viewOptions = document.getElementById('meds-view-options');
+
+        if (!viewContainer.contains(event.target)) {
+            viewOptions.classList.add('hidden');
+        }
+    });
+
+    // Show loading spinner
+    function showLoadingSpinner(text) {
+        const loadingContainer = document.getElementById('loading-medications-container');
+        const loadingText = document.getElementById('loading-medications-text');
+        loadingText.textContent = text;
+        loadingContainer.style.display = 'flex';
+    }
+
+    function hideLoadingSpinner() {
+        const loadingContainer = document.getElementById('loading-medications-container');
+        loadingContainer.style.display = 'none';
+    }
+
+    // Filter medications
+    function setMedsFilter(filterOption) {
+        medicationsState.setFilter('status', filterOption);
+
+        // Update radio button
+        document.getElementById(`meds-view-${filterOption}`).checked = true;
+    }
+
+    // Sort medications
+    function setMedsSort(sortOption) {
+        // sortOption is like "start_date_desc" or "name_asc"
+        // Split only on the last underscore to handle "start_date"
+        const parts = sortOption.split('_');
+        const direction = parts.pop(); // 'desc' or 'asc'
+        const field = parts.join('_'); // 'start_date' or 'name'
+
+        medicationsState.setSort(field, direction);
+
+        // Update radio button - use the full sortOption as-is
+        const radioButton = document.getElementById(`meds-sort-${sortOption.replace(/_/g, '-')}`);
+        if (radioButton) {
+            radioButton.checked = true;
+        }
+    }
+
+    // Search medications
+    function handleMedicationSearch() {
+        const searchInput = document.getElementById('medication-search-input');
+        const searchTerm = searchInput.value.trim();
+        medicationsState.setFilter('searchTerm', searchTerm);
+    }
+
+    // Add toggle pin function
+    function toggleMedicationPin(medicationId) {
+        event.stopPropagation();
+
+        // Find the medication by its id
+        const medication = Object.values(medicationsState.allMedications).find(m => m.id === medicationId);
+        if (!medication) {
+            console.error('Medication not found:', medicationId);
+            return;
+        }
+
+        const pinButton = document.getElementById(`pin-button-${medication.id}`);
+        if (pinButton) {
+            const isPinned = medicationsState.pinnedMedications.has(medicationId);
+            const pinIcon = isPinned ? '<i class="fa-solid fa-thumbtack"></i>' : '<i class="fa-solid fa-thumbtack-slash"></i>';
+            const pinTitle = isPinned ? 'Unpin Medication' : 'Pin Medication';
+
+            pinButton.innerHTML = pinIcon;
+            pinButton.title = pinTitle;
+        }
+    }
+
+    // Open medication modal in edit mode
+    function openMedicationModal(mode, medicationId = null) {
+        const modal = document.getElementById('meds-modal');
+        const medicationContent = document.getElementById('medication-content');
+        const deleteMedicationContent = document.getElementById('delete-medication-content');
+        const modalTitle = document.getElementById('meds-modal-title');
+        const modalSubtitle = document.getElementById('meds-modal-subtitle');
+        modal.style.display = 'flex';
+        console.log('Opening medication modal in mode:', mode, 'for medicationId:', medicationId);
+        if (mode === 'edit' && medicationId) {
+            console.log('Current medication:', medicationsState.allMedications[medicationId]);
+            medicationsState.currentMedication = medicationsState.allMedications[medicationId];
+            medicationContent.style.display = 'block';
+            deleteMedicationContent.style.display = 'none';
+            modalTitle.textContent = 'Edit Medication';
+            modalSubtitle.style.display = 'block';
+            populateMedicationForm(medicationsState.currentMedication);
+        } else {
+            medicationsState.currentMedication = null;
+            medicationContent.style.display = 'block';
+            deleteMedicationContent.style.display = 'none';
+            modalTitle.textContent = 'Add Medication';
+            modalSubtitle.style.display = 'block';
+            resetMedicationForm();
+        }
+    }
+
+    function closeMedicationsModal() {
+        const modal = document.getElementById('meds-modal');
+        modal.style.display = 'none';
+        medicationsState.currentMedication = null;
+        document.getElementById('medication-delete').value = '';
+        clearFormStatus();
+    }
+
+    // Update the toggleMedicationPin function to directly update the button UI
+    function toggleMedicationPin(medicationId) {
+        event.stopPropagation();
+
+        // Toggle the pin state
+        medicationsState.togglePin(medicationId);
+
+        // Immediately update the button UI for instant feedback
+        const pinButton = document.getElementById(`pin-button-${medicationId}`);
+        if (pinButton) {
+            const isPinned = medicationsState.pinnedMedications.has(medicationId);
+            const pinIcon = isPinned ? '<i class="fa-solid fa-thumbtack"></i>' : '<i class="fa-solid fa-thumbtack-slash"></i>';
+            const pinTitle = isPinned ? 'Unpin Medication' : 'Pin Medication';
+
+            pinButton.innerHTML = pinIcon;
+            pinButton.title = pinTitle;
+        }
+    }
+    // Update the updateMedicationPin function to only re-render after successful backend update
+    async function updateMedicationPin(medicationId, isPinned) {
+        const formData = new FormData();
+        formData.append('medication_id', medicationId);
+        formData.append('pinned', isPinned ? '1' : '0');
+        formData.append('healthie_provider_id', '{{ healthie_provider_id }}');
+        formData.append('healthie_user_id', '{{ healthie_user_id }}');
+        formData.append('temporary_lookup_code', '{{ temporary_lookup_code }}');
+        formData.append('patient_not_registered_at_syntrillo', '{{ patient_not_registered_at_syntrillo }}');
+
+        try {
+            const response = await fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_update_medication_pin") }}', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update the medication in state
+                if (data.data) {
+                    medicationsState.updateMedication(medicationId, data.data);
+                }
+                // Only re-render if we're filtering by pinned to update the list
+                if (medicationsState.filters.status === 'pinned') {
+                    medicationsState.applyFiltersAndSort();
+                }
+                console.log('Pin status updated successfully');
+            } else {
+                console.error('Error updating pin status:', data.message || data.error);
+                // Revert the pin state on error
+                if (isPinned) {
+                    medicationsState.pinnedMedications.delete(healthieMedicationId);
+                } else {
+                    medicationsState.pinnedMedications.add(healthieMedicationId);
+                }
+                // Update the UI to reflect the reverted state
+                const medication = Object.values(medicationsState.allMedications).find(m => m.healthie_medication_id === healthieMedicationId);
+                if (medication) {
+                    const pinButton = document.getElementById(`pin-button-${medication.id}`);
+                    if (pinButton) {
+                        const isPinnedNow = medicationsState.pinnedMedications.has(healthieMedicationId);
+                        const pinIcon = isPinnedNow ? '<i class="fa-solid fa-thumbtack"></i>' : '<i class="fa-solid fa-thumbtack-slash"></i>';
+                        const pinTitle = isPinnedNow ? 'Unpin Medication' : 'Pin Medication';
+                        pinButton.innerHTML = pinIcon;
+                        pinButton.title = pinTitle;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error updating pin status:', error);
+            // Revert the pin state on error
+            if (isPinned) {
+                medicationsState.pinnedMedications.delete(healthieMedicationId);
+            } else {
+                medicationsState.pinnedMedications.add(healthieMedicationId);
+            }
+            // Update the UI to reflect the reverted state
+            const medication = Object.values(medicationsState.allMedications).find(m => m.healthie_medication_id === healthieMedicationId);
+            if (medication) {
+                const pinButton = document.getElementById(`pin-button-${medication.id}`);
+                if (pinButton) {
+                    const isPinnedNow = medicationsState.pinnedMedications.has(healthieMedicationId);
+                    const pinIcon = isPinnedNow ? '<i class="fa-solid fa-thumbtack"></i>' : '<i class="fa-solid fa-thumbtack-slash"></i>';
+                    const pinTitle = isPinnedNow ? 'Unpin Medication' : 'Pin Medication';
+                    pinButton.innerHTML = pinIcon;
+                    pinButton.title = pinTitle;
+                }
+            }
+        }
+    }
+
+    function renderMedications() {
+        const medicationsContainer = document.getElementById('active-medications-container');
+        medicationsContainer.innerHTML = '';
+
+        const medications = medicationsState.displayedMedications;
+
+        // If no medications, show a message
+        if (medications.length === 0) {
+            const hasSearchTerm = medicationsState.filters.searchTerm.length > 0;
+            const message = hasSearchTerm
+                ? 'No medications match your search.'
+                : 'No medications found for this patient.';
+            medicationsContainer.innerHTML = `<div class="no-medications"><i class="fa-solid fa-triangle-exclamation"></i><p>${message}</p></div>`;
+            return;
+        }
+
+        // Helper functions
+        String.prototype.toTitleCase = function () {
+            return this.toLowerCase().split(' ').map(word => {
+                return word.charAt(0).toUpperCase() + word.slice(1);
+            }).join(' ');
+        };
+        const safeDisplay = (value, defaultText = '') => value || defaultText;
+        const cleanDisplay = (value) => {
+            if (!value) return '';
+            return String(value).replace(/_/g, ' ');
+        };
+        const arrayToCommaSeparated = (arr) => {
+            if (!Array.isArray(arr) || arr.length === 0) return '-';
+            const titleCased = arr.map(item => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase());
+            return titleCased.join(', ');
+        };
+        const formatDate = (dateStr) => {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        const deliveryCleaned = (method) => {
+            if (!method) return '-';
+            return method.replace(/_+/g, ' ').replace(/\//g, ', ').toTitleCase();
+        };
+
+        medications.forEach(medication => {
+            const isPinned = medicationsState.pinnedMedications.has(medication.id);
+            const pinIcon = isPinned ? '<i class="fa-solid fa-thumbtack"></i>' : '<i class="fa-solid fa-thumbtack-slash"></i>';
+            const pinTitle = isPinned ? 'Unpin Medication' : 'Pin Medication';
+
+            const medicationHTML = `
+                <div id="med-${medication.id}" class="medication-container" onclick="toggleExtraInfo('${medication.id}')" title="Click to show more">
+                    <div id="medication-${medication.id}-main-container" class="medication-main-container">
+                        <div class="medication-info-container">
+                            <div class="medication-title-container">
+                                <h3 class="medication-title">${safeDisplay(medication.medication_name, 'Unnamed Medication')}</h3>
+                                <div class="medication-classification-container">
+                                    ${((medication.category && medication.category !== 'other') ? `<p class="medication-category">${cleanDisplay(medication.category)}</p>` : (medication.category === 'other' && medication.custom_category) ? `<p class="medication-category">${cleanDisplay(medication.custom_category)}</p>` : '')}
+                                    ${((medication.supercategory && medication.supercategory !== 'other') ? `<p class="medication-supercategory">${cleanDisplay(medication.supercategory)}</p>` : (medication.supercategory === 'other' && medication.custom_supercategory) ? `<p class="medication-supercategory">${cleanDisplay(medication.custom_supercategory)}</p>` : '')}
+                                </div>
+                            </div>
+                            <div class="medication-dosage-info-container">
+                                <div class="medication-dosage-info">
+                                    ${(medication.dosage_amount && medication.dosage_unit) ? `<p id="medication-dosage-value" class="medication-dosage-info-value">${safeDisplay(medication.dosage_amount, '')} ${safeDisplay(medication.dosage_unit, '')}</p>` : ''}
+                                    ${medication.dosing_schedule_rule ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dosing_schedule_rule}</p>` : medication.frequency ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dose_count ? `${medication.dose_count}x ` : ''}${medication.frequency}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medication-date-container">
+                            <p class="medication-start-date-title">START DATE</p>
+                            <p class="medication-start-date">${formatDate(medication.start_date)}</p>
+                        </div>
+                        <div class="medication-actions-container">
+                            <button id="pin-button-${medication.id}" class="medication-action-button" title="${pinTitle}" onclick="toggleMedicationPin('${medication.id}')">
+                                ${pinIcon}
+                            </button>
+                            <button class="medication-action-button" title="Edit Medication" onclick="event.stopPropagation(); openMedicationModal('edit', '${medication.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="medication-${medication.id}-extra-container" class="medication-extra-info-container" style="display: none;">
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">COMMON NAME</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.common_name, '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DELIVERY METHOD</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? deliveryCleaned(medication.delivery_method) : '-', '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">COMMENTS</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.comment, '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DIRECTIONS</p>
+                            <p class="medication-data-block-value">${safeDisplay(medication.directions, '-')}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DAY OF WEEK</p>
+                            <p class="medication-data-block-value">${arrayToCommaSeparated(medication.day_of_week)}</p>
+                        </div>
+                        <div class="medication-data-block">
+                            <p class="medication-data-block-title">DAY PERIOD</p>
+                            <p class="medication-data-block-value">${arrayToCommaSeparated(medication.day_period)}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            medicationsContainer.innerHTML += medicationHTML;
+        });
+    }
+
+    // Also update the toggleExtraInfo function to accept medication.id
+    function toggleExtraInfo(medicationId = null) {
+        console.log("Selected medication: ", medicationsState.allMedications[medicationId])
+        const extraInfoContainer = document.getElementById(`medication-${medicationId}-extra-container`);
         if (extraInfoContainer.style.display === 'none') {
             extraInfoContainer.style.display = 'grid';
         } else {
@@ -649,203 +1222,23 @@
         }
     }
 
-    function setMedsSort(sortOption) {
-        // Implement sorting logic here
-        console.log("Sorting medications by:", sortOption);
-    }
+    function toggleLegend() {
+        const legendContainerWrapper = document.getElementById('medication-legend-container-wrapper');
+        const legendIcon = document.getElementById('med-legend-icon');
+        const legendText = document.getElementById('med-legend-text');
 
-    function setMedsFilter(filterOption) {
-        // Implement filtering logic here
-        console.log("Filtering medications by:", filterOption);
-    }
 
-    function openMedicationsModal(formType, medication = null) {
-        currentMedication = medication;
-        const modal = document.getElementById('meds-modal');
-        modal.style.display = 'flex';
-
-        const deleteContent = document.getElementById('delete-medication-content');
-        const medicationContent = document.getElementById('medication-content');
-        const modalTitle = document.getElementById('meds-modal-title');
-        const modalSubtitle = document.getElementById('meds-modal-subtitle');
-
-        if (formType === 'delete') {
-            deleteContent.style.display = 'flex';
-            medicationContent.style.display = 'none';
-            modalTitle.textContent = 'Delete Medication';
-            populateDeleteMedicationForm(medication);
+        if (legendContainerWrapper.classList.contains('collapsed')) {
+            // Show the legend with slide down effect
+            legendContainerWrapper.classList.remove('collapsed');
+            legendIcon.className = 'fas fa-chevron-up';
+            legendText.textContent = 'Hide Legend';
         } else {
-            deleteContent.style.display = 'none';
-            medicationContent.style.display = 'flex';
-            // If editing, populate form with medication data
-            if (medication) {
-                modalTitle.textContent = 'Edit Medication';
-                // TODO: Populate form fields with medication data
-                populateMedicationForm(medication);
-            } else {
-                const modalTitle = document.getElementById('meds-modal-title');
-                modalTitle.textContent = 'Add Medication';
-                populateMedicationForm(null);
-            }
+            // Hide the legend with slide up effect
+            legendContainerWrapper.classList.add('collapsed');
+            legendIcon.className = 'fas fa-chevron-down';
+            legendText.textContent = 'Show Legend';
         }
-
-    }
-
-    function closeMedicationsModal() {
-        const modal = document.getElementById('meds-modal');
-        modal.style.display = 'none';
-        currentMedication = null;
-        const statusMessage = document.getElementById('form-status-message');
-        statusMessage.textContent = '';
-        statusMessage.className = '';
-        const doseSuggestionsContainer = document.getElementById('dose-suggestions-container');
-        doseSuggestionsContainer.style.display = 'none';
-        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
-        doseSuggestionsList.innerHTML = '';
-    }
-
-    function editMedication(medicationId) {
-        // Find the medication from the current data
-        const medication = window.medicationsData[medicationId];
-        if (medication) {
-            openMedicationsModal('edit', medication);
-        }
-    }
-
-    function deleteMedication(medicationId) {
-        // Find the medication from the current data
-        const medication = window.medicationsData[medicationId];
-        if (medication) {
-            openMedicationsModal('delete', medication);
-        }
-    }
-
-    function showLoadingSpinner(message) {
-        const activeMedicationsContainer = document.getElementById('active-medications-container');
-        activeMedicationsContainer.innerHTML = '';
-        const loadingContainer = document.getElementById('loading-medications-container');
-        loadingContainer.style.display = 'flex';
-        const loadingText = document.getElementById('loading-medications-text');
-        loadingText.textContent = message;
-    }
-
-    function hideLoadingSpinner() {
-        const loadingContainer = document.getElementById('loading-medications-container');
-        loadingContainer.style.display = 'none';
-        const loadingText = document.getElementById('loading-medications-text');
-        loadingText.textContent = '';
-    }
-
-    function getMedicationsData() {
-        const formData = new FormData();
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
-
-        fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_active_medications") }}', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            const medicationsObj = data.data;
-            const medications = Object.values(medicationsObj);
-
-            // console.log('Medications data:', data);
-            // console.log('Medications object:', medicationsObj);
-            // console.log('Medications array:', medications);
-
-            // Store data globally for edit/delete operations
-            window.medicationsData = medicationsObj;
-
-            // Convert the dictionary to an array of medication objects
-            const medicationsContainer = document.getElementById('active-medications-container');
-
-            // If no medications, show a message
-            if (medications.length === 0) {
-                medicationsContainer.innerHTML += '<div class="no-medications"><i class="fa-solid fa-triangle-exclamation"></i><p>No medications found for this patient.</p></div>';
-                hideLoadingSpinner();
-                return;
-            }
-
-            medications.forEach(medication => {
-
-                // console.log('Medication:', medication);
-
-                // Helper function to safely display values
-                const safeDisplay = (value, defaultText = '') => value || defaultText;
-                const cleanDisplay = (value) => {
-                    if (!value) return '';
-                    return String(value).replace(/_/g, ' ');
-                };
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return 'N/A';
-                    const date = new Date(dateStr);
-                    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                };
-
-                const medicationHTML = `
-                    <div id="med-${medication.id}" class="medication-container" onclick="toggleExtraInfo('${medication.healthie_medication_id}')" title="Click to show more">
-                        <div id="medication-${medication.healthie_medication_id}-main-container" class="medication-main-container">
-                            <div class="medication-info-container">
-                                <div class="medication-title-container">
-                                    <h3 class="medication-title">${safeDisplay(medication.medication_name, 'Unnamed Medication')}</h3>
-                                    ${((medication.category && medication.category !== 'other') ? `<p class="medication-category">${cleanDisplay(medication.category)}</p>` : (medication.category === 'other' && medication.custom_category) ? `<p class="medication-category">${cleanDisplay(medication.custom_category)}</p>` : '')}
-                                    ${((medication.supercategory && medication.supercategory !== 'other') ? `<p class="medication-supercategory">${cleanDisplay(medication.supercategory)}</p>` : (medication.supercategory === 'other' && medication.custom_supercategory) ? `<p class="medication-supercategory">${cleanDisplay(medication.custom_supercategory)}</p>` : '')}
-                                </div>
-                                <div class="medication-dosage-info-container">
-                                    <div class="medication-dosage-info">
-                                        ${(medication.dosage_amount && medication.dosage_unit) ? `<p id="medication-dosage-value" class="medication-dosage-info-value">${safeDisplay(medication.dosage_amount, '')} ${safeDisplay(medication.dosage_unit, '')}</p>` : ''}
-                                        ${medication.dosing_schedule_rule ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dosing_schedule_rule}</p>` : medication.frequency ? `<p id="medication-dosing-schedule-rule" class="medication-dosage-info-value">${medication.dose_count ? `${medication.dose_count}x ` : ''}${medication.frequency}</p>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="medication-date-container">
-                                <p class="medication-start-date-title">START DATE</p>
-                                <p class="medication-start-date">${formatDate(medication.start_date)}</p>
-                            </div>
-                            <div class="medication-actions-container">
-                                <button class="medication-action-button" title="Edit Medication" onclick="event.stopPropagation(); editMedication('${medication.healthie_medication_id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="medication-action-button" title="Delete Medication" onclick="event.stopPropagation(); deleteMedication('${medication.healthie_medication_id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="medication-${medication.healthie_medication_id}-extra-container" class="medication-extra-info-container" style="display: none;">
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">COMMON NAME</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.common_name, '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">DELIVERY METHOD</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.delivery_method ? medication.delivery_method.toUpperCase() : '-', '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">COMMENTS</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.comment, '-')}</p>
-                            </div>
-                            <div class="medication-data-block">
-                                <p class="medication-data-block-title">DIRECTIONS</p>
-                                <p class="medication-data-block-value">${safeDisplay(medication.directions, '-')}</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                medicationsContainer.innerHTML += medicationHTML;
-            });
-
-            hideLoadingSpinner();
-
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const medicationsContainer = document.getElementById('meds-data-container');
-            medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
-        });
     }
 
     let keywordDebounceTimer;
@@ -855,81 +1248,88 @@
     let syntrilloMedicationKeywordByName = {};
 
     function getMedicationKeywords(origin, keyword) {
-        // Clear previous timer
-        clearTimeout(keywordDebounceTimer);
+        // Return a Promise
+        return new Promise((resolve, reject) => {
+            // Clear previous timer
+            clearTimeout(keywordDebounceTimer);
 
-        // Don't search if keyword is too short
-        if (keyword.length < 2) {
-            if (origin === 'healthie') {
-                const healthieDatalist = document.getElementById('healthie-medication-suggestions');
-                healthieDatalist.innerHTML = '';
-            } else {
-                const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
-                syntrilloDatalist.innerHTML = '';
+            // Add null/undefined check
+            if (!keyword || typeof keyword !== 'string') {
+                resolve();
+                return;
             }
 
-            return;
-        }
-
-        // Debounce the search
-        keywordDebounceTimer = setTimeout(() => {
-            const encodedKeyword = encodeURIComponent(keyword);
-            const healthieURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_healthie_medication_keywords", keyword="") }}${encodedKeyword}`;
-            const syntrilloURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_syntrillo_medication_keywords", keyword="") }}${encodedKeyword}`;
-            fetch(origin === 'healthie' ? healthieURL : syntrilloURL, {
-                method: 'GET'
-            })
-            .then(response => response.json())
-            .then(data => {
-                // console.log('Medication keywords:', data);
-                const datalist = document.getElementById(`${origin}-medication-suggestions`);
-                datalist.innerHTML = '';
-
-                if (data.success && Object.keys(data.data).length > 0) {
-
-                    if (origin === 'healthie') {
-                        healthieMedicationKeywords = data.data;
-                        healthieMedicationKeywordByName = {};
-                        console.log('Healthie Medication Keywords:', healthieMedicationKeywords);
-                        for (const [id, value] of Object.entries(healthieMedicationKeywords)) {
-                            const option = document.createElement('option');
-                            option.value = value.name;
-                            datalist.appendChild(option);
-                            // cache by name for lookup on selection
-                            healthieMedicationKeywordByName[value.name] = { id, ...value };
-                            console.log('Added Healthie option:', option);
-                        }
-                    }
-
-                    if (origin === 'syntrillo') {
-                        syntrilloMedicationKeywords = data.data;
-                        syntrilloMedicationKeywordByName = {};
-                        for (const [id, value] of Object.entries(syntrilloMedicationKeywords)) {
-                            const option = document.createElement('option');
-                            option.value = value.name;
-                            option.id = id;
-                            datalist.appendChild(option);
-                            // cache by name for lookup on selection
-                            syntrilloMedicationKeywordByName[value.name] = { id, ...value };
-                        }
-                    }
+            // Don't search if keyword is too short
+            if (keyword.length < 2) {
+                if (origin === 'healthie') {
+                    const healthieDatalist = document.getElementById('healthie-medication-suggestions');
+                    if (healthieDatalist) healthieDatalist.innerHTML = '';
                 } else {
-                    healthieMedicationKeywords = {};
-                    healthieMedicationKeywordByName = {};
-                    syntrilloMedicationKeywords = {};
-                    syntrilloMedicationKeywordByName = {};
+                    const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
+                    if (syntrilloDatalist) syntrilloDatalist.innerHTML = '';
                 }
-            })
-            .catch(error => console.error('Error fetching medication keywords:', error));
-        }, 300); // Wait 300ms after user stops typing
-    }
+                resolve(); // Resolve immediately if keyword too short
+                return;
+            }
 
-    function getCommonMedicationKeywords(keyword) {
-        return;
-    }
+            // Debounce the search
+            keywordDebounceTimer = setTimeout(() => {
+                const encodedKeyword = encodeURIComponent(keyword);
+                const healthieURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_healthie_medication_keywords", keyword="") }}${encodedKeyword}`;
+                const syntrilloURL = `{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_syntrillo_medication_keywords", keyword="") }}${encodedKeyword}`;
 
+                fetch(origin === 'healthie' ? healthieURL : syntrilloURL, {
+                    method: 'GET'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const datalist = document.getElementById(`${origin}-medication-suggestions`);
+                        if (datalist) datalist.innerHTML = '';
+
+                        if (data.success && Object.keys(data.data).length > 0) {
+
+                            if (origin === 'healthie') {
+                                healthieMedicationKeywords = data.data;
+                                healthieMedicationKeywordByName = {};
+                                for (const [id, value] of Object.entries(healthieMedicationKeywords)) {
+                                    const option = document.createElement('option');
+                                    option.value = value.name;
+                                    if (datalist) datalist.appendChild(option);
+                                    healthieMedicationKeywordByName[value.name] = { id, ...value };
+                                }
+                            }
+
+                            if (origin === 'syntrillo') {
+                                syntrilloMedicationKeywords = data.data;
+                                syntrilloMedicationKeywordByName = {};
+                                for (const [id, value] of Object.entries(syntrilloMedicationKeywords)) {
+                                    const option = document.createElement('option');
+                                    option.value = value.name;
+                                    option.id = id;
+                                    // option.onclick = () => {
+                                    //     document.getElementById('healthie-medication-id').value = id;
+                                    // };
+                                    if (datalist) datalist.appendChild(option);
+                                    syntrilloMedicationKeywordByName[value.name] = { id, ...value };
+                                }
+                            }
+                        } else {
+                            healthieMedicationKeywords = {};
+                            healthieMedicationKeywordByName = {};
+                            syntrilloMedicationKeywords = {};
+                            syntrilloMedicationKeywordByName = {};
+                        }
+                        resolve(); // Resolve after successful fetch
+                    })
+                    .catch(error => {
+                        console.error('Error fetching medication keywords:', error);
+                        reject(error); // Reject on error
+                    });
+            }, 300); // Wait 300ms after user stops typing
+        });
+    }
     const medNameInput = document.getElementById('medication-name');
-    medNameInput.addEventListener('input', function() {
+    medNameInput.addEventListener('input', function () {
         getMedicationKeywords('healthie', this.value);
         handleHealthieMedicationSelection();
     });
@@ -941,7 +1341,7 @@
         const doseContainer = document.getElementById('dose-suggestions-container');
         if (item) {
             // set hidden id and populate dose suggestions
-            const hiddenId = document.getElementById('medication-id');
+            const hiddenId = document.getElementById('healthie-medication-id');
             if (hiddenId) hiddenId.value = item.id;
             populateDoseSuggestions(item.dosage_options || []);
             if (doseContainer) doseContainer.style.display = 'flex';
@@ -951,8 +1351,17 @@
         }
     }
 
+    document.getElementById('healthie-medication-id').addEventListener('input', function () {
+        const healthieMedicationId = this.value;
+        if (healthieMedicationId) {
+            handleHealthieMedicationSelection
+        } else {
+            document.getElementById('syntrillo-medication-inputs-description').style.display = 'none';
+        }
+    });
+
     const commonNameInput = document.getElementById('medication-common-name');
-    commonNameInput.addEventListener('input', function() {
+    commonNameInput.addEventListener('input', function () {
         getMedicationKeywords('syntrillo', this.value);
         handleSyntrilloMedicationSelection();
     });
@@ -971,23 +1380,14 @@
             hiddenId.value = item.id;
             medicationCategorySelect.value = item.category;
             medicationSupercategorySelect.value = item.supercategory;
-            if (item.category === 'Other' || item.supercategory === 'Other') {
-                // show custom inputs
-                medicationCustomCategoryInput.style.display = 'none';
-                medicationCustomSupercategoryInput.style.display = 'none';
+            if (item.category === 'other' && item.custom_category) {
+                medicationCustomContainer.disabled = false;
+                medicationCustomCategoryInput.value = item.custom_category;
             }
-            if (item.category === 'Other') {
-                medicationCustomCategoryInput.style.display = 'block';
-            } else {
-                medicationCustomCategoryInput.style.display = 'none';
+            if (item.supercategory === 'other' && item.custom_supercategory) {
+                medicationCustomContainer.disabled = false;
+                medicationCustomSupercategoryInput.value = item.custom_supercategory;
             }
-            if (item.supercategory === 'Other') {
-                medicationCustomSupercategoryInput.style.display = 'block';
-            } else {
-                medicationCustomSupercategoryInput.style.display = 'none';
-            }
-            medicationCustomCategoryInput.value = item.custom_category || '';
-            medicationCustomSupercategoryInput.value = item.custom_supercategory || '';
         } else {
             // not an exact match
             hiddenId.value = '';
@@ -1021,7 +1421,7 @@
         }
 
         // Populate form fields with medication data
-        console.log('Populating form with medication:', medication);
+        // console.log('Populating form with medication:', medication);
 
         // Hidden inputs
         if (medication.id) {
@@ -1047,6 +1447,7 @@
         // Text inputs
         if (medication.medication_name) {
             document.getElementById('medication-name').value = medication.medication_name;
+            document.getElementById('medication-to-delete').innerHTML = medication.medication_name;
         }
 
         if (medication.common_name) {
@@ -1129,33 +1530,65 @@
         if (medication.directions) {
             document.getElementById('medication-directions').value = medication.directions;
         }
-    }
 
-    function populateDeleteMedicationForm(medication) {
-        const form = document.getElementById('delete-medication-form');
-
-        if (!medication) {
-            // Clear the form
-            form.reset();
-            return;
+        // Multi-select fields
+        if (medication.pinned) {
+            const pinButton = document.getElementById(`medication-pin-checkbox`);
+            if (pinButton) {
+                pinButton.checked = true;
+            }
         }
 
-        // Hidden inputs
-        if (medication.id) {
-            document.getElementById('delete-medication-id').value = medication.id;
+        if (medication.day_of_week && Array.isArray(medication.day_of_week)) {
+            for (let day of medication.day_of_week) {
+                const checkbox = document.getElementById(`day-${day.toLowerCase()}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            }
         }
 
-        if (medication.healthie_medication_id) {
-            document.getElementById('delete-medication-healthie-id').value = medication.healthie_medication_id;
+        if (medication.day_period && Array.isArray(medication.day_period)) {
+            for (let period of medication.day_period) {
+                const checkbox = document.getElementById(`time-${period.toLowerCase()}`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            }
         }
 
-        if (medication.medication_name) {
-            document.getElementById('delete-medication-name').value = medication.medication_name;
-        }
+        // Check if dosage info is missing and show suggestions if available
+        const doseContainer = document.getElementById('dose-suggestions-container');
+        const hasNoDosageInfo = !medication.dosage_amount && !medication.dosage_unit;
 
-        // Display medication name in confirmation message
-        const confirmationMessage = document.getElementById('delete-medication-confirmation-label');
-        confirmationMessage.textContent = `Please confirm the deletion of this medication by typing "Delete ${medication.medication_name}" below:`;
+        if (hasNoDosageInfo && medication.medication_name) {
+            // Fetch and display dosage options since dosage info is missing
+            getMedicationKeywords('healthie', medication.medication_name)
+                .then(() => {
+                    const item = healthieMedicationKeywordByName[medication.medication_name];
+                    if (item && item.dosage_options && item.dosage_options.length > 0) {
+                        populateDoseSuggestions(item.dosage_options);
+                        if (doseContainer) {
+                            doseContainer.style.display = 'flex';
+                        }
+                    } else {
+                        if (doseContainer) {
+                            doseContainer.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching medication keywords:', error);
+                    if (doseContainer) {
+                        doseContainer.style.display = 'none';
+                    }
+                });
+        } else {
+            // Has dosage info, hide suggestions
+            if (doseContainer) {
+                doseContainer.style.display = 'none';
+            }
+        }
     }
 
     async function createCommonMedication() {
@@ -1202,6 +1635,48 @@
         }
     }
 
+    function getMedicationsData() {
+        const formData = new FormData();
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        formData.append('healthie_user_id', "{{ healthie_user_id }}");
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
+
+        fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_all_medications") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                const medicationsObj = data.data;
+
+                // Update state instead of directly rendering
+                medicationsState.setAllMedications(medicationsObj);
+                console.log('All medications state: ', medicationsState.allMedications);
+
+                // Initialize pinned medications from backend data
+                medicationsState.pinnedMedications.clear();
+                Object.values(medicationsObj).forEach(med => {
+                    if (med.pinned) {
+                        console.log('Pinning medication on load: ', med);
+                        medicationsState.pinnedMedications.add(med.id);
+                    }
+                });
+
+
+
+                // Store globally for backward compatibility
+                window.medicationsData = medicationsObj;
+
+                hideLoadingSpinner();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const medicationsContainer = document.getElementById('meds-data-container');
+                medicationsContainer.innerHTML = '<p style="color: red;" class="error-message"><span><i class="fas fa-exclamation-triangle"></i></span> Error loading medications. Please try again.</span></p>';
+            });
+    }
+
     async function submitMedicationForm() {
 
         const commonMedNameInput = document.getElementById('medication-common-name');
@@ -1212,33 +1687,27 @@
         const commonMedIDInput = document.getElementById('common-medication-id');
 
         let commonMedID = null;
+        let isNewCommonMedication = false;
 
         const validCommonName = commonMedNameInput.value.length > 2;
         const validCategory = categorySelect.value !== '';
         const validSupercategory = supercategorySelect.value !== '';
-        const validCustomCategory = categorySelect.value === 'other' && customCategoryInput.value.length > 2;
-        const validCustomSupercategory = supercategorySelect.value === 'other' && customSupercategoryInput.value.length > 2;
+        const validCustomCategory = categorySelect.value !== 'other' || (categorySelect.value === 'other' && customCategoryInput.value.length > 2);
+        const validCustomSupercategory = supercategorySelect.value !== 'other' || (supercategorySelect.value === 'other' && customSupercategoryInput.value.length > 2);
 
         const validCommonMedication = validCommonName && validCategory && validSupercategory && validCustomCategory && validCustomSupercategory
-
-        // console.log('Valid Common Name:', validCommonName);
-        // console.log('Valid Category:', validCategory);
-        // console.log('Valid Supercategory:', validSupercategory);
-        // console.log('Valid Custom Category:', validCustomCategory);
-        // console.log('Valid Custom Supercategory:', validCustomSupercategory);
-        // console.log('Valid Common Medication:', validCommonMedication);
-        // console.log('Common Medication ID Input Value:', commonMedIDInput.value);
 
         if (validCommonMedication && !commonMedIDInput.value) {
             handleFormStatus('pending', 'Saving common medication data...')
             commonMedID = await createCommonMedication();
-        }
 
-        if (commonMedID === null) {
-            handleFormStatus('error', 'Error saving common medication data. Please fix the errors and try again.');
-            return;
-        } else {
-            handleFormStatus('pending', 'Saving medication data...');
+            if (!commonMedID) {
+                // Error creating common medication
+                handleFormStatus('error', 'Error creating common medication. Please try again.');
+                return;
+            }
+
+            isNewCommonMedication = true;
         }
 
         const submitBtn = document.getElementById('medication-submit-btn');
@@ -1253,15 +1722,14 @@
 
         let formData;
 
-        if (currentMedication) {
+        if (medicationsState.currentMedication && medicationsState.currentMedication.id && !isNewCommonMedication) {
             formData = new FormData();
 
             // Append existing medication ID
-            formData.append('id', currentMedication.id);
-
+            formData.append('id', medicationsState.currentMedication.id);
             // Append updated fields from the form
             for (let [key, value] of new FormData(form).entries()) {
-                if (currentMedication[key] != value) {
+                if (medicationsState.currentMedication[key] != value) {
                     formData.append(key, value);
                 }
             }
@@ -1273,117 +1741,288 @@
 
         // Filter out empty string values and convert is_active to boolean
         const cleanedFormData = new FormData();
+
+        cleanedFormData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        cleanedFormData.append('healthie_user_id', "{{ healthie_user_id }}");
+        cleanedFormData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        cleanedFormData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
+
         for (let [key, value] of formData.entries()) {
-            console.log(`Processing field: ${key} with value: ${value}`);
+            // console.log(`Processing field: ${key} with value: ${value}`);
             // Skip empty strings for optional fields
             if (value === '' || value === null) {
                 continue;
             }
+
+            if (key === 'pinned') {
+                // Convert pinned checkbox to boolean
+                cleanedFormData.append('pinned', '1');
+                continue;
+            }
+
             cleanedFormData.append(key, value);
         }
 
-        cleanedFormData.append('healthie_provider_id', healthieProviderId);
-        cleanedFormData.append('healthie_user_id', healthieUserId);
-        cleanedFormData.append('temporary_lookup_code', temporaryLookupCode);
-        cleanedFormData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
-
-        // Log for debugging
+        // Debug: Log cleaned form data
         console.log('Cleaned Form Data:');
         for (let [key, value] of cleanedFormData.entries()) {
             console.log(`${key}: ${value}`);
         }
 
-        if (currentMedication) {
-            // Update the medication
-            fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_update_medication") }}', {
+        try {
+            const endpoint = medicationsState.currentMedication && medicationsState.currentMedication.id
+                ? '{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_update_medication") }}'
+                : '{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_create_medication") }}';
+
+            const message = medicationsState.currentMedication && medicationsState.currentMedication.id
+                ? 'Updating medication...'
+                : 'Creating medication...';
+
+            handleFormStatus('pending', message);
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 body: cleanedFormData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Medication updated:', data);
-                handleFormStatus('success', 'Medication updated successfully!');
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('Medication saved:', data);
+                // Show success message
+                const action = medicationsState.currentMedication && medicationsState.currentMedication.id ? 'updated' : 'created';
+                handleFormStatus('success', `Medication ${action} successfully!`);
                 submitBtn.disabled = false;
                 closeMedicationsModal();
-                showLoadingSpinner('Fetching updated medications...');
-                getMedicationsData();
-            })
-            .catch(error => {
-                console.error('Error updating medication:', error);
-                handleFormStatus('error', 'Error updating medication. Please try again.');
+
+                // Update local state
+                const med = data.data;
+                if (action === 'updated') {
+                    // Update existing medication in state
+                    medicationsState.updateMedication(med.id, med);
+                } else {
+                    // Add new medication to state
+                    medicationsState.addMedication(med);
+                }
+
+                // console.log('Updated medications state:', medicationsState.allMedications);
+            } else {
+                handleFormStatus('error', `Error saving medication: ` + (data.message || data.error || 'Unknown'));
                 submitBtn.disabled = false;
-            })
-        } else {
-            // Create a new medication
-            fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_create_medication") }}', {
-                method: 'POST',
-                body: cleanedFormData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Medication created:', data);
-                handleFormStatus('success', 'Medication created successfully!');
-                submitBtn.disabled = false;
-                closeMedicationsModal();
-                showLoadingSpinner('Fetching updated medications...');
-                getMedicationsData();
-            })
-            .catch(error => {
-                console.error('Error creating medication:', error);
-                handleFormStatus('error', 'Error creating medication. Please try again.');
-                submitBtn.disabled = false;
-            })
+            }
+        } catch (error) {
+            console.error('Error cleaning form data:', error);
+            handleFormStatus('error', `Error saving medication: ${error.message}`);
+            submitBtn.disabled = false;
         }
     };
 
     async function confirmDeleteMedication() {
+        const currentMedication = medicationsState.currentMedication;
         if (!currentMedication || !currentMedication.id) {
             handleFormStatus('error', 'No medication selected for deletion.');
             return;
         }
 
+        handleFormStatus('pending', 'Deleting medication...');
+
         const formData = new FormData();
         formData.append('id', currentMedication.id);
         formData.append('healthie_medication_id', currentMedication.healthie_medication_id);
-        formData.append('healthie_provider_id', healthieProviderId);
-        formData.append('healthie_user_id', healthieUserId);
-        formData.append('temporary_lookup_code', temporaryLookupCode);
-        formData.append('patient_not_registered_at_syntrillo', PatientNotRegisteredAtSyntrillo);
+        formData.append('healthie_provider_id', "{{ healthie_provider_id }}");
+        formData.append('healthie_user_id', "{{ healthie_user_id }}");
+        formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}");
+        formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}");
 
         fetch('{{ url_for("iframe_healthie_provider_tab_medications_bp.iframe_healthie_provider_tab_delete_medication") }}', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Medication deleted:', data);
-            if (data.success) {
-                handleDeleteFormStatus('success', 'Medication deleted successfully!');
-                closeMedicationsModal();
-                showLoadingSpinner('Fetching updated medications...');
-                getMedicationsData();
-            } else {
-                handleDeleteFormStatus('error', 'Error deleting medication: ' + (data.message || data.error || 'Unknown'));
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting medication:', error);
-            handleDeleteFormStatus('error', 'Error deleting medication. Please try again.');
-        });
+            .then(response => response.json())
+            .then(data => {
+                console.log('Medication deleted:', data);
+                if (data.success) {
+                    handleFormStatus('success', 'Medication deleted successfully!');
+                    medicationsState.deleteMedication(currentMedication.id);
+                    closeMedicationsModal();
+                    medicationsState.currentMedication = null;
+                } else {
+                    handleFormStatus('error', 'Error deleting medication: ' + (data.message || data.error || 'Unknown'));
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting medication:', error);
+                handleFormStatus('error', 'Error deleting medication. Please try again.');
+            });
     }
 
     function handleFormStatus(status, message) {
+        const statusMessage = document.getElementById('med-form-status-message');
+        statusMessage.textContent = message;
+        statusMessage.className = status; // 'success', 'error', 'pending'
+    }
+
+    function clearFormStatus() {
         const statusMessage = document.getElementById('form-status-message');
-        statusMessage.textContent = message;
-        statusMessage.className = status; // 'success', 'error', 'pending'
+        statusMessage.textContent = '';
+        statusMessage.className = '';
     }
 
-    function handleDeleteFormStatus(status, message) {
-        const statusMessage = document.getElementById('delete-medication-error-message');
-        statusMessage.textContent = message;
-        statusMessage.className = status; // 'success', 'error', 'pending'
+    function resetMedicationForm() {
+        const form = document.getElementById('medication-form');
+
+        if (!form) {
+            console.error('Form not found');
+            return;
+        }
+
+        // Reset all form fields to their default values
+        form.reset();
+
+        // Clear hidden inputs explicitly
+        document.getElementById('syntrillo-medication-id').value = '';
+        document.getElementById('healthie-medication-id').value = '';
+        document.getElementById('medication-dosage-option-id').value = '';
+        document.getElementById('medication-mirrored').value = '';
+        document.getElementById('common-medication-id').value = '';
+
+        // Set default radio button values
+        document.getElementById('medication-is-active-yes').checked = true;
+        document.getElementById('medication-is-active-no').checked = false;
+
+        // Clear all checkboxes (day of week and day period)
+        const dayCheckboxes = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        dayCheckboxes.forEach(day => {
+            const checkbox = document.getElementById(`day-${day}`);
+            if (checkbox) checkbox.checked = false;
+        });
+
+        const periodCheckboxes = ['morning', 'afternoon', 'evening', 'night'];
+        periodCheckboxes.forEach(period => {
+            const checkbox = document.getElementById(`time-${period}`);
+            if (checkbox) checkbox.checked = false;
+        });
+
+        // Clear pinned checkbox
+        const pinnedCheckbox = document.getElementById('medication-pin-checkbox');
+        if (pinnedCheckbox) pinnedCheckbox.checked = false;
+
+        // Reset select dropdowns to first option (empty/default)
+        document.getElementById('medication-category').value = '';
+        document.getElementById('medication-supercategory').value = '';
+        document.getElementById('medication-delivery-method').value = '';
+        document.getElementById('medication-frequency').value = '';
+        document.getElementById('medication-time-of-day').value = '';
+
+        // Hide and clear custom category/supercategory fields
+        const customCategoryInput = document.getElementById('medication-custom-category');
+        const customSupercategoryInput = document.getElementById('medication-custom-supercategory');
+        const customContainer = document.getElementById('medication-custom-classification-container');
+
+        if (customCategoryInput) {
+            customCategoryInput.value = '';
+            customCategoryInput.disabled = true;
+            customCategoryInput.style.display = 'none';
+        }
+
+        if (customSupercategoryInput) {
+            customSupercategoryInput.value = '';
+            customSupercategoryInput.disabled = true;
+            customSupercategoryInput.style.display = 'none';
+        }
+
+        if (customContainer) {
+            customContainer.style.display = 'none';
+        }
+
+        // Hide required tags for conditional fields
+        document.getElementById('medication-end-date-required-tag').style.display = 'none';
+        document.getElementById('medication-category-required-tag').style.display = 'none';
+        document.getElementById('medication-supercategory-required-tag').style.display = 'none';
+        document.getElementById('medication-custom-category-required-tag').style.display = 'none';
+        document.getElementById('medication-custom-supercategory-required-tag').style.display = 'none';
+
+        // Disable end date field (since default is active)
+        const endDateInput = document.getElementById('medication-end-date');
+        if (endDateInput) {
+            endDateInput.disabled = true;
+            endDateInput.value = '';
+        }
+
+        // Hide dose suggestions container
+        const doseContainer = document.getElementById('dose-suggestions-container');
+        if (doseContainer) {
+            doseContainer.style.display = 'none';
+        }
+
+        // Clear dose suggestions list
+        const doseSuggestionsList = document.getElementById('dose-suggestions-list');
+        if (doseSuggestionsList) {
+            doseSuggestionsList.innerHTML = '';
+        }
+
+        // Clear medication name in delete section
+        const medToDelete = document.getElementById('medication-to-delete');
+        if (medToDelete) {
+            medToDelete.innerHTML = '';
+        }
+
+        // Clear the delete confirmation input
+        const deleteInput = document.getElementById('medication-delete');
+        if (deleteInput) {
+            deleteInput.value = '';
+        }
+
+        // Disable delete button
+        const deleteBtn = document.getElementById('medication-delete-btn');
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add('medication-btn-disabled');
+        }
+
+        // Clear datalist suggestions
+        const healthieDatalist = document.getElementById('healthie-medication-suggestions');
+        const syntrilloDatalist = document.getElementById('syntrillo-medication-suggestions');
+        if (healthieDatalist) healthieDatalist.innerHTML = '';
+        if (syntrilloDatalist) syntrilloDatalist.innerHTML = '';
+
+        // Reset keyword caches
+        healthieMedicationKeywords = {};
+        healthieMedicationKeywordByName = {};
+        syntrilloMedicationKeywords = {};
+        syntrilloMedicationKeywordByName = {};
+
+        // Clear form status message
+        clearFormStatus();
+
+        // Re-enable submit button and trigger validation check
+        const submitBtn = document.getElementById('medication-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true; // Will be re-enabled by checkRequiredFields if valid
+            submitBtn.classList.add('medication-btn-disabled');
+        }
+
+        // Trigger validation check to update submit button state
+        if (typeof checkRequiredFields === 'function') {
+            checkRequiredFields();
+        }
+
+        // console.log('Medication form reset successfully');
     }
 
-    showLoadingSpinner('Fetching active medications...');
-    getMedicationsData();
+    document.addEventListener('DOMContentLoaded', function () {
+        const medicationModal = document.getElementById('medication-modal');
+
+        // Close modals when clicking outside of them
+        window.onclick = function (event) {
+            if (event.target === medicationModal) {
+                closeMedicationsModal();
+            }
+        };
+    });
+
+    $(document).ready(function () {
+        showLoadingSpinner('Fetching patient medications...');
+        getMedicationsData();
+    })
 </script>

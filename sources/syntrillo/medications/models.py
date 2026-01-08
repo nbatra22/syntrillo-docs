@@ -4,7 +4,6 @@ from datetime import datetime
 from enum import Enum
 from decimal import Decimal
 from datetime import date, timezone, time
-from nanoid import generate
 
 class Frequency(str, Enum):
     HOURLY = "hourly"
@@ -76,7 +75,7 @@ class CommonMedication(BaseModel):
     Pydantic model representing a common medication entry.
     This model validates the data type and constraints for common medications.
     """
-    id: str = Field(default_factory=lambda: generate(size=10))  # Unique nanoid
+    id: str = Field(..., max_length=12)  # Unique nanoid
     common_name: str = Field(..., max_length=55)
     category: Optional[DrugCategory] = None
     supercategory: Optional[DrugSupercategory] = None
@@ -93,7 +92,7 @@ class MedicationRecord(BaseModel):
     This model validates the data type and constraints for one medication entry.
     """
     # Required Fields (NOT NULL)
-    id: str = Field(default_factory=lambda: generate(size=10))  # Unique nanoid
+    id: str = Field(..., max_length=12)  # Unique nanoid
     syntrillo_internal_key: str = Field(..., max_length=255)
     medication_name: str = Field(..., max_length=255)
     healthie_medication_id: int = 0

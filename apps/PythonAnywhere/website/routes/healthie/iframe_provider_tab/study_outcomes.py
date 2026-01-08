@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
 
 from .post_management import PostManager
@@ -7,6 +8,10 @@ from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
 from syntrillo.study_outcomes.patient_study_outcomes import PatientStudyOutcomes
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.api_healthie.user import HealthieUser
+from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
+from syntrillo.stroke_risk_score_v2.agg_data import get_healthie_activity_data
 
 iframe_healthie_provider_tab_study_outcomes_bp = Blueprint('iframe_healthie_provider_tab_study_outcomes_bp', __name__)
 
@@ -48,7 +53,7 @@ def iframe_healthie_provider_tab_study_outcomes():
     )
 
 
-@iframe_healthie_provider_tab_study_outcomes_bp.route('/healthie/iframe_provider_tab/study_outcomes/data', methods=['POST'])
+@iframe_healthie_provider_tab_study_outcomes_bp.route('/healthie/iframe_provider_tab/study_outcomes_data', methods=['POST'])
 def iframe_healthie_provider_tab_study_outcomes_data():
     """
     This endpoint is used to get the data for the study outcomes tab.
@@ -61,17 +66,54 @@ def iframe_healthie_provider_tab_study_outcomes_data():
     healthie_user_id = post_manager.pseudonyms['healthie_user_id']
 
     study_outcomes = PatientStudyOutcomes(syntrillo_internal_key_patient, healthie_user_id)
-    study_outcomes_data = study_outcomes.get_primary_prevention_data()
+    primary_prevention_study_groups = study_outcomes.primary_prevention_study_group
+    secondary_prevention_study_groups = study_outcomes.secondary_prevention_study_group
 
-    if study_outcomes_data is None:
+    healthie_user_manager = HealthieUser(healthie_user_id)
+    user_group = healthie_user_manager.get_user_group_by_healthie_user_id()
+    user_group_name = user_group['name'] if user_group else None
+    user_group_id = user_group['id'] if user_group else None
+
+    if user_group_id is None:
         return jsonify({
-            "success": True,
-            "message": "No data available",
-            "study_outcomes_data": {}
+            'success': False,
+            'message': 'User is not assigned to a group',
         })
 
-    return jsonify({
-        "success": True,
-        "message": "Study outcomes data received successfully",
-        "study_outcomes_data": study_outcomes_data
-    })
+    study_type = 'Primary Prevention' if user_group_id in primary_prevention_study_groups else 'Secondary Prevention' if user_group_id in secondary_prevention_study_groups else 'N/A'
+
+    # Initialize both to None
+    primary_prevention_data = None
+    secondary_prevention_data = None
+
+    if study_type == 'Primary Prevention':
+        primary_prevention_data = study_outcomes.get_primary_prevention_data()
+        if primary_prevention_data['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully retrieved primary prevention data',
+                'user_group_name': user_group_name,
+                'study_type': study_type,
+                'primary_prevention_data': primary_prevention_data['data'],
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': primary_prevention_data['message'],
+            })
+
+    elif study_type == 'Secondary Prevention':
+        secondary_prevention_data = study_outcomes.get_secondary_prevention_data()
+        if secondary_prevention_data['success']:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully retrieved secondary prevention data',
+                'user_group_name': user_group_name,
+                'study_type': study_type,
+                'secondary_prevention_data': secondary_prevention_data['data'],
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': secondary_prevention_data['message'],
+            })
