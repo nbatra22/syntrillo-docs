@@ -129,7 +129,7 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: boo
 
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
-        return None, None, None
+        return None, None, None, None, None
 
 def calc_risk_variable_contributions(
     final_dependent_score: float,
@@ -807,4 +807,3 @@ if __name__ == "__main__":
         #     AVG_DBP: 81.825,
         #     CREATININE: creatinine_levels_value,
         # }
-
