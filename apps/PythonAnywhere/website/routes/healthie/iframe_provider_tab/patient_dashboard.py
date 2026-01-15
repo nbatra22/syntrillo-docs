@@ -63,7 +63,7 @@ def iframe_healthie_provider_tab_patient_dashboard():
     )
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/blood_pressure', methods=['POST'])
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/patient_view/blood_pressure', methods=['POST'])
 def healthie_iframe_provider_tab_blood_pressure():
     """
     Retrieves summary stats data from BP Analysis class.
@@ -94,7 +94,7 @@ def healthie_iframe_provider_tab_blood_pressure():
         abort(500, description="An error occurred while processing your request.")
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/heart_rate', methods=['POST'])
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/patient_view/heart_rate', methods=['POST'])
 def healthie_iframe_provider_tab_heart_rate():
     """
     Retrieves heart rate data from
@@ -131,7 +131,7 @@ def healthie_iframe_provider_tab_heart_rate():
     })
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/biometrics', methods=['POST'])
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/patient_view/biometrics', methods=['POST'])
 def healthie_iframe_provider_tab_biometrics():
     """
     This endpoint is used to retrieve biometrics data for a patient.
