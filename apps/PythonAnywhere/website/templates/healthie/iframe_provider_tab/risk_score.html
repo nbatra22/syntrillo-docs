@@ -208,9 +208,12 @@
     }
 
     .rs-treatment-optimization {
+        display: inline-block;
+        flex-shrink: 0;
+        white-space: nowrap;
         font-size: 9px;
         font-weight: 500;
-        margin: 0;
+        /* margin: 0 0 0 0.5rem; */
         color: #e5e7eb;
         background-color: #16284a;
         padding: 0.1rem 0.25rem;
@@ -438,6 +441,7 @@
         display: flex;
         justify-content: space-between;
         align-items: start;
+        gap: 1rem;
         padding: 8px;
         border-radius: 0.25rem;
     }
@@ -460,12 +464,35 @@
     .rs-metric-info {
         display: flex;
         flex-direction: column;
+        min-width: 0;
     }
 
     .rs-metric-title,
     .rs-metric-value {
         font-weight: bold;
         font-size: 14px;
+    }
+
+    .rs-metric-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .rs-metric-title:hover {
+        overflow: visible;
+        text-overflow: clip;
+        /* animation: scroll-text 6s ease-in-out; */
+    }
+
+    @keyframes scroll-text {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        50% {
+            transform: translateX(-40%);
+        }
     }
 
     .rs-metric-subtitle,
@@ -1003,6 +1030,76 @@
                     </div>
                 </div>
 
+                <div id="rs-baseline-sbp-variability-container" class="rs-metric-container">
+                    <div class="rs-metric-info">
+                        <div class="rs-metric-title-container">
+                            <h3 class="rs-metric-title">
+                                Systolic BP - Variability (Baseline)
+                            </h3>
+                            <i id="rs-baseline-sbp-variability-circle" class="fa-solid fa-circle"
+                                style="display: none; color: green;"></i>
+                        </div>
+                        <h4 class="rs-metric-subtitle">
+                            Tenovi BPM
+                        </h4>
+                    </div>
+                    <div class="rs-metric-values-container">
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-baseline-sbp-variability" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                        <div class="rs-metric-srs-container">
+                            <h3 id="rs-baseline-sbp-variability-srs" class="rs-metric-value">
+                                <i class="fa-solid fa-xmark"></i>
+                            </h3>
+                        </div>
+                        <div class="rs-metric-sps-container">
+                            <h3 id="rs-baseline-sbp-variability-sps" class="rs-metric-value">
+                                <i class="fa-solid fa-xmark"></i>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rs-baseline-sbp-peak-container" class="rs-metric-container">
+                    <div class="rs-metric-info">
+                        <div class="rs-metric-title-container">
+                            <h3 class="rs-metric-title">
+                                Systolic BP - Peak (Baseline)
+                            </h3>
+                            <i id="rs-baseline-sbp-peak-circle" class="fa-solid fa-circle"
+                                style="display: none; color: green;"></i>
+                        </div>
+                        <h4 class="rs-metric-subtitle">
+                            Tenovi BPM
+                        </h4>
+                    </div>
+                    <div class="rs-metric-values-container">
+                        <div class="rs-metric-value-container">
+                            <h3 id="rs-baseline-sbp-peak" class="rs-metric-value">
+                                -
+                            </h3>
+                            <h4 class="rs-metric-value-unit">
+                                mmHg
+                            </h4>
+                        </div>
+                        <div class="rs-metric-srs-container">
+                            <h3 id="rs-baseline-sbp-peak-srs" class="rs-metric-value">
+                                <i class="fa-solid fa-xmark"></i>
+                            </h3>
+                        </div>
+                        <div class="rs-metric-sps-container">
+                            <h3 id="rs-baseline-sbp-peak-sps" class="rs-metric-value">
+                                <i class="fa-solid fa-xmark"></i>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Trailing BP -->
                 <div id="rs-bp-trailing-sbp-container" class="rs-metric-container">
                     <div class="rs-metric-info">
@@ -1074,14 +1171,13 @@
                     </div>
                 </div>
 
-                <!-- BP Variability and Peak -->
-                <div id="rs-bp-variability-container" class="rs-metric-container">
+                <div id="rs-trailing-sbp-variability-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <div class="rs-metric-title-container">
                             <h3 class="rs-metric-title">
                                 Systolic BP - Variability (1mo. Trailing)
                             </h3>
-                            <i id="rs-bp-variability-circle" class="fa-solid fa-circle"
+                            <i id="rs-trailing-sbp-variability-circle" class="fa-solid fa-circle"
                                 style="display: none; color: green;"></i>
                         </div>
                         <h4 class="rs-metric-subtitle">
@@ -1090,7 +1186,7 @@
                     </div>
                     <div class="rs-metric-values-container">
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-bp-variability" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-variability" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1098,25 +1194,25 @@
                             </h4>
                         </div>
                         <div class="rs-metric-srs-container">
-                            <h3 id="rs-bp-variability-srs" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-variability-srs" class="rs-metric-value">
                                 <i class="fa-solid fa-xmark"></i>
                             </h3>
                         </div>
                         <div class="rs-metric-sps-container">
-                            <h3 id="rs-bp-variability-sps" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-variability-sps" class="rs-metric-value">
                                 <i class="fa-solid fa-xmark"></i>
                             </h3>
                         </div>
                     </div>
                 </div>
 
-                <div id="rs-bp-peak-container" class="rs-metric-container">
+                <div id="rs-trailing-sbp-peak-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <div class="rs-metric-title-container">
                             <h3 class="rs-metric-title">
                                 Systolic BP - Peak (1mo. Trailing)
                             </h3>
-                            <i id="rs-bp-peak-circle" class="fa-solid fa-circle"
+                            <i id="rs-trailing-sbp-peak-circle" class="fa-solid fa-circle"
                                 style="display: none; color: green;"></i>
                         </div>
                         <h4 class="rs-metric-subtitle">
@@ -1125,7 +1221,7 @@
                     </div>
                     <div class="rs-metric-values-container">
                         <div class="rs-metric-value-container">
-                            <h3 id="rs-bp-peak" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-peak" class="rs-metric-value">
                                 -
                             </h3>
                             <h4 class="rs-metric-value-unit">
@@ -1133,12 +1229,12 @@
                             </h4>
                         </div>
                         <div class="rs-metric-srs-container">
-                            <h3 id="rs-bp-peak-srs" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-peak-srs" class="rs-metric-value">
                                 <i class="fa-solid fa-xmark"></i>
                             </h3>
                         </div>
                         <div class="rs-metric-sps-container">
-                            <h3 id="rs-bp-peak-sps" class="rs-metric-value">
+                            <h3 id="rs-trailing-sbp-peak-sps" class="rs-metric-value">
                                 <i class="fa-solid fa-xmark"></i>
                             </h3>
                         </div>
@@ -1234,7 +1330,7 @@
                     </div>
                 </div>
 
-                <div id="rs-hr-avg-container" class="rs-metric-container">
+                <!-- <div id="rs-hr-avg-container" class="rs-metric-container">
                     <div class="rs-metric-info">
                         <div class="rs-metric-title-container">
                             <h3 class="rs-metric-title">
@@ -1266,7 +1362,7 @@
                             </h3>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </section>
 
@@ -2217,6 +2313,8 @@
                         <div class="rs-metric-title-container">
                             <h3 class="rs-metric-title">
                                 (Hyperlipidemia) Triglycerides Level
+                                <!-- <span id="rs-triglycerides-level-treatment-optimization" class="rs-treatment-optimization"
+                                style="display: none;"></span> -->
                             </h3>
                             <p id="rs-triglycerides-level-treatment-optimization" class="rs-treatment-optimization"
                                 style="display: none;"></p>
@@ -2936,18 +3034,26 @@
         // Blood Pressure
         const sbpBaseline = document.getElementById("rs-bp-baseline-sbp");
         const dbpBaseline = document.getElementById("rs-bp-baseline-dbp");
+        const sbpBaselineSRS = document.getElementById("rs-bp-baseline-sbp-srs");
+        const sbpBaselineSPS = document.getElementById("rs-bp-baseline-sbp-sps");
         const sbpTrailing = document.getElementById("rs-bp-trailing-sbp");
         const sbpTrailingSRS = document.getElementById("rs-bp-trailing-sbp-srs");
         const sbpTrailingSPS = document.getElementById("rs-bp-trailing-sbp-sps");
         const dbpTrailing = document.getElementById("rs-bp-trailing-dbp");
         const dbpTrailingSRS = document.getElementById("rs-bp-trailing-dbp-srs");
         const dbpTrailingSPS = document.getElementById("rs-bp-trailing-dbp-sps");
-        const sbpVariability = document.getElementById("rs-bp-variability");
-        const sbpVariabilitySRS = document.getElementById("rs-bp-variability-srs");
-        const sbpVariabilitySPS = document.getElementById("rs-bp-variability-sps");
-        const sbpPeak = document.getElementById("rs-bp-peak");
-        const sbpPeakSRS = document.getElementById("rs-bp-peak-srs");
-        const sbpPeakSPS = document.getElementById("rs-bp-peak-sps");
+        const sbpBaselineVariability = document.getElementById("rs-baseline-sbp-variability");
+        const sbpBaselineVariabilitySRS = document.getElementById("rs-baseline-sbp-variability-srs");
+        const sbpBaselineVariabilitySPS = document.getElementById("rs-baseline-sbp-variability-sps");
+        const sbpTrailingVariability = document.getElementById("rs-trailing-sbp-variability");
+        const sbpTrailingVariabilitySRS = document.getElementById("rs-trailing-sbp-variability-srs");
+        const sbpTrailingVariabilitySPS = document.getElementById("rs-trailing-sbp-variability-sps");
+        const sbpBaselinePeak = document.getElementById("rs-baseline-sbp-peak");
+        const sbpBaselinePeakSRS = document.getElementById("rs-baseline-sbp-peak-srs");
+        const sbpBaselinePeakSPS = document.getElementById("rs-baseline-sbp-peak-sps");
+        const sbpTrailingPeak = document.getElementById("rs-trailing-sbp-peak");
+        const sbpTrailingPeakSRS = document.getElementById("rs-trailing-sbp-peak-srs");
+        const sbpTrailingPeakSPS = document.getElementById("rs-trailing-sbp-peak-sps");
 
         // Heart Rate
         const hrBaseline = document.getElementById("rs-hr-baseline");
@@ -3181,8 +3287,10 @@
                         const dbpBaselineCircle = document.getElementById('rs-bp-baseline-dbp-circle');
                         const sbpTrailingCircle = document.getElementById('rs-bp-trailing-sbp-circle');
                         const dbpTrailingCircle = document.getElementById('rs-bp-trailing-dbp-circle');
-                        const sbpPeakCircle = document.getElementById('rs-bp-peak-circle');
-                        const sbpVariabilityCircle = document.getElementById('rs-bp-variability-circle');
+                        const sbpBaselinePeakCircle = document.getElementById('rs-baseline-sbp-peak-circle');
+                        const sbpTrailingPeakCircle = document.getElementById('rs-trailing-sbp-peak-circle');
+                        const sbpBaselineVariabilityCircle = document.getElementById('rs-baseline-sbp-variability-circle');
+                        const sbpTrailingVariabilityCircle = document.getElementById('rs-trailing-sbp-variability-circle');
 
                         const thresholds = {
                             'sbp': {
@@ -3203,69 +3311,119 @@
                             }
                         }
 
-                        const sbpValue = bp.systolic.trailing.average;
-                        const dbpValue = bp.diastolic.trailing.average;
-                        const sbpPeakValue = bp.systolic.trailing['Peak AVG SBP'];
+                        const sbpTrailingValue = bp.systolic.trailing.average;
+                        const dbpTrailingValue = bp.diastolic.trailing.average;
+                        const sbpTrailingVariabilityValue = bp.systolic.trailing.variability;
+                        const sbpTrailingPeakValue = bp.systolic.trailing['Peak AVG SBP'];
                         const sbpBaselineValue = bp.systolic.baseline.average;
                         const dbpBaselineValue = bp.diastolic.baseline.average;
-                        const sbpVariabilityValue = bp.systolic.trailing.variability;
+                        const sbpBaselineVariabilityValue = bp.systolic.baseline.variability;
+                        const sbpBaselinePeakValue = bp.systolic.baseline['Peak AVG SBP'];
 
                         // Update BP values
-                        if (sbpTrailing) sbpTrailing.innerHTML = sbpValue || missingDataIcon;
-                        if (sbpVariability) sbpVariability.innerHTML = sbpVariabilityValue || missingDataIcon;
-                        if (sbpPeak) sbpPeak.innerHTML = sbpPeakValue || missingDataIcon;
-                        if (dbpTrailing) dbpTrailing.innerHTML = dbpValue || missingDataIcon;
+                        if (sbpTrailing) sbpTrailing.innerHTML = sbpTrailingValue || missingDataIcon;
+                        if (sbpTrailingVariability) sbpTrailingVariability.innerHTML = sbpTrailingVariabilityValue || missingDataIcon;
+                        if (sbpTrailingPeak) sbpTrailingPeak.innerHTML = sbpTrailingPeakValue || missingDataIcon;
+                        if (dbpTrailing) dbpTrailing.innerHTML = dbpTrailingValue || missingDataIcon;
                         if (sbpBaseline) sbpBaseline.innerHTML = sbpBaselineValue || missingDataIcon;
                         if (dbpBaseline) dbpBaseline.innerHTML = dbpBaselineValue || missingDataIcon;
+                        if (sbpBaselineVariability) sbpBaselineVariability.innerHTML = sbpBaselineVariabilityValue || missingDataIcon;
+                        if (sbpBaselinePeak) sbpBaselinePeak.innerHTML = sbpBaselinePeakValue || missingDataIcon;
 
                         // Update color based on thresholds
-                        if (sbpValue >= thresholds.sbp.red) {
+                        // Trailing SBP
+                        if (sbpTrailingValue >= thresholds.sbp.red) {
                             sbpTrailingCircle.style.color = 'red';
-                        } else if (sbpValue >= thresholds.sbp.yellow) {
+                        } else if (sbpTrailingValue >= thresholds.sbp.yellow) {
                             sbpTrailingCircle.style.color = 'yellow';
                         }
-                        sbpTrailingCircle.style.display = 'block';
 
-                        if (dbpValue >= thresholds.dbp.red) {
+                        if (sbpTrailingValue) {
+                            sbpTrailingCircle.style.display = 'block';
+                        }
+
+                        // Trailing DBP
+                        if (dbpTrailingValue >= thresholds.dbp.red) {
                             dbpTrailingCircle.style.color = 'red';
-                        } else if (dbpValue >= thresholds.dbp.yellow) {
+                        } else if (dbpTrailingValue >= thresholds.dbp.yellow) {
                             dbpTrailingCircle.style.color = 'yellow';
                         }
-                        dbpTrailingCircle.style.display = 'block';
 
-                        if (sbpPeakValue >= thresholds.peak_sbp.red) {
-                            sbpPeakCircle.style.color = 'red';
-                        } else if (sbpPeakValue >= thresholds.peak_sbp.yellow) {
-                            sbpPeakCircle.style.color = 'yellow';
+                        if (dbpTrailingValue) {
+                            dbpTrailingCircle.style.display = 'block';
                         }
-                        sbpPeakCircle.style.display = 'block';
 
+                        // Baseline SBP
                         if (sbpBaselineValue >= thresholds.sbp.red) {
                             sbpBaselineCircle.style.color = 'red';
                         } else if (sbpBaselineValue >= thresholds.sbp.yellow) {
                             sbpBaselineCircle.style.color = 'yellow';
                         }
-                        sbpBaselineCircle.style.display = 'block';
 
+                        if (sbpBaselineValue) {
+                            sbpBaselineCircle.style.display = 'block';
+                        }
+
+                        // Baseline DBP
                         if (dbpBaselineValue >= thresholds.dbp.red) {
                             dbpBaselineCircle.style.color = 'red';
                         } else if (dbpBaselineValue >= thresholds.dbp.yellow) {
                             dbpBaselineCircle.style.color = 'yellow';
                         }
-                        dbpBaselineCircle.style.display = 'block';
 
-                        if (sbpVariabilityValue >= thresholds.variability.red) {
-                            sbpVariabilityCircle.style.color = 'red';
-                        } else if (sbpVariabilityValue >= thresholds.variability.yellow) {
-                            sbpVariabilityCircle.style.color = 'yellow';
+                        if (dbpBaselineValue) {
+                            dbpBaselineCircle.style.display = 'block';
                         }
-                        sbpVariabilityCircle.style.display = 'block';
+
+                        // Baseline Peak SBP
+                        if (sbpBaselinePeakValue >= thresholds.peak_sbp.red) {
+                            sbpBaselinePeakCircle.style.color = 'red';
+                        } else if (sbpBaselinePeakValue >= thresholds.peak_sbp.yellow) {
+                            sbpBaselinePeakCircle.style.color = 'yellow';
+                        }
+
+                        if (sbpBaselinePeakValue) {
+                            sbpBaselinePeakCircle.style.display = 'block';
+                        }
+
+                        // Trailing Peak SBP
+                        if (sbpTrailingPeakValue >= thresholds.peak_sbp.red) {
+                            sbpTrailingPeakCircle.style.color = 'red';
+                        } else if (sbpTrailingPeakValue >= thresholds.peak_sbp.yellow) {
+                            sbpTrailingPeakCircle.style.color = 'yellow';
+                        }
+
+                        if (sbpTrailingPeakValue) {
+                            sbpTrailingPeakCircle.style.display = 'block';
+                        }
+
+                        // Trailing SBP Variability
+                        if (sbpBaselineVariabilityValue >= thresholds.variability.red) {
+                            sbpBaselineVariabilityCircle.style.color = 'red';
+                        } else if (sbpBaselineVariabilityValue >= thresholds.variability.yellow) {
+                            sbpBaselineVariabilityCircle.style.color = 'yellow';
+                        }
+
+                        if (sbpBaselineVariabilityValue) {
+                            sbpBaselineVariabilityCircle.style.display = 'block';
+                        }
+
+                        // Baseline SBP Variability
+                        if (sbpBaselineValue >= thresholds.sbp.red) {
+                            sbpBaselineCircle.style.color = 'red';
+                        } else if (sbpBaselineValue >= thresholds.sbp.yellow) {
+                            sbpBaselineCircle.style.color = 'yellow';
+                        }
+
+                        if (sbpBaselineValue) {
+                            sbpBaselineCircle.style.display = 'block';
+                        }
                     }
 
                     // Handle Tenovi HR Data
                     if (metrics.tenovi_hr_data) {
                         const hrData = metrics.tenovi_hr_data;
-                        if (hrData.trailing_hr_average) hrAvg.innerHTML = hrData.trailing_hr_average || missingDataIcon;
+                        if (hrData.trailing_hr_average) hrTrailing.innerHTML = hrData.trailing_hr_average || missingDataIcon;
                     }
 
                     // Update Healthie SRS Data
@@ -3293,7 +3451,7 @@
                     if (metrics.lab_data) {
                         const lab_data = metrics.lab_data;
 
-                        if (lab_data.hemoglobin_value) ha1c.innerHTML = lab_data.hemoglobin_value ? Math.round(lab_data.hemoglobin_value * 10) / 10 : missingDataIcon;
+                        if (lab_data.hgA1c_value) ha1c.innerHTML = lab_data.hgA1c_value ? Math.round(lab_data.hgA1c_value * 10) / 10 : missingDataIcon;
                         if (lab_data.ldl_value) ldl.innerHTML = lab_data.ldl_value ? Math.round(lab_data.ldl_value * 10) / 10 : missingDataIcon;
                         if (lab_data.hdl_value) hdl.innerHTML = lab_data.hdl_value ? Math.round(lab_data.hdl_value * 10) / 10 : missingDataIcon;
                         if (lab_data.creatintine_value) creatinine.innerHTML = lab_data.creatintine_value ? Math.round(lab_data.creatintine_value * 10) / 10 : missingDataIcon;
@@ -3358,7 +3516,7 @@
                         // Biometrics
                         if (height) height.innerHTML = srs.Height || missingDataIcon;
                         if (weight) weight.innerHTML = srs.Weight || missingDataIcon;
-                        if (bmi) bmi.innerHTML = Math.round(srs.BMI, 2) || missingDataIcon;
+                        if (bmi) bmi.innerHTML = srs.BMI ? parseFloat(srs.BMI.toFixed(1)) : missingDataIcon;
 
                         // Heart Rate (from SRS data)
                         // if (hrBaseline) hrBaseline.textContent = srs.RHR || '-';
@@ -3498,6 +3656,9 @@
 
                         // LDL Level
                         if (srs.LDLLevel) {
+                            if (srs.LDLLevel === 'Borderline') {
+                                srs.LDLLevel = 'Borderline High';
+                            }
                             ldlLevelContainer.style.display = 'flex';
                             ldlLevel.innerHTML = srs.LDLLevel || missingDataIcon;
                         } else {
@@ -3506,6 +3667,9 @@
 
                         // HDL Level
                         if (srs.HDLLevel) {
+                            if (srs.HDLLevel === 'Borderline') {
+                                srs.HDLLevel = 'Borderline High';
+                            }
                             hdlLevelContainer.style.display = 'flex';
                             hdlLevel.innerHTML = srs.HDLLevel || missingDataIcon;
                         } else {
@@ -3514,6 +3678,9 @@
 
                         // Triglycerides Level
                         if (srs.TriglyceridesLevel) {
+                            if (srs.TriglyceridesLevel === 'Borderline') {
+                                srs.TriglyceridesLevel = 'Borderline High';
+                            }
                             triglyceridesLevelContainer.style.display = 'flex';
                             triglyceridesLevel.innerHTML = srs.TriglyceridesLevel || missingDataIcon;
                         } else {
@@ -3665,10 +3832,19 @@
                     if (independentRiskVariableScores) {
 
                         if (independentRiskVariableScores.srs.avg_sbp) {
-                            sbpTrailingSRS.textContent = decimalToFixed(independentRiskVariableScores.srs.avg_sbp);
+                            if (!metrics.tenovi_bp_data.systolic.trailing.average) {
+                                sbpBaselineSRS.textContent = decimalToFixed(independentRiskVariableScores.srs.avg_sbp);
+                            } else {
+                                sbpTrailingSRS.textContent = decimalToFixed(independentRiskVariableScores.srs.avg_sbp);
+                            }
                         }
+
                         if (independentRiskVariableScores.sps.avg_sbp) {
-                            sbpTrailingSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_sbp);
+                            if (!metrics.tenovi_bp_data.systolic.trailing.average) {
+                                sbpBaselineSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_sbp);
+                            } else {
+                                sbpTrailingSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_sbp);
+                            }
                         }
 
                         if (independentRiskVariableScores.srs.avg_dbp) {
@@ -3679,10 +3855,10 @@
                         }
 
                         if (independentRiskVariableScores.srs.avg_peak_sbp) {
-                            sbpPeakSRS.textContent = decimalToFixed(independentRiskVariableScores.srs.avg_peak_sbp);
+                            sbpTrailingPeakSRS.textContent = decimalToFixed(independentRiskVariableScores.srs.avg_peak_sbp);
                         }
                         if (independentRiskVariableScores.sps.avg_peak_sbp) {
-                            sbpPeakSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_peak_sbp);
+                            sbpTrailingPeakSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_peak_sbp);
                         }
 
                         if (independentRiskVariableScores.srs.spb_std) {
@@ -3834,7 +4010,7 @@
                 if (error.message && error.message.includes('HTTP')) {
                     errorMessageText.textContent = error.message;
                 } else {
-                    errorMessageText.textContent = 'Error loading data';
+                    errorMessageText.textContent = `Error loading data: ${error.message}`;
                 }
             })
             .finally(() => {

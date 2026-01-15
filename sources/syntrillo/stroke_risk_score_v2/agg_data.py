@@ -890,6 +890,8 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                     },
                     BASELINE: {
                         AVERAGE: None,
+                        VARIABILITY: None,
+                        PEAK_AVG_SBP: None,
                     },
                 },
                 DIASTOLIC: {
@@ -1001,6 +1003,8 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
+                    VARIABILITY: baseline_bp_metadata[SBP_SD],
+                    PEAK: baseline_bp_metadata[PEAK_SBP],
                 },
             },
             DIASTOLIC: {
@@ -1033,6 +1037,8 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                 },
                 BASELINE: {
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
+                    VARIABILITY: baseline_bp_metadata[SBP_SD],
+                    PEAK_AVG_SBP: baseline_bp_metadata[PEAK_SBP],
                 },
             },
             DIASTOLIC: {

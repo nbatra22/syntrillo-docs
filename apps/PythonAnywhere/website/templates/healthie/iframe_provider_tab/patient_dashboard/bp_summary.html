@@ -1,5 +1,5 @@
 <style>
-.bp-summary-container {
+.pd-bp-summary-container {
         display: flex;
         justify-content: center;
         align-items: stretch;
@@ -9,7 +9,7 @@
         padding: 1rem 0;
     }
 
-    .bp-summary-subcontainer {
+    .pd-bp-summary-subcontainer {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -18,31 +18,31 @@
         padding: 0 1rem;
     }
 
-    #bp-summary-middle-container {
+    #pd-bp-summary-middle-container {
         border-right: 1px solid #d1d5db;
         border-left: 1px solid #d1d5db;
     }
 
-    .bp-summary-subcontainer-title {
+    .pd-bp-summary-subcontainer-title {
         font-size: 0.875rem;
         font-weight: 500;
         color: #6b7280;
     }
 
-    .bp-summary-status-container {
+    .pd-bp-summary-status-container {
         display: flex;
         justify-content: center;
         align-items: center;
         flex: 1;
     }
 
-    .bp-summary-status {
+    .pd-bp-summary-status {
         font-size: 1.5rem;
         font-weight: bold;
         text-align: center;
     }
 
-    .bp-summary-metrics-container, .bp-summary-targets-container {
+    .pd-bp-summary-metrics-container, .pd-bp-summary-targets-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -51,16 +51,16 @@
         gap: 0.5rem;
     }
 
-    .bp-summary-targets-container {
+    .pd-bp-summary-targets-container {
         align-items: center;
     }
 
-    .bp-summary-targets-value {
+    .pd-bp-summary-targets-value {
         color: #16284a;
         line-height: 30px;
     }
 
-    .bp-summary-metric-container {
+    .pd-bp-summary-metric-container {
         display: grid;
         grid-template-columns: 1rem 1fr;
         align-items: center;
@@ -69,7 +69,7 @@
         margin-left: 0.5rem;
     }
 
-    .bp-summary-metrics-value {
+    .pd-bp-summary-metrics-value {
         margin: 0;
         color: #16284a;
     }
@@ -78,83 +78,83 @@
 </style>
 
 
-<div id="bp-summary-container" class="bp-summary-container">
-    <div id="bp-summary-left-container" class="bp-summary-subcontainer">
-        <h3 class="bp-summary-subcontainer-title">
+<div id="pd-bp-summary-container" class="pd-bp-summary-container">
+    <div id="pd-bp-summary-left-container" class="pd-bp-summary-subcontainer">
+        <h3 class="pd-bp-summary-subcontainer-title">
             Status
         </h3>
-        <div class="bp-summary-status-container">
-            <span id="bp-summary-status"></span>
+        <div class="pd-bp-summary-status-container">
+            <span id="pd-bp-summary-status"></span>
         </div>
     </div>
-    <div id="bp-summary-middle-container" class="bp-summary-subcontainer">
-        <h3 class="bp-summary-subcontainer-title">
+    <div id="pd-bp-summary-middle-container" class="pd-bp-summary-subcontainer">
+        <h3 class="pd-bp-summary-subcontainer-title">
             Targets
         </h3>
-        <div class="bp-summary-targets-container">
-            <p class="bp-summary-targets-value">
+        <div class="pd-bp-summary-targets-container">
+            <p class="pd-pd-bp-summary-targets-value">
                 Avg SBP < 125 mmHg
             </p>
-            <p class="bp-summary-targets-value">
+            <p class="pd-bp-summary-targets-value">
                 Avg DBP < 80 mmHg
             </p>
-            <p class="bp-summary-targets-value">
+            <p class="pd-bp-summary-targets-value">
                 Peak SBP < 165 mmHg
             </p>
-            <p class="bp-summary-targets-value">
+            <p class="pd-bp-summary-targets-value">
                 Low SBP > 90 mmHg
             </p>
-            <p class="bp-summary-targets-value">
+            <p class="pd-bp-summary-targets-value">
                 Symptomatic Hypotensive Episodes: 0
             </p>
-            <p class="bp-summary-targets-value">
+            <p class="pd-bp-summary-targets-value">
                 Near-Hypotensive Episodes: 0
             </p>
         </div>
     </div>
-    <div id="bp-summary-right-container" class="bp-summary-subcontainer">
-        <h3 class="bp-summary-subcontainer-title">
+    <div id="pd-bp-summary-right-container" class="pd-bp-summary-subcontainer">
+        <h3 class="pd-bp-summary-subcontainer-title">
             Actual
         </h3>
-        <div id="bp-summary-metrics-loading-container" class="bp-summary-metrics-container"
+        <div id="pd-bp-summary-metrics-loading-container" class="pd-bp-summary-metrics-container"
             style="display: flex; justify-content: center; align-items: center;">
             Retrieving metrics...
         </div>
-        <div id="bp-summary-metrics-container" class="bp-summary-metrics-container" style="display: none;">
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-avg-sbp-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Avg SBP: <span id="bp-summary-avg-sbp"></span> mmHg
+        <div id="pd-bp-summary-metrics-container" class="pd-bp-summary-metrics-container" style="display: none;">
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-avg-sbp-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Avg SBP: <span id="pd-bp-summary-avg-sbp"></span> mmHg
                 </p>
             </div>
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-avg-dbp-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Avg DBP: <span id="bp-summary-avg-dbp"></span> mmHg
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-avg-dbp-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Avg DBP: <span id="pd-bp-summary-avg-dbp"></span> mmHg
                 </p>
             </div>
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-peak-sbp-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Peak SBP: <span id="bp-summary-peak-sbp"></span> mmHg
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-peak-sbp-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Peak SBP: <span id="pd-bp-summary-peak-sbp"></span> mmHg
                 </p>
             </div>
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-low-sbp-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Low SBP: <span id="bp-summary-low-sbp"></span> mmHg
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-low-sbp-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Low SBP: <span id="pd-bp-summary-low-sbp"></span> mmHg
                 </p>
             </div>
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-symptomatic-hypotension-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Symptomatic Hypotensive Episodes: <span id="bp-summary-symptomatic-hypotension-count"></span>
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-symptomatic-hypotension-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Symptomatic Hypotensive Episodes: <span id="pd-bp-summary-symptomatic-hypotension-count"></span>
                 </p>
             </div>
-            <div class="bp-summary-metric-container">
-                <span id="bp-summary-near-hypotensive-grade"></span>
-                <p class="bp-summary-metrics-value">
-                    Near-Hypotensive Episodes: <span id="bp-summary-near-hypotensive-count"></span>
+            <div class="pd-bp-summary-metric-container">
+                <span id="pd-bp-summary-near-hypotensive-grade"></span>
+                <p class="pd-bp-summary-metrics-value">
+                    Near-Hypotensive Episodes: <span id="pd-bp-summary-near-hypotensive-count"></span>
                 </p>
             </div>
         </div>
@@ -164,7 +164,7 @@
 <script>
     function getBloodPressureSummary() {
 
-        const statusContent = document.getElementById("bp-summary-status");
+        const statusContent = document.getElementById("pd-bp-summary-status");
         showSpinner(statusContent);
 
         const formData = new FormData()
@@ -182,41 +182,39 @@
                 if (data.success && data.data) {
                     const summary_stats = data.data;
 
-                    document.getElementById("bp-summary-status").textContent = summary_stats.status.value;
-                    document.getElementById("bp-summary-status").style.fontWeight = "bold";
-                    document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
-                    document.getElementById("bp-summary-status").style.textAlign = "center";
-                    document.getElementById("bp-summary-status").style.color = summary_stats.status.grade === 0 ? "#16a34a" : summary_stats.status.grade === 1 ? "#f59e0b" : summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
+                    document.getElementById("pd-bp-summary-status").textContent = summary_stats.status.value;
+                    document.getElementById("pd-bp-summary-status").style.fontWeight = "bold";
+                    document.getElementById("pd-bp-summary-status").style.fontSize = "1.25rem";
+                    document.getElementById("pd-bp-summary-status").style.textAlign = "center";
+                    document.getElementById("pd-bp-summary-status").style.color = summary_stats.status.grade === 0 ? "#16a34a" : summary_stats.status.grade === 1 ? "#f59e0b" : summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
 
-                    document.getElementById("bp-summary-avg-sbp").textContent = summary_stats.avg_sbp.value;
-                    document.getElementById("bp-summary-avg-dbp").textContent = summary_stats.avg_dbp.value;
-                    document.getElementById("bp-summary-peak-sbp").textContent = summary_stats.peak_sbp.value;
-                    document.getElementById("bp-summary-low-sbp").textContent = summary_stats.low_sbp.value;
-                    document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = summary_stats.symptomatic_hypotension.value;
-                    document.getElementById("bp-summary-near-hypotensive-count").textContent = summary_stats.near_hypotensive.value;
+                    document.getElementById("pd-bp-summary-avg-sbp").textContent = summary_stats.avg_sbp.value;
+                    document.getElementById("pd-bp-summary-avg-dbp").textContent = summary_stats.avg_dbp.value;
+                    document.getElementById("pd-bp-summary-peak-sbp").textContent = summary_stats.peak_sbp.value;
+                    document.getElementById("pd-bp-summary-low-sbp").textContent = summary_stats.low_sbp.value;
+                    document.getElementById("pd-bp-summary-symptomatic-hypotension-count").textContent = summary_stats.symptomatic_hypotension.value;
+                    document.getElementById("pd-bp-summary-near-hypotensive-count").textContent = summary_stats.near_hypotensive.value;
 
                     const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
                     const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
                     const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
                     const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
 
-                    document.getElementById("bp-summary-avg-sbp-grade").innerHTML = summary_stats.avg_sbp.grade === 0 ? greenCheck : summary_stats.avg_sbp.grade === 1 ? yellowExclamation : summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
-                    document.getElementById("bp-summary-avg-dbp-grade").innerHTML = summary_stats.avg_dbp.grade === 0 ? greenCheck : summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
-                    document.getElementById("bp-summary-peak-sbp-grade").innerHTML = summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
-                    document.getElementById("bp-summary-low-sbp-grade").innerHTML = summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
-                    document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+                    document.getElementById("pd-bp-summary-avg-sbp-grade").innerHTML = summary_stats.avg_sbp.grade === 0 ? greenCheck : summary_stats.avg_sbp.grade === 1 ? yellowExclamation : summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("pd-bp-summary-avg-dbp-grade").innerHTML = summary_stats.avg_dbp.grade === 0 ? greenCheck : summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("pd-bp-summary-peak-sbp-grade").innerHTML = summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("pd-bp-summary-low-sbp-grade").innerHTML = summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("pd-bp-summary-symptomatic-hypotension-grade").innerHTML = summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
+                    document.getElementById("pd-bp-summary-near-hypotensive-grade").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
 
-                    document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
-                    document.getElementById("bp-summary-metrics-container").style.display = "flex";
-
-                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
+                    document.getElementById("pd-bp-summary-metrics-loading-container").style.display = "none";
+                    document.getElementById("pd-bp-summary-metrics-container").style.display = "flex";
                 }
 
                 if (data.error) {
-                    bpAnalysisContent.innerHTML = `<h2 class="bp-no-data-error">${data.error}</h2>`
-                    extremesContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
-                    // distributionContent.innerHTML = `<h2 class="bp-no-data-error">No measurement data available.</h2>`
+                    bpAnalysisContent.innerHTML = `<h2 class="pd-bp-no-data-error">${data.error}</h2>`
+                    extremesContent.innerHTML = `<h2 class="pd-bp-no-data-error">No measurement data available.</h2>`
+                    // distributionContent.innerHTML = `<h2 class="pd-bp-no-data-error">No measurement data available.</h2>`
                 }
             })
             .catch(e => {
@@ -227,7 +225,6 @@
             })
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        getBloodPressureSummary();
-    });
+    getBloodPressureSummary();
+
 </script>
