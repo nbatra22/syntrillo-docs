@@ -63,8 +63,8 @@ def iframe_healthie_provider_tab_patient_dashboard():
     )
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe/patient_sidebar/blood_pressure', methods=['POST'])
-def healthie_iframe_patient_sidebar_blood_pressure():
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/blood_pressure', methods=['POST'])
+def healthie_iframe_provider_tab_blood_pressure():
     """
     Retrieves summary stats data from BP Analysis class.
     """
@@ -94,8 +94,8 @@ def healthie_iframe_patient_sidebar_blood_pressure():
         abort(500, description="An error occurred while processing your request.")
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe/patient_sidebar/heart_rate', methods=['POST'])
-def healthie_iframe_patient_sidebar_heart_rate():
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/heart_rate', methods=['POST'])
+def healthie_iframe_provider_tab_heart_rate():
     """
     Retrieves heart rate data from
     """
@@ -131,8 +131,8 @@ def healthie_iframe_patient_sidebar_heart_rate():
     })
 
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe/patient_sidebar/biometrics', methods=['POST'])
-def healthie_iframe_patient_sidebar_biometrics():
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/biometrics', methods=['POST'])
+def healthie_iframe_provider_tab_biometrics():
     """
     This endpoint is used to retrieve biometrics data for a patient.
 
@@ -280,8 +280,8 @@ def healthie_iframe_patient_sidebar_biometrics():
         "ssq_data": ssq_data
     })
 
-@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe/patient_sidebar/stroke_risk_factors', methods=['POST'])
-def healthie_iframe_patient_sidebar_stroke_risk_factors():
+@iframe_healthie_provider_tab_patient_dashboard_bp.route('/healthie/iframe_provider_tab/stroke_risk_factors', methods=['POST'])
+def healthie_iframe_provider_tab_stroke_risk_factors():
     """
     This endpoint is used to retrieve stroke risk factor data for a patient.
     """

@@ -187,7 +187,7 @@
         const biometricRhrCurrent = document.getElementById("pd-biometric-rhr-current");
 
         // Hide HR table and show spinner initially until data is successfully fetched
-        fetch("{{ url_for('iframe_healthie_provider_tab_patient_dashboard_bp.healthie_iframe_patient_sidebar_heart_rate') }}", {
+        fetch("{{ url_for('iframe_healthie_provider_tab_patient_dashboard_bp.healthie_iframe_provider_tab_heart_rate') }}", {
             method: "POST",
             body: formData
         })
@@ -287,7 +287,7 @@
         metricsTable.style.display = "none";
         showSpinner(metricsSpinnerContainer);
 
-        fetch("{{ url_for('iframe_healthie_provider_tab_patient_dashboard_bp.healthie_iframe_patient_sidebar_biometrics') }}", {
+        fetch("{{ url_for('iframe_healthie_provider_tab_patient_dashboard_bp.healthie_iframe_provider_tab_biometrics') }}", {
             method: "POST",
             body: formData
         })
