@@ -3065,6 +3065,8 @@
         // Physical Activity
         const moderateVigorousActivity = document.getElementById("rs-moderate-vigorous-activity");
         const physicalInactivity = document.getElementById("rs-physical-inactivity");
+        const physicalInactivitySRS = document.getElementById("rs-physical-inactivity-srs");
+        const physicalInactivitySPS = document.getElementById("rs-physical-inactivity-sps");
         const physicalInactivityLevelSRS = document.getElementById("rs-physical-inactivity-level-srs");
         const physicalInactivityLevelSPS = document.getElementById("rs-physical-inactivity-level-sps");
         const physicalInactivityLevel = document.getElementById("rs-physical-inactivity-level");
@@ -3861,11 +3863,11 @@
                             sbpTrailingPeakSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.avg_peak_sbp);
                         }
 
-                        if (independentRiskVariableScores.srs.spb_std) {
-                            sbpVariabilitySRS.textContent = decimalToFixed(independentRiskVariableScores.srs.spb_std);
+                        if (independentRiskVariableScores.srs.sbp_std) {
+                            sbpBaselineVariabilitySRS.textContent = decimalToFixed(independentRiskVariableScores.srs.sbp_std);
                         }
-                        if (independentRiskVariableScores.sps.spb_std) {
-                            sbpVariabilitySPS.textContent = decimalToFixed(independentRiskVariableScores.sps.spb_std);
+                        if (independentRiskVariableScores.sps.sbp_std) {
+                            sbpBaselineVariabilitySPS.textContent = decimalToFixed(independentRiskVariableScores.sps.sbp_std);
                         }
 
                         if (independentRiskVariableScores.srs.rhr) {
@@ -3887,6 +3889,13 @@
                         }
                         if (independentRiskVariableScores.sps.hemoglobin_a1c) {
                             ha1cSPS.textContent = decimalToFixed(independentRiskVariableScores.sps.hemoglobin_a1c);
+                        }
+
+                        if (independentRiskVariableScores.srs.physical_inactivity) {
+                            physicalInactivitySRS.textContent = decimalToFixed(independentRiskVariableScores.srs.physical_inactivity);
+                        }
+                        if (independentRiskVariableScores.sps.physical_inactivity) {
+                            physicalInactivitySPS.textContent = decimalToFixed(independentRiskVariableScores.sps.physical_inactivity);
                         }
 
                     }
