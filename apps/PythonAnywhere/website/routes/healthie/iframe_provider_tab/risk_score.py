@@ -76,6 +76,22 @@ def iframe_healthie_provider_tab_risk_score_data():
 
     try:
 
+        # Flag for Don
+        secrets = LocalEnvironmentAndSecrets()
+        healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
+        if healthie_user_id is not None and str(healthie_user_id) in healthie_patient_dashboard_ids:
+            return jsonify({
+                'success': True,
+                'message': 'No data available',
+                'data': {
+                    'risk_score': DEFAULT_DATA_OBJECT_NOTATION['risk_score'],
+                    'priority_score': DEFAULT_DATA_OBJECT_NOTATION['priority_score'],
+                    'metrics': DEFAULT_DATA_OBJECT_NOTATION['metrics'],
+                    'independent_risk_variable_scores': DEFAULT_DATA_OBJECT_NOTATION['independent_risk_variable_scores'],
+                    'dependent_risk_variable_contributions': DEFAULT_DATA_OBJECT_NOTATION['dependent_risk_variable_contributions']
+                }
+            })
+
         risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient, is_ondemand_srs=on_demand)
 
         if risk_score is None and stroke_priority_score is None:
@@ -95,22 +111,6 @@ def iframe_healthie_provider_tab_risk_score_data():
             metrics['srs_response_data'] = metrics['srs_response_data'][0].model_dump()
         if metrics['lab_data'] is not None:
             metrics['lab_data'] = metrics['lab_data'].model_dump()
-
-        # Flag for Don
-        secrets = LocalEnvironmentAndSecrets()
-        healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
-        if healthie_user_id is not None and str(healthie_user_id) in healthie_patient_dashboard_ids:
-            return jsonify({
-                'success': True,
-                'message': 'No data available',
-                'data': {
-                    'risk_score': DEFAULT_DATA_OBJECT_NOTATION['risk_score'],
-                    'priority_score': DEFAULT_DATA_OBJECT_NOTATION['priority_score'],
-                    'metrics': DEFAULT_DATA_OBJECT_NOTATION['metrics'],
-                    'independent_risk_variable_scores': DEFAULT_DATA_OBJECT_NOTATION['independent_risk_variable_scores'],
-                    'dependent_risk_variable_contributions': DEFAULT_DATA_OBJECT_NOTATION['dependent_risk_variable_contributions']
-                }
-            })
 
         # Return success response
         return jsonify({

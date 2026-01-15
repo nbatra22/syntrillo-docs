@@ -173,7 +173,7 @@
         formData.append('temporary_lookup_code', "{{ temporary_lookup_code }}")
         formData.append('patient_not_registered_at_syntrillo', "{{ patient_not_registered_at_syntrillo }}")
 
-        fetch("{{ url_for('iframe_healthie_patient_sidebar_data_bp.healthie_iframe_patient_sidebar_blood_pressure') }}", {
+        fetch("{{ url_for('iframe_healthie_provider_tab_patient_dashboard_bp.healthie_iframe_patient_sidebar_blood_pressure') }}", {
             method: "POST",
             body: formData
         })
