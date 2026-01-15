@@ -106,7 +106,7 @@ def iframe_healthie_patient_sidebar():
 
         # --------------------------------------------------------------------
         # Flag for Don
-        secrets = LocalEnvironmentAndSecrets()
+        secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
         healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
 
         if healthie_user_id in healthie_patient_dashboard_ids.split(','):
