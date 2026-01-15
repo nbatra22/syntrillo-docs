@@ -77,7 +77,7 @@ def iframe_healthie_provider_tab_risk_score_data():
     try:
 
         # Flag for Don
-        secrets = LocalEnvironmentAndSecrets()
+        secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
         healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
         if healthie_user_id is not None and str(healthie_user_id) in healthie_patient_dashboard_ids:
             return jsonify({
