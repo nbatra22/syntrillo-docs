@@ -1,9 +1,447 @@
 <!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_provider_tab/devices.html -->
 
-<h2>Devices in use</h2>
+<style>
+    section {
+        padding: 1rem 0;
+    }
 
-<div class="table-container-data">
-    <table>
+    section h2 {
+        font-weight: bold;
+        font-size: large;
+        margin: 0;
+    }
+
+    section p {
+        color: #6b7280;
+        font-size: small;
+        margin-bottom: 0;
+    }
+
+    .devices-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .devices-header h2 {
+        margin: 0;
+    }
+
+    .devices-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .devices-table thead {
+        background-color: #f9fafb;
+    }
+
+    .devices-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #d1d5db;
+        font-size: 0.875rem;
+    }
+
+    .devices-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #d1d5db;
+        color: #16284a;
+        font-size: 0.95rem;
+    }
+
+    .devices-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .devices-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .no-devices-message {
+        text-align: center;
+        color: #6b7280;
+        padding: 2rem;
+        font-weight: 500;
+    }
+
+    .device-status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-flagged {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-pending {
+        background-color: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .collapsible-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 1rem 0;
+        margin-bottom: 1rem;
+        border: none;
+        background: none;
+        width: 100%;
+    }
+
+    .collapsible-header h2 {
+        margin: 0;
+        font-size: 1.125rem;
+    }
+
+    .collapsible-header:hover h2 {
+        color: #3b82f6;
+    }
+
+    .icon-container {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.25rem;
+        color: #6b7280;
+    }
+
+    .collapsible-content {
+        display: none;
+        padding: 1rem 0;
+    }
+
+    .collapsible-content.show {
+        display: block;
+    }
+
+    .devices-instructions {
+        background-color: #f9fafb;
+        border-left: 4px solid #3b82f6;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.375rem;
+    }
+
+    .devices-instructions ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .devices-instructions li {
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .patient-info-container {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .patient-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1rem;
+    }
+
+    .patient-info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .patient-info-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .patient-info-value {
+        color: #16284a;
+        font-size: 0.95rem;
+    }
+
+    .location-divider {
+        grid-column: 1 / -1;
+        height: 1px;
+        background-color: #d1d5db;
+        margin: 0.5rem 0;
+    }
+
+    .location-title {
+        grid-column: 1 / -1;
+        font-weight: 600;
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .form-section {
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+    }
+
+    .form-row-full {
+        grid-column: 1 / -1;
+    }
+
+    .form-input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .form-input-group label {
+        margin: 0;
+    }
+
+    .form-input-group.full {
+        flex: 1 1 100%;
+    }
+
+    .form-row .form-input-group {
+        width: auto;
+    }
+
+    .form-row .form-input-group input[type="text"],
+    .form-row .form-input-group select {
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .form-input-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        white-space: nowrap;
+    }
+
+    .form-input-group input[type="checkbox"] {
+        width: 1.125rem;
+        height: 1.125rem;
+        cursor: pointer;
+        accent-color: #3b82f6;
+    }
+
+    .form-input-group select,
+    .form-input-group input[type="text"] {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 0.95rem;
+        outline: none;
+    }
+
+    .form-input-group select:focus,
+    .form-input-group input[type="text"]:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .devices-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .devices-column {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .devices-column-title {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .devices-checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .devices-checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    .devices-checkbox-group input[type="checkbox"] {
+        width: 1.125rem;
+        height: 1.125rem;
+        cursor: pointer;
+        accent-color: #3b82f6;
+    }
+
+    .form-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.625rem 1.25rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        outline: none;
+    }
+
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: #2563eb;
+    }
+
+    .btn-primary:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    .btn-primary:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .response-status {
+        display: none;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .response-status.loading {
+        display: flex;
+        background-color: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .response-status.success {
+        display: flex;
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .response-status.error {
+        display: flex;
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 0.75rem;
+        height: 0.75rem;
+        border: 1.5px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .logs-section {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #d1d5db;
+    }
+
+    .logs-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #orderNewDevicesFormTextarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.75rem;
+        color: #374151;
+        background-color: #f9fafb;
+        resize: vertical;
+        outline: none;
+    }
+
+    #orderNewDevicesFormTextarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .location-section {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .location-section:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="flex flex-col gap-4">
+    <section class="devices-header">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-lg font-bold">Devices</h2>
+            <p class="text-sm text-gray-500">Connected devices for this patient.</p>
+        </div>
+    </section>
+
+    <table class="devices-table">
         <thead>
             <tr>
                 <th>Device Name</th>
@@ -24,212 +462,174 @@
                         <td>
                             {% if device.status == 'Dropship Requested' %}
                                 {% if device.device.fulfillment_request and device.device.fulfillment_request.flagged_by_client %}
-                                    Flagged (dropship pending)
+                                    <span class="device-status-badge status-flagged">Flagged (dropship pending)</span>
                                 {% else %}
-                                    {{ device.status }}
+                                    <span class="device-status-badge status-pending">{{ device.status }}</span>
                                 {% endif %}
                             {% else %}
-                                {{ device.status }}
+                                <span class="device-status-badge status-active">{{ device.status }}</span>
                             {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="5">No device available</td>
+                    <td colspan="5" class="no-devices-message">No devices available</td>
                 </tr>
             {% endif %}
         </tbody>
     </table>
 </div>
 
-<h2 class="collapsible">
+<button class="collapsible-header" id="orderDevicesToggle">
     <span class="icon-container">
-        <i class="fas {% if unroll_order_new_devices_form %}fa-chevron-down{% else %}fa-chevron-right{% endif %}"></i>
+        <i class="fas {% if unroll_order_new_devices_form %}fa-chevron-down{% else %}fa-chevron-right{% endif %}" id="orderDevicesIcon"></i>
     </span>
-    Order new Tenovi device(s)
-</h2>
-<div class="collapsible-content {% if unroll_order_new_devices_form %}show{% else %}collapsed{% endif %}">
+    <h2>Order New Tenovi Device(s)</h2>
+</button>
 
-    <ul>
-        <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
-        <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
-        <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
-        <li>Obtain the patient's consent to receive SMS messages.</li>
-        <li>Flagged devices will be on hold. You can review them on the Tenovi portal and validate the dropship order.</li>
-    </ul>
+<div class="collapsible-content {% if unroll_order_new_devices_form %}show{% else %}{% endif %}" id="orderDevicesContent">
+    <div class="devices-instructions">
+        <ul>
+            <li>Verify patient shipping address. If needed go to Actions > Client Address to modify it.</li>
+            <li>Select the devices for this patient. Make sure a small BPM device is not required.</li>
+            <li>Include patient's gateway ID if you order a new device and if the patient already has a gateway.</li>
+            <li>Obtain the patient's consent to receive SMS messages.</li>
+            <li>Flagged devices will be on hold. You can review them on the Tenovi portal and validate the dropship order.</li>
+        </ul>
+    </div>
 
-    <table class="compact-table-two-columns" style="margin-left: 20px;">
-        <tr>
-            <td class="compact-table-two-columns-col1" colspan="2">
-                <hr style="height:1px;width:60%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-            </td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1">Phone number:</td>
-            <td class="compact-table-two-columns-col2">{{ user_pii.phone_number }}</td>
-        </tr>
-        {% if n_user_locations > 1 %}
-        <tr>
-            <td class="compact-table-two-columns-col1" colspan="2">
-                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-            </td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1" colspan="2">Several locations available - Use the dropdown below.</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1" colspan="2">
-                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-            </td>
-        </tr>
-        {% endif %}
-        {% if n_user_locations == 0 %}
-        <tr>
-            <td class="compact-table-two-columns-col1">Address:</td>
-            <td class="compact-table-two-columns-col2">No locations available</td>
-        </tr>
-        {% else %}
-        {% for location in user_pii.locations %}
-        <tr>
-            <td class="compact-table-two-columns-col1">Address:</td>
-            <td class="compact-table-two-columns-col2">{{ location.line1 }}<br>{{ location.line2 }}</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1">City:</td>
-            <td class="compact-table-two-columns-col2">{{ location.city }}</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1">State:</td>
-            <td class="compact-table-two-columns-col2">{{ location.state }}</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1">Zip code:</td>
-            <td class="compact-table-two-columns-col2">{{ location.zip }}</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1">Country:</td>
-            <td class="compact-table-two-columns-col2">{{ location.country }}</td>
-        </tr>
-        <tr>
-            <td class="compact-table-two-columns-col1" colspan="2">
-                <hr style="height:1px;width:30%;text-align:left;margin-left:10px;color:lightgray; margin-bottom: 10px;">
-            </td>
-        </tr>
-        {% endfor %}
-        {% endif %}
-    </table>
+    <div class="patient-info-container">
+        <div class="patient-info-grid">
+            <div class="patient-info-row">
+                <span class="patient-info-label">Phone Number</span>
+                <span class="patient-info-value">{{ user_pii.phone_number }}</span>
+            </div>
 
+            {% if n_user_locations > 1 %}
+                <div class="location-title">Multiple Locations Available</div>
+            {% endif %}
 
+            {% if n_user_locations == 0 %}
+                <div class="patient-info-row">
+                    <span class="patient-info-label">Address</span>
+                    <span class="patient-info-value">No locations available</span>
+                </div>
+            {% else %}
+                {% for location in user_pii.locations %}
+                    {% if loop.index > 1 %}<div class="location-divider"></div>{% endif %}
+                    <div class="location-title">Location {{ loop.index }}</div>
+                    <div class="patient-info-row">
+                        <span class="patient-info-label">Address</span>
+                        <span class="patient-info-value">
+                            {{ location.line1 }}<br>{{ location.line2 }}
+                        </span>
+                    </div>
+                    <div class="patient-info-row">
+                        <span class="patient-info-label">City</span>
+                        <span class="patient-info-value">{{ location.city }}</span>
+                    </div>
+                    <div class="patient-info-row">
+                        <span class="patient-info-label">State</span>
+                        <span class="patient-info-value">{{ location.state }}</span>
+                    </div>
+                    <div class="patient-info-row">
+                        <span class="patient-info-label">Zip Code</span>
+                        <span class="patient-info-value">{{ location.zip }}</span>
+                    </div>
+                    <div class="patient-info-row">
+                        <span class="patient-info-label">Country</span>
+                        <span class="patient-info-value">{{ location.country }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
 
-    <style>
-        /* Initially loading indicator and logs */
-        #orderNewDevicesFormLoading {
-            display: none;
-        }
-        #orderNewDevicesFormSuccess {
-            display: none;
-        }
-    </style>
+    <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
+        <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
 
-    <div class="table-container-button">
-        <table class="compact-table">
-            <tr>
-                <td>
-                    <form id="orderNewDevicesForm" action="{{ url_for('iframe_healthie_provider_tab_devices_bp.tenovi_order_new_devices_form') }}" method="POST">
-                        <table>
-                            <tr>
-                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <input type="hidden" name="temporary_lookup_code" value="{{ temporary_lookup_code }}">
-                                    <button type="button" id="orderNewDevicesFormButton" class="styled-button">Place Order</button>
-                                </td>
-                                <td align="left" style="vertical-align: middle;">
-                                    <span id="orderNewDevicesFormLoading" class="response-message"><b>Running - Please wait ...</b></span>
-                                    <span id="orderNewDevicesFormSuccess" class="response-message"></span>
-                                </td>
-                            </tr>
-                            {% if n_user_locations > 1 %}
-                            <tr>
-                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <label for="locationSelect" class="styled-label">Choose location:</label>
-                                </td>
-                                <td align="left" style="vertical-align: middle;">
-                                    <select name="location_index" id="locationSelect" class="styled-select">
-                                        {% for location in user_pii.locations %}
-                                        <option value="{{ loop.index0 }}">
-                                            {{ location.line1 }}, {{ location.line2 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}, {{ location.country }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                            </tr>
-                            {% endif %}
-                            <tr>
-                                <td align="right" style="vertical-align: middle; width: 20%; white-space: nowrap;">
-                                    <input class="styled-input-checkbox" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes" {{ gateway_checked }}>
-                                    <label for="includeGatewayId" class="styled-label">Include Gateway ID :</label>
-                                </td>
-                                <td align="left" style="vertical-align: middle;">
-                                    <input class="styled-input-text" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;" colspan="2">
-                                    <input class="styled-input-checkbox" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
-                                    <label for="sms_opt_in" class="styled-label">SMS opt-in [if patient gave consent]</label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td align="left" style="vertical-align: middle; width: 20%; white-space: nowrap;" colspan="2">
-                                    <input class="styled-input-checkbox" type="checkbox" id="FlagDevices" name="flag_devices" value="yes">
-                                    <label for="flag_devices" class="styled-label">Flag devices for review</label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="2" align="left">
-                                    <legend class="styled-legend">Select Devices:</legend>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td align="left" style="white-space: nowrap;">
-                                    <input class="styled-input-checkbox" type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
-                                    <label for="bpmLarge" class="styled-label">BPM Large</label><br>
+        <div class="form-section">
+            <div class="form-buttons">
+                <button type="button" id="orderNewDevicesFormButton" class="btn btn-primary">Place Order</button>
+                <div id="orderNewDevicesFormLoading" class="response-status">
+                    <div class="spinner"></div>
+                    <span>Processing order...</span>
+                </div>
+                <div id="orderNewDevicesFormSuccess" class="response-status"></div>
+            </div>
 
-                                    <!-- <input class="styled-input-checkbox" type="checkbox" id="bpmSmall" name="device_bpm_small" value="yes"> -->
-                                    <!-- <label for="bpmSmall" class="styled-label">BPM Small</label><br> -->
+            {% if n_user_locations > 1 %}
+            <div class="form-row">
+                <div class="form-input-group">
+                    <label for="locationSelect">Choose Location:</label>
+                    <select name="location_index" id="locationSelect">
+                        {% for location in user_pii.locations %}
+                        <option value="{{ loop.index0 }}">
+                            {{ location.line1 }}, {{ location.city }}, {{ location.state }} {{ location.zip }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            {% endif %}
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="bpmOmron" name="device_bpm_omron" value="yes">
-                                    <label for="bpmOmron" class="styled-label">BPM Omron</label><br>
-                                </td>
-                                <td align="left" style="white-space: nowrap;">
+            <div class="form-row">
+                <div class="form-input-group">
+                    <input class="form-input-group" type="checkbox" id="includeGatewayId" name="include_gateway_id" value="yes" {{ gateway_checked }}>
+                    <label for="includeGatewayId">Include Gateway ID</label>
+                </div>
+                <div class="form-input-group">
+                    <input class="form-input-group" type="text" id="gatewayId" name="gateway_id" value="{{ gateway_id }}" placeholder="Enter Gateway ID">
+                </div>
+            </div>
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
-                                    <label for="pillbox" class="styled-label">Pillbox</label><br>
+            <div class="form-row form-row-full">
+                <div class="form-input-group full">
+                    <input class="form-input-group" type="checkbox" id="SMSoptIn" name="sms_opt_in" value="yes">
+                    <label for="sms_opt_in">SMS opt-in (if patient gave consent)</label>
+                </div>
+            </div>
 
-                                    <input class="styled-input-checkbox" type="checkbox" id="watch" name="device_watch" value="yes" checked>
-                                    <label for="watch" class="styled-label">Watch</label><br>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <table>
-                        <tr>
-                            <td align="right" style="vertical-align: top; width: 20%; white-space: nowrap;">
-                                <p class="logs">Logs:</p>
-                            </td>
-                            <td align="left">
-                                <textarea id="orderNewDevicesFormTextarea" class="monospace-small" rows="3" cols="100" readonly wrap="off"></textarea>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div> <!-- table-container-button -->
+            <div class="form-row form-row-full">
+                <div class="form-input-group full">
+                    <input class="form-input-group" type="checkbox" id="FlagDevices" name="flag_devices" value="yes">
+                    <label for="flag_devices">Flag devices for review</label>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <div class="devices-column-title">Select Devices</div>
+                <div class="devices-grid">
+                    <div class="devices-checkbox-group">
+                        <label>
+                            <input type="checkbox" id="bpmLarge" name="device_bpm_large" value="yes" checked>
+                            BPM Large
+                        </label>
+                        <label>
+                            <input type="checkbox" id="bpmOmron" name="device_bpm_omron" value="yes">
+                            BPM Omron
+                        </label>
+                    </div>
+                    <div class="devices-checkbox-group">
+                        <label>
+                            <input type="checkbox" id="pillbox" name="device_pillbox" value="yes" checked>
+                            Pillbox
+                        </label>
+                        <label>
+                            <input type="checkbox" id="watch" name="device_watch" value="yes" checked>
+                            Watch
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="logs-section">
+                <div class="logs-label">Logs</div>
+                <textarea id="orderNewDevicesFormTextarea" rows="3" readonly wrap="off"></textarea>
+            </div>
+        </div>
+    </form>
 
 </div> <!-- collapsible-content -->
 
@@ -238,6 +638,20 @@
 <script>
 
 $(document).ready(function() {
+
+    // ========================= Collapsible Toggle =========================
+    $('#orderDevicesToggle').click(function() {
+        const content = $('#orderDevicesContent');
+        const icon = $('#orderDevicesIcon');
+
+        content.toggleClass('show');
+
+        if (content.hasClass('show')) {
+            icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        } else {
+            icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        }
+    });
 
     // ========================= Order New Tenovi Devices =========================
 
@@ -252,7 +666,8 @@ $(document).ready(function() {
 
         // Hide and erase previous log and show loading indicator
         $('#orderNewDevicesFormTextarea').val("");
-        $('#orderNewDevicesFormSuccess').hide();
+        $('#orderNewDevicesFormSuccess').removeClass('success error');
+        $('#orderNewDevicesFormLoading').addClass('loading');
         $('#orderNewDevicesFormLoading').show();
         $('body').addClass('loading'); // Apply loading cursor
 
@@ -263,8 +678,10 @@ $(document).ready(function() {
             success: function(response) {
                 $('#orderNewDevicesFormTextarea').val(JSON.stringify(response, null, 4)); // Update textarea with log message
                 if (response.success) {
-                        $('#orderNewDevicesFormSuccess').html("<b>Success! - The page will reload to show the updated status.</b>");
+                        $('#orderNewDevicesFormSuccess').html("<span style='color: #065f46;'>✓ Success! The page will reload to show the updated status.</span>");
+                        $('#orderNewDevicesFormSuccess').removeClass('loading').addClass('success');
                         $('#orderNewDevicesFormSuccess').show();
+                        $('#orderNewDevicesFormLoading').hide();
                         // Reload the page after a delay to allow the user to read the success message
                         setTimeout(function() {
                             // allows to prevent multiple requests from being sent at the same time
@@ -277,8 +694,10 @@ $(document).ready(function() {
                             loadTabContent('{{ url_for("iframe_healthie_provider_tab_system_devices_bp.iframe_healthie_provider_tab_system_devices") }}', '#tab-system-devices');
                         }, 5000); // Reload after a delay
                     } else {
-                        $('#orderNewDevicesFormSuccess').html("Error. See logs below.");
+                        $('#orderNewDevicesFormSuccess').html("<span style='color: #991b1b;'>✗ Error. See logs below.</span>");
+                        $('#orderNewDevicesFormSuccess').removeClass('loading').addClass('error');
                         $('#orderNewDevicesFormSuccess').show();
+                        $('#orderNewDevicesFormLoading').hide();
                         // enables the button to try again
                         isOrderNewDevicesRunning = false;
                     }
@@ -286,12 +705,17 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error('Error:', error); // Log AJAX error to console
                 $('#orderNewDevicesFormTextarea').val('Error: ' + error); // Display error message in textarea
+                $('#orderNewDevicesFormSuccess').html("<span style='color: #991b1b;'>✗ Network error. See logs below.</span>");
+                $('#orderNewDevicesFormSuccess').removeClass('loading').addClass('error');
+                $('#orderNewDevicesFormSuccess').show();
+                $('#orderNewDevicesFormLoading').hide();
 
                 // allows to prevent multiple requests from being sent at the same time
                 isOrderNewDevicesRunning = false;
             },
             complete: function() {
                 // Hide loading indicator after AJAX completes (whether success or error)
+                $('#orderNewDevicesFormLoading').removeClass('loading');
                 $('#orderNewDevicesFormLoading').hide();
                 $('body').removeClass('loading'); // Remove loading cursor
 
