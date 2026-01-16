@@ -8,7 +8,7 @@ from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesM
 from syntrillo.pseudonyms_management.temporary_lookup_codes_management import TemporaryLookUpCodesManagement
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.api_healthie.user import HealthieUser
-
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 
 # -------------------------------------------------
 
@@ -46,7 +46,10 @@ def iframe_healthie_patient_sidebar():
         else:
             # healthie_user_id = '-1'
             # healthie_user_id = "1035117" # with onboarding forms
-            healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "1209727" # with syntrillo_internal_key
+            # healthie_user_id = "1966294" # Patient AWS Test 3
+            healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
+            # healthie_user_id = "2315391" # Bob Barker
             # healthie_user_id = "dummy" + str(random.randint(100000, 999999)) # without syntrillo_internal_key
             # healthie_user_id = "dummy456456" # without syntrillo_internal_key
             # healthie_user_id = "1051529" # Omar's "Patient One" with devices
@@ -71,15 +74,9 @@ def iframe_healthie_patient_sidebar():
         temporary_lookup_code = temporary_lookup_codes_management.create_temporary_pseudo_code(
             syntrillo_internal_key=syntrillo_internal_key,
             purpose=TemporaryLookUpCodesManagement.PURPOSE_HEALTHIE_IFRAME
-            )
+        )
     else:
         temporary_lookup_code = None
-
-    # --------------------------------------------------------------------
-    # We do not pass healthie_user_id if the patient is registered at Syntrillo
-    if syntrillo_internal_key is not None:
-        healthie_user_id = "Not transmitted"
-
 
     # --------------------------------------------------------------------
     # is it a demo or test mode?
@@ -108,12 +105,22 @@ def iframe_healthie_patient_sidebar():
     else:
 
         # --------------------------------------------------------------------
+        # Flag for Don
+        secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
+        healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
 
-        return render_template(
-            'healthie/iframe_patient_sidebar/index.html',
-            patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
-            healthie_user_id=healthie_user_id,
-            temporary_lookup_code=temporary_lookup_code
+        if healthie_user_id in healthie_patient_dashboard_ids.split(','):
+            healthie_user_id = "Not transmitted"
+            return render_template(
+                'healthie/iframe_patient_sidebar/index.html',
+                patient_not_registered_at_syntrillo=patient_not_registered_at_syntrillo,
+                healthie_user_id=healthie_user_id,
+                temporary_lookup_code=temporary_lookup_code
             )
-
-
+        else:
+            healthie_user_id = "Not transmitted"
+            return render_template(
+                'healthie/iframe_patient_sidebar/coming_soon.html',
+                healthie_user_id=healthie_user_id,
+                temporary_lookup_code=temporary_lookup_code
+            )

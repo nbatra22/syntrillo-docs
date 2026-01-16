@@ -6,6 +6,9 @@ from .post_management import PostManager
 from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
+from syntrillo.stroke_risk_score_v2.models.don import DEFAULT_DATA_OBJECT_NOTATION
+from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
+from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
 iframe_healthie_provider_tab_risk_score_bp = Blueprint('iframe_healthie_provider_tab_risk_score_bp', __name__)
 
@@ -67,9 +70,30 @@ def iframe_healthie_provider_tab_risk_score_data():
     syntrillo_internal_key_patient = post_manager.syntrillo_internal_key
     on_demand = (request.form.get('on_demand') == '1')
 
+    lookup_codes_manager = LookUpCodesManagement()
+    entry = lookup_codes_manager.retrieve_entry_by_internal_key(syntrillo_internal_key_patient)
+    healthie_user_id = entry['healthie_user_id'] if entry else None
+
     try:
 
+        # Flag for Don
+        secrets = LocalEnvironmentAndSecrets(load_healthie_ids_secrets=True)
+        healthie_patient_dashboard_ids = secrets.get_secret_value('healthie_ids', 'patient_dashboard_ids')
+        if healthie_user_id is not None and str(healthie_user_id) in healthie_patient_dashboard_ids:
+            return jsonify({
+                'success': True,
+                'message': 'No data available',
+                'data': {
+                    'risk_score': DEFAULT_DATA_OBJECT_NOTATION['risk_score'],
+                    'priority_score': DEFAULT_DATA_OBJECT_NOTATION['priority_score'],
+                    'metrics': DEFAULT_DATA_OBJECT_NOTATION['metrics'],
+                    'independent_risk_variable_scores': DEFAULT_DATA_OBJECT_NOTATION['independent_risk_variable_scores'],
+                    'dependent_risk_variable_contributions': DEFAULT_DATA_OBJECT_NOTATION['dependent_risk_variable_contributions']
+                }
+            })
+
         risk_score, metrics, stroke_priority_score, independent_risk_variable_scores, dependent_risk_variable_contributions = calculate_risk_score(syntrillo_internal_key_patient, is_ondemand_srs=on_demand)
+
         if risk_score is None and stroke_priority_score is None:
             return jsonify({
                 'success': True,

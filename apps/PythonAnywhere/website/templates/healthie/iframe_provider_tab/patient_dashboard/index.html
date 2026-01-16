@@ -1,0 +1,184 @@
+<!-- Path: ./apps/PythonAnywhere/website/templates/healthie/iframe_patient_sidebar/index.html -->
+
+<style>
+    .pd-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .pd-container section {
+        padding: 1rem 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pd-header {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pd-header h2 {
+        margin: 0 !important;
+        font-size: 20px !important;
+        font-weight: bold;
+    }
+
+    .pd-header p {
+        margin: 0 !important;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    /* Spinner styles */
+    .spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #4A90E2;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .pd-bp-footnotes {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        padding: 1rem;
+    }
+
+    .pd-bp-footnotes li {
+        margin-left: 0.5rem;
+    }
+
+    .pd-bp-footnotes span {
+        font-weight: bold;
+    }
+
+    .pd-section {
+        gap: 1rem;
+    }
+</style>
+
+<div class="pd-container">
+    <section id="patient-dashboard-header" class="pd-header">
+        <h2>Patient Dashboard</h2>
+        <p id="" class="">
+            Make changes to what the patient sees in their dashboard by updating the information below.
+        </p>
+    </section>
+
+    <section id="srs-section" class="pd-section">
+        <div id="" class="pd-section-title-container">
+            <h2 class="pd-section-title">
+                Stroke Risk Factor Analysis
+            </h2>
+        </div>
+        <div class="pd-section-content" id="stroke-risk-score-container">
+            {% include 'healthie/iframe_provider_tab/patient_dashboard/srs_table.html' %}
+        </div>
+    </section>
+
+    <!-- <section id="commentary-section" class="pd-section">
+        <div id="" class="pd-section-title-container">
+            <h2 class="pd-section-title">
+                Physician Commentary
+            </h2>
+        </div>
+        <div class="pd-section-content" id="commentary-container">
+            {% include 'healthie/iframe_provider_tab/patient_dashboard/physician_commentary.html' %}
+        </div>
+    </section> -->
+
+    <section id="bp-section" class="pd-section">
+        <div id="" class="pd-section-title-container">
+            <h2 class="pd-section-title">
+                Blood Pressure Analysis
+            </h2>
+            <p id="bp-subtitle">
+                The data below is calculated using your most recent two weeks of measurements.
+            </p>
+        </div>
+        <!-- <div class="">
+            <p style="color: #16284a; font-size: 16px;">
+                Our clinicians have reviewed your health information and feel that you are at an overall low risk of stroke. Given available data, they estimate your 10 year risk of stroke and heart attack is most likely around 10% although your yearly risk of stroke may be as high as 2% per year depending on the interaction of your unique risk factors.
+            </p>
+        </div> -->
+        <div class="pd-section-content" id="blood-pressure-container">
+            <!-- Blood pressure content will be dynamically inserted here -->
+             {% include 'healthie/iframe_provider_tab/patient_dashboard/bp_summary.html' %}
+             <ul class="pd-bp-footnotes">
+                <li>
+                    Blood pressure measurements are captured as two numbers, both measured in millimeters of mercury (mmHg).
+                </li>
+                <li>
+                    <span>Systolic Blood Pressure (SBP)</span>, the top number, measures the pressure in your arteries when your heart beats and pumps blood.
+                </li>
+                <li>
+                    <span>Diastolic Blood Pressure (DBP)</span>, the bottom number, measures the pressure in your arteries when your heart rests between beats.
+                </li>
+                <li>
+                    <span>Peak SBP</span> and <span>Low SBP</span> represent the average of your three highest and lowest systolic blood pressure readings.
+                </li>
+                <li>
+                    <span>Symptomatic Hypotensive Episodes</span> are blood pressure readings where your SBP is below 90 mmHg accompanied by symptoms like dizziness or fainting.
+                </li>
+             </ul>
+        </div>
+    </section>
+
+    <section id="other-metrics-section" class="pd-section">
+        <div id="" class="pd-section-title-container">
+            <h2 class="pd-section-title">
+                Biometrics
+            </h2>
+            <p id="" class="pd-section-subtitle">
+                Additional health metrics listed below are sourced from your connected devices and/or manually logged.
+            </p>
+        </div>
+        <div style="width: 100%;">
+            {% include 'healthie/iframe_provider_tab/patient_dashboard/metrics.html' %}
+        </div>
+    </section>
+
+</div>
+
+<script>
+
+
+    function showSpinner(targetElement) {
+        targetElement.innerHTML = "";
+
+        // Check if a spinner already exists inside the target
+        let existingSpinner = targetElement.querySelector(".spinner");
+        if (!existingSpinner) {
+            // Create a new spinner
+            let spinner = document.createElement("div");
+            spinner.classList.add("spinner");
+
+            // Ensure the target element is a flex container to center the spinner
+            targetElement.style.display = "flex";
+            targetElement.style.justifyContent = "center";
+            targetElement.style.alignItems = "center";
+
+            targetElement.appendChild(spinner);
+        }
+    }
+
+    function hideSpinner(targetElement) {
+        // Find and remove the spinner inside the target element
+        let spinner = targetElement.querySelector(".spinner");
+        if (spinner) {
+            spinner.remove();
+        }
+
+        // Reset the targetElement styles in case they were changed
+        targetElement.style.display = "";
+        targetElement.style.justifyContent = "";
+        targetElement.style.alignItems = "";
+    }
+</script>
