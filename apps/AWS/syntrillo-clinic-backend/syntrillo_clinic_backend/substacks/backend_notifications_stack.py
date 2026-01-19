@@ -42,7 +42,7 @@ class BackendNotificationsStack(Stack):
         self.notification_function = _lambda.Function(
             self, "SecurityNotificationFunction",
             function_name="SecurityNotificationFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_10,
             handler="handler.handler",
             code=_lambda.Code.from_asset("lambda-functions/helpers/security-notification-function"),
             timeout=Duration.seconds(30),
@@ -130,7 +130,7 @@ class BackendNotificationsStack(Stack):
             self.notification_function = _lambda.Function(
                 self, "PipelineNotificationFunction",
                 function_name="PipelineNotificationFunction",
-                runtime=_lambda.Runtime.PYTHON_3_9,
+                runtime=_lambda.Runtime.PYTHON_3_10,
                 handler="handler.handler",
                 code=_lambda.Code.from_asset("lambda-functions/helpers/pipeline-notification-function"),
                 timeout=Duration.seconds(30),
