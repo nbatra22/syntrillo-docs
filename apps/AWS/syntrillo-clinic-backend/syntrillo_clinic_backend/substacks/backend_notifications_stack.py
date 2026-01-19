@@ -38,34 +38,71 @@ class BackendNotificationsStack(Stack):
             sns_subscriptions.EmailSubscription(dev_mailing_list)
         )
 
-        # # Create Inspector Event Bridge Rule
-        # inspector_security_notification_rule = events.Rule(
-        #     self, "InspectorSecurityNotificationRule",
-        #     rule_name="inspector-security-notification-rule",
-        #     event_pattern=events.EventPattern(
-        #         source=["aws.inspector2"],
-        #         detail_type=["Inspector2 Finding"],
-        #     )
-        # )
+        # Create Lambda function for processing SECURITY notifications
+        self.notification_function = _lambda.Function(
+            self, "SecurityNotificationFunction",
+            function_name="SecurityNotificationFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="handler.handler",
+            code=_lambda.Code.from_asset("lambda-functions/helpers/security-notification-function"),
+            timeout=Duration.seconds(30),
+            environment={
+                "SNS_TOPIC_ARN": self.security_notification_topic.topic_arn
+            }
+        )
+        
+        # Grant permissions to the Lambda function to publish to SNS
+        self.security_notification_topic.grant_publish(self.notification_function)
+        
+        # Create a topic for inspector v2 events
+        self.inspector_v2_event_topic = sns.Topic(
+            self, "InspectorV2EventTopic",
+            topic_name="inspector-v2-event-topic",
+        )
+        
+        # subscribe lambda to inspector v2 events
+        self.inspector_v2_event_topic.add_subscription(
+            sns_subscriptions.LambdaSubscription(self.notification_function)
+        )
 
-        # # Add lambda function to the event bridge rule
-        # inspector_security_notification_rule.add_target(
-        #     events_targets.SnsTopic(self.security_notification_topic)
-        # )
+        # Create a topic for guarduty events
+        self.guard_duty_event_topic = sns.Topic(
+            self, "GuardDutyEventTopic",
+            topic_name="guardduty-event-topic",
+        )
+        
+        # subscribe lambda to inspector v2 events
+        self.guard_duty_event_topic.add_subscription(
+            sns_subscriptions.LambdaSubscription(self.notification_function)
+        )
 
-        # # Create guardduty Event Bridge rule
-        # guardduty_security_notification_rule = events.Rule(
-        #     self, "GuardDutySecurityNotificationRule",
-        #     rule_name="guardduty-security-notification-rule",
-        #     event_pattern=events.EventPattern(
-        #         source=["aws.guardduty"],
-        #         detail_type=["GuardDuty Finding"],
-        #     )
-        # )
+        # Create Inspector Event Bridge Rule
+        inspector_security_notification_rule = events.Rule(
+            self, "InspectorSecurityNotificationRule",
+            rule_name="inspector-security-notification-rule",
+            event_pattern=events.EventPattern(
+                source=["aws.inspector2"],
+                detail_type=["Inspector2 Finding"],
+            )
+        )
 
-        # guardduty_security_notification_rule.add_target(
-        #     events_targets.SnsTopic(self.security_notification_topic)
-        # )
+        inspector_security_notification_rule.add_target(
+            events_targets.SnsTopic(self.inspector_v2_event_topic)
+        )
+
+        # Create guardduty Event Bridge rule
+        guardduty_security_notification_rule = events.Rule(
+            self, "GuardDutySecurityNotificationRule",
+            rule_name="guardduty-security-notification-rule",
+            event_pattern=events.EventPattern(
+                source=["aws.guardduty"],
+                detail_type=["GuardDuty Finding"],
+            )
+        )
+
+        guardduty_security_notification_rule.add_target(
+            events_targets.SnsTopic(self.guard_duty_event_topic)
+        )
 
         if environment_context["environment_name"] == "staging":
             # ---------------------------------------------------------------------

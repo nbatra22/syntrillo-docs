@@ -129,7 +129,7 @@ def calculate_risk_score(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: boo
 
     except Exception as e:
         logger.error(f"Error calculating risk score: {e}")
-        return None, None, None
+        return None, None, None, None, None
 
 def calc_risk_variable_contributions(
     final_dependent_score: float,
@@ -137,7 +137,7 @@ def calc_risk_variable_contributions(
     stroke_priority_score_total: float,
     independent_risk_variable_scores: dict,
     dependent_risk_variable_scores: dict
-    ) -> dict:
+    ) -> tuple[dict, dict]:
 
     # get sums of the srs and sps
     sum_total_srs = final_dependent_score + independent_risk_factor_value
@@ -807,4 +807,3 @@ if __name__ == "__main__":
         #     AVG_DBP: 81.825,
         #     CREATININE: creatinine_levels_value,
         # }
-

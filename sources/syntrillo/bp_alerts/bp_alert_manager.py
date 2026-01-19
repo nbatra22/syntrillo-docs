@@ -431,9 +431,10 @@ class BloodPressureAlertManager:
             # alert_title = f"⚠️ {patient_name} - BP Alert"
             alert_title = f"🔴 {patient_name} - BP Alert"
 
+            # Retrieve conversation ID by title
             conversation_manager = HealthieConversations()
-
             conversation_id = conversation_manager.get_conversation_by_title(alert_title, messenger_id)
+
             if not conversation_id:
                 # Create a new conversation
                 conversation_output = self.make_conversation_query(clinicians, messenger_id, alert_title)
@@ -442,7 +443,11 @@ class BloodPressureAlertManager:
 
                 conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
                 logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
+            else:
+                # Verify conversation members are up to date
+                conversation_manager.validate_conversation_members(conversation_id, clinicians)
 
+            # Add note to conversation
             message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
             logger.info(f"Successfully added note to conversation in Healthie: {message}")
 
@@ -485,6 +490,9 @@ class BloodPressureAlertManager:
 
                 conversation_id = conversation_output.get('createConversation', {}).get('conversation', {}).get('id')
                 logger.info(f"Successfully created conversation in Healthie: {conversation_output}")
+            else:
+                # Verify conversation members are up to date
+                conversation_manager.validate_conversation_members(conversation_id, physicians)
 
             message = conversation_manager.create_note(conversation_id=conversation_id, content=content, user_id=messenger_id)
             logger.info(f"Successfully added note to conversation in Healthie: {message}")
@@ -534,7 +542,7 @@ class BloodPressureAlertManager:
         #         }
         #   }
 
-        logger.info("Creating conversation in Healthie")
+        logger.info("Creating conversation in Healthie...")
 
         try:
             # Convert the clinician_ids to a GraphQL valid variable string

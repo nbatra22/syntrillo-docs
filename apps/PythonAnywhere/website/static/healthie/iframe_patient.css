@@ -1,38 +1,58 @@
 /* static/healthie/iframe_patient.css */
 
-/* my friend : https://www.w3schools.com/css/tryit.asp */
-
 body {
-    font-family: "Avenir",Helvetica,"Arial",sans-serif; /* Avenir is Heathie's font */
-    font-size: 16px;
-    padding: 5px;
-    color: #4f4f4f;
+    padding: 2rem 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    /* width: 80%; */
 }
 
-
 h1 {
-    font-size: 24px;
+    font-weight: bold;
+    font-size: x-large;
+    margin: 0;
     color: #16284a;
 }
 
 h2 {
-    font-size: 20px;
+    font-weight: bold;
+    font-size: large;
+    margin: 0;
     color: #16284a;
-    margin-top: 20px;
-}
-
-h3 {
-    font-size: 18px;
-    color: #16284a;
-    margin-left: 10px;
-    margin-top: 20px;
 }
 
 p {
-    font-style: normal;
-    font-stretch: normal;
-    font-size: 16px;
-    line-height: 21px;
-    color: #16284a;
-    padding-left: 20px;
+    color: #6b7280;
+    font-size: small;
+    margin-bottom: 0;
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    display: inline-block;
+    width: 2rem !important;
+    /* Adjust size as needed */
+    height: 2rem !important;
+    border: 4px solid white;
+    /* Light blue */
+    border-top-color: #3b82f6;
+    /* Solid blue for animation */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }

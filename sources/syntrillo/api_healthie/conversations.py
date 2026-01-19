@@ -391,6 +391,80 @@ class HealthieConversations:
             logger.error(f"Error fetching conversation id from Healthie: {e}")
             return None
 
+    def validate_conversation_members(self, conversation_id: str, valid_members: list):
+        """
+        Validates conversation members are up to date.
+        """
+        try:
+            conversation, log = self.get_conversation_by_id(conversation_id=conversation_id)
+
+            if not log['success'] or conversation is None:
+                logger.error(f"Failed to retrieve conversation {conversation_id} for member validation.")
+                return False
+
+            current_member_ids = set([member['user_id'] for member in conversation.get('conversation_memberships', [])])
+            valid_member_ids = set(valid_members)
+
+            # Check for missing members
+            valid_memberships = current_member_ids == valid_member_ids
+
+            if valid_memberships:
+                logger.info(f"Conversation {conversation_id} members are up to date.")
+                return True
+            else:
+                logger.info(f"Updating conversation {conversation_id} members...")
+
+                updated_memberships = self.update_conversation_memberships(conversation_id, valid_members)
+
+                if not updated_memberships:
+                    logger.error(f"Failed to update conversation {conversation_id} members.")
+                    return False
+                else:
+                    return True
+
+        except Exception as e:
+            logger.error(f"Error validating conversation members for conversation {conversation_id}: {e}")
+            return False
+
+    def update_conversation_memberships(self, conversation_id: str, members_ids):
+        """
+        Update conversation memberships to ensure they are current.
+        """
+        try:
+            logger.info(f"Updating conversation memberships with members: {members_ids}")
+
+            response, log = self.auth.send_query(query=
+            """
+                mutation updateConversation(
+                    $id: ID,
+                    $simple_added_users: String,
+                ) {
+                    updateConversation(
+                        input: {
+                            id: $id,
+                            simple_added_users: $simple_added_users
+                        }
+                    ) {
+                        conversation {
+                            id
+                            conversation_memberships_count
+                        }
+                    }
+                }
+            """, variables={
+                'id': conversation_id,
+                'simple_added_users': members_ids
+            })
+
+            if not log['success']:
+                logger.error(f"Failed to update conversation memberships: {log.get('message', 'Unknown error')}")
+                return False
+
+            # After updating, assume success for this example
+            return True
+        except Exception as e:
+            logger.error(f"Error updating conversation memberships: {e}")
+            return False
 
 if __name__ == '__main__':
 
