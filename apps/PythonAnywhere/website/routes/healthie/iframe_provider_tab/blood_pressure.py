@@ -235,6 +235,8 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     file_name = request.form.get("file-name").strip() or f"{first_initial}{last_initial}-{date_str}"
     analysis = pd.read_json(io.StringIO(request.form.get("analysis_json")))
     extremes = pd.read_json(io.StringIO(request.form.get("extremes_json")))
+    include_intro_section_str = request.form.get("include-intro-section", "off")
+    include_intro_section = True if include_intro_section_str == "on" else False
 
     # Retrieve logo path
     logo_filename = "syntrillo_logo.png"
@@ -261,7 +263,11 @@ def iframe_healthie_provider_tab_download_bp_pdf():
         report_code=nanoid
     )
     # bp_pdf = bp_report_manager.generate_pdf_report()
-    bp_pdf = bp_report_manager.generate_pdf_report_with_header_footer()
+
+    if include_intro_section:
+        bp_pdf = bp_report_manager.generate_provider_pdf_report()
+    else:
+        bp_pdf = bp_report_manager.generate_patient_pdf_report()
 
     return send_file(bp_pdf, as_attachment=True, download_name=f"{file_name}.pdf", mimetype="application/pdf")
 

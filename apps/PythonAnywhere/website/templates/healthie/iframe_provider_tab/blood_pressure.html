@@ -241,6 +241,12 @@
         margin: 0;
     }
 
+    .bp-form-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     .bp-form-submit-button {
         width: 100%;
         display: flex;
@@ -652,6 +658,16 @@
                                 Report title will default to "Blood Pressure Analysis" if value is blank.
                             </p>
                         </div> -->
+                        <div id="" class="bp-form-input-container">
+                            <label for="include-intro-section" class="bp-form-checkbox" style="font-size: smaller; font-weight: bold;">
+                                <input type="checkbox" id="include-intro-section" name="include-intro-section" checked style="width: auto !important;" />
+                                Include intro section?
+                            </label>
+                            <p class="">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Intro section includes access code, phone, website, email, and communication excerpt. Uncheck this box for reports sent to patients.
+                            </p>
+                        </div>
                         <div id="hidden-inputs" class="hidden">
                             <input type="hidden" name="temporary_lookup_code" id="temporary_lookup_code"
                                 value="{{ temporary_lookup_code }}" />
@@ -745,7 +761,7 @@
             </p>
         </div>
     </section>
-    
+
     <!-- Biometrics Infographic as Table -->
     <section id="bp-biometrics-section" class="bp-table-container">
         <div id="bp-biometrics-spinner-container"></div>

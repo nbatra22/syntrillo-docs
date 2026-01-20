@@ -23,7 +23,7 @@ class BloodPressureReport:
         self.report_code = report_code
         self.logo = logo
 
-    def generate_pdf_report_with_header_footer(self):
+    def generate_provider_pdf_report(self):
         """
         Build the PDF with header & footer on ALL pages.
         Uses onFirstPage/onLaterPages to render consistently.
@@ -50,6 +50,38 @@ class BloodPressureReport:
         elements.extend(self._build_extremes_section())
 
         # Ensure header/footer on every page
+        doc.build(
+            elements,
+            onFirstPage=self._draw_header_footer,
+            onLaterPages=self._draw_header_footer
+        )
+
+        pdf_buffer.seek(0)
+        return pdf_buffer
+
+    def generate_patient_pdf_report(self):
+        """
+        Build the PDF report for patients without header/footer.
+        Simpler layout.
+        """
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            pdf_buffer,
+            pagesize=letter,
+            topMargin=72,
+            bottomMargin=72,
+            leftMargin=32,
+            rightMargin=32
+        )
+
+        elements = []
+
+        # Content sections
+        elements.extend(self._build_summary_section())
+        elements.append(PageBreak())
+        elements.extend(self._build_analysis_section())
+        elements.extend(self._build_extremes_section())
+
         doc.build(
             elements,
             onFirstPage=self._draw_header_footer,
