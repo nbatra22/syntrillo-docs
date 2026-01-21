@@ -74,23 +74,27 @@ def healthie_iframe_patient_sidebar_heart_rate():
     # Get baseline (first 2 weeks), prior (2 weeks before current), and current (latest 2 weeks) RHR data
     healthie_utils = HealthieUtils()
     rhr_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category=RHR_CATEGORY)
-    rhr_metadata = calc_rhr_metadata(
-        rhr_data=rhr_data,
+    pulse_data = get_healthie_metric_data(healthie_utils, healthie_user_id, category="Pulse")
+
+    hr_data = rhr_data if len(rhr_data) >= len(pulse_data) else pulse_data
+
+    hr_metadata = calc_rhr_metadata(
+        rhr_data=hr_data,
         baseline_num_weeks=2,
         trailing_num_weeks=2,
         prior_num_weeks= 2
-    ) if rhr_data else {}
+    ) if hr_data else {}
 
     return jsonify({
-        'average_rhr_baseline': rhr_metadata.get('average_rhr_baseline'),
-        'average_rhr_trailing': rhr_metadata.get('average_rhr_trailing'),
-        'average_rhr_prior': rhr_metadata.get('average_rhr_prior'),
-        "baseline_start_date": rhr_metadata.get('baseline_start_date'),
-        "baseline_end_date": rhr_metadata.get('baseline_end_date'),
-        "prior_start_date": rhr_metadata.get('prior_start_date'),
-        "prior_end_date": rhr_metadata.get('prior_end_date'),
-        "current_start_date": rhr_metadata.get('current_start_date'),
-        "current_end_date": rhr_metadata.get('current_end_date'),
+        'average_rhr_baseline': hr_metadata.get('average_rhr_baseline'),
+        'average_rhr_trailing': hr_metadata.get('average_rhr_trailing'),
+        'average_rhr_prior': hr_metadata.get('average_rhr_prior'),
+        "baseline_start_date": hr_metadata.get('baseline_start_date'),
+        "baseline_end_date": hr_metadata.get('baseline_end_date'),
+        "prior_start_date": hr_metadata.get('prior_start_date'),
+        "prior_end_date": hr_metadata.get('prior_end_date'),
+        "current_start_date": hr_metadata.get('current_start_date'),
+        "current_end_date": hr_metadata.get('current_end_date'),
     })
 
 
