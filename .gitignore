@@ -83,4 +83,5 @@ tailwind.exe
 
 /syntrillo_env
 
-
+# Node modules
+node_modules/
