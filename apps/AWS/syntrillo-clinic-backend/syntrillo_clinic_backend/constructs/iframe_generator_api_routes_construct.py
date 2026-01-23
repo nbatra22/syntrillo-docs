@@ -82,12 +82,11 @@ class IFrameGeneratorAPIRoutes(Construct):
         )
 
         # /iframe_healthie_client_sidebar
-        if self.environment_context["environment_name"] != 'prod':
-            iframe_healthie_client_sidebar = self.rest_api.root.add_resource("iframe_healthie_client_sidebar")
-            iframe_healthie_client_sidebar.add_method(
-                "GET",
-                apigw.LambdaIntegration(iframe_generator_function),
-            )
+        iframe_healthie_client_sidebar = self.rest_api.root.add_resource("iframe_healthie_client_sidebar")
+        iframe_healthie_client_sidebar.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+        )
 
     def create_login_resources(self, login_function: _lambda.Function):
         
