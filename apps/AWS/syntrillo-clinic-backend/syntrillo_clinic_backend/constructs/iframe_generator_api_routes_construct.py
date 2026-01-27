@@ -179,7 +179,7 @@ class IFrameGeneratorAPIRoutes(Construct):
         # ---------------------------------------------------------------------
 
         # /iframe_healthie_client_sidebar
-        healthie_iframe_client_side_bar = self.healthie_resource.add_resource("iframe_client_sidebar")
+        healthie_iframe_client_side_bar = self.healthie_resource.add_resource("iframe_patient_sidebar")
 
         healthie_iframe_client_side_bar_proxy_resources = healthie_iframe_client_side_bar.add_resource("{proxy+}")
         healthie_iframe_client_side_bar_proxy_resources.add_method(

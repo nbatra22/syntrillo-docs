@@ -101,6 +101,7 @@ class ServersStack(Stack):
         self.iframe_generator_api_routes.create_static_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_tab_resources(self.iframe_generator_function.function_alias)
         self.iframe_generator_api_routes.create_provider_sidebar_resources(self.iframe_generator_function.function_alias)
+        self.iframe_generator_api_routes.create_patient_sidebar_resources(self.iframe_generator_function.function_alias)
 
         self.blood_pressure_notification_function = BloodPressureNotificationFunction(
             self, "BloodPressureNotificationFunction",
