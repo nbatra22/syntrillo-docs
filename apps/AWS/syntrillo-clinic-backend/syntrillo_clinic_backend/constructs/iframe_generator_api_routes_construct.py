@@ -171,3 +171,20 @@ class IFrameGeneratorAPIRoutes(Construct):
             authorizer=self.cognito_authorizer,
             authorization_type=apigateway.AuthorizationType.COGNITO
         )
+    
+    def create_patient_sidebar_resources(self, iframe_generator_function: _lambda.Function):
+
+        # ---------------------------------------------------------------------
+        # PATIENT SIDEBAR HTML RESOURCES
+        # ---------------------------------------------------------------------
+
+        # /iframe_healthie_client_sidebar
+        healthie_iframe_client_side_bar = self.healthie_resource.add_resource("iframe_client_sidebar")
+
+        healthie_iframe_client_side_bar_proxy_resources = healthie_iframe_client_side_bar.add_resource("{proxy+}")
+        healthie_iframe_client_side_bar_proxy_resources.add_method(
+            "GET",
+            apigw.LambdaIntegration(iframe_generator_function),
+            authorizer=self.cognito_authorizer,
+            authorization_type=apigateway.AuthorizationType.COGNITO
+        )
