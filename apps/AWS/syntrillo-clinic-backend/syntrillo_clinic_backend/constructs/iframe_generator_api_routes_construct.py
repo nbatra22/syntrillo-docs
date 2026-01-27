@@ -178,13 +178,13 @@ class IFrameGeneratorAPIRoutes(Construct):
         # PATIENT SIDEBAR HTML RESOURCES
         # ---------------------------------------------------------------------
 
-        # /iframe_healthie_client_sidebar
-        healthie_iframe_client_side_bar = self.healthie_resource.add_resource("iframe_patient_sidebar")
+        # /iframe_healthie_patient_sidebar
+        healthie_iframe_patient_side_bar = self.healthie_resource.add_resource("iframe_patient_sidebar")
 
-        healthie_iframe_client_side_bar_proxy_resources = healthie_iframe_client_side_bar.add_resource("{proxy+}")
-        healthie_iframe_client_side_bar_proxy_resources.add_method(
+        healthie_iframe_patient_side_bar_proxy_resources = healthie_iframe_patient_side_bar.add_resource("{proxy+}")
+        healthie_iframe_patient_side_bar_proxy_resources.add_method(
             "GET",
             apigw.LambdaIntegration(iframe_generator_function),
-            authorizer=self.cognito_authorizer,
-            authorization_type=apigateway.AuthorizationType.COGNITO
+            # authorizer=self.cognito_authorizer,
+            # authorization_type=apigateway.AuthorizationType.COGNITO
         )
