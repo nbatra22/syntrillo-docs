@@ -26,7 +26,7 @@ from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 iframe_healthie_patient_sidebar_data_bp = Blueprint('iframe_healthie_patient_sidebar_data_bp', __name__)
 
 
-@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe/patient_sidebar/blood_pressure', methods=['POST'])
+@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe_patient_sidebar/blood_pressure', methods=['POST'])
 def healthie_iframe_patient_sidebar_blood_pressure():
     """
     Retrieves summary stats data from BP Analysis class.
@@ -57,7 +57,7 @@ def healthie_iframe_patient_sidebar_blood_pressure():
         abort(500, description="An error occurred while processing your request.")
 
 
-@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe/patient_sidebar/heart_rate', methods=['POST'])
+@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe_patient_sidebar/heart_rate', methods=['POST'])
 def healthie_iframe_patient_sidebar_heart_rate():
     """
     Retrieves heart rate data from
@@ -98,7 +98,7 @@ def healthie_iframe_patient_sidebar_heart_rate():
     })
 
 
-@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe/patient_sidebar/biometrics', methods=['POST'])
+@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe_patient_sidebar/biometrics', methods=['POST'])
 def healthie_iframe_patient_sidebar_biometrics():
     """
     This endpoint is used to retrieve biometrics data for a patient.
@@ -247,7 +247,7 @@ def healthie_iframe_patient_sidebar_biometrics():
         "ssq_data": ssq_data
     })
 
-@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe/patient_sidebar/stroke_risk_factors', methods=['POST'])
+@iframe_healthie_patient_sidebar_data_bp.route('/healthie/iframe_patient_sidebar/stroke_risk_factors', methods=['POST'])
 def healthie_iframe_patient_sidebar_stroke_risk_factors():
     """
     This endpoint is used to retrieve stroke risk factor data for a patient.
