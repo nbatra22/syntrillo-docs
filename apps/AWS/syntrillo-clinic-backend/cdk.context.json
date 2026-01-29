@@ -101,7 +101,7 @@
     },
     "iframe_generator_api": {
       "use_waf": true,
-      "allowed_referer": "https://securestaging.gethealthie.com/",
+      "allowed_referer": "https://securestaging.gethealthie.com",
       "webacl-log-group-removal-policy": "DESTROY",
       "iframes_allowed_api_adresses": [
         {
@@ -182,7 +182,7 @@
     },
     "iframe_generator_api": {
       "use_waf": true,
-      "allowed_referer": "https://patients.syntrillo.com/",
+      "allowed_referer": "https://patients.syntrillo.com",
       "webacl-log-group-removal-policy": "RETAIN",
       "iframes_allowed_api_adresses": [
         {
