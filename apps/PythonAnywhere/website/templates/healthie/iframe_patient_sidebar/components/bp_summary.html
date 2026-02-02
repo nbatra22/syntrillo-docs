@@ -74,11 +74,157 @@
         color: #16284a;
     }
 
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+        .bp-summary-container {
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .bp-summary-subcontainer {
+            width: 100%;
+            padding: 1rem;
+        }
+
+        #bp-summary-middle-container {
+            border-right: none;
+            border-left: none;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .bp-summary-subcontainer-title {
+            font-size: 1rem;
+        }
+
+        .bp-summary-targets-value {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            text-align: center;
+        }
+
+        .bp-summary-metric-container {
+            font-size: 1rem;
+            margin-left: 0;
+            gap: 0.75rem;
+        }
+
+        .bp-summary-metrics-value {
+            font-size: 0.875rem;
+        }
+    }
+
+    /* New table-based design styles */
+    .bp-summary-table-container {
+        background-color: #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .bp-summary-table-status-row {
+        text-align: center;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+    }
+
+    .bp-summary-table-status-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .bp-summary-table-status-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .bp-summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        border-radius: 0.375rem;
+        overflow: hidden;
+    }
+
+    .bp-summary-table thead {
+        background-color: #f3f4f6;
+    }
+
+    .bp-summary-table th {
+        padding: 0.75rem;
+        text-align: left;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .bp-summary-table td {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        color: #16284a;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .bp-summary-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .bp-summary-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .bp-summary-table-metric {
+        font-weight: 500;
+    }
+
+    .bp-summary-table-target {
+        color: #6b7280;
+    }
+
+    /* .bp-summary-table-actual {
+        font-weight: 600;
+    } */
+
+    .bp-summary-table-status-cell {
+        text-align: center;
+    }
+
+    .bp-summary-table-loading {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .bp-summary-table-container {
+            padding: 0.5rem;
+        }
+
+        .bp-summary-table th,
+        .bp-summary-table td {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .bp-summary-table-status-value {
+            font-size: 1.25rem;
+        }
+
+        .bp-summary-table-status-label {
+            font-size: 0.75rem;
+        }
+    }
+
 
 </style>
 
 
-<div id="bp-summary-container" class="bp-summary-container">
+<!-- <div id="bp-summary-container" class="bp-summary-container">
     <div id="bp-summary-left-container" class="bp-summary-subcontainer">
         <h3 class="bp-summary-subcontainer-title">
             Status
@@ -159,6 +305,66 @@
             </div>
         </div>
     </div>
+</div> -->
+
+<div class="bp-summary-table-container">
+    <div class="bp-summary-table-status-row">
+        <div class="bp-summary-table-status-label">Overall Status</div>
+        <div id="bp-summary-status" class="bp-summary-table-status-value">Loading...</div>
+    </div>
+
+    <div id="bp-summary-table-loading" class="bp-summary-table-loading">
+        Retrieving metrics...
+    </div>
+
+    <table id="bp-summary-table" class="bp-summary-table" style="display: none;">
+        <thead>
+            <tr>
+                <th>Metric</th>
+                <th>Target</th>
+                <th>Actual</th>
+                <th style="text-align: center;">Goal Met</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="bp-summary-table-metric">Average SBP (mmHg)</td>
+                <td class="bp-summary-table-target">Less than 125</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-avg-sbp">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-avg-sbp-status"></span></td>
+            </tr>
+            <tr>
+                <td class="bp-summary-table-metric">Average DBP (mmHg)</td>
+                <td class="bp-summary-table-target">Less than 80</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-avg-dbp">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-avg-dbp-status"></span></td>
+            </tr>
+            <tr>
+                <td class="bp-summary-table-metric">Peak SBP (mmHg)</td>
+                <td class="bp-summary-table-target">Less than 165</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-peak-sbp">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-peak-sbp-status"></span></td>
+            </tr>
+            <tr>
+                <td class="bp-summary-table-metric">Low SBP (mmHg)</td>
+                <td class="bp-summary-table-target">Greater than 90</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-low-sbp">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-low-sbp-status"></span></td>
+            </tr>
+            <tr>
+                <td class="bp-summary-table-metric">Symptomatic Hypotensive Episodes</td>
+                <td class="bp-summary-table-target">0</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-symptomatic-hypotension">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-symptomatic-hypotension-status"></span></td>
+            </tr>
+            <tr>
+                <td class="bp-summary-table-metric">Near-Hypotensive Episodes</td>
+                <td class="bp-summary-table-target">0</td>
+                <td class="bp-summary-table-actual"><span id="bp-table-near-hypotensive">--</span></td>
+                <td class="bp-summary-table-status-cell"><span id="bp-table-near-hypotensive-status"></span></td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
@@ -182,35 +388,34 @@
                 if (data.success && data.data) {
                     const summary_stats = data.data;
 
-                    document.getElementById("bp-summary-status").textContent = summary_stats.status.value;
-                    document.getElementById("bp-summary-status").style.fontWeight = "bold";
-                    document.getElementById("bp-summary-status").style.fontSize = "1.25rem";
-                    document.getElementById("bp-summary-status").style.textAlign = "center";
-                    document.getElementById("bp-summary-status").style.color = summary_stats.status.grade === 0 ? "#16a34a" : summary_stats.status.grade === 1 ? "#f59e0b" : summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
-
-                    document.getElementById("bp-summary-avg-sbp").textContent = summary_stats.avg_sbp.value;
-                    document.getElementById("bp-summary-avg-dbp").textContent = summary_stats.avg_dbp.value;
-                    document.getElementById("bp-summary-peak-sbp").textContent = summary_stats.peak_sbp.value;
-                    document.getElementById("bp-summary-low-sbp").textContent = summary_stats.low_sbp.value;
-                    document.getElementById("bp-summary-symptomatic-hypotension-count").textContent = summary_stats.symptomatic_hypotension.value;
-                    document.getElementById("bp-summary-near-hypotensive-count").textContent = summary_stats.near_hypotensive.value;
-
                     const redXmark = `<i class="fa-solid fa-circle-xmark" style="color: #dc2626;"></i>`
                     const yellowExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #eab308;"></i>`
                     const orangeExclamation = `<i class="fa-solid fa-circle-exclamation" style="color: #ea580c;"></i>`
                     const greenCheck = `<i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>`
 
-                    document.getElementById("bp-summary-avg-sbp-grade").innerHTML = summary_stats.avg_sbp.grade === 0 ? greenCheck : summary_stats.avg_sbp.grade === 1 ? yellowExclamation : summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
-                    document.getElementById("bp-summary-avg-dbp-grade").innerHTML = summary_stats.avg_dbp.grade === 0 ? greenCheck : summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
-                    document.getElementById("bp-summary-peak-sbp-grade").innerHTML = summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
-                    document.getElementById("bp-summary-low-sbp-grade").innerHTML = summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
-                    document.getElementById("bp-summary-symptomatic-hypotension-grade").innerHTML = summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-summary-near-hypotensive-grade").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+                    // Populate status
+                    document.getElementById("bp-summary-status").textContent = summary_stats.status.value;
+                    document.getElementById("bp-summary-status").style.color = summary_stats.status.grade === 0 ? "#16a34a" : summary_stats.status.grade === 1 ? "#f59e0b" : summary_stats.status.grade === 2 ? "#dc2626" : "#dc2626";
 
-                    document.getElementById("bp-summary-metrics-loading-container").style.display = "none";
-                    document.getElementById("bp-summary-metrics-container").style.display = "flex";
+                    // Populate actual values
+                    document.getElementById("bp-table-avg-sbp").textContent = summary_stats.avg_sbp.value;
+                    document.getElementById("bp-table-avg-dbp").textContent = summary_stats.avg_dbp.value;
+                    document.getElementById("bp-table-peak-sbp").textContent = summary_stats.peak_sbp.value;
+                    document.getElementById("bp-table-low-sbp").textContent = summary_stats.low_sbp.value;
+                    document.getElementById("bp-table-symptomatic-hypotension").textContent = summary_stats.symptomatic_hypotension.value;
+                    document.getElementById("bp-table-near-hypotensive").textContent = summary_stats.near_hypotensive.value;
 
-                    document.getElementById("bp-summary-status").textContent = data.summary_stats.status.value;
+                    // Populate goal met status icons
+                    document.getElementById("bp-table-avg-sbp-status").innerHTML = summary_stats.avg_sbp.grade === 0 ? greenCheck : summary_stats.avg_sbp.grade === 1 ? yellowExclamation : summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-table-avg-dbp-status").innerHTML = summary_stats.avg_dbp.grade === 0 ? greenCheck : summary_stats.avg_dbp.grade === 2 ? orangeExclamation : redXmark;
+                    document.getElementById("bp-table-peak-sbp-status").innerHTML = summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-table-low-sbp-status").innerHTML = summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
+                    document.getElementById("bp-table-symptomatic-hypotension-status").innerHTML = summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
+                    document.getElementById("bp-table-near-hypotensive-status").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+
+                    // Show table and hide loading
+                    document.getElementById("bp-summary-table-loading").style.display = "none";
+                    document.getElementById("bp-summary-table").style.display = "table";
                 }
 
                 if (data.error) {
