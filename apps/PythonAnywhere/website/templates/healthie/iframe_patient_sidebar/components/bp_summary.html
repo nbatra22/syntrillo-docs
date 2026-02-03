@@ -357,12 +357,12 @@
                 <td class="bp-summary-table-actual"><span id="bp-table-symptomatic-hypotension">--</span></td>
                 <td class="bp-summary-table-status-cell"><span id="bp-table-symptomatic-hypotension-status"></span></td>
             </tr>
-            <tr>
+            <!-- <tr>
                 <td class="bp-summary-table-metric">Near-Hypotensive Episodes</td>
                 <td class="bp-summary-table-target">0</td>
                 <td class="bp-summary-table-actual"><span id="bp-table-near-hypotensive">--</span></td>
                 <td class="bp-summary-table-status-cell"><span id="bp-table-near-hypotensive-status"></span></td>
-            </tr>
+            </tr> -->
         </tbody>
     </table>
 </div>
@@ -403,7 +403,7 @@
                     document.getElementById("bp-table-peak-sbp").textContent = summary_stats.peak_sbp.value;
                     document.getElementById("bp-table-low-sbp").textContent = summary_stats.low_sbp.value;
                     document.getElementById("bp-table-symptomatic-hypotension").textContent = summary_stats.symptomatic_hypotension.value;
-                    document.getElementById("bp-table-near-hypotensive").textContent = summary_stats.near_hypotensive.value;
+                    // document.getElementById("bp-table-near-hypotensive").textContent = summary_stats.near_hypotensive.value;
 
                     // Populate goal met status icons
                     document.getElementById("bp-table-avg-sbp-status").innerHTML = summary_stats.avg_sbp.grade === 0 ? greenCheck : summary_stats.avg_sbp.grade === 1 ? yellowExclamation : summary_stats.avg_sbp.grade === 2 ? orangeExclamation : redXmark;
@@ -411,7 +411,7 @@
                     document.getElementById("bp-table-peak-sbp-status").innerHTML = summary_stats.peak_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-table-low-sbp-status").innerHTML = summary_stats.low_sbp.grade === 0 ? greenCheck : redXmark;
                     document.getElementById("bp-table-symptomatic-hypotension-status").innerHTML = summary_stats.symptomatic_hypotension.value > 0 ? redXmark : greenCheck;
-                    document.getElementById("bp-table-near-hypotensive-status").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
+                    // document.getElementById("bp-table-near-hypotensive-status").innerHTML = summary_stats.near_hypotensive.value > 0 ? redXmark : greenCheck;
 
                     // Show table and hide loading
                     document.getElementById("bp-summary-table-loading").style.display = "none";
