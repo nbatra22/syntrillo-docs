@@ -6,12 +6,12 @@ from typing import Tuple
 import textwrap
 import io
 import re
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+# import matplotlib
+# import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.api_tenovi.device_types import DeviceTypes
@@ -559,7 +559,7 @@ class BloodPressureAnalysis:
 
         if total_days == 0:
             return 0.0
-        
+
         engagement = (days_with_measurements / total_days) * 100
         return round(engagement, 1)
 
@@ -1055,94 +1055,94 @@ class BloodPressureAnalysis:
         return "\n".join(textwrap.wrap(text, width))
 
 
-    def get_time_distribution_graph(self) -> str:
-        if self.bpm_df is None or self.bpm_df.empty:
-            raise ValueError("bpm_df is not set or is empty.")
+    # def get_time_distribution_graph(self) -> str:
+    #     if self.bpm_df is None or self.bpm_df.empty:
+    #         raise ValueError("bpm_df is not set or is empty.")
 
-        df = self.bpm_df.copy()
-        df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
-        df['hour'] = df['timestamp_local'].dt.hour
+    #     df = self.bpm_df.copy()
+    #     df['timestamp_local'] = pd.to_datetime(df['timestamp_local'])
+    #     df['hour'] = df['timestamp_local'].dt.hour
 
-        # Melt for box plot
-        df_melted = df.melt(
-            id_vars='hour',
-            value_vars=['systolic', 'diastolic'],
-            var_name='Measurement',
-            value_name='Value'
-        )
+    #     # Melt for box plot
+    #     df_melted = df.melt(
+    #         id_vars='hour',
+    #         value_vars=['systolic', 'diastolic'],
+    #         var_name='Measurement',
+    #         value_name='Value'
+    #     )
 
-        # Count of total measurements per hour
-        counts = df.groupby('hour').size().reset_index(name='count')
+    #     # Count of total measurements per hour
+    #     counts = df.groupby('hour').size().reset_index(name='count')
 
-        # Create subplot layout
-        fig = make_subplots(
-            rows=2, cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.1,
-            row_heights=[0.7, 0.3],
-            subplot_titles=("Blood Pressure Distribution by Hour", "Number of Measurements per Hour")
-        )
+    #     # Create subplot layout
+    #     fig = make_subplots(
+    #         rows=2, cols=1,
+    #         shared_xaxes=True,
+    #         vertical_spacing=0.1,
+    #         row_heights=[0.7, 0.3],
+    #         subplot_titles=("Blood Pressure Distribution by Hour", "Number of Measurements per Hour")
+    #     )
 
-        # Box plots (top)
-        for measurement in ['systolic', 'diastolic']:
-            filtered = df_melted[df_melted['Measurement'] == measurement]
-            fig.add_trace(
-                go.Box(
-                    x=filtered['hour'],
-                    y=filtered['Value'],
-                    name=measurement.capitalize(),
-                    boxmean=True
-                ),
-                row=1, col=1
-            )
+    #     # Box plots (top)
+    #     for measurement in ['systolic', 'diastolic']:
+    #         filtered = df_melted[df_melted['Measurement'] == measurement]
+    #         fig.add_trace(
+    #             go.Box(
+    #                 x=filtered['hour'],
+    #                 y=filtered['Value'],
+    #                 name=measurement.capitalize(),
+    #                 boxmean=True
+    #             ),
+    #             row=1, col=1
+    #         )
 
-        # Bar chart (bottom)
-        fig.add_trace(
-            go.Bar(
-                x=counts['hour'],
-                y=counts['count'],
-                marker_color='lightgray',
-                name='Measurement Count'
-            ),
-            row=2, col=1
-        )
+    #     # Bar chart (bottom)
+    #     fig.add_trace(
+    #         go.Bar(
+    #             x=counts['hour'],
+    #             y=counts['count'],
+    #             marker_color='lightgray',
+    #             name='Measurement Count'
+    #         ),
+    #         row=2, col=1
+    #     )
 
-        # Layout tweaks
-        fig.update_layout(
-            height=600,
-            margin=dict(l=40, r=40, t=30, b=40),
-            showlegend=True,
-            autosize=True
-        )
-        fig.update_xaxes(title_text="Hour of Day", tickmode='linear', dtick=1, row=2, col=1)
-        fig.update_yaxes(title_text="BP (mmHg)", row=1, col=1)
-        fig.update_yaxes(title_text="Count", row=2, col=1)
+    #     # Layout tweaks
+    #     fig.update_layout(
+    #         height=600,
+    #         margin=dict(l=40, r=40, t=30, b=40),
+    #         showlegend=True,
+    #         autosize=True
+    #     )
+    #     fig.update_xaxes(title_text="Hour of Day", tickmode='linear', dtick=1, row=2, col=1)
+    #     fig.update_yaxes(title_text="BP (mmHg)", row=1, col=1)
+    #     fig.update_yaxes(title_text="Count", row=2, col=1)
 
-        return pio.to_html(
-            fig,
-            full_html=False,
-            include_plotlyjs=False,
-            config={'responsive': True}
-        )
+    #     return pio.to_html(
+    #         fig,
+    #         full_html=False,
+    #         include_plotlyjs=False,
+    #         config={'responsive': True}
+    #     )
 
-    def generate_custom_report ( self, columns, extremes_filter_cols=None, report_title="Custom Report" ) :
-        """
-        Generates a downloadable PDF report (using save_to_pdf) that includes only the columns (from the analysis dataframe) provided by the user.
-        Optionally, if extremes_filter_cols is provided, the extremes df is filtered (using extremes[ extremes_filter_cols ]) before being passed to save_to_pdf.
-        :param columns: (list) – A list of column names (from analysis_df) to include in the report.
-        :param extremes_filter_cols: (list, optional) – A list of column names (from extremes df) to filter extremes. If None, the entire extremes df is used.
-        :param report_title: (str, optional) – A title for the report (default is "Custom Report").
-        :return: (io.BytesIO) – A BytesIO buffer containing the generated PDF.
-        """
-        if not self.analysis_df is not None :
-             raise ValueError (" analysis_df is not set (or is None). Call initialize_data (or calculate_analysis) first." )
-        if not columns :
-             raise ValueError (" columns must be a non-empty list." )
-        # Filter analysis_df to include only the columns provided (and the index, so that the metric names are present)
-        filtered_analysis = self.analysis_df[ columns ].copy ( )
-        # (Optional) filter extremes df if extremes_filter_cols is provided
-        extremes_df = self.calculate_extremes ( )
-        if extremes_filter_cols is not None :
-             extremes_df = extremes_df[ extremes_filter_cols ]
-        # Call save_to_pdf (using the filtered dfs) and return the BytesIO buffer
-        return self.save_to_pdf ( filtered_analysis, extremes_df, report_title )
+    # def generate_custom_report ( self, columns, extremes_filter_cols=None, report_title="Custom Report" ) :
+    #     """
+    #     Generates a downloadable PDF report (using save_to_pdf) that includes only the columns (from the analysis dataframe) provided by the user.
+    #     Optionally, if extremes_filter_cols is provided, the extremes df is filtered (using extremes[ extremes_filter_cols ]) before being passed to save_to_pdf.
+    #     :param columns: (list) – A list of column names (from analysis_df) to include in the report.
+    #     :param extremes_filter_cols: (list, optional) – A list of column names (from extremes df) to filter extremes. If None, the entire extremes df is used.
+    #     :param report_title: (str, optional) – A title for the report (default is "Custom Report").
+    #     :return: (io.BytesIO) – A BytesIO buffer containing the generated PDF.
+    #     """
+    #     if not self.analysis_df is not None :
+    #          raise ValueError (" analysis_df is not set (or is None). Call initialize_data (or calculate_analysis) first." )
+    #     if not columns :
+    #          raise ValueError (" columns must be a non-empty list." )
+    #     # Filter analysis_df to include only the columns provided (and the index, so that the metric names are present)
+    #     filtered_analysis = self.analysis_df[ columns ].copy ( )
+    #     # (Optional) filter extremes df if extremes_filter_cols is provided
+    #     extremes_df = self.calculate_extremes ( )
+    #     if extremes_filter_cols is not None :
+    #          extremes_df = extremes_df[ extremes_filter_cols ]
+    #     # Call save_to_pdf (using the filtered dfs) and return the BytesIO buffer
+    #     return self.save_to_pdf ( filtered_analysis, extremes_df, report_title )

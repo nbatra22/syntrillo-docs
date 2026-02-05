@@ -1,8 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, abort, send_file, current_app
 import pandas as pd
 import io
-from io import BytesIO
-import os
 from datetime import datetime
 import secrets
 import string
@@ -239,11 +237,11 @@ def iframe_healthie_provider_tab_download_bp_pdf():
     include_intro_section = True if include_intro_section_str == "on" else False
 
     # Retrieve logo path
-    logo_filename = "syntrillo_logo.png"
-    logo_path = os.path.join(current_app.static_folder, logo_filename)
-    if not os.path.exists(logo_path):
-        logger.warning(f"Logo not found at {logo_path}; proceeding without logo.")
-        logo_path = None
+    # logo_filename = "syntrillo_logo.png"
+    # logo_path = os.path.join(current_app.static_folder, logo_filename)
+    # if not os.path.exists(logo_path):
+    #     logger.warning(f"Logo not found at {logo_path}; proceeding without logo.")
+    #     logo_path = None
 
     # Establish connection to BloodPressureAnalysis class
     bp_analysis = BloodPressureAnalysis(post_manager.syntrillo_internal_key)
