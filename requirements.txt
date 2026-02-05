@@ -1,0 +1,58 @@
+
+# Web Frameworks
+flask
+flask-sqlalchemy
+flask-cors
+werkzeug
+
+# AWS Services
+aws-lambda-powertools
+aws-cdk-lib
+constructs>=10.0.0,<11.0.0
+boto3
+botocore
+apig-wsgi
+
+# Database
+pymysql
+sqlalchemy
+sshtunnel
+
+# Data Science & Analysis
+pandas
+numpy
+scipy
+matplotlib
+plotly
+kaleido
+statsmodels
+
+# AI/ML - OpenAI & LangChain
+openai
+langchain-chroma
+langchain-community
+langchain-core
+chromadb
+
+# Document Processing
+pymupdf
+beautifulsoup4
+openpyxl
+reportlab
+bleach
+
+# Utilities
+requests
+python-dotenv
+python-dateutil
+pytz
+pydantic
+pydantic-settings
+
+# Markdown & Text
+markdown
+markdown2
+markupsafe
+
+# Candid Health API
+git+https://github.com/candidhealth/candid-python.git

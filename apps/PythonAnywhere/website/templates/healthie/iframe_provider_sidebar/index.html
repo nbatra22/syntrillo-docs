@@ -251,10 +251,12 @@
 const API_URL = '';
 let authToken = localStorage.getItem('authToken');
 
-// Check if user is already logged in
-if (authToken) {
-    showIframeProviderSideBar();
-}
+// // Check if user is already logged in
+// if (authToken) {
+//     showIframeProviderSideBar();
+// }
+
+showIframeProviderSideBar();
 
 async function login() {
     const username = document.getElementById('username').value;

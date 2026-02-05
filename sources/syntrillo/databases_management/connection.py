@@ -81,7 +81,8 @@ class DatabaseConnection:
                     'user': env_secrets.get_aws_database_user(),
                     'password': env_secrets.get_aws_database_password(),
                     'port': int(env_secrets.get_aws_database_local_port()),
-                    'ssl': {'ssl': True}  # Enforce SSL
+                    #'ssl': {'ssl': True}  # Enforce SSL
+                    'ssl_ca': 'syntrillo/system/rds-certificate-bundle/us-east-1-bundle.pem',
                 }
 
             elif self.database_server == 'PythonAnywhere':
