@@ -118,7 +118,8 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = Fa
                     syntrillo_internal_key_patient= str(syntrillo_internal_key),
                     created_at=datetime.now(),
                     Gender=gender,
-                )]
+                )
+            ]
             srs_response_data[0] = populate_with_patient_history(srs_response_data[0], patient_history_data, syntrillo_internal_key)
         else:
             srs_response_data = get_srs_response_data(syntrillo_internal_key, db_manager)
