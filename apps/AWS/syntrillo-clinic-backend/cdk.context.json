@@ -154,9 +154,9 @@
     "stacks-termination-protection": true,
     "iframe_generator_function": {
       "log_level": "INFO",
-      "provisioned_concurrency_executions": 8,
-      "lambda_time_out_seconds": 60,
-      "memory_size": 384,
+      "provisioned_concurrency_executions": 20,
+      "lambda_time_out_seconds": 300,
+      "memory_size": 512,
       "reserved_concurrent_executions": 50
     },
     "blood_pressure_notification_function": {
