@@ -7,6 +7,8 @@ from syntrillo.system.iframe_validator import IframeValidator
 from syntrillo.stroke_risk_score_v2.calc_risk_score import calculate_risk_score
 from syntrillo.stroke_risk_score_v2.srs_iframe_db import insert_srs_iframe_data
 from syntrillo.stroke_risk_score_v2.models.don import DEFAULT_DATA_OBJECT_NOTATION
+from syntrillo.stroke_risk_score_v3.data_aggregator import SRSDataAggregator
+from syntrillo.stroke_risk_score_v3.score_calculator import SRSCalculator
 from syntrillo.system.local_environment_and_secrets import LocalEnvironmentAndSecrets
 from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 
