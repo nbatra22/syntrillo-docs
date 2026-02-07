@@ -161,14 +161,14 @@
     },
     "blood_pressure_notification_function": {
       "log_level": "INFO",
-      "provisioned_concurrency_executions": 1,
-      "lambda_time_out_seconds": 60,
+      "provisioned_concurrency_executions": 5,
+      "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
     },
     "message_endpoint_function": {
       "log_level": "INFO",
-      "provisioned_concurrency_executions": 3,
+      "provisioned_concurrency_executions": 5,
       "lambda_time_out_seconds": 300,
       "memory_size": 384,
       "reserved_concurrent_executions": 50
