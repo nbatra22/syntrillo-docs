@@ -27,6 +27,70 @@ export interface PatientDetailData {
   };
 }
 
+export interface BloodPressureData {
+  success: boolean;
+  error: string | null;
+  data: {
+    avg_systolic?: number;
+    avg_diastolic?: number;
+    peak_systolic?: number;
+    low_systolic?: number;
+    num_measurements?: number;
+  };
+}
+
+export interface StrokeRiskData {
+  success: boolean;
+  message?: string;
+  data: {
+    risk_score?: number;
+    priority_score?: number;
+    metrics?: Record<string, any>;
+    independent_risk_variable_scores?: Record<string, any>;
+    dependent_risk_variable_contributions?: Record<string, any>;
+  };
+}
+
+export interface HeartRateData {
+  average_rhr_baseline?: number;
+  average_rhr_trailing?: number;
+  average_rhr_prior?: number;
+  baseline_start_date?: string;
+  baseline_end_date?: string;
+  prior_start_date?: string;
+  prior_end_date?: string;
+  current_start_date?: string;
+  current_end_date?: string;
+}
+
+export interface BiometricsData {
+  physical_activity_data: {
+    inactive: {
+      inactivity_baseline?: any;
+      inactivity_prior?: any;
+      inactivity_current?: any;
+    };
+    active: {
+      activity_baseline?: any;
+      activity_prior?: any;
+      activity_current?: any;
+    };
+  };
+  bmi_data: {
+    bmi_current?: { bmi: number; date: string };
+    bmi_prior?: { bmi: number; date: string };
+    bmi_baseline?: { bmi: number; date: string };
+  };
+  ssq_data: {
+    ssq_current?: number;
+    ssq_prior?: number;
+    ssq_baseline?: number;
+    ssq_baseline_date?: string;
+    ssq_prior_date?: string;
+    ssq_current_date?: string;
+  };
+}
+
 /**
  * Provider Sidebar API calls
  */
@@ -70,6 +134,142 @@ export const providerApi = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch patient data');
+    }
+
+    return response.json();
+  },
+};
+
+/**
+ * Patient Sidebar API calls
+ */
+export const patientSidebarApi = {
+  /**
+   * Get blood pressure summary data for patient sidebar
+   */
+  getBloodPressure: async (temporaryLookupCode: string): Promise<BloodPressureData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/blood_pressure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch blood pressure data');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get heart rate data for patient sidebar
+   */
+  getHeartRate: async (temporaryLookupCode: string): Promise<HeartRateData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/heart_rate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch heart rate data');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get biometrics data (BMI, physical activity, sodium) for patient sidebar
+   */
+  getBiometrics: async (temporaryLookupCode: string): Promise<BiometricsData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/biometrics`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch biometrics data');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get stroke risk factors data for patient sidebar
+   */
+  getStrokeRiskFactors: async (temporaryLookupCode: string): Promise<StrokeRiskData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/stroke_risk_factors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch stroke risk factors');
+    }
+
+    return response.json();
+  },
+};
+
+/**
+ * Provider Tab API calls (Patient Extra Tab in Healthie)
+ */
+export const providerTabApi = {
+  /**
+   * Get blood pressure data for provider tab
+   */
+  getBloodPressure: async (temporaryLookupCode: string): Promise<BloodPressureData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/blood_pressure`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch blood pressure data');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get stroke risk factors for provider tab
+   */
+  getStrokeRiskFactors: async (temporaryLookupCode: string): Promise<StrokeRiskData> => {
+    const response = await fetch(`${API_BASE_URL}/healthie/iframe/patient_sidebar/stroke_risk_factors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch stroke risk factors');
     }
 
     return response.json();
