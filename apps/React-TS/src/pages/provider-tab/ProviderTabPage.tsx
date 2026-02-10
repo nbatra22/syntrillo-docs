@@ -11,12 +11,9 @@ const ProviderTabPage: React.FC = () => {
     const code = urlParams.get('temporary_lookup_code');
     const userId = urlParams.get('healthie_user_id') || urlParams.get('hl_current_user_id');
 
-    if (code) {
-      setTemporaryLookupCode(code);
-    }
-    if (userId) {
-      setHealthieUserId(userId);
-    }
+    // Set values from URL or use dev defaults
+    setTemporaryLookupCode(code || 'dev-test-code-123');
+    setHealthieUserId(userId || '1033222');
   }, []);
 
   return (

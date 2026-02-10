@@ -8,9 +8,8 @@ const PatientSidebarPage: React.FC = () => {
     // Extract temporary lookup code from URL params
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('temporary_lookup_code');
-    if (code) {
-      setTemporaryLookupCode(code);
-    }
+    // Set value from URL or use dev default
+    setTemporaryLookupCode(code || 'dev-test-code-123');
   }, []);
 
   return (

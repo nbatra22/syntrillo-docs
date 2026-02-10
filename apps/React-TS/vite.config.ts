@@ -21,11 +21,8 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
-      // Proxy iframe_healthie routes
-      '/iframe_healthie': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
+      // NOTE: Removed '/iframe_healthie' proxy - these routes are now handled by React Router
+      // The React app serves: /iframe_healthie_provider_sidebar, /iframe_healthie_provider_tab, /iframe_healthie_client_sidebar
     },
   },
 })

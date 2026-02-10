@@ -56,40 +56,40 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ temporaryLookupCode
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Syntrillo Dashboard</h1>
+    <div className="space-y-8 p-6">
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Syntrillo Dashboard</h1>
 
       {/* Stroke Risk Factor Analysis Section */}
-      <section className="border border-gray-300 rounded">
-        <div className="bg-gray-100 p-4 border-b border-gray-300">
-          <h2 className="text-xl font-semibold text-gray-800">Stroke Risk Factor Analysis</h2>
+      <section className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5">
+          <h2 className="text-2xl font-semibold text-gray-800">Stroke Risk Factor Analysis</h2>
         </div>
-        <div className="p-4">
+        <div className="p-6">
           {strokeRiskData?.data ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-blue-50 rounded">
-                  <p className="text-sm text-gray-600">Risk Score</p>
-                  <p className="text-2xl font-bold text-blue-600">
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Risk Score</p>
+                  <p className="text-4xl font-bold text-blue-600">
                     {strokeRiskData.data.risk_score?.toFixed(1) ?? 'N/A'}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-50 rounded">
-                  <p className="text-sm text-gray-600">Priority Score</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Priority Score</p>
+                  <p className="text-4xl font-bold text-purple-600">
                     {strokeRiskData.data.priority_score?.toFixed(1) ?? 'N/A'}
                   </p>
                 </div>
               </div>
 
               {strokeRiskData.data.metrics && (
-                <div className="mt-4">
-                  <h3 className="font-semibold text-gray-700 mb-2">Key Metrics</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">Key Metrics</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
                     {Object.entries(strokeRiskData.data.metrics).map(([key, value]) => (
-                      <div key={key} className="flex justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-gray-600">{key.replace(/_/g, ' ')}:</span>
-                        <span className="font-medium">{String(value)}</span>
+                      <div key={key} className="flex justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                        <span className="font-semibold text-gray-900">{String(value)}</span>
                       </div>
                     ))}
                   </div>
@@ -97,57 +97,62 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ temporaryLookupCode
               )}
             </div>
           ) : (
-            <p className="text-gray-600">No stroke risk data available.</p>
+            <p className="text-gray-600 py-4">No stroke risk data available.</p>
           )}
         </div>
       </section>
 
       {/* Blood Pressure Analysis Section */}
-      <section className="border border-gray-300 rounded">
-        <div className="bg-gray-100 p-4 border-b border-gray-300">
-          <h2 className="text-xl font-semibold text-gray-800">Blood Pressure Analysis</h2>
-          <p className="text-sm text-gray-600 mt-1">
+      <section className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 px-6 py-5">
+          <h2 className="text-2xl font-semibold text-gray-800">Blood Pressure Analysis</h2>
+          <p className="text-sm text-gray-600 mt-2 leading-relaxed">
             The data below is calculated using your most recent two weeks of measurements.
           </p>
         </div>
-        <div className="p-4">
+        <div className="p-6">
           {bpData?.data ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-3 bg-red-50 rounded">
-                  <p className="text-sm text-gray-600">Average SBP</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {bpData.data.avg_systolic?.toFixed(0) ?? 'N/A'} <span className="text-sm">mmHg</span>
+            <div className="space-y-6">
+              <div className="grid grid-cols-3 gap-6">
+                <div className="p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Average SBP</p>
+                  <p className="text-4xl font-bold text-red-600">
+                    {bpData.data.avg_systolic?.toFixed(0) ?? 'N/A'} <span className="text-base font-normal">mmHg</span>
                   </p>
                 </div>
-                <div className="p-3 bg-blue-50 rounded">
-                  <p className="text-sm text-gray-600">Average DBP</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {bpData.data.avg_diastolic?.toFixed(0) ?? 'N/A'} <span className="text-sm">mmHg</span>
+                <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Average DBP</p>
+                  <p className="text-4xl font-bold text-blue-600">
+                    {bpData.data.avg_diastolic?.toFixed(0) ?? 'N/A'} <span className="text-base font-normal">mmHg</span>
                   </p>
                 </div>
-                <div className="p-3 bg-green-50 rounded">
-                  <p className="text-sm text-gray-600">Measurements</p>
-                  <p className="text-2xl font-bold text-green-600">
+                <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Measurements</p>
+                  <p className="text-4xl font-bold text-green-600">
                     {bpData.data.num_measurements ?? 'N/A'}
                   </p>
                 </div>
               </div>
 
-              <ul className="text-sm text-gray-600 space-y-2 bg-gray-50 p-4 rounded">
-                <li>
-                  Blood pressure measurements are captured as two numbers, both measured in millimeters of mercury (mmHg).
-                </li>
-                <li>
-                  <span className="font-semibold">Systolic Blood Pressure (SBP)</span>, the top number, measures the pressure in your arteries when your heart beats and pumps blood.
-                </li>
-                <li>
-                  <span className="font-semibold">Diastolic Blood Pressure (DBP)</span>, the bottom number, measures the pressure in your arteries when your heart rests between beats.
-                </li>
-              </ul>
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
+                <ul className="text-sm text-gray-700 space-y-3 leading-relaxed">
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span>Blood pressure measurements are captured as two numbers, both measured in millimeters of mercury (mmHg).</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span><span className="font-semibold text-gray-800">Systolic Blood Pressure (SBP)</span>, the top number, measures the pressure in your arteries when your heart beats and pumps blood.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    <span><span className="font-semibold text-gray-800">Diastolic Blood Pressure (DBP)</span>, the bottom number, measures the pressure in your arteries when your heart rests between beats.</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           ) : (
-            <p className="text-gray-600">No blood pressure data available.</p>
+            <p className="text-gray-600 py-4">No blood pressure data available.</p>
           )}
         </div>
       </section>

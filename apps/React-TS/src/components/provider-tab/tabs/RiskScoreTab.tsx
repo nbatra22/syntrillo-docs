@@ -58,31 +58,31 @@ const RiskScoreTab: React.FC<RiskScoreTabProps> = ({ temporaryLookupCode }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Stroke Risk Score Analysis</h2>
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-gray-800 mb-2">Stroke Risk Score Analysis</h2>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Risk Score</h3>
-          <p className="text-5xl font-bold text-blue-600">
+      <div className="grid grid-cols-2 gap-8">
+        <div className="p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">Risk Score</h3>
+          <p className="text-6xl font-bold text-blue-600">
             {riskData.data.risk_score?.toFixed(1) ?? 'N/A'}
           </p>
         </div>
 
-        <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Priority Score</h3>
-          <p className="text-5xl font-bold text-purple-600">
+        <div className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-700 mb-3">Priority Score</h3>
+          <p className="text-6xl font-bold text-purple-600">
             {riskData.data.priority_score?.toFixed(1) ?? 'N/A'}
           </p>
         </div>
       </div>
 
       {riskData.data.metrics && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">Risk Factors</h3>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="mt-8">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-5">Risk Factors</h3>
+          <div className="grid grid-cols-2 gap-5">
             {Object.entries(riskData.data.metrics).map(([key, value]) => (
-              <div key={key} className="flex justify-between p-3 bg-gray-50 rounded border border-gray-200">
+              <div key={key} className="flex justify-between p-5 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 hover:shadow-sm transition-all">
                 <span className="text-gray-700 font-medium capitalize">
                   {key.replace(/_/g, ' ')}:
                 </span>
@@ -94,13 +94,13 @@ const RiskScoreTab: React.FC<RiskScoreTabProps> = ({ temporaryLookupCode }) => {
       )}
 
       {riskData.data.independent_risk_variable_scores && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-700 mb-4">Independent Risk Variables</h3>
-          <div className="grid grid-cols-3 gap-3">
+        <div className="mt-8">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-5">Independent Risk Variables</h3>
+          <div className="grid grid-cols-3 gap-5">
             {Object.entries(riskData.data.independent_risk_variable_scores).map(([key, value]) => (
-              <div key={key} className="p-3 bg-blue-50 rounded border border-blue-200">
-                <p className="text-sm text-gray-600 mb-1">{key.replace(/_/g, ' ')}</p>
-                <p className="text-xl font-bold text-blue-600">{String(value)}</p>
+              <div key={key} className="p-5 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-sm transition-all">
+                <p className="text-sm font-medium text-gray-600 mb-2 capitalize">{key.replace(/_/g, ' ')}</p>
+                <p className="text-2xl font-bold text-blue-600">{String(value)}</p>
               </div>
             ))}
           </div>

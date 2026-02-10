@@ -40,17 +40,17 @@ const ProviderSidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto">
+    <div className="w-full max-w-[1400px] mx-auto px-6 py-4">
       {/* Tab Navigation */}
-      <ul className="flex border-b border-gray-300 bg-white">
+      <ul className="flex border-b-2 border-gray-200 bg-white rounded-t-xl overflow-hidden">
         {tabs.map((tab) => (
           <li key={tab.id} className="mr-1">
             <button
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-block py-3 px-4 font-medium transition-colors ${
+              className={`inline-block py-4 px-6 font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'text-blue-600 border-b-3 border-blue-600 bg-blue-50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               {tab.label}
@@ -62,13 +62,13 @@ const ProviderSidebar: React.FC = () => {
         <li className="flex-grow"></li>
 
         {/* System Tab */}
-        <li className="mr-1">
+        <li className="mr-2">
           <button
             onClick={() => setActiveTab('system')}
-            className={`inline-block py-3 px-4 font-medium transition-colors ${
+            className={`inline-block py-4 px-6 font-medium transition-all ${
               activeTab === 'system'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                ? 'text-blue-600 border-b-3 border-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
             System
@@ -76,25 +76,23 @@ const ProviderSidebar: React.FC = () => {
         </li>
 
         {/* Logout Button */}
-        <li className="flex items-center ml-2 mr-2">
+        <li className="flex items-center ml-2 mr-4">
           <button
             onClick={handleLogout}
-            className="px-3 py-2 text-sm font-medium text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-red-600 border-2 border-red-600 rounded-lg hover:bg-red-50 hover:shadow-sm transition-all"
           >
-            <i className="fas fa-sign-out-alt mr-1"></i> Logout
+            <i className="fas fa-sign-out-alt mr-2"></i> Logout
           </button>
         </li>
       </ul>
 
       {/* Tab Content */}
-      <div className="bg-white border border-t-0 border-gray-300 rounded-b">
+      <div className="bg-white rounded-b-xl shadow-sm min-h-[500px]">
         {renderTabContent()}
       </div>
 
       {/* Bottom Spacer */}
-      <div className="bg-white mb-5">
-        <p>&nbsp;</p>
-      </div>
+      <div className="mb-8"></div>
     </div>
   );
 };
