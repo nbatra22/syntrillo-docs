@@ -26,7 +26,7 @@ const RiskScoreTab: React.FC<RiskScoreTabProps> = ({ temporaryLookupCode }) => {
       setRiskData(data);
     } catch (err) {
       console.error('Error fetching risk score:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch risk score');
+      setError(err instanceof Error ? err.message : 'Failed to fetch risk score data');
     } finally {
       setLoading(false);
     }
@@ -34,78 +34,146 @@ const RiskScoreTab: React.FC<RiskScoreTabProps> = ({ temporaryLookupCode }) => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-8">
-        <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="text-gray-600">Loading risk score data...</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem' }}>
+        <div className="spinner" style={{
+          width: '2rem',
+          height: '2rem',
+          border: '4px solid white',
+          borderTopColor: '#3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p style={{ color: '#6b7280', fontSize: '1rem' }}>Loading risk score data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-100 text-red-700 rounded">
+      <div style={{ padding: '1.25rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: '0.5rem' }}>
         Error: {error}
       </div>
     );
   }
 
-  if (!riskData?.data) {
-    return (
-      <div className="text-center py-8 text-gray-600">
-        No risk score data available for this patient.
-      </div>
-    );
-  }
+  const riskScore = riskData?.data?.risk_score ?? 'N/A';
+  const priorityScore = riskData?.data?.priority_score ?? 'N/A';
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-2">Stroke Risk Score Analysis</h2>
-
-      <div className="grid grid-cols-2 gap-8">
-        <div className="p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">Risk Score</h3>
-          <p className="text-6xl font-bold text-blue-600">
-            {riskData.data.risk_score?.toFixed(1) ?? 'N/A'}
-          </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Header with Scores */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+          <h1 style={{ fontWeight: 'bold', fontSize: 'large', margin: 0 }}>
+            Stroke Risk Score
+          </h1>
+          <button
+            onClick={fetchRiskScore}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '2rem',
+              height: '2rem',
+              padding: 0,
+              borderRadius: '50%',
+              border: 'none',
+              color: '#16284a',
+              backgroundColor: '#e5e7eb',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            title="Refresh Risk Score Data"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#d1d5db'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+          >
+            <i className="fa-solid fa-arrows-rotate"></i>
+          </button>
         </div>
 
-        <div className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">Priority Score</h3>
-          <p className="text-6xl font-bold text-purple-600">
-            {riskData.data.priority_score?.toFixed(1) ?? 'N/A'}
-          </p>
+        {/* Scores Display */}
+        <div style={{ display: 'flex', gap: '2rem' }}>
+          <div style={{
+            backgroundColor: '#e5e7eb',
+            borderRadius: '0.375rem',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.5rem',
+            minWidth: '150px'
+          }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+              Risk Score
+            </h3>
+            <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#16284a', margin: 0 }}>
+              {riskScore}
+            </h2>
+          </div>
+          <div style={{
+            backgroundColor: '#e5e7eb',
+            borderRadius: '0.375rem',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.5rem',
+            minWidth: '150px'
+          }}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+              Priority Score
+            </h3>
+            <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#16284a', margin: 0 }}>
+              {priorityScore}
+            </h2>
+          </div>
         </div>
       </div>
 
-      {riskData.data.metrics && (
-        <div className="mt-8">
-          <h3 className="text-2xl font-semibold text-gray-800 mb-5">Risk Factors</h3>
-          <div className="grid grid-cols-2 gap-5">
-            {Object.entries(riskData.data.metrics).map(([key, value]) => (
-              <div key={key} className="flex justify-between p-5 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 hover:shadow-sm transition-all">
-                <span className="text-gray-700 font-medium capitalize">
-                  {key.replace(/_/g, ' ')}:
-                </span>
-                <span className="font-semibold text-gray-900">{String(value)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Clinical Assessment */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: '#eff6ff', padding: '1.5rem', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
+        <p style={{ fontSize: '1rem', color: '#1e40af', margin: 0 }}>
+          Our clinicians have reviewed your health information and feel that you are at an overall low risk of stroke.
+          Given available data, they estimate your one-year risk of stroke and heart attack is most likely around 1%
+          although it may be as high as 2% per year depending on the interaction of your unique risk factors.
+        </p>
+        <p style={{ fontSize: '1rem', color: '#1e40af', margin: 0 }}>
+          The following risk factors or conditions are contributing the most to your current risk of stroke.
+          Addressing these risk factors can help lower your overall risk of stroke.
+        </p>
+      </div>
 
-      {riskData.data.independent_risk_variable_scores && (
-        <div className="mt-8">
-          <h3 className="text-2xl font-semibold text-gray-800 mb-5">Independent Risk Variables</h3>
-          <div className="grid grid-cols-3 gap-5">
-            {Object.entries(riskData.data.independent_risk_variable_scores).map(([key, value]) => (
-              <div key={key} className="p-5 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-sm transition-all">
-                <p className="text-sm font-medium text-gray-600 mb-2 capitalize">{key.replace(/_/g, ' ')}</p>
-                <p className="text-2xl font-bold text-blue-600">{String(value)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Risk Factors Table */}
+      <div style={{ overflow: 'hidden', borderRadius: '0.75rem', border: '1px solid #d1d5db', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f3f4f6' }}>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, color: '#374151', width: '33%' }}>Risk Factor</th>
+              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Comments from your doctor</th>
+            </tr>
+          </thead>
+          <tbody style={{ backgroundColor: 'white' }}>
+            <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '1rem 1.5rem', fontWeight: 500, color: '#111827' }}>Hypertension</td>
+              <td style={{ padding: '1rem 1.5rem', color: '#374151', lineHeight: '1.625' }}>
+                Our clinicians estimate that the risk factor most contributing to your risk of stroke and heart disease
+                is your average systolic blood pressure which was 133. According to this estimate, your risk of stroke
+                is increased by 35% compared to an optimal value (average systolic blood pressure &lt; 125). Your average
+                systolic blood pressure also increases your risk of dementia and kidney disease.
+              </td>
+            </tr>
+            <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '1rem 1.5rem', fontWeight: 500, color: '#111827' }}>Hyperlipidemia (LDL and Triglycerides)</td>
+              <td style={{ padding: '1rem 1.5rem', color: '#374151', lineHeight: '1.625' }}>
+                Our clinicians estimate the second most important risk factor contributing to your risk of stroke and
+                heart disease is your hyperlipidemia. According to this estimate, your risk of stroke is increased by 25%
+                compared to the optimal levels. A LDL level &gt; 100 is considered elevated although the goal LDL level
+                in patients with known atherosclerosis is less than 70. A triglyceride level greater than 150 is considered elevated.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

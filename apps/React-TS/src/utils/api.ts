@@ -31,6 +31,13 @@ export interface BloodPressureData {
   success: boolean;
   error: string | null;
   data: {
+    status: { value: string; grade: number };
+    avg_sbp: { value: number; grade: number };
+    avg_dbp: { value: number; grade: number };
+    peak_sbp: { value: number; grade: number };
+    low_sbp: { value: number; grade: number };
+    symptomatic_hypotension: { value: number };
+    near_hypotensive: { value: number };
     avg_systolic?: number;
     avg_diastolic?: number;
     peak_systolic?: number;

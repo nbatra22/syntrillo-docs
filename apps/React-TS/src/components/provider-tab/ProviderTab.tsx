@@ -4,8 +4,9 @@ import BloodPressureTab from './tabs/BloodPressureTab';
 import MedicationsTab from './tabs/MedicationsTab';
 import DevicesTab from './tabs/DevicesTab';
 import SystemTab from './tabs/SystemTab';
+import SystemDevicesTab from './tabs/SystemDevicesTab';
 
-type TabType = 'risk-score' | 'blood-pressure' | 'medications' | 'devices' | 'system';
+type TabType = 'risk-score' | 'blood-pressure' | 'medications' | 'devices' | 'system' | 'system-devices';
 
 interface ProviderTabProps {
   temporaryLookupCode: string;
@@ -15,11 +16,16 @@ interface ProviderTabProps {
 const ProviderTab: React.FC<ProviderTabProps> = ({ temporaryLookupCode, healthieUserId }) => {
   const [activeTab, setActiveTab] = useState<TabType>('risk-score');
 
-  const tabs = [
+  const leftTabs = [
     { id: 'risk-score' as TabType, label: 'Risk Score' },
     { id: 'blood-pressure' as TabType, label: 'Blood Pressure' },
     { id: 'medications' as TabType, label: 'Medications' },
     { id: 'devices' as TabType, label: 'Devices' },
+  ];
+
+  const rightTabs = [
+    { id: 'system' as TabType, label: 'System' },
+    { id: 'system-devices' as TabType, label: 'System Devices' },
   ];
 
   const renderTabContent = () => {
@@ -34,50 +40,84 @@ const ProviderTab: React.FC<ProviderTabProps> = ({ temporaryLookupCode, healthie
         return <DevicesTab temporaryLookupCode={temporaryLookupCode} />;
       case 'system':
         return <SystemTab temporaryLookupCode={temporaryLookupCode} healthieUserId={healthieUserId} />;
+      case 'system-devices':
+        return <SystemDevicesTab temporaryLookupCode={temporaryLookupCode} healthieUserId={healthieUserId} />;
       default:
         return <RiskScoreTab temporaryLookupCode={temporaryLookupCode} />;
     }
   };
 
   return (
-    <div className="w-full px-6 py-4">
-      {/* Tab Navigation */}
-      <ul className="flex border-b-2 border-gray-200 bg-white rounded-t-xl overflow-hidden">
-        {tabs.map((tab) => (
-          <li key={tab.id} className="mr-1">
-            <button
-              onClick={() => setActiveTab(tab.id)}
-              className={`inline-block py-4 px-6 font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'text-blue-600 border-b-3 border-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+    <div style={{ maxWidth: '1200px' }}>
+      {/* Tab Navigation - Bootstrap nav-tabs style */}
+      <ul style={{
+        display: 'flex',
+        listStyle: 'none',
+        padding: 0,
+        margin: 0,
+        borderBottom: '1px solid #dee2e6'
+      }} role="tablist">
+        {leftTabs.map((tab) => (
+          <li key={tab.id} style={{ marginRight: '0.25rem' }}>
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(tab.id);
+              }}
+              href={`#tab-${tab.id}`}
+              role="tab"
+              style={{
+                display: 'block',
+                padding: '0.5rem 1rem',
+                border: '1px solid transparent',
+                borderTopLeftRadius: '0.25rem',
+                borderTopRightRadius: '0.25rem',
+                color: activeTab === tab.id ? '#495057' : '#007bff',
+                backgroundColor: activeTab === tab.id ? '#fff' : 'transparent',
+                borderColor: activeTab === tab.id ? '#dee2e6 #dee2e6 #fff' : 'transparent',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
             >
               {tab.label}
-            </button>
+            </a>
           </li>
         ))}
 
-        {/* Spacer to push System tab to the right */}
-        <li className="flex-grow"></li>
+        {/* Spacer to push right tabs to the right */}
+        <li style={{ flex: 1, marginLeft: 'auto' }}></li>
 
-        {/* System Tab */}
-        <li className="mr-4">
-          <button
-            onClick={() => setActiveTab('system')}
-            className={`inline-block py-4 px-6 font-medium transition-all ${
-              activeTab === 'system'
-                ? 'text-blue-600 border-b-3 border-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
-          >
-            System
-          </button>
-        </li>
+        {/* Right Tabs (System and System Devices) */}
+        {rightTabs.map((tab) => (
+          <li key={tab.id} style={{ marginRight: '0.25rem' }}>
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(tab.id);
+              }}
+              href={`#tab-${tab.id}`}
+              role="tab"
+              style={{
+                display: 'block',
+                padding: '0.5rem 1rem',
+                border: '1px solid transparent',
+                borderTopLeftRadius: '0.25rem',
+                borderTopRightRadius: '0.25rem',
+                color: activeTab === tab.id ? '#495057' : '#007bff',
+                backgroundColor: activeTab === tab.id ? '#fff' : 'transparent',
+                borderColor: activeTab === tab.id ? '#dee2e6 #dee2e6 #fff' : 'transparent',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
+            >
+              {tab.label}
+            </a>
+          </li>
+        ))}
       </ul>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-b-xl shadow-sm p-8 min-h-[500px]">
+      <div style={{ padding: '1.5rem', backgroundColor: '#fff' }}>
         {renderTabContent()}
       </div>
     </div>
