@@ -68,6 +68,9 @@ from syntrillo.stroke_risk_score_v2.constants import (
     TRAILING_NUM_WEEKS,
     TRAILING_NUM_DAYS,
     METRIC_STAT,
+    CIGARETTE_USE,
+    ALCOHOL_USE,
+    MARIJUANA_USE
 )
 
 GENDER_MAPPING = {
@@ -110,6 +113,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = Fa
         tenovi_hr_data = get_tenovi_hr_data(db_manager)
         healthie_srs_data = get_srs_healthie_data(healthie_user_id, db_manager, syntrillo_internal_key, healthie_utils)
         lab_data = get_lab_data(healthie_utils=healthie_utils, healthie_user_id=healthie_user_id)
+        substance_use_data = get_substance_use_data(db_manager=db_manager, syntrillo_internal_key=syntrillo_internal_key)
 
         if is_ondemand_srs:
             patient_history_data = get_patient_history_data(healthie_user_id=healthie_user_id)
@@ -130,7 +134,7 @@ def aggregate_data(syntrillo_internal_key: uuid.UUID, is_ondemand_srs: bool = Fa
             "healthie_srs_data": healthie_srs_data,
             "srs_response_data": srs_response_data,
             "lab_data": lab_data,
-            "substance_use_data": {},
+            "substance_use_data": substance_use_data,
         }
 
     except Exception as e:
@@ -612,7 +616,55 @@ def get_healthie_metric_data(healthie_utils: HealthieUtils, healthie_user_id: st
         logger.error(f"Error fetching metric data from healthie: {e}")
         raise ValueError("Error fetching metric data from healthie")
 
+def get_substance_use_data(db_manager: SyntrilloDatabaseManager, syntrillo_internal_key: uuid.UUID) -> dict:
+    """
+    Get the substance use data from healthie
+    Args:
+        healthie_user_id (str): The healthie user id
 
+    Returns:
+        dict: The substance use data
+    Raises:
+        ValueError: If the substance use data is not valid
+    """
+    # Independent risk factors used in calculation
+    cigarette_use_form_id, cigarette_mod_id = db_manager.get_form_module_ids_by_module_label("cigarettes_frequency")
+    alcohol_use_form_id, alcohol_mod_id = db_manager.get_form_module_ids_by_module_label("daily_alcohol_consumption")
+    marijuana_use_form_id, marijuana_mod_id = db_manager.get_form_module_ids_by_module_label("marijuana_use")
+
+    cigarette_answer, cigarette_updated_at = db_manager.get_patient_form_response_by_module_id(cigarette_mod_id, syntrillo_internal_key)
+    alcohol_answer, alcohol_updated_at = db_manager.get_patient_form_response_by_module_id(alcohol_mod_id, syntrillo_internal_key)
+    marijuana_answer, marijuana_updated_at = db_manager.get_patient_form_response_by_module_id(marijuana_mod_id, syntrillo_internal_key)
+
+    # Unused in calculation
+    tobacco_use_form_id, tobacco_use_mod_id = db_manager.get_form_module_ids_by_module_label("tobacco_use")
+    tobacco_type_form_id, tobacco_type_mod_id = db_manager.get_form_module_ids_by_module_label("tobacco_type")
+    other_tobacco_freq_form_id, other_tobacco_freq_mod_id = db_manager.get_form_module_ids_by_module_label("other_tobacco_frequency")
+    alcohol_consumption_form_id, alcohol_consumption_mod_id = db_manager.get_form_module_ids_by_module_label("alcohol_consumption")
+    other_substance_use_form_id, other_substance_use_mod_id = db_manager.get_form_module_ids_by_module_label("other_substance_use")
+    other_substance_type_form_id, other_substance_type_mod_id = db_manager.get_form_module_ids_by_module_label("other_substance_type")
+    other_substance_checkbox_form_id, other_substance_checkbox_mod_id = db_manager.get_form_module_ids_by_module_label("other_substance_checkbox")
+
+    tobacco_use_answer, tobacco_use_updated_at = db_manager.get_patient_form_response_by_module_id(tobacco_use_mod_id, syntrillo_internal_key)
+    tobacco_type_answer, tobacco_type_updated_at = db_manager.get_patient_form_response_by_module_id(tobacco_type_mod_id, syntrillo_internal_key)
+    other_tobacco_freq_answer, other_tobacco_freq_updated_at = db_manager.get_patient_form_response_by_module_id(other_tobacco_freq_mod_id, syntrillo_internal_key)
+    alcohol_consumption_answer, alcohol_consumption_updated_at = db_manager.get_patient_form_response_by_module_id(alcohol_consumption_mod_id, syntrillo_internal_key)
+    other_substance_use_answer, other_substance_use_updated_at = db_manager.get_patient_form_response_by_module_id(other_substance_use_mod_id, syntrillo_internal_key)
+    other_substance_type_answer, other_substance_type_updated_at = db_manager.get_patient_form_response_by_module_id(other_substance_type_mod_id, syntrillo_internal_key)
+    other_substance_checkbox_answer, other_substance_checkbox_updated_at = db_manager.get_patient_form_response_by_module_id(other_substance_checkbox_mod_id, syntrillo_internal_key)
+
+    return {
+        "cigarrette_use": cigarette_answer if cigarette_answer else None,
+        "alcohol_use": alcohol_answer if alcohol_answer else None,
+        "marijuana_use": marijuana_answer if marijuana_answer else None,
+        "tobacco_use": tobacco_use_answer if tobacco_use_answer else None,
+        "tobacco_type": tobacco_type_answer if tobacco_type_answer else None,
+        "other_tobacco_freq": other_tobacco_freq_answer if other_tobacco_freq_answer else None,
+        "alcohol_consumption": alcohol_consumption_answer if alcohol_consumption_answer else None,
+        "other_substance_use": other_substance_use_answer if other_substance_use_answer else None,
+        "other_substance_type": other_substance_type_answer if other_substance_type_answer else None,
+        "other_substance_checkbox": other_substance_checkbox_answer if other_substance_checkbox_answer else None,
+    }
 
 def calc_rhr_metadata(
     rhr_data: list[dict],
@@ -890,6 +942,7 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
                         PEAK_AVG_SBP: None,
                     },
                     BASELINE: {
+                        SBP_COUNT_175: None,
                         AVERAGE: None,
                         VARIABILITY: None,
                         PEAK_AVG_SBP: None,
@@ -917,6 +970,9 @@ def get_tenovi_bp_data(syntrillo_internal_key: uuid.UUID) -> dict:
 
         # Calculate the bp metadata for the trailing and baseline dataframes
         bp_metadata = calc_bp_metadata(bp_analysis, trailing_bp_df, baseline_bp_df)
+
+        # Add baseline start date
+        bp_metadata["baseline_start_date"] = baseline_start if baseline_start else None
 
         return bp_metadata
 
@@ -1003,6 +1059,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP],
                 },
                 BASELINE: {
+                    PEAK: baseline_bp_metadata[PEAK_SBP],
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
                     VARIABILITY: baseline_bp_metadata[SBP_SD],
                     PEAK: baseline_bp_metadata[PEAK_SBP],
@@ -1037,6 +1094,7 @@ def calc_bp_metadata(bp_analysis: BloodPressureAnalysis, trailing_bp_dataframe: 
                     PEAK_AVG_SBP: trailing_bp_metadata[PEAK_SBP] if PEAK_SBP in trailing_bp_metadata else None,
                 },
                 BASELINE: {
+                    SBP_COUNT_175: float(baseline_bp_metadata[SBP_COUNT_175]) if SBP_COUNT_175 in baseline_bp_metadata else None, # Considered the "PEAK" BP value for SRS
                     AVERAGE: baseline_bp_metadata[AVG_SBP],
                     VARIABILITY: baseline_bp_metadata[SBP_SD],
                     PEAK_AVG_SBP: baseline_bp_metadata[PEAK_SBP],

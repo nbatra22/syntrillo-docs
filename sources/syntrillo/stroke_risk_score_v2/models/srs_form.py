@@ -141,7 +141,6 @@ class SRSFormResponse(BaseModel):
     OSASeverity: Optional[OSASeverityOptions] = None
     CADType: Optional[CADTypeOptions] = None
 
-
     # Lab values
     Triglycerides: Optional[float] = None
     LDL: Optional[float] = None

@@ -1,3 +1,5 @@
+import datetime
+from tkinter import BASELINE
 import uuid
 import numpy as np
 import json
@@ -653,10 +655,24 @@ def get_independent_risk_factor_values(agg_data: dict):
         substance_use_data = agg_data.get("substance_use_data", {})
 
         # BP Data
+        logger.info(f"|||||||||||| Tenovi BP data: {tenovi_bp_data}")
+        start_date = tenovi_bp_data.get("baseline_start_date")
+        is_4_weeks = (datetime.datetime.now(datetime.timezone.utc) - start_date).days >= 28 if start_date else False
+
+        avg_baseline_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(BASELINE, {}).get(AVERAGE)
+        avg_baseline_peak_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(BASELINE, {}).get(SBP_COUNT_175)
+        std_baseline_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(BASELINE, {}).get(VARIABILITY)
+        avg_baseline_dbp_value = tenovi_bp_data.get(DIASTOLIC, {}).get(BASELINE, {}).get(AVERAGE)
+
         avg_trailing_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(TRAILING, {}).get(AVERAGE)
         avg_trailing_peak_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(TRAILING, {}).get(SBP_COUNT_175)
         std_trailing_sbp_value = tenovi_bp_data.get(SYSTOLIC, {}).get(TRAILING, {}).get(VARIABILITY)
         avg_trailing_dbp_value = tenovi_bp_data.get(DIASTOLIC, {}).get(TRAILING, {}).get(AVERAGE)
+
+        avg_sbp_value = avg_trailing_sbp_value if is_4_weeks and avg_trailing_sbp_value else avg_baseline_sbp_value
+        avg_peak_sbp_value = avg_trailing_peak_sbp_value if is_4_weeks and avg_trailing_peak_sbp_value else avg_baseline_peak_sbp_value
+        std_sbp_value = std_trailing_sbp_value if is_4_weeks and std_trailing_sbp_value else std_baseline_sbp_value
+        avg_dbp_value = avg_trailing_dbp_value if is_4_weeks and avg_trailing_dbp_value else avg_baseline_dbp_value
 
         # Data from Healthie
         # Fallback to baseline if there is not enough trailing data
@@ -684,16 +700,16 @@ def get_independent_risk_factor_values(agg_data: dict):
         logger.info("Successfully reformatted aggregated data into independent risk factor values...")
         return {
             GENDER: gender,
-            AVG_SBP: avg_trailing_sbp_value,
+            AVG_SBP: avg_sbp_value,
             RHR: avg_trailing_rhr_value,
             PHYSICAL_INACTIVITY: avg_trailing_inactivity_value,
             PHYSICAL_ACTIVITY: activity_minutes_answer,
             CIGARETTE_USE: cigarette_use_value,
             ALCOHOL_USE: alcohol_use_value,
             MARIJUANA_USE: marijuana_use_value,
-            SBP_STD: std_trailing_sbp_value,
-            AVG_PEAK_SBP: avg_trailing_peak_sbp_value,
-            AVG_DBP: avg_trailing_dbp_value,
+            SBP_STD: std_sbp_value,
+            AVG_PEAK_SBP: avg_peak_sbp_value,
+            AVG_DBP: avg_dbp_value,
             HEMOGLOBIN_A1C: hemoglobin_value,
             CREATININE: creatinine_levels_value,
         }
