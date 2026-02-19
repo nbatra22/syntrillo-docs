@@ -3,12 +3,14 @@ import { c } from './theme';
 import { useDashboardData } from './hooks/useDashboardData';
 
 import BloodPressureCard    from './cards/BloodPressureCard';
+import BPGraphCard          from './cards/BPGraphCard';
 import RiskScoreCards       from './cards/RiskScoreCards';
 import MedicalHistoryCard   from './cards/MedicalHistoryCard';
 import LabValuesCard        from './cards/LabValuesCard';
+import SubstanceUseCard     from './cards/SubstanceUseCard';
 import PatientSummaryCard   from './cards/PatientSummaryCard';
 import DevicesCard          from './cards/DevicesCard';
-import HeartRateCard        from './cards/HeartRateCard';
+import HRGraphCard          from './cards/HRGraphCard';
 import BloodPressureModal   from './modals/BloodPressureModal';
 import RiskScoreModal       from './modals/RiskScoreModal';
 
@@ -113,12 +115,13 @@ const DataDashboard: React.FC<Props> = ({ temporaryLookupCode }) => {
             summary={data.bloodPressureSummary}
             onClick={() => setOpenModal('blood-pressure')}
           />
-          <PatientSummaryCard summary={data.patientSummary} />
+          <BPGraphCard data={data.bpTimeSeries} />
+          <HRGraphCard heartRate={data.heartRate} data={data.hrTimeSeries} />
 
-          {/* Bottom row: Devices + Heart Rate */}
+          {/* Bottom row: Devices + Physical Activity */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <DevicesCard    devices={data.devices}        />
-            <HeartRateCard  heartRate={data.heartRate}    />
+            <DevicesCard       devices={data.devices}          />
+            <PatientSummaryCard summary={data.patientSummary} />
           </div>
         </div>
 
@@ -131,6 +134,7 @@ const DataDashboard: React.FC<Props> = ({ temporaryLookupCode }) => {
           />
           <MedicalHistoryCard items={data.medicalHistory} />
           <LabValuesCard      values={data.labValues}     />
+          <SubstanceUseCard />
         </div>
       </div>
 

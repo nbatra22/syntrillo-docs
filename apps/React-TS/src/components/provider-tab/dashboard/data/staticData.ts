@@ -64,9 +64,22 @@ export interface Device {
   status: DeviceStatus;
 }
 
+export interface BPTimeSeriesPoint {
+  date: string;       // 'YYYY-MM-DD'
+  systolic: number;
+  diastolic: number;
+}
+
+export interface HRTimeSeriesPoint {
+  date: string;       // 'YYYY-MM-DD'
+  value: number;
+}
+
 export interface DashboardData {
   bloodPressureSummary: BloodPressureSummary;
   bloodPressureDetail: BloodPressureDetail;
+  bpTimeSeries: BPTimeSeriesPoint[];
+  hrTimeSeries: HRTimeSeriesPoint[];
   riskScore: number;
   priorityScore: number;
   medicalHistory: MedicalHistoryItem[];
@@ -127,6 +140,56 @@ export const staticDashboardData: DashboardData = {
       { title: 'Sodium Consumer Status',   baseline: { value: 98.5  },                  prior: { value: '—'   },                  latest: { value: 86.0  }                  },
     ],
   },
+
+  bpTimeSeries: [
+    { date: '2026-01-20', systolic: 158, diastolic: 96  },
+    { date: '2026-01-21', systolic: 152, diastolic: 92  },
+    { date: '2026-01-23', systolic: 165, diastolic: 100 },
+    { date: '2026-01-24', systolic: 148, diastolic: 88  },
+    { date: '2026-01-25', systolic: 162, diastolic: 95  },
+    { date: '2026-01-27', systolic: 157, diastolic: 91  },
+    { date: '2026-01-28', systolic: 145, diastolic: 84  },
+    { date: '2026-01-29', systolic: 163, diastolic: 97  },
+    { date: '2026-01-31', systolic: 154, diastolic: 89  },
+    { date: '2026-02-01', systolic: 159, diastolic: 93  },
+    { date: '2026-02-03', systolic: 147, diastolic: 86  },
+    { date: '2026-02-04', systolic: 162, diastolic: 96  },
+    { date: '2026-02-05', systolic: 156, diastolic: 92  },
+    { date: '2026-02-07', systolic: 149, diastolic: 87  },
+    { date: '2026-02-08', systolic: 165, diastolic: 99  },
+    { date: '2026-02-10', systolic: 155, diastolic: 91  },
+    { date: '2026-02-11', systolic: 160, diastolic: 95  },
+    { date: '2026-02-12', systolic: 147, diastolic: 85  },
+    { date: '2026-02-14', systolic: 163, diastolic: 98  },
+    { date: '2026-02-15', systolic: 153, diastolic: 89  },
+    { date: '2026-02-16', systolic: 150, diastolic: 87  },
+    { date: '2026-02-17', systolic: 147, diastolic: 86  },
+  ],
+
+  hrTimeSeries: [
+    { date: '2026-01-20', value: 63    },
+    { date: '2026-01-21', value: 61    },
+    { date: '2026-01-23', value: 65    },
+    { date: '2026-01-24', value: 60    },
+    { date: '2026-01-25', value: 62    },
+    { date: '2026-01-27', value: 64    },
+    { date: '2026-01-28', value: 59    },
+    { date: '2026-01-29', value: 61    },
+    { date: '2026-01-31', value: 63    },
+    { date: '2026-02-01', value: 60    },
+    { date: '2026-02-03', value: 58    },
+    { date: '2026-02-04', value: 62    },
+    { date: '2026-02-05', value: 61    },
+    { date: '2026-02-07', value: 59    },
+    { date: '2026-02-08', value: 60    },
+    { date: '2026-02-10', value: 63    },
+    { date: '2026-02-11', value: 61    },
+    { date: '2026-02-12', value: 58    },
+    { date: '2026-02-14', value: 60    },
+    { date: '2026-02-15', value: 59    },
+    { date: '2026-02-16', value: 58    },
+    { date: '2026-02-17', value: 57.56 },
+  ],
 
   riskScore:     10.65,
   priorityScore: 93.4,
