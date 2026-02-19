@@ -35,7 +35,7 @@ import pandas as pd
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.api_tenovi.device_measurements import DeviceMeasurements
 from syntrillo.api_tenovi.device_types import DeviceTypes
-from syntrillo.bp_analysis.constants import (
+from syntrillo.blood_pressure.constants import (
     AVG_DBP,
     AVG_PP,
     AVG_SBP,

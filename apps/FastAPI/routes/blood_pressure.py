@@ -2,30 +2,38 @@
 Blood pressure routes — FastAPI port of the legacy Flask blueprint.
 
 Legacy route → new endpoint mapping:
-  POST /healthie/iframe_provider_tab/blood_pressure/analysis   → GET  /api/v1/blood-pressure/analysis
-  GET  /healthie/iframe_provider_tab/blood_pressure/download   → GET  /api/v1/blood-pressure/download
-  POST /healthie/iframe_provider_tab/blood_pressure/metrics    → GET  /api/v1/blood-pressure/metrics
-  POST /healthie/iframe_provider_tab/blood_pressure/hr         → GET  /api/v1/blood-pressure/hr
-  POST /healthie/iframe_provider_tab/blood_pressure/biometrics → GET  /api/v1/blood-pressure/biometrics
+  POST /healthie/iframe_provider_tab/blood_pressure/analysis   → GET /api/v1/blood-pressure/summary
+                                                                 GET /api/v1/blood-pressure/analysis
+                                                                 GET /api/v1/blood-pressure/extremes
+                                                                 GET /api/v1/blood-pressure/distribution
+  GET  /healthie/iframe_provider_tab/blood_pressure/download   → GET /api/v1/blood-pressure/download
+  POST /healthie/iframe_provider_tab/blood_pressure/metrics    → GET /api/v1/blood-pressure/metrics
+  POST /healthie/iframe_provider_tab/blood_pressure/hr         → GET /api/v1/blood-pressure/hr
+  POST /healthie/iframe_provider_tab/blood_pressure/biometrics → GET /api/v1/blood-pressure/biometrics
 
 Key differences from the legacy implementation:
   - No HTML is returned; React handles all rendering.
-  - patient_not_registered_at_syntrillo is handled by a 403 from the
-    dependency layer rather than rendering a template.
-  - PDF download re-computes analysis server-side instead of accepting
-    pre-rendered JSON from the client.
+  - The single /analysis endpoint is split into focused sub-endpoints that
+    the React frontend can fetch independently or in parallel.
+  - A shared `get_loaded_bp` dependency instantiates BloodPressureAnalysis
+    and loads the patient's data once per request.
+  - PDF download uses the legacy BloodPressureAnalysis (aliased as
+    LegacyBPAnalysis) because BloodPressureReport requires DataFrames.
+  - PDF analysis is computed server-side; the client no longer sends
+    pre-rendered JSON (unlike the legacy download endpoint).
   - All endpoints accept temporary_lookup_code as a query parameter so
-    FastAPI's dependency injection can cache the identity resolution
-    within a single request.
+    FastAPI's dependency injection can cache identity resolution within
+    a single request.
 """
 
 import secrets
 import string
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -37,9 +45,10 @@ from syntrillo.api_healthie.constants import RHR_CATEGORY, WEIGHT_CATEGORY
 from syntrillo.api_healthie.forms import HealthieForms
 from syntrillo.api_healthie.user import HealthieUser
 from syntrillo.api_healthie.utils import HealthieUtils
-from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis
+from syntrillo.blood_pressure.analysis import BloodPressureAnalysis
+from syntrillo.blood_pressure.constants import DIASTOLIC, SYSTOLIC, TIMESTAMP_LOCAL
+from syntrillo.bp_analysis.bp_analysis import BloodPressureAnalysis as LegacyBPAnalysis
 from syntrillo.bp_analysis.bp_report import BloodPressureReport
-from syntrillo.pseudonyms_management.lookup_codes_management import LookUpCodesManagement
 from syntrillo.remote_monitoring.syntrillo_database_manager import SyntrilloDatabaseManager
 from syntrillo.stroke_risk_score_v2.agg_data import (
     calc_rhr_metadata,
@@ -52,38 +61,39 @@ from syntrillo.system.logger import logger
 
 from dependencies import get_pseudonyms, get_syntrillo_internal_key
 from schemas.blood_pressure import (
-    AnalysisRow,
     BPAnalysisResponse,
     BPBiometricsResponse,
+    BPDistributionResponse,
+    BPExtremesResponse,
     BPHRResponse,
-    BPMeasurement,
     BPMetricsResponse,
-    DateRange,
-    GradedValue,
+    BPSummaryResponse,
+    BoxPlotStats,
+    GradedMetric,
+    HourlyDataPoint,
     HRMeasurements,
     SSQData,
-    SummaryStats,
 )
 
 router = APIRouter()
 
-# Rows suppressed in the legacy route (kept consistent here)
+# Rows suppressed only in the legacy PDF download (not in API responses)
 _ROWS_TO_REMOVE = {"SBP CV (%)", "DBP CV (%)", "SBP Count (>= 175)"}
 _ROW_RENAME = {"Hypotensive Count⁴": "Near-Hypotensive Events⁴"}
 
 
-# ── /analysis ─────────────────────────────────────────────────────────────────
+# ── Shared dependency ─────────────────────────────────────────────────────────
 
-@router.get("/analysis", response_model=BPAnalysisResponse)
-def get_bp_analysis(
+def get_loaded_bp(
     start_date: Optional[date] = Query(None, description="Start of date range (YYYY-MM-DD)"),
     end_date: Optional[date] = Query(None, description="End of date range (YYYY-MM-DD)"),
     internal_key: str = Depends(get_syntrillo_internal_key),
-):
+) -> BloodPressureAnalysis:
     """
-    Returns structured blood pressure analysis for a given date range.
+    Instantiate BloodPressureAnalysis and load the patient's BP readings.
 
-    Replaces: POST /healthie/iframe_provider_tab/blood_pressure/analysis
+    Raises 422 if the date range is too short; 404 if there are no readings.
+    Shared across /summary, /analysis, /extremes, and /distribution.
     """
     bp = BloodPressureAnalysis(internal_key)
     _, log = bp.get_blood_pressure_dataframe(start_date=start_date, end_date=end_date)
@@ -94,141 +104,88 @@ def get_bp_analysis(
             detail=log.get("error", "Failed to retrieve blood pressure data."),
         )
 
-    if _.empty:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Insufficient data. Patient has recorded zero measurements.",
-        )
-
-    summary_stats = bp.calculate_summary_stats(hide_intervention=False)
-    analysis_table = bp.get_analysis_table()
-    analysis_table = analysis_table[~analysis_table.index.isin(_ROWS_TO_REMOVE)]
-    analysis_table.rename(index=_ROW_RENAME, inplace=True)
-    extremes = bp.calculate_extremes().reset_index(drop=True)
-
-    return BPAnalysisResponse(
-        analysis=_df_to_analysis_rows(analysis_table),
-        extremes=_df_to_extremes(extremes),
-        summary_stats=_dict_to_summary_stats(summary_stats),
-    )
+    return bp
 
 
-# ── /download ─────────────────────────────────────────────────────────────────
+# ── /summary ──────────────────────────────────────────────────────────────────
 
-@router.get("/download")
-def download_bp_report(
-    start_date: Optional[date] = Query(None),
-    end_date: Optional[date] = Query(None),
-    file_name: Optional[str] = Query(None),
-    include_intro_section: bool = Query(True),
-    internal_key: str = Depends(get_syntrillo_internal_key),
-    pseudonyms: dict = Depends(get_pseudonyms),
-):
+@router.get("/summary", response_model=BPSummaryResponse)
+def get_bp_summary(bp: BloodPressureAnalysis = Depends(get_loaded_bp)):
     """
-    Streams a PDF blood pressure report.
+    Key metrics with grades for the most recent (Current/Latest) timeframe.
 
-    Analysis is computed server-side; the client no longer needs to send
-    pre-rendered JSON (unlike the legacy download endpoint).
-
-    Replaces: GET/POST /healthie/iframe_provider_tab/blood_pressure/download
+    Powers the summary card at the top of the BP tab (target vs actual view).
     """
-    healthie_user = HealthieUser(pseudonyms["healthie_user_id"])
-    patient_info = healthie_user._patient_information or {}
-    first_initial = (patient_info.get("first_name") or " ")[0]
-    last_initial = (patient_info.get("last_name") or " ")[0]
-
-    from datetime import datetime
-    date_str = datetime.now().strftime("%y%m%d")
-    resolved_name = (file_name or f"{first_initial}{last_initial}-{date_str}").strip()
-
-    bp = BloodPressureAnalysis(internal_key)
-    _, log = bp.get_blood_pressure_dataframe(start_date=start_date, end_date=end_date)
-
-    if not log.get("success") or _.empty:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No blood pressure data available for this report.",
-        )
-
-    analysis_table = bp.get_analysis_table()
-    analysis_table = analysis_table[~analysis_table.index.isin(_ROWS_TO_REMOVE)]
-    analysis_table.rename(index=_ROW_RENAME, inplace=True)
-    extremes = bp.calculate_extremes().reset_index(drop=True)
-    summary_stats = bp.calculate_summary_stats(hide_intervention=True)
-
-    nanoid = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(5))
-    resolved_name = f"{resolved_name}-{nanoid}"
-
-    bp_report = BloodPressureReport(
-        logo=None,
-        patient_info_dict=patient_info,
-        summary_dict=summary_stats,
-        timeframed_df=analysis_table,
-        extremes_df=extremes,
-        report_code=nanoid,
-    )
-
-    pdf_buffer = (
-        bp_report.generate_provider_pdf_report()
-        if include_intro_section
-        else bp_report.generate_patient_pdf_report()
-    )
-
-    return StreamingResponse(
-        pdf_buffer,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{resolved_name}.pdf"'},
+    summary = bp.calculate_summary_stats(hide_intervention=False)
+    return BPSummaryResponse(
+        date_range=summary.get("date_range"),
+        status=GradedMetric(**summary["status"]),
+        avg_sbp=GradedMetric(**summary["avg_sbp"]),
+        avg_dbp=GradedMetric(**summary["avg_dbp"]),
+        peak_sbp=GradedMetric(**summary["peak_sbp"]),
+        low_sbp=GradedMetric(**summary["low_sbp"]),
+        symptomatic_hypotension=GradedMetric(**summary["symptomatic_hypotension"]),
+        near_hypotensive=GradedMetric(**summary["near_hypotensive"]),
     )
 
 
-# ── /metrics ──────────────────────────────────────────────────────────────────
+# ── /analysis ─────────────────────────────────────────────────────────────────
 
-@router.get("/metrics", response_model=BPMetricsResponse)
-def get_bp_metrics(
-    internal_key: str = Depends(get_syntrillo_internal_key),
-    pseudonyms: dict = Depends(get_pseudonyms),
-):
+@router.get("/analysis", response_model=BPAnalysisResponse)
+def get_bp_analysis(bp: BloodPressureAnalysis = Depends(get_loaded_bp)):
     """
-    Returns SSQ score, BMI, and resting heart rate for the patient.
+    Full timeframed analysis table with per-metric grades and progress deltas.
 
-    Replaces: POST /healthie/iframe_provider_tab/blood_pressure/metrics
+    Powers the detailed metrics table below the summary card.
     """
-    healthie_user_id = pseudonyms["healthie_user_id"]
+    return BPAnalysisResponse(**bp.get_analysis_data())
 
-    biometrics = get_biometric_data(internal_key)
-    bmi = calculate_bmi(biometrics["weight"], biometrics["height"])
 
-    db_manager = SyntrilloDatabaseManager(internal_key)
-    healthie_data = get_srs_healthie_data(healthie_user_id, db_manager, internal_key)
-    hr_measurements = HRMeasurements(
-        baseline_rhr=healthie_data.get("average_rhr_baseline"),
-        trailing_rhr=healthie_data.get("average_rhr_trailing"),
-    )
+# ── /extremes ─────────────────────────────────────────────────────────────────
 
-    secrets_manager = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
-    custom_module_form_id = "2455490" if secrets_manager.is_production() else "2203381"
+@router.get("/extremes", response_model=BPExtremesResponse)
+def get_bp_extremes(bp: BloodPressureAnalysis = Depends(get_loaded_bp)):
+    """
+    Out-of-bounds readings: SBP < 90, SBP > 170, or DBP > 110.
+    """
+    return BPExtremesResponse(measurements=bp.get_extremes())
 
-    forms_manager = HealthieForms()
-    autoscored_sections = forms_manager.get_autoscored_sections(
-        custom_module_form_id=custom_module_form_id,
-        user_id=healthie_user_id,
-    )
 
-    ssq_score = (
-        autoscored_sections["formAnswerGroups"][0]["autoscored_sections"]
-        if autoscored_sections and len(autoscored_sections.get("formAnswerGroups", [])) > 0
-        else None
-    )
+# ── /distribution ─────────────────────────────────────────────────────────────
 
-    return BPMetricsResponse(ssq_score=ssq_score, bmi=bmi, hr_measurements=hr_measurements)
+@router.get("/distribution", response_model=BPDistributionResponse)
+def get_bp_distribution(bp: BloodPressureAnalysis = Depends(get_loaded_bp)):
+    """
+    Box-and-whisker statistics for systolic and diastolic readings by hour of day.
+
+    Powers the distribution chart showing when readings tend to be
+    highest/lowest and how variable they are throughout the day.
+    """
+    df = bp.bpm_df.copy()
+    df["hour"] = pd.to_datetime(df[TIMESTAMP_LOCAL], errors="coerce").dt.hour
+
+    data = []
+    for hour in range(24):
+        hour_df = df[df["hour"] == hour].dropna(subset=[SYSTOLIC, DIASTOLIC])
+        if hour_df.empty:
+            continue
+        sbp_stats = _box_plot_stats(hour_df[SYSTOLIC].tolist())
+        dbp_stats = _box_plot_stats(hour_df[DIASTOLIC].tolist())
+        if sbp_stats is not None and dbp_stats is not None:
+            data.append(HourlyDataPoint(
+                hour=hour,
+                count=len(hour_df),
+                systolic=sbp_stats,
+                diastolic=dbp_stats,
+            ))
+
+    return BPDistributionResponse(data=data)
 
 
 # ── /hr ───────────────────────────────────────────────────────────────────────
 
 @router.get("/hr", response_model=BPHRResponse)
-def get_resting_hr(
-    pseudonyms: dict = Depends(get_pseudonyms),
-):
+def get_resting_hr(pseudonyms: dict = Depends(get_pseudonyms)):
     """
     Returns baseline, prior, and current resting heart rate averages.
 
@@ -410,51 +367,149 @@ def get_biometrics(
     )
 
 
+# ── /metrics ──────────────────────────────────────────────────────────────────
+
+@router.get("/metrics", response_model=BPMetricsResponse)
+def get_bp_metrics(
+    internal_key: str = Depends(get_syntrillo_internal_key),
+    pseudonyms: dict = Depends(get_pseudonyms),
+):
+    """
+    Returns SSQ score, BMI, and resting heart rate for the patient.
+
+    Replaces: POST /healthie/iframe_provider_tab/blood_pressure/metrics
+    """
+    healthie_user_id = pseudonyms["healthie_user_id"]
+
+    biometrics = get_biometric_data(internal_key)
+    bmi = calculate_bmi(biometrics["weight"], biometrics["height"])
+
+    db_manager = SyntrilloDatabaseManager(internal_key)
+    healthie_data = get_srs_healthie_data(healthie_user_id, db_manager, internal_key)
+    hr_measurements = HRMeasurements(
+        baseline_rhr=healthie_data.get("average_rhr_baseline"),
+        trailing_rhr=healthie_data.get("average_rhr_trailing"),
+    )
+
+    secrets_manager = LocalEnvironmentAndSecrets(load_healthie_secrets=True)
+    custom_module_form_id = "2455490" if secrets_manager.is_production() else "2203381"
+
+    forms_manager = HealthieForms()
+    autoscored_sections = forms_manager.get_autoscored_sections(
+        custom_module_form_id=custom_module_form_id,
+        user_id=healthie_user_id,
+    )
+
+    ssq_score = (
+        autoscored_sections["formAnswerGroups"][0]["autoscored_sections"]
+        if autoscored_sections and len(autoscored_sections.get("formAnswerGroups", [])) > 0
+        else None
+    )
+
+    return BPMetricsResponse(ssq_score=ssq_score, bmi=bmi, hr_measurements=hr_measurements)
+
+
+# ── /download ─────────────────────────────────────────────────────────────────
+
+@router.get("/download")
+def download_bp_report(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    file_name: Optional[str] = Query(None),
+    include_intro_section: bool = Query(True),
+    internal_key: str = Depends(get_syntrillo_internal_key),
+    pseudonyms: dict = Depends(get_pseudonyms),
+):
+    """
+    Streams a PDF blood pressure report.
+
+    Uses LegacyBPAnalysis (from bp_analysis) because BloodPressureReport
+    requires DataFrames (timeframed_df, extremes_df) that the new
+    BloodPressureAnalysis class does not expose.
+
+    Analysis is computed server-side; the client no longer sends
+    pre-rendered JSON (unlike the legacy download endpoint).
+
+    Replaces: GET/POST /healthie/iframe_provider_tab/blood_pressure/download
+    """
+    healthie_user = HealthieUser(pseudonyms["healthie_user_id"])
+    patient_info = healthie_user._patient_information or {}
+    first_initial = (patient_info.get("first_name") or " ")[0]
+    last_initial = (patient_info.get("last_name") or " ")[0]
+
+    date_str = datetime.now().strftime("%y%m%d")
+    resolved_name = (file_name or f"{first_initial}{last_initial}-{date_str}").strip()
+
+    bp = LegacyBPAnalysis(internal_key)
+    _, log = bp.get_blood_pressure_dataframe(start_date=start_date, end_date=end_date)
+
+    if not log.get("success") or _.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No blood pressure data available for this report.",
+        )
+
+    analysis_table = bp.get_analysis_table()
+    analysis_table = analysis_table[~analysis_table.index.isin(_ROWS_TO_REMOVE)]
+    analysis_table.rename(index=_ROW_RENAME, inplace=True)
+    extremes = bp.calculate_extremes().reset_index(drop=True)
+    summary_stats = bp.calculate_summary_stats(hide_intervention=True)
+
+    nanoid = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(5))
+    resolved_name = f"{resolved_name}-{nanoid}"
+
+    bp_report = BloodPressureReport(
+        logo=None,
+        patient_info_dict=patient_info,
+        summary_dict=summary_stats,
+        timeframed_df=analysis_table,
+        extremes_df=extremes,
+        report_code=nanoid,
+    )
+
+    pdf_buffer = (
+        bp_report.generate_provider_pdf_report()
+        if include_intro_section
+        else bp_report.generate_patient_pdf_report()
+    )
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{resolved_name}.pdf"'},
+    )
+
+
 # ── Private helpers ───────────────────────────────────────────────────────────
 
-def _df_to_analysis_rows(df: pd.DataFrame) -> list[AnalysisRow]:
-    return [
-        AnalysisRow(
-            metric=str(metric),
-            baseline=row.get("Baseline"),
-            prior=row.get("Prior"),
-            current=row.get("Current"),
-            since_baseline=row.get("Since Baseline"),
-            since_prior=row.get("Since Prior"),
-        )
-        for metric, row in df.iterrows()
-    ]
+def _box_plot_stats(values: list) -> Optional[BoxPlotStats]:
+    """
+    Compute 1.5×IQR box-and-whisker statistics for a list of numeric values.
 
+    Whiskers extend to the most extreme non-outlier data points; values
+    beyond the fences are listed separately as outliers.
+    Returns None if the list is empty after dropping NaNs.
+    """
+    clean = [v for v in values if v is not None and not (isinstance(v, float) and np.isnan(v))]
+    if not clean:
+        return None
 
-def _df_to_extremes(df: pd.DataFrame) -> list[BPMeasurement]:
-    if df is None or df.empty:
-        return []
-    return [
-        BPMeasurement(
-            timestamp=str(row.get("Timestamp", "")),
-            systolic=float(row.get("Systolic", 0)),
-            diastolic=float(row.get("Diastolic", 0)),
-        )
-        for _, row in df.iterrows()
-    ]
+    arr = np.array(clean, dtype=float)
+    q1 = float(np.percentile(arr, 25))
+    q3 = float(np.percentile(arr, 75))
+    iqr = q3 - q1
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
 
+    non_outliers = [v for v in clean if lower_fence <= v <= upper_fence]
+    outliers = [v for v in clean if v < lower_fence or v > upper_fence]
 
-def _dict_to_summary_stats(summary: dict) -> SummaryStats:
-    def to_graded(d: dict) -> GradedValue:
-        return GradedValue(value=d.get("value"), grade=int(d.get("grade", 0)))
-
-    def to_date_range(dr) -> DateRange:
-        if isinstance(dr, dict):
-            return DateRange(start=dr.get("start"), end=dr.get("end"))
-        return DateRange()
-
-    return SummaryStats(
-        date_range=to_date_range(summary.get("date_range", {})),
-        status=to_graded(summary.get("status", {})),
-        avg_sbp=to_graded(summary.get("avg_sbp", {})),
-        avg_dbp=to_graded(summary.get("avg_dbp", {})),
-        peak_sbp=to_graded(summary.get("peak_sbp", {})),
-        low_sbp=to_graded(summary.get("low_sbp", {})),
-        symptomatic_hypotension=to_graded(summary.get("symptomatic_hypotension", {})),
-        near_hypotensive=to_graded(summary.get("near_hypotensive", {})),
+    return BoxPlotStats(
+        min=float(min(non_outliers)) if non_outliers else float(min(clean)),
+        q1=q1,
+        median=float(np.median(arr)),
+        mean=float(np.mean(arr)),
+        q3=q3,
+        max=float(max(non_outliers)) if non_outliers else float(max(clean)),
+        outliers=outliers,
     )
