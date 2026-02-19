@@ -513,3 +513,4 @@ def _box_plot_stats(values: list) -> Optional[BoxPlotStats]:
         max=float(max(non_outliers)) if non_outliers else float(max(clean)),
         outliers=outliers,
     )
+

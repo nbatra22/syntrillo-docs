@@ -26,7 +26,7 @@ export const useDashboardData = (_temporaryLookupCode: string) => {
         // ]);
         // if (!cancelled) setData(transformApiData(bp, risk));
         // ─────────────────────────────────────────────────────────────
-
+        
         // Simulate network latency with static data
         await new Promise(r => setTimeout(r, 200));
         if (!cancelled) setData(staticDashboardData);

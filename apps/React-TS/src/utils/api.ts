@@ -172,6 +172,24 @@ export const patientSidebarApi = {
     return response.json();
   },
 
+  getBPSummary: async (temporaryLookupCode: string): Promise<BloodPressureData> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/blood-pressure/summary`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        temporary_lookup_code: temporaryLookupCode,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch blood pressure data');
+    }
+
+    return response.json();
+  },
+
   /**
    * Get heart rate data for patient sidebar
    */
