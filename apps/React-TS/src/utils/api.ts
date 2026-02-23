@@ -1,7 +1,7 @@
 // API configuration and utility functions
 
 const API_BASE_URL = import.meta.env.DEV
-  ? '' // Proxy handles this in dev mode
+  ? 'http://127.0.0.1:8000' // Proxy handles this in dev mode
   : 'https://your-production-domain.com'; // Update with your production URL
 
 // Types
@@ -173,14 +173,11 @@ export const patientSidebarApi = {
   },
 
   getBPSummary: async (temporaryLookupCode: string): Promise<BloodPressureData> => {
-    const response = await fetch(`${API_BASE_URL}/api/v1/blood-pressure/summary`, {
-      method: 'POST',
+    const response = await fetch(`http://127.0.0.1:8000/api/v1/blood-pressure/summary?temporary_lookup_code=${encodeURIComponent(temporaryLookupCode)}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: new URLSearchParams({
-        temporary_lookup_code: temporaryLookupCode,
-      }),
     });
 
     if (!response.ok) {
