@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { staticDashboardData } from '../data/staticData';
 import type { DashboardData } from '../data/staticData';
+import { patientSidebarApi, providerApi } from '../../../../utils/api';
+import { bloodPressureApi } from '../../../../utils/actions/blood-pressure';
 
 // TODO: Uncomment when backend is ready:
 // import { providerTabApi } from '../../../../utils/api';
@@ -26,7 +28,12 @@ export const useDashboardData = (_temporaryLookupCode: string) => {
         // ]);
         // if (!cancelled) setData(transformApiData(bp, risk));
         // ─────────────────────────────────────────────────────────────
-        
+        // patientSidebarApi.getBPSummary(_temporaryLookupCode).then(bp => {
+        //   console.log('Fetched blood pressure summary:', bp);
+        // });
+        bloodPressureApi.getBPSummary(_temporaryLookupCode).then(bp => {
+          console.log('Fetched blood pressure summary:', bp);
+        });
         // Simulate network latency with static data
         await new Promise(r => setTimeout(r, 200));
         if (!cancelled) setData(staticDashboardData);

@@ -23,7 +23,7 @@ export default defineConfig({
       },
       // Proxy routes to FastAPI backend
       '/fastapi': {
-        target: 'http://127.0.0.1:8000', // FastAPI backend URL
+        target: 'http://127.0.0.1:8000/api/v1', // FastAPI backend URL
         changeOrigin: true,
       },
       // NOTE: Removed '/iframe_healthie' proxy - these routes are now handled by React Router
