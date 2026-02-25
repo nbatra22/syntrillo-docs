@@ -1,9 +1,37 @@
 import React, { useState } from 'react';
 import { c } from '../theme';
+import type { SubstanceUse } from '../data/staticData';
 
-const SubstanceUseCard: React.FC = () => {
+interface Props {
+  substanceUse: SubstanceUse | null;
+}
+
+const SubstanceUseCard: React.FC<Props> = ({ substanceUse }) => {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+
+  const rows = substanceUse ? [
+    {
+      label: 'Tobacco',
+      value: substanceUse.tobaccoUse === 'Yes'
+        ? (substanceUse.tobaccoType?.replace(/\|/g, ', ') ?? 'Yes')
+        : (substanceUse.tobaccoUse ?? '—'),
+    },
+    {
+      label: 'Alcohol',
+      value: substanceUse.alcoholConsumption ?? '—',
+    },
+    {
+      label: 'Marijuana',
+      value: substanceUse.marijuanaUse ?? '—',
+    },
+    {
+      label: 'Other Substances',
+      value: substanceUse.otherSubstanceUse === 'Yes'
+        ? (substanceUse.otherSubstanceType ?? 'Yes')
+        : (substanceUse.otherSubstanceUse ?? '—'),
+    },
+  ] : [];
 
   return (
     <>
@@ -20,7 +48,7 @@ const SubstanceUseCard: React.FC = () => {
           transition: 'all 0.2s ease',
           cursor: 'pointer',
         }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: rows.length > 0 ? '16px' : 0 }}>
           <h3 style={{ margin: 0, color: c.txt1, fontSize: '16px', fontWeight: 700, letterSpacing: '-0.01em' }}>
             Substance Use
           </h3>
@@ -41,6 +69,29 @@ const SubstanceUseCard: React.FC = () => {
             Update Values →
           </span>
         </div>
+
+        {rows.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {rows.map((row, i) => {
+              const isLast = i === rows.length - 1;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '9px 0',
+                    borderBottom: isLast ? undefined : `1px solid ${c.divider}`,
+                  }}
+                >
+                  <span style={{ color: c.txt2, fontSize: '13px' }}>{row.label}</span>
+                  <span style={{ color: c.txt1, fontSize: '13px', fontWeight: 600 }}>{row.value}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Modal */}

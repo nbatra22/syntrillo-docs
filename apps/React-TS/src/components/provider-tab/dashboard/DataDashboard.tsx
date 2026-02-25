@@ -134,7 +134,7 @@ const DataDashboard: React.FC<Props> = ({ temporaryLookupCode }) => {
           />
           <MedicalHistoryCard items={data.medicalHistory} />
           <LabValuesCard      values={data.labValues}     />
-          <SubstanceUseCard />
+          <SubstanceUseCard substanceUse={data.substanceUse} />
         </div>
       </div>
 

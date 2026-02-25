@@ -59,6 +59,15 @@ export interface LabValue {
   alert?: boolean;
 }
 
+export interface SubstanceUse {
+  tobaccoUse: string | null;
+  tobaccoType: string | null;
+  alcoholConsumption: string | null;
+  marijuanaUse: string | null;
+  otherSubstanceUse: string | null;
+  otherSubstanceType: string | null;
+}
+
 export interface Device {
   name: string;
   status: DeviceStatus;
@@ -84,6 +93,7 @@ export interface DashboardData {
   priorityScore: number;
   medicalHistory: MedicalHistoryItem[];
   labValues: LabValue[];
+  substanceUse: SubstanceUse | null;
   devices: Device[];
   heartRate: {
     current: number;
@@ -211,6 +221,8 @@ export const staticDashboardData: DashboardData = {
     { label: 'Triglycerides',                  value: '—', unit: 'mg/dL', alert: true },
     { label: 'Creatinine',                     value: '—', unit: 'mg/dL' },
   ],
+
+  substanceUse: null,
 
   devices: [
     { name: 'Tenovi Watch',   status: 'unlinked'  },
