@@ -44,7 +44,8 @@ const Gauge: React.FC<GaugeProps> = ({ value, max, higherIsBad }) => {
   const circumference = 2 * Math.PI * r;         // ≈ 263.9
   const arcLength     = 0.75 * circumference;     // 270° arc ≈ 197.9
   const gapLength     = circumference - arcLength;
-  const filled        = pct * arcLength;
+  // Fill tracks severity so green (low severity) = small bar, red (high) = full arc
+  const filled        = severity * arcLength;
 
   return (
     <svg viewBox="0 0 120 105" style={{ width: '100%', maxWidth: '150px' }}>
@@ -171,7 +172,7 @@ const RiskScoreCards: React.FC<Props> = ({ riskScore, priorityScore, onClick }) 
         label="Risk Score"
         value={riskScore}
         max={RISK_SCORE_MAX}
-        higherIsBad={false}
+        higherIsBad={true}
         onClick={onClick}
       />
       <ScoreCard
