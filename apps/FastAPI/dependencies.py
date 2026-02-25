@@ -94,8 +94,8 @@ def handle_dev_env_user():
     # healthie_user_id = "1966294" # Patient AWS Test 3
     # healthie_user_id = "2062692" # Patient AWS Test 5
     # healthie_user_id = "2062877" # Patient AWS Test 6 (hypertensive)
-    healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
-    # healthie_user_id = "2315391" # Bob Barker
+    # healthie_user_id = "1562903" # Crispy Bacon with syntrillo_internal_key: 99fddf03-9304-4e48-8711-0cc4d825eb94
+    healthie_user_id = "2315391" # Bob Barker
 
     print(f"Dev environment: using healthie_user_id {healthie_user_id} to look up syntrillo_internal_key")
 

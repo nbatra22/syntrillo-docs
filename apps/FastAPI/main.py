@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from config import settings
-from routes import blood_pressure
+from routes import blood_pressure, risk_score, devices
 
 app = FastAPI(
     title="Syntrillo API",
@@ -22,6 +23,18 @@ app.include_router(
     blood_pressure.router,
     prefix="/api/v1/blood-pressure",
     tags=["Blood Pressure"],
+)
+
+app.include_router(
+    risk_score.router,
+    prefix="/api/v1/risk-score",
+    tags=["Risk Score"],
+)
+
+app.include_router(
+    devices.router,
+    prefix="/api/v1/devices",
+    tags=["Devices"],
 )
 
 
