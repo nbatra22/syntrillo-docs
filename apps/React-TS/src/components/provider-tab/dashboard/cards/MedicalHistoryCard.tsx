@@ -80,7 +80,7 @@ const MedicalHistoryCard: React.FC<Props> = ({ items }) => {
                 key={i}
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
+                  alignItems: 'flex-start',
                   justifyContent: 'space-between',
                   gap: '10px',
                   padding: '9px 0',
@@ -97,8 +97,8 @@ const MedicalHistoryCard: React.FC<Props> = ({ items }) => {
                   color: c.txt1,
                   fontSize: '13px',
                   fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
+                  textAlign: 'right',
+                  flexShrink: 1,
                 }}>
                   {item.value}
                 </span>
