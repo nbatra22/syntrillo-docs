@@ -1,0 +1,40 @@
+name: Generate & Sync Docs
+
+on:
+  push:
+    branches:
+      - system-migration # only run on system-migration for time being
+    paths:
+      - 'src/**'        # optional: trigger only on code changes
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          npm install typedoc # or your language-specific tool
+
+      - name: Generate Markdown Docs
+        run: |
+          npx typedoc --out generated-docs src
+
+      - name: Clone Mintlify Docs Repo
+        env:
+          MINT_REPO: https://github.com/nbatra22/docs.git
+        run: |
+          git clone $MINT_REPO mintlify-docs
+
+      - name: Copy Generated Docs
+        run: |
+          rsync -av --delete generated-docs/ mintlify-docs/
+
+      - name: Commit & Push
+        run: |
+          cd mintlify-docs
+          git add .
+          git commit -m "Auto-generate docs from code" || echo "No changes to commit"
+          git push
