@@ -1,0 +1,26 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Syntrillo Clinic",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0ea5e9",
+    "light": "#38bdf8",
+    "dark": "#0369a1"
+  },
+  "topbarLinks": [],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "http://localhost:5173"
+  },
+  "navigation": [
+    {
+      "group": "Architecture",
+      "pages": ["architecture/backend-frontend"]
+    }
+  ],
+  "footerSocials": {}
+}

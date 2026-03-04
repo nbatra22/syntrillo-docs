@@ -1,0 +1,150 @@
+---
+title: "FastAPI + React-TS Architecture"
+description: "How the FastAPI backend and React-TypeScript frontend are connected in the Syntrillo clinical platform."
+---
+
+## Overview
+
+Syntrillo Clinic uses a two-app architecture:
+
+- **Backend**: Python FastAPI app at `apps/FastAPI/`, running on `http://127.0.0.1:8000` in development
+- **Frontend**: React 19 + TypeScript app at `apps/React-TS/`, running on `http://localhost:5173` via Vite
+
+The two communicate over HTTP — the React app makes `fetch` calls to FastAPI REST endpoints, and FastAPI returns JSON responses.
+
+---
+
+## Backend — FastAPI
+
+The FastAPI app is the single source of truth for all clinical data. It exposes a versioned REST API under the `/api/v1/` prefix.
+
+### Entry Point
+
+```
+apps/FastAPI/main.py
+```
+
+The `FastAPI` application instance is created here. Three routers are mounted at startup:
+
+| Router module | Prefix | Tag |
+|---|---|---|
+| `routes/blood_pressure.py` | `/api/v1/blood-pressure` | Blood Pressure |
+| `routes/risk_score.py` | `/api/v1/risk-score` | Risk Score |
+| `routes/devices.py` | `/api/v1/devices` | Devices |
+
+A `GET /health` endpoint is also available for liveness checks.
+
+### CORS
+
+CORS middleware is applied globally so that the React dev server (on a different port) is allowed to call the API. Allowed origins come from `config.py` via `settings.cors_origins`.
+
+### Shared Logic
+
+Business logic lives in `sources/syntrillo/` and is symlinked into the FastAPI app at `apps/FastAPI/syntrillo`. This keeps clinical algorithms (risk scoring, blood pressure analysis, etc.) decoupled from the HTTP layer.
+
+---
+
+## Frontend — React-TS
+
+The React app is a Vite-bundled SPA written in TypeScript. It renders Healthie-embedded iframes for both the **patient sidebar** and the **provider sidebar/tab**.
+
+### Entry Point
+
+```
+apps/React-TS/src/main.tsx  →  App.tsx  →  pages/
+```
+
+Routing is handled by React Router 7. Pages are organized by view context:
+
+```
+src/pages/
+  login/              # Auth gate
+  patient-sidebar/    # Patient-facing sidebar iframe
+  provider-sidebar/   # Provider billing dashboard iframe
+  provider-tab/       # Provider patient extra tab iframe
+```
+
+### API Client
+
+All HTTP calls to FastAPI are centralized in:
+
+```
+apps/React-TS/src/utils/api.ts
+```
+
+Three API namespaces are exported:
+
+| Export | Used by | Purpose |
+|---|---|---|
+| `providerApi` | Provider Sidebar | Fetch all-patients overview and single-patient billing/BP data |
+| `patientSidebarApi` | Patient Sidebar | Fetch BP summary, heart rate, biometrics, stroke risk factors |
+| `providerTabApi` | Provider Tab | Fetch BP data and stroke risk factors for a single patient |
+
+#### Base URL
+
+```ts
+const API_BASE_URL = import.meta.env.DEV
+  ? 'http://127.0.0.1:8000'      // local FastAPI dev server
+  : 'https://your-production-domain.com';
+```
+
+In development, the React app points directly at the local FastAPI server. In production, update this to the deployed API domain.
+
+#### Authentication
+
+Provider-facing calls attach a Bearer token from `localStorage`:
+
+```ts
+headers: {
+  'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+}
+```
+
+Patient-facing calls use a short-lived `temporary_lookup_code` passed as a query param or form body — no persistent auth token needed.
+
+---
+
+## Request Flow
+
+```
+React Component
+  │
+  ▼
+api.ts (fetch call)
+  │  HTTP GET/POST
+  ▼
+FastAPI route handler
+  │
+  ▼
+sources/syntrillo/ (shared clinical logic)
+  │
+  ▼
+JSON response
+  │
+  ▼
+React Component (renders data)
+```
+
+---
+
+## Running Locally
+
+**Backend**
+
+```bash
+cd apps/FastAPI
+uvicorn main:app --reload
+# API available at http://127.0.0.1:8000
+# Interactive docs at http://127.0.0.1:8000/docs
+```
+
+**Frontend**
+
+```bash
+cd apps/React-TS
+npm install
+npm run dev
+# App available at http://localhost:5173
+```
+
+FastAPI's interactive Swagger UI (`/docs`) is useful for testing endpoints independently before wiring them into the frontend.
