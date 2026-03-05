@@ -19,7 +19,7 @@
             "group": "Current System",
             "pages": [
               "current-system/overview",
-              "current-system/backend"
+              "current-system/backend/overview"
             ]
           },
           {
