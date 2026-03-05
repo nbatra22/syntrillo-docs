@@ -13,7 +13,9 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction"]
+            "pages": [
+              "introduction"
+            ]
           },
           {
             "group": "Current System",
@@ -33,7 +35,8 @@
             "pages": [
               "migration/overview",
               "migration/backend/overview",
-              "migration/frontend/overview"
+              "migration/frontend/overview",
+              "migration/stroke-risk-score"
             ]
           }
         ]
@@ -73,6 +76,12 @@
               "migration/api-reference/health-check"
             ]
           }
+        ]
+      },
+      {
+        "tab": "Dump",
+        "pages": [
+          "dumping-srs"
         ]
       }
     ]
