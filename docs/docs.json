@@ -19,16 +19,21 @@
             "group": "Current System",
             "pages": [
               "current-system/overview",
-              "current-system/backend",
-              "current-system/database",
-              "current-system/deployment"
+              "current-system/backend"
+            ]
+          },
+          {
+            "group": "Database",
+            "pages": [
+              "database/overview"
             ]
           },
           {
             "group": "Migration",
             "pages": [
               "migration/overview",
-              "migration/progress"
+              "migration/backend/overview",
+              "migration/frontend/overview"
             ]
           }
         ]
