@@ -1,55 +1,75 @@
 {
   "name": "SyntrilloClinic",
-  "theme": "willow",
-  "description": "Clinical platform documentation",
+  "theme": "mint",
   "colors": {
     "primary": "#0EA5E9",
     "light": "#38BDF8",
     "dark": "#0369A1"
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": ["introduction"]
-    },
-    {
-      "group": "Current System",
-      "pages": [
-        "current-system/overview",
-        "current-system/backend",
-        "current-system/database",
-        "current-system/deployment"
-      ]
-    },
-    {
-      "group": "Migration",
-      "pages": [
-        "migration/overview",
-        "migration/progress"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "migration/api-reference/get-bp-summary",
-        "migration/api-reference/get-bp-analysis",
-        "migration/api-reference/get-bp-extremes",
-        "migration/api-reference/get-bp-distribution",
-        "migration/api-reference/get-bp-hr",
-        "migration/api-reference/get-bp-biometrics",
-        "migration/api-reference/get-bp-metrics",
-        "migration/api-reference/download-bp-report",
-        "migration/api-reference/get-risk-score-data",
-        "migration/api-reference/get-lab-values",
-        "migration/api-reference/get-devices",
-        "migration/api-reference/health-check"
-      ]
-    },
-    {
-      "group": "Frontend",
-      "pages": [
-        "migration/frontend/overview"
-      ]
-    }
-  ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction"]
+          },
+          {
+            "group": "Current System",
+            "pages": [
+              "current-system/overview",
+              "current-system/backend",
+              "current-system/database",
+              "current-system/deployment"
+            ]
+          },
+          {
+            "group": "Migration",
+            "pages": [
+              "migration/overview",
+              "migration/progress"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Blood Pressure",
+            "pages": [
+              "migration/api-reference/get-bp-summary",
+              "migration/api-reference/get-bp-analysis",
+              "migration/api-reference/get-bp-extremes",
+              "migration/api-reference/get-bp-distribution",
+              "migration/api-reference/get-bp-hr",
+              "migration/api-reference/get-bp-biometrics",
+              "migration/api-reference/get-bp-metrics",
+              "migration/api-reference/download-bp-report"
+            ]
+          },
+          {
+            "group": "Risk Score",
+            "pages": [
+              "migration/api-reference/get-risk-score-data",
+              "migration/api-reference/get-lab-values"
+            ]
+          },
+          {
+            "group": "Devices",
+            "pages": [
+              "migration/api-reference/get-devices"
+            ]
+          },
+          {
+            "group": "System",
+            "pages": [
+              "migration/api-reference/health-check"
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
