@@ -1,5 +1,6 @@
 {
   "name": "SyntrilloClinic",
+  "theme": "willow",
   "description": "Clinical platform documentation",
   "colors": {
     "primary": "#0EA5E9",
