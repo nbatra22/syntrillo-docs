@@ -1,0 +1,42 @@
+---
+title: "Introduction"
+description: "Overview of the SyntrilloClinic platform and its ongoing system migration."
+---
+
+## What is SyntrilloClinic?
+
+SyntrilloClinic is a clinical platform that provides healthcare providers with patient monitoring tools including blood pressure tracking, risk scoring, lab value management, and device integration.
+
+## Current System
+
+The platform is currently live and hosted on **PythonAnywhere**. The current stack consists of:
+
+- **Frontend:** HTML/CSS served directly from PythonAnywhere
+- **Backend:** Flask server handling all API logic and data processing
+- **Database & Integrations:** AWS, configured via the `apps/AWS` directory
+
+## System Migration (In Progress)
+
+We are actively migrating the platform to a modern stack:
+
+- **Frontend:** React + TypeScript (located in `apps/React-TS`)
+- **Backend:** FastAPI (located in `apps/FastAPI`)
+
+The goal of this migration is to improve scalability, maintainability, and developer experience. Both the current system and the new system are documented here.
+
+## Documentation Structure
+
+<CardGroup cols={2}>
+  <Card title="Current System" icon="server" href="/current-system/overview">
+    Documentation for the live PythonAnywhere + Flask stack
+  </Card>
+  <Card title="Migration" icon="arrows-rotate" href="/migration/overview">
+    Progress and documentation for the FastAPI + React-TS migration
+  </Card>
+  <Card title="API Reference" icon="code" href="/migration/api-reference/get-bp-summary">
+    Full reference for all FastAPI endpoints
+  </Card>
+  <Card title="Frontend" icon="browser" href="/migration/frontend/overview">
+    React-TS component and page structure
+  </Card>
+</CardGroup>

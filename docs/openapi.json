@@ -1,0 +1,1659 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Syntrillo API",
+    "description": "Syntrillo clinical platform API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/blood-pressure/summary": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Bp Summary",
+        "description": "Key metrics with grades for the most recent (Current/Latest) timeframe.\n\nPowers the summary card at the top of the BP tab (target vs actual view).",
+        "operationId": "get_bp_summary_api_v1_blood_pressure_summary_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of date range (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Start of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of date range (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "End of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/analysis": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Bp Analysis",
+        "description": "Full timeframed analysis table with per-metric grades and progress deltas.\n\nPowers the detailed metrics table below the summary card.",
+        "operationId": "get_bp_analysis_api_v1_blood_pressure_analysis_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of date range (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Start of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of date range (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "End of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/extremes": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Bp Extremes",
+        "description": "Out-of-bounds readings: SBP < 90, SBP > 170, or DBP > 110.",
+        "operationId": "get_bp_extremes_api_v1_blood_pressure_extremes_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of date range (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Start of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of date range (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "End of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPExtremesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/distribution": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Bp Distribution",
+        "description": "Box-and-whisker statistics for systolic and diastolic readings by hour of day.\n\nPowers the distribution chart showing when readings tend to be\nhighest/lowest and how variable they are throughout the day.",
+        "operationId": "get_bp_distribution_api_v1_blood_pressure_distribution_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start of date range (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Start of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End of date range (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "End of date range (YYYY-MM-DD)"
+          },
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPDistributionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/hr": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Resting Hr",
+        "description": "Returns baseline, prior, and current resting heart rate averages.\n\nReplaces: POST /healthie/iframe_provider_tab/blood_pressure/hr",
+        "operationId": "get_resting_hr_api_v1_blood_pressure_hr_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPHRResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/biometrics": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Biometrics",
+        "description": "Returns physical activity, BMI, and SSQ data across timeframes.\n\nReplaces: POST /healthie/iframe_provider_tab/blood_pressure/biometrics",
+        "operationId": "get_biometrics_api_v1_blood_pressure_biometrics_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPBiometricsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/metrics": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Get Bp Metrics",
+        "description": "Returns SSQ score, BMI, and resting heart rate for the patient.\n\nReplaces: POST /healthie/iframe_provider_tab/blood_pressure/metrics",
+        "operationId": "get_bp_metrics_api_v1_blood_pressure_metrics_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BPMetricsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/blood-pressure/download": {
+      "get": {
+        "tags": [
+          "Blood Pressure"
+        ],
+        "summary": "Download Bp Report",
+        "description": "Streams a PDF blood pressure report.\n\nUses LegacyBPAnalysis (from bp_analysis) because BloodPressureReport\nrequires DataFrames (timeframed_df, extremes_df) that the new\nBloodPressureAnalysis class does not expose.\n\nAnalysis is computed server-side; the client no longer sends\npre-rendered JSON (unlike the legacy download endpoint).\n\nReplaces: GET/POST /healthie/iframe_provider_tab/blood_pressure/download",
+        "operationId": "download_bp_report_api_v1_blood_pressure_download_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start Date"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Name"
+            }
+          },
+          {
+            "name": "include_intro_section",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Intro Section"
+            }
+          },
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk-score/data": {
+      "get": {
+        "tags": [
+          "Risk Score"
+        ],
+        "summary": "Get Risk Score Data",
+        "description": "Risk score and priority score with supporting metrics.\n\nReplaces: POST /healthie/iframe_provider_tab/risk_score/data",
+        "operationId": "get_risk_score_data_api_v1_risk_score_data_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskScoreResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/risk-score/lab-values": {
+      "get": {
+        "tags": [
+          "Risk Score"
+        ],
+        "summary": "Get Lab Values",
+        "description": "Lab values extracted from the risk score metrics (HbA1c, LDL, HDL,\nTriglycerides, Creatinine).\n\nCalls calculate_risk_score internally and extracts metrics.lab_data.\nReturns None for any value the patient has not yet recorded.",
+        "operationId": "get_lab_values_api_v1_risk_score_lab_values_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabValuesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/devices": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get Devices",
+        "description": "Returns the list of Tenovi devices paired with the patient.\n\nReplaces: POST /healthie/iframe_provider_tab/devices",
+        "operationId": "get_devices_api_v1_devices_get",
+        "parameters": [
+          {
+            "name": "temporary_lookup_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Temporary patient lookup code from Healthie",
+              "title": "Temporary Lookup Code"
+            },
+            "description": "Temporary patient lookup code from Healthie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevicesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisRow": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MetricValue"
+            },
+            "type": "object",
+            "title": "Values"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/MetricProgress"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric",
+          "values",
+          "progress"
+        ],
+        "title": "AnalysisRow",
+        "description": "One row of the analysis table."
+      },
+      "BMIDataPoint": {
+        "properties": {
+          "bmi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bmi"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        },
+        "type": "object",
+        "title": "BMIDataPoint"
+      },
+      "BPAnalysisResponse": {
+        "properties": {
+          "timeframes": {
+            "items": {
+              "$ref": "#/components/schemas/TimeframeInfo"
+            },
+            "type": "array",
+            "title": "Timeframes"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/AnalysisRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "overall_progress": {
+            "$ref": "#/components/schemas/OverallProgress"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timeframes",
+          "rows",
+          "overall_progress"
+        ],
+        "title": "BPAnalysisResponse",
+        "description": "Full timeframed analysis table.\n\nPowers the detailed metrics table below the summary card."
+      },
+      "BPBiometricsResponse": {
+        "properties": {
+          "physical_activity_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Physical Activity Data"
+          },
+          "bmi_data": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BMIDataPoint"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Bmi Data"
+          },
+          "ssq_data": {
+            "$ref": "#/components/schemas/SSQData"
+          }
+        },
+        "type": "object",
+        "required": [
+          "physical_activity_data",
+          "bmi_data",
+          "ssq_data"
+        ],
+        "title": "BPBiometricsResponse",
+        "description": "Contextual biometric data: physical activity, BMI history, SSQ scores."
+      },
+      "BPDistributionResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/HourlyDataPoint"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "BPDistributionResponse",
+        "description": "Measurement spread by hour of day.\n\nPowers the distribution chart showing when readings tend to be\nhighest/lowest and how variable they are throughout the day."
+      },
+      "BPExtremesResponse": {
+        "properties": {
+          "measurements": {
+            "items": {
+              "$ref": "#/components/schemas/BPMeasurement"
+            },
+            "type": "array",
+            "title": "Measurements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "measurements"
+        ],
+        "title": "BPExtremesResponse",
+        "description": "Out-of-bounds measurements: SBP < 90, SBP > 170, or DBP > 110."
+      },
+      "BPHRResponse": {
+        "properties": {
+          "average_rhr_baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rhr Baseline"
+          },
+          "average_rhr_trailing": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rhr Trailing"
+          },
+          "average_rhr_prior": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rhr Prior"
+          },
+          "baseline_start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Start Date"
+          },
+          "baseline_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline End Date"
+          },
+          "prior_start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior Start Date"
+          },
+          "prior_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prior End Date"
+          },
+          "current_start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Start Date"
+          },
+          "current_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current End Date"
+          }
+        },
+        "type": "object",
+        "title": "BPHRResponse",
+        "description": "Resting heart rate averages across baseline, prior, and current timeframes."
+      },
+      "BPMeasurement": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "systolic": {
+            "type": "number",
+            "title": "Systolic"
+          },
+          "diastolic": {
+            "type": "number",
+            "title": "Diastolic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "systolic",
+          "diastolic"
+        ],
+        "title": "BPMeasurement",
+        "description": "A single blood pressure reading."
+      },
+      "BPMetricsResponse": {
+        "properties": {
+          "ssq_score": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Score"
+          },
+          "bmi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bmi"
+          },
+          "hr_measurements": {
+            "$ref": "#/components/schemas/HRMeasurements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hr_measurements"
+        ],
+        "title": "BPMetricsResponse",
+        "description": "Quick scalar metrics for the patient \u2014 no date-range dependency."
+      },
+      "BPSummaryResponse": {
+        "properties": {
+          "date_range": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Range"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "avg_sbp": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "avg_dbp": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "peak_sbp": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "low_sbp": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "symptomatic_hypotension": {
+            "$ref": "#/components/schemas/GradedMetric"
+          },
+          "near_hypotensive": {
+            "$ref": "#/components/schemas/GradedMetric"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "avg_sbp",
+          "avg_dbp",
+          "peak_sbp",
+          "low_sbp",
+          "symptomatic_hypotension",
+          "near_hypotensive"
+        ],
+        "title": "BPSummaryResponse",
+        "description": "Key blood pressure metrics with grades for the current/latest timeframe.\n\nPowers the summary card at the top of the BP tab (target vs actual view)."
+      },
+      "BoxPlotStats": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "q1": {
+            "type": "number",
+            "title": "Q1"
+          },
+          "median": {
+            "type": "number",
+            "title": "Median"
+          },
+          "mean": {
+            "type": "number",
+            "title": "Mean"
+          },
+          "q3": {
+            "type": "number",
+            "title": "Q3"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "outliers": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Outliers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "q1",
+          "median",
+          "mean",
+          "q3",
+          "max",
+          "outliers"
+        ],
+        "title": "BoxPlotStats",
+        "description": "Box-and-whisker statistics for one group (hour + measurement type).\n\nWhiskers use the 1.5\u00d7IQR rule; values beyond are listed as outliers."
+      },
+      "Device": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DeviceStatus"
+          },
+          "hardware_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hardware Uuid"
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "Device",
+        "description": "A single Tenovi device paired with the patient."
+      },
+      "DeviceStatus": {
+        "type": "string",
+        "enum": [
+          "connected",
+          "disconnected",
+          "unlinked"
+        ],
+        "title": "DeviceStatus"
+      },
+      "DevicesResponse": {
+        "properties": {
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/Device"
+            },
+            "type": "array",
+            "title": "Devices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "devices"
+        ],
+        "title": "DevicesResponse",
+        "description": "List of devices paired with the patient via Tenovi.\n\nMirrors the data used by:\n  POST /healthie/iframe_provider_tab/devices"
+      },
+      "GradedMetric": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "grade": {
+            "type": "integer",
+            "title": "Grade",
+            "description": "0=optimal 1=caution 2=critical 3=severe",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "GradedMetric",
+        "description": "A single metric value with a pre-computed severity grade.\n\nGrade scale: 0 = optimal, 1 = caution, 2 = critical, 3 = severe.\nReact maps grade \u2192 colour; no CSS is sent from the server."
+      },
+      "HRMeasurements": {
+        "properties": {
+          "baseline_rhr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Rhr"
+          },
+          "trailing_rhr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trailing Rhr"
+          }
+        },
+        "type": "object",
+        "title": "HRMeasurements"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HourlyDataPoint": {
+        "properties": {
+          "hour": {
+            "type": "integer",
+            "title": "Hour"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "systolic": {
+            "$ref": "#/components/schemas/BoxPlotStats"
+          },
+          "diastolic": {
+            "$ref": "#/components/schemas/BoxPlotStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "hour",
+          "count",
+          "systolic",
+          "diastolic"
+        ],
+        "title": "HourlyDataPoint",
+        "description": "Systolic and diastolic box plot stats for one hour of the day (0\u201323)."
+      },
+      "LabValuesResponse": {
+        "properties": {
+          "hemoglobin_a1c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hemoglobin A1C"
+          },
+          "ldl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ldl"
+          },
+          "hdl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hdl"
+          },
+          "triglycerides": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triglycerides"
+          },
+          "creatinine": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creatinine"
+          }
+        },
+        "type": "object",
+        "title": "LabValuesResponse",
+        "description": "Patient lab values extracted from the risk score metrics.lab_data.\n\nAll fields are optional \u2014 a value is None when the patient has no\nrecorded entry for that lab marker."
+      },
+      "MetricProgress": {
+        "properties": {
+          "since_baseline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressDelta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "since_prior": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressDelta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "MetricProgress",
+        "description": "Progress deltas for a single row, relative to baseline and prior."
+      },
+      "MetricValue": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade",
+            "description": "0=optimal 1=caution 2=critical. None means no colour coding for this metric."
+          }
+        },
+        "type": "object",
+        "title": "MetricValue",
+        "description": "One cell in the analysis table: the numeric value + its grade."
+      },
+      "OverallProgress": {
+        "properties": {
+          "since_baseline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressDelta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "since_prior": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressDelta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "OverallProgress",
+        "description": "Aggregate point-based progress across all tracked metrics."
+      },
+      "ProgressDelta": {
+        "properties": {
+          "delta_pts": {
+            "type": "integer",
+            "title": "Delta Pts"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "'improving' | 'worsening' | 'same'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delta_pts",
+          "direction"
+        ],
+        "title": "ProgressDelta",
+        "description": "Progress score for a single metric relative to a reference timeframe."
+      },
+      "RiskScoreResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "risk_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Score"
+          },
+          "priority_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Score"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metrics"
+          },
+          "independent_risk_variable_scores": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Independent Risk Variable Scores"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "RiskScoreResponse",
+        "description": "Risk score and priority score with supporting metrics."
+      },
+      "SSQData": {
+        "properties": {
+          "ssq_current": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Current"
+          },
+          "ssq_prior": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Prior"
+          },
+          "ssq_baseline": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Baseline"
+          },
+          "ssq_baseline_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Baseline Date"
+          },
+          "ssq_prior_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Prior Date"
+          },
+          "ssq_current_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ssq Current Date"
+          }
+        },
+        "type": "object",
+        "title": "SSQData",
+        "description": "Salt sensitivity questionnaire scores across timeframes."
+      },
+      "TimeframeInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "date_range": {
+            "type": "string",
+            "title": "Date Range"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "date_range"
+        ],
+        "title": "TimeframeInfo",
+        "description": "Metadata for a single analysis timeframe column."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
