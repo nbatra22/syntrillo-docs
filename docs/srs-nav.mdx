@@ -1,0 +1,93 @@
+---
+title: "SRS / NAV"
+---
+
+## Implementation plan
+
+- Josh listed a 2 main event triggers to update our stroke risk score
+  - submit onboarding form (done in healthie) // more than js the onboarding form
+  - Or any of the risk factors are updated 
+
+    Agg_data should return a data object that looks like so
+
+  ```text
+  'data': {
+  	'medical_history': {...}, // pulled from healthie and internal db
+  	'blood_pressure': {...}, // pulled from internal db
+  	'lab_values': {...}, // pulled from healthie
+  	'substance_use': {...} // healthie and internal db
+  	'physical_activity': {...}, // pulled from healthie - webhook for trigger
+  	'heart_rate': {...} // pulled from healthie & tenovi
+  }
+  ```
+
+when i say internal db i mean from srs_form_responses table (?)
+
+and pulled from healthie would be through api. ambigious on this because of the existence of healthie_form_responses table internally but saw that most of it was empty right now
+
+I think the idea is that each of these groupings would have separate data tables within AWS that get updated from event triggers.
+
+Agg_data pulls from each of these tables everytime one of them gets updated and then recalculates risk score
+
+srs_data_table looks like this:
+
+```text
+{
+	'risk_score': {
+		'score': FLOAT,
+		'dependent_risk_values': {
+			'value': FLOAT,
+			'risk_factors': [...],
+		},
+		'independent_risk_values' {
+			'value': FLOAT,
+			'risk_factors': {
+				'avg_sbp': FLOAT,
+				'ldl': FLOAT,
+				...
+			}
+		}
+	},
+	'priority_score': {
+		'score': FLOAT,
+		'dependent_risk_values': {
+			'value': FLOAT,
+			'risk_factors': [...],
+		},
+		'independent_risk_values' {
+			'value': FLOAT,
+			'risk_factors': {
+				'avg_sbp': FLOAT,
+				'ldl': FLOAT,
+				...
+			}
+		}
+	},
+	'data': {...},
+	'calculated_at': TIMESTAMP,
+}
+```
+
+which in table format would look like 
+
+| Column                 | Data type                         |
+| :--------------------- | :-------------------------------- |
+| risk_score             | response from calculator function |
+| priority_score         | response from calculator function |
+| syntrillo_internal_key | UUID                              |
+| data                   | JSON // response from agg_data    |
+| calculated_at          | TIMESTAMP                         |
+| trigger                | []                                |
+
+Webhook (healthie update or internal db update) → call a engine class function like engine_run("trigger") or something which will run aggregate_data() followed by srs_update(). 
+
+engine_run should update the srs_data_table with new aggregate_data object and new srs object. 
+
+First step is setting up this trigger points
+
+Everytime values are updated makeing sure they are saved within backend -- then i can start implementing the engine class. 
+
+with the engine class im first going to call the existing aggregate data and calculate_srs function. i will clean up their responses after. 
+
+- create new db structure
+- migrate existing data we have into said new db structure 

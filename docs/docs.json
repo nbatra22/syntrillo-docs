@@ -82,7 +82,8 @@
         "tab": "Dump",
         "pages": [
           "dumping-srs",
-          "srs-josh"
+          "srs-josh",
+          "srs-nav"
         ]
       }
     ]
