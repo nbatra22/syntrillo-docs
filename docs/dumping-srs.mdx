@@ -22,3 +22,19 @@ one stroke risk score database final risk score, time it was calculated, each of
 **Create the scheduler/event function** — a new Lambda that calls your existing `aggregate_data` + `calculate_risk_score` pipeline and writes results to a DB table
 
 **Flask route should visualize values from the above db table** everytime an update to risk score has been triggered
+
+```text
+// EXAMPLE AGG DATA OUTPUT
+
+{
+	...,
+	'medical_history': [
+		{
+			'metric_abbr				
+			'condition': STR,
+			'value': ANY,
+			'srs_multiplier': FLOAT, // RENAME THIS
+			'srs_contribution': FLOAT,
+			'sps_multiplier': FLOAT, // RENAME THIS
+			'sps_contribution': FLOAT,
+```

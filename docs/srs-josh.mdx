@@ -1,0 +1,493 @@
+---
+title: "SRS / JOSH"
+---
+
+## Event Triggers
+
+1. Onboarding Form Submission (Healthie webhook - form)
+2. Risk Factor Group Update
+   1. Medical History (Internal - form submission)
+   2. Lab Values (Healthie webhook - metric entry)
+   3. Substance Use (Internal - form submission)
+   4. Blood Pressure (Internal - BP analysis lambda \*\*\* every 1 month instead of 2)
+   5. Tests/Orders (TBD - Healthie webhook or Internal)
+   6. Physical Activity (Healthie webhook - form)
+
+All Healthie webhook events would be sent to our (not yet created) Lambda function endpoint, which would read the payload then, depending on event type, query the corresponding event data (either form answers or metric entries) from Healthie and save the data to their respective datatables as needed.
+
+More information on each grouping is below.
+
+## Risk Factor Groupings
+
+These groupings are based on the categorization of patient health data as well as the frequency of capture.
+
+### Medical History
+
+Probably captured just once through the onboarding form unless a new condition is made known to us while the patient is under our care. The main proponent of this form would be to capture treatment optimization of each confirmed condition, which the Healthie form lacks.
+
+You can view the production onboarding form here: https://patients.syntrillo.com/forms/2687534
+
+Here's a list of conditions that are a stroke risk factor:
+
+| Condition                   | Short Name       | Dependency                      | Data Type                                                                                                        | Treatment Optimization? |
+| --------------------------- | ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Atrial Fibillation          | a_fib            |                                 | BOOL                                                                                                             |                         |
+| Iron Deficiency Anemia      | id_anemia        |                                 | BOOL                                                                                                             |                         |
+| Arterial Clots              | a_clots          |                                 | ENUM:<br />single prior event<br />multiple prior events<br />unknown                                            | No                      |
+| Venous Clots                | v_clots          |                                 | ENUM:<br />single event<br />multiple events<br />unknown                                                        | No                      |
+| Congestive Heart Failure    | chf              |                                 | BOOL                                                                                                             |                         |
+| Carotid Stenosis            | c_stenosis       |                                 | BOOL                                                                                                             |                         |
+| Obstructive Sleep Apnea     | osa              |                                 | BOOL                                                                                                             |                         |
+| Coronoary Artery Disease    | cad              |                                 | BOOL                                                                                                             |                         |
+| Valvular Heart Disease      | vhd              |                                 | BOOL                                                                                                             |                         |
+| Hyperlipidemia              | hyperlipidemia   | hdl<br />ldl<br />triglycerides | BOOL                                                                                                             |                         |
+| Hypertension                | hypertension     |                                 | BOOL                                                                                                             | ?                       |
+| Transient Ischemic Attack   | tia              |                                 | BOOL                                                                                                             |                         |
+| diabetes                    | diabetes         |                                 | BOOL                                                                                                             | ?                       |
+| Peripheral Vascular Disease | pvd              |                                 | BOOL                                                                                                             | ?                       |
+| CAD Type                    | cad_type         | cad                             | ENUM:<br />symptomatic<br />asymptomatic single vessel<br />asymp multivessel<br />unknown                       | No                      |
+| Ejection Fraction           | chf_ef           | chf                             | ENUM:<br />≤ 40%<br />\> 40%<br />unknown                                                                        | No                      |
+| Stroke                      | previous_stroke  |                                 | ENUM:<br />one<br />multiple                                                                                     | No                      |
+| Stroke Mechanism            | stroke_mechanism | previous_stroke                 | ENUM<br />cardioembolic<br />small vessel<br />large vessel<br />cryptogenic<br />hypercoaguable<br />structural | No                      |
+| History of Ischemia         | ischemia         | tia<br />previous_stroke        | BOOL                                                                                                             |                         |
+| Hypercoaguable State        | hypercoaguable   | v_clots<br />a_clots<br />???   | BOOL                                                                                                             | ?                       |
+| Presence of PFO             | pfo_present      | v_clots                         | ENUM:<br />positive<br />negative<br />unknown                                                                   | No                      |
+
+I'm tired after writing that. Here's some notes on that table:
+
+- Conditions/metrics with non-null dependencies basically require its dependency to be truthy/present (i.e. if a patient has had a previous stroke, then that's considered history of ischemia)
+- Assume 'yes' for every condition/metric with a blank value for treatment optimization. Values with '?' may need to be confirmed by Omar
+
+EDIT: I just realized the example objects below are a better depiction of how I envision this table to look like column-wise. We'll probably need a join table of some sort that include all the risk factors but I'll add more thoughts on that somewhere further down this abyss.
+
+Here's an example of how 'medical_history' could appear within the risk factor aggregation parent object:
+
+```text
+{
+	'medical_history': [
+		{
+			'display_name': 'History of Ischemia',
+			'short_name': 'Ischemia'
+			'condition_key': 'ischemia',
+			'value': True
+			'compliance': 'Optimized'
+			'dependencies': ['previous_stroke'],
+			'updated_at': TIMESTAMP
+		},
+		{
+			'display_name': 'Previous Stroke(s)',
+			'short_name': 'Stroke(s)'
+			'condition_key': 'previous_stroke',
+			'value': 'Multiple'
+			'compliance': 'Optimized'
+			'dependencies': [],
+			'updated_at': TIMESTAMP
+		},
+		{
+			'display_name': 'Obstructive Sleep Apnea',
+			'short_name': 'OSA'
+			'condition_key': 'osa',
+			'value': True
+			'compliance': 'Not optimized'
+			'dependencies': [],
+			'updated_at': TIMESTAMP
+		},
+		...
+	]
+}
+```
+
+Alternatively, we could also have medical_history appear as a dictionary:
+
+```text
+{
+	'medical_history': {
+		'ischemia': {
+			'display_name': 'History of Ischemia',
+			'short_name': 'Ischemia'
+			'condition_key': 'ischemia',
+			'value': True
+			'compliance': 'Optimized'
+			'dependencies': ['previous_stroke'],
+			'updated_at': TIMESTAMP
+		},
+		'previous_stroke': {
+			'display_name': 'Previous Stroke(s)',
+			'short_name': 'Stroke(s)'
+			'condition_key': 'previous_stroke',
+			'value': 'Multiple'
+			'compliance': 'Optimized'
+			'dependencies': [],
+			'updated_at': TIMESTAMP
+		},
+		'osa': {
+			'display_name': 'Obstructive Sleep Apnea',
+			'short_name': 'OSA'
+			'condition_key': 'osa',
+			'value': True
+			'compliance': 'Not optimized'
+			'dependencies': [],
+			'updated_at': TIMESTAMP
+		},
+		...
+	}
+}
+```
+
+The latter of these two options is probably more intuitive tbh
+
+### Blood Pressure
+
+Our most abundant pool of data. Best case scenario is that each patient records at least one measurement a day since baseline. These values can be grabbed directly from tenovi_raw_measurements. Note 'value_1' is systolic and 'value_2' is diastolic. Also make sure to query by 'blood_pressure' for 'metric_name', but you should probably just use the BloodPressureAnalysis class too.
+
+The only BP metrics we care about for the SRS calculation is the following:
+
+- Average SBP
+- Average DBP
+- SBP Variability (std. deviation)
+- SBP Peak (avg. of 3 highest measurements)
+
+The only caveat here is that we need to handle the timeframes differently depending how far along the patient has been under our care. The basic rule of thumb is to check if the patient's first measurement is less than or greater than 4 weeks time. If the former is true, use Baseline values (first two weeks). If the latter is true, use 1 month trailing values.
+
+Here's what the blood_pressure object could look like within the risk factor aggregation parent object:
+
+```text
+{
+	'blood_pressure': {
+		'avg_sbp': {
+			'display_name': 'Average Systolic BP',
+			'short_name': 'Avg SBP'
+			'value': FLOAT
+			'timeframe': '1mo. Trailing'
+		},
+		'avg_dbp': {
+			'display_name': 'Average Diastolic BP',
+			'short_name': 'Avg DBP'
+			'value': FLOAT
+			'timeframe': '1mo. Trailing'
+		},
+		'sbp_variability': {
+			'display_name': 'Systolic BP Variability',
+			'short_name': 'SBP Variability'
+			'value': FLOAT
+			'timeframe': '1mo. Trailing'
+		},
+		'peak_sbp': {
+			'display_name': 'Peak Systolic BP',
+			'short_name': 'Peak SBP'
+			'value': FLOAT
+			'timeframe': '1mo. Trailing'
+		},
+		...
+	}
+}
+```
+
+### Lab Values
+
+Updated maybe a few times a year? Frequency doesn't really matter though since the curent workflow is that clinicians update these values in Healthie once its reported to them.
+
+That said, we'll need to query Healthie's API to retrieve each the following metrics:
+
+- LDL
+- HDL
+- Hemoglobin A1c
+- Triglycerides
+- Creatinine
+
+Here's the lab_values thing in the aggregate parent thing:
+
+```text
+'lab_values': {
+	'ldl': {
+		'display_name': 'Low Density Lipoprotein'
+		'short_name': 'LDL'
+		'value': FLOAT,
+		'level': ENUM
+		'updated_at': TIMESTAMP
+	},
+	'hdl': {
+		'display_name': 'High Density Lipoprotein'
+		'short_name': 'HDL'
+		'value': FLOAT,
+		'level': ENUM
+		'updated_at': TIMESTAMP
+	},
+	...
+}
+```
+
+### Substance Use
+
+Probably the second most frequently captured data pool? Not now but like in the future? First data points are captured via onboarding form, but we should provide an internal form in case of behavioral changes post-onboarding.
+
+These metrics are what's used in the calculation:
+
+- Alcohol use (drinks per day)
+- Marijuana use (yay or nay)
+- Cigarette use (darts per day)
+
+These are other fun metrics that are on the onboarding form that we can also display/capture:
+
+- Alcohol frequency (times per month)
+- Tobacco use (yay or nay)
+- Tobacco type (vape god, chewing guy, dart dude)
+- Other substances (use your imagination here)
+
+Here's what the child should look like in parent:
+
+```text
+'substance_use': {
+	'alcohol_use': {
+		'display_name': 'Alcohol Use'
+		'unit': 'drinks per day'
+		'value': '7+',
+		'updated_at': TIMESTAMP
+	},
+	'marijuana_use': {
+		'display_name': 'Marijuana Use'
+		'unit': None,
+		'value': 'Yes',
+		'updated_at': TIMESTAMP
+	},
+	'cigarette_use': {
+		'display_name': 'Cigarette Use'
+		'unit': 'cigarettes per day'
+		'value': '0',
+		'updated_at': TIMESTAMP
+	}
+	...
+}
+```
+
+### Tests/Orders
+
+This bucket is boring but probably similar to the substance use in that these can maybe be updated more than once per year? Doesn't really matter though because this bucket is a fake bucket in that it is not used in the calculation but is nice to display.
+
+I don't want to write more about this bucket before we get the greenlight from Omar that this fake bucket should be promoted to a real bucket.
+
+### Physical Activity
+
+Healthie form. Patients _should_ be filling this out every three months or so but who knows if they do (not me).
+
+We only care about two metrics here:
+
+- Physical Activity (moderate + vigorous activity / week)
+- Physical Inactivity (hours sitting / day)
+
+Link to said form: https://patients.syntrillo.com/forms/2670536
+
+### Resting Heart Rate
+
+Use Healthie Metric, else Tenovi pulse measurements.
+
+## Origin Groupings
+
+Here's a tabular Venn diagram of the bucket origins:
+
+| Healthie                       | Both            | Internal                          |
+| ------------------------------ | --------------- | :-------------------------------- |
+| Medical History (baseline)     | Medical History | Medical History (post-onboarding) |
+| Lab Values                     |                 | Blood Pressure                    |
+| Substance use (baseline)       | Substance use   | Substance use (post-onboarding)   |
+| Tests/Orders?                  |                 |                                   |
+| Physical Activity              |                 |                                   |
+| Metrics ('Resting Heart Rate') | Heart Rate      | tenovi_raw_measurements ('pulse') |
+
+## Aggregate Data Object
+
+```text
+'data': {
+	'medical_history': {...},
+	'blood_pressure': {...},
+	'lab_values': {...},
+	'substance_use': {...}
+	'physical_activity': {...},
+	'heart_rate': {...}
+}
+```
+
+Vibez
+
+## Risk Score Calculations
+
+I've gone blind but will add more here soon. Here's what I envision the response object to look like:
+
+```text
+{
+	'risk_score': {
+		'score': FLOAT,
+		'dependent_risk_values': {
+			'value': FLOAT,
+			'risk_factors': [...],
+		},
+		'independent_risk_values' {
+			'value': FLOAT,
+			'risk_factors': {
+				'avg_sbp': FLOAT,
+				'ldl': FLOAT,
+				...
+			}
+		}
+	},
+	'priority_score': {
+		'score': FLOAT,
+		'dependent_risk_values': {
+			'value': FLOAT,
+			'risk_factors': [...],
+		},
+		'independent_risk_values' {
+			'value': FLOAT,
+			'risk_factors': {
+				'avg_sbp': FLOAT,
+				'ldl': FLOAT,
+				...
+			}
+		}
+	},
+	'data': {...},
+	'calculated_at': TIMESTAMP,
+}
+```
+
+If this is the end goal of the entire SRS system, then the new datatable to solve the historical trend problem could probably be as simple as this:
+
+| Column                 | Data type |
+| ---------------------- | --------- |
+| syntrillo_internal_key | UUID      |
+| data                   | JSON      |
+| created_at             | TIMESTAMP |
+| trigger                | []        |
+
+EDIT: everything below 'created_at' is an afterthought
+
+## Backend Architecture
+
+I have three classes in mind, which would look very similar to the v2 version:
+
+1. SRS Engine
+2. SRS Data Aggregator
+3. SRS Calculator
+
+### SRS Data Aggregator
+
+High level, scroll to the last section is confused.
+
+```text
+class SRSDataAggregator():
+	__init__(self, trigger):
+		if trigger is not None:
+			self.latest_copy = _pull_latest():
+		else:
+			self.medical_history = _get_medical_history():
+			self.blood_pressure = _get_blood_pressure():
+		...
+	
+	aggregate_data():
+		return {
+			'medical_history': {...},
+			'blood_pressure': {...},
+			...
+		}
+		
+	_pull_latest()
+	_get_medical_history():
+	_get_blood_pressure():
+	...
+```
+
+### SRS Calculator
+
+```text
+class SRSCalculator():
+	__init__(self, aggregate_data): 
+		self.data = aggregate_data
+
+	calculate_srs():
+	calculate_sps():
+
+	_calculate_dependent_risk_values(type=['srs' || 'sps']):
+	_calculate_independent_risk_values(type=['srs' || 'sps']):
+```
+
+### SRS Engine
+
+The main entry point to this entire automation. 
+
+```text
+class SRSEngine():
+	__init__(self, trigger):
+		self.trigger = trigger
+		
+		data_aggregator = SRSDataAggregation(trigger=self.trigger)
+		self.aggregate_data = data_aggregator.aggregate()
+		
+		self.calculator = SRSCalculator(aggregate_data=self.aggergate_data)
+	
+	save_to_db()
+```
+
+### My brain is fried
+
+You may have noticed some weird props thrown in above. This is because I think we can speed up parts of this process by passing in a trigger prop into the engine class, which would signify what bucket was updated. Knowing this information, the aggregator class can simply get that respective bucket's updated data and replace it in the latest copy of the patient's SRS data object. 
+
+An example would be if a post-onboarding patient has a new lab value recorded, then from the Lambda function after receiving the webhook event, we instantiate this class something along these lines:
+
+```text
+if payload.resource = 'metric.updated':
+	srs_engine = SRSEngine(trigger='lab_value')
+```
+
+Then in the SRS Engine class:
+
+```text
+class SRSEngine():
+	__init__(self, trigger='lab_value'):
+		self.trigger = 'lab_value'
+		
+		data_aggregator = SRSDataAggregation(trigger=self.trigger)
+		self.aggregate_data = data_aggregator.aggregate()
+		
+		self.calculator = SRSCalculator(aggregate_data=self.aggergate_data)
+```
+
+Next, the aggregator class:
+
+```text
+class SRSDataAggregator():
+
+	__init__(self, trigger):
+		self.trigger = trigger
+		self.updated_bucket = None
+
+		if self.trigger is not None:
+			self.latest_copy = _pull_latest():
+			
+			if self.trigger == 'lab_values':
+				self.updated_bucket = self._get_lab_values()
+			
+			...
+		else:
+			self.medical_history = _get_medical_history():
+			self.blood_pressure = _get_blood_pressure():
+			...
+	
+	aggregate_data():
+		if self.trigger is not None:
+			self.latest_copy[self.trigger] = self.updated_bucket
+			return latest_copy
+		else:
+			return {
+				'medical_history': _get_medical_history(),
+				'blood_pressure': _get_blood_pressure(),
+				...
+			}
+		
+	_pull_latest()
+	_get_medical_history():
+	_get_blood_pressure():
+	_get_lab_values():
+	...
+```
+
+Finally, back in the engine class, after aggregating and calculating, we can save the new copy with the trigger as an additional column to this new datatable we've been talking bout

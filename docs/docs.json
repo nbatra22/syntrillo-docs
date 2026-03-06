@@ -81,7 +81,8 @@
       {
         "tab": "Dump",
         "pages": [
-          "dumping-srs"
+          "dumping-srs",
+          "srs-josh"
         ]
       }
     ]
