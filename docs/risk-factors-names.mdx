@@ -1,0 +1,50 @@
+---
+title: "Data Tables"
+---
+
+### `srs_risk_factor_names`
+
+| metric_key          | display_name              | short_name      | category    |
+| :------------------ | :------------------------ | :-------------- | :---------- |
+| avg_sbp             | Average Systolic BP       | Avg SBP         | independent |
+| sbp_std             | Systolic BP Variability   | SBP Variability | independent |
+| rhr                 | Resting Heart Rate        | RHR             | independent |
+| physical_inactivity | Physical Inactivity       | Inactivity      | independent |
+| physical_activity   | Physical Activity         | Activity        | independent |
+| cigarette_use       | Cigarette Use             | Cigarette Use   | independent |
+| alcohol_use         | Alcohol Use               | Alcohol Use     | independent |
+| marijuana_use       | Marijuana Use             | Marijuana Use   | independent |
+| recent_stroke       | Previous Stroke           | Stroke          | dependent   |
+| tia                 | Transient Ischemic Attack | TIA             | dependent   |
+| headCT              | Chronic Infarct / Head CT | Head CT         | dependent   |
+| afib                | Atrial Fibrillation       | AFib            | dependent   |
+| anemia              | Iron Deficiency Anemia    | Anemia          | dependent   |
+| arterialClots       | Arterial Clots            | Art. Clots      | dependent   |
+| venousClots         | Venous Clots              | Ven. Clots      | dependent   |
+| chf                 | Congestive Heart Failure  | CHF             | dependent   |
+| stenosis            | Carotid Stenosis          | Stenosis        | dependent   |
+| osa                 | Obstructive Sleep Apnea   | OSA             | dependent   |
+| heartDisease        | Valvular Heart Disease    | Val. Hrt Dis.   | dependent   |
+| cad                 | Coronary Artery Disease   | CAD             | dependent   |
+| ldl                 | LDL Cholesterol           | LDL             | dependent   |
+| hdl                 | HDL Cholesterol           | HDL             | dependent   |
+| triglycerides       | Triglycerides             | Triglycerides   | dependent   |
+
+### Table 2: `medical_history` — **per-patient, versioned**
+
+The fields come directly from what `data_aggregator.py` ([line 158](vscode-webview://01cekvndj6n9g7br6bvuppebg9u74avm4mk1049idshd1k5koasv/sources/syntrillo/stroke_risk_score_v3/data_aggregator.py#L158)) maps via `populate_with_patient_history`. The data flows: **Healthie form →** `get_form_answers_group()` **→ parsed into** `SRSFormResponse`.
+
+Important: most of these fields already live in `srs_form_responses` — so `medical_history` is either:
+
+- A **dedicated intermediate table** pulling directly from Healthie, or
+- A **view/derived table** from `srs_form_responses` with just the history booleans
+
+**Populated by:** Healthie API via `get_form_answers_group(custom_module_form_id=<history_form_id>, user_id=<user_id>)` — same pipeline that feeds `srs_form_responses`
+
+### Table 3: `substance_use` — **per-patient, versioned**
+
+Fields come from [SubstanceUseCard.tsx](vscode-webview://01cekvndj6n9g7br6bvuppebg9u74avm4mk1049idshd1k5koasv/apps/React-TS/src/components/provider-tab/dashboard/cards/SubstanceUseCard.tsx) and the `SubstanceUse` interface in [staticData.ts](vscode-webview://01cekvndj6n9g7br6bvuppebg9u74avm4mk1049idshd1k5koasv/apps/React-TS/src/components/provider-tab/dashboard/data/staticData.ts#L62): `tobaccoUse`, `tobaccoType`, `alcoholConsumption`, `marijuanaUse`, `otherSubstanceUse`, `otherSubstanceType`.
+
+Critically — in `data_aggregator.py` line 118/151, `substance_use_data` is hardcoded to `{}`. **This pipeline is not yet implemented.** The `cigarette_use`, `alcohol_use`, `marijuana_use` keys exist in constants.py but have no data source yet.
+
+**Populated by:** Healthie form (there's a substance use intake form) via the same `get_form_answers_group` pattern, once the form ID is identified.

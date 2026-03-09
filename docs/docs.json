@@ -10,7 +10,7 @@
     "tabs": [
       {
         "tab": "Docs",
-        "groups": [
+        "pages": [
           {
             "group": "Getting Started",
             "pages": [
@@ -38,7 +38,8 @@
               "migration/frontend/overview",
               "migration/stroke-risk-score"
             ]
-          }
+          },
+          "risk-factors-names"
         ]
       },
       {
