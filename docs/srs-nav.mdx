@@ -4,14 +4,14 @@ title: "SRS / NAV"
 
 ## Current status
 
-- **<kbd>✅</kbd>** create medical history, srs_names, and substance use tables
+- **✅** create medical history, srs_names, and substance use tables
 - <kbd>x</kbd> populate medical_history and substance_use from srs_form_responses or Healthie getAllFormResponses endpoint (currently got dummy data)
-- **<kbd>✅</kbd>** make sure`medical_history` and `substance_use` are **append-only** db (keep full history with `created_at`) or **upsert/latest-only** (one row per patient)?
+- **✅** make sure`medical_history` and `substance_use` are **append-only** db (keep full history with `created_at`) or **upsert/latest-only** (one row per patient)?
 - <kbd>x</kbd>  write a new data_agg.py in stroke_risk_score_v3
-  - **<kbd>✅</kbd>** add get_medical_history(patient-lookup-key) ← from new data table 
-  - **<kbd>✅</kbd>** add get_substance_use(patient-lookup-key) ← from new data table
+  - **✅** add get_medical_history(patient-lookup-key) ← from new data table
+  - **✅** add get_substance_use(patient-lookup-key) ← from new data table
   - <kbd>x</kbd> add get_blood_pressure (this can be the same way it is doing before)
-  - <kbd>x</kbd> get_physical_activity (same)
+  - <kbd>x</kbd> get_physical_activity (can also be the same)
   - <kbd>x</kbd> get_lab_values (can also be the same)
   - <kbd>x</kbd> get_heart_rate (can be the same)
 - <kbd>x</kbd>  restructure data_agg output to be:
@@ -30,13 +30,13 @@ def aggregate_data(self) -> dict:
 
 - <kbd>x</kbd>  start on srsCalculator (not here yet)  intermediate steps after talking w Josh
   - <kbd>x</kbd>  uses output from data_agg to calculate srs from algo in spreadsheet
-- <kbd>x</kbd> Then can implement the engine class which uses Lambda trigger functions to update db and periodacally call data_agg then calculate_risk_score
+- <kbd>x</kbd> Then can implement the engine class which uses Lambda trigger functions to update db and periodacally call data_agg and calculate_risk_score
 
 ### Basic SRS flow should be
 
 Webhook (healthie update or internal db update) → call a engine class function like engine_run("trigger") or something which will run aggregate_data() followed by srs_update().
 
-## Notes: 
+## Notes:
 
 - Josh listed a 2 main event triggers to update our stroke risk score
   - submit onboarding form (done in healthie) // more than js the onboarding form
