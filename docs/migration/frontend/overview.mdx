@@ -7,26 +7,6 @@ description: "React + TypeScript architecture, app structure, and API integratio
 
 The new frontend is a React 19 + TypeScript application built with Vite, located at `apps/React-TS/`. It replaces all Flask-rendered HTML templates and Jinja iframes. The app runs entirely in the browser and fetches data from the FastAPI backend.
 
----
-
-## Setup
-
-**1. Install dependencies** (from `apps/React-TS/`)
-
-```bash
-npm install
-```
-
-**2. Start the development server from React-TS directory**
-
-```bash
-npm run dev
-```
-
-The app runs at `http://localhost:5173` by default. The FastAPI backend must also be running at `http://127.0.0.1:8000` (configured via `CORS_ORIGINS` in the backend `.env`).
-
-Visit /provider-tab to see the new dashboard
-
 ## App Structure
 
 ```text

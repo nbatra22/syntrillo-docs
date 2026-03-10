@@ -3,52 +3,26 @@ title: "Overview"
 description: "System migration from Flask/PythonAnywhere to FastAPI + React-TS."
 ---
 
-Start the system: (Install dependencies if needed)
-
-1. In one terminal open AWS/syntrillo-clinic-backend/utils/bastion
-
-   run the command:
-
-```text
-./ssm-start.sh staging mysql-tunnel
-```
-
-2. In a new terminal enter  app/FastAPI directory
-
-   To install dependencies run _<u>pip install -r requirements.txt</u>_
-
-   To run the program run command:
-
-`uvicorn main:app --reload`
-
-3. In a third terminal cd into app/React-TS directory
-
-   To install dependencies run _<u>npm install</u>_
-
-   run the command
-
-`npm run dev`
-
 ## Architecture: Before vs. After
 
 <CardGroup cols={2}>
   <Card icon="server" title="Current System (Live)">
     **Frontend:** HTML/CSS rendered server-side via Flask templates
 
-    **Backend:** Flask on PythonAnywhere — handles routing, rendering, and business logic in one process
+    **Backend:** Flask on PythonAnywhere — handles routing, rendering, and  logic in one process
 
     **Database:** AWS (MySQL via pymysql)
 
     **Auth:** Session-based, handled in Flask
   </Card>
   <Card icon="arrows-rotate" title="New System (In Progress)">
-    **Frontend:** React 19 + TypeScript + Vite — runs in the browser, fetches data from the API
+    **Frontend:** React 19 + TypeScript + Vite — runs in the browser, fetches data via  API
 
-    **Backend:** FastAPI + Uvicorn — pure JSON API, no HTML rendering
+    **Backend:** FastAPI + Uvicorn, no HTML rendering
 
     **Database:** Same AWS MySQL (shared `sources/syntrillo` layer)
 
-    **Auth:** Token-based via `syntrillo_internal_key` query param, enforced per-endpoint
+    **Auth:** ??
   </Card>
 </CardGroup>
 
@@ -62,7 +36,7 @@ Start the system: (Install dependencies if needed)
 
 **Phase 3 — Deployment** Deploy FastAPI to AWS (replacing PythonAnywhere for the backend). The React app is served as a static build. The `apps/AWS` directory contains CDK infrastructure and Lambda functions for this phase.
 
-## Navigation
+## Read More About:
 
 <CardGroup cols={2}>
   <Card icon="python" href="/migration/backend/overview" title="Backend (FastAPI)">
