@@ -14,8 +14,7 @@
           {
             "group": "Getting Started",
             "pages": [
-              "introduction",
-              "starting-locally"
+              "introduction"
             ]
           },
           {
@@ -35,6 +34,7 @@
             "group": "Migration",
             "pages": [
               "migration/overview",
+              "starting-locally",
               "migration/backend/overview",
               "migration/frontend/overview",
               "migration/aws-updates"
