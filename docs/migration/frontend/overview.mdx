@@ -17,7 +17,7 @@ The new frontend is a React 19 + TypeScript application built with Vite, located
 npm install
 ```
 
-**2. Start the development server**
+**2. Start the development server from React-TS directory**
 
 ```bash
 npm run dev
@@ -25,31 +25,11 @@ npm run dev
 
 The app runs at `http://localhost:5173` by default. The FastAPI backend must also be running at `http://127.0.0.1:8000` (configured via `CORS_ORIGINS` in the backend `.env`).
 
-**Other scripts:**
-
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Development server with HMR |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-
----
-
-## Stack
-
-| Tool | Purpose |
-|---|---|
-| **React 19** | UI framework |
-| **TypeScript** | Static typing |
-| **Vite** | Build tool and dev server (HMR via SWC) |
-| **Tailwind CSS 4** | Utility-first styling |
-| **React Router** | Client-side navigation |
-
----
+Visit /provider-tab to see the new dashboard
 
 ## App Structure
 
-```
+```text
 apps/React-TS/src/
 ├── main.tsx              # Entry point — renders <App /> into the DOM
 ├── App.tsx               # Root component, router setup
@@ -70,8 +50,6 @@ apps/React-TS/src/
 └── assets/               # Static assets
 ```
 
----
-
 ## Pages
 
 **Provider Tab** — The main clinical view. Loads data from the FastAPI API and renders the BP tab, risk score tab, and other clinical panels. Corresponds to the legacy Flask iframes that were embedded in Healthie.
@@ -88,18 +66,4 @@ apps/React-TS/src/
 
 The React app fetches data from the FastAPI backend (`http://127.0.0.1:8000/api/v1/...` in development). A key design advantage over the legacy system: the frontend can fetch multiple endpoints **in parallel** rather than waiting for a single large response.
 
-For example, the BP tab can simultaneously fetch `/summary`, `/analysis`, `/extremes`, and `/distribution` using `Promise.all`, reducing total load time compared to the legacy single-payload approach.
-
-All API calls pass a `temporary_lookup_code` query parameter for patient identity resolution. Auth failures return `401` and are handled by the app before rendering any patient data.
-
----
-
-## Key Differences from the Legacy System
-
-| Legacy (Flask) | New (React-TS) |
-|---|---|
-| HTML rendered server-side by Flask/Jinja | React renders entirely in the browser |
-| Single large `/analysis` payload | Multiple focused endpoints, fetched in parallel |
-| iFrame-based embedding in Healthie | Standalone React app (or embeddable component) |
-| No TypeScript — Python templates | Fully typed TypeScript components |
-| Tailwind not used | Tailwind CSS 4 for all styling |
+For example, the BP tab can simultaneously fetch `/summary`, `/analysis`, `/extremes`, and `/distribution` using `Promise.all`, reducing total load time compared to the legacy single-payload approach. Planning on making this event driven

@@ -35,8 +35,7 @@
             "pages": [
               "migration/overview",
               "migration/backend/overview",
-              "migration/frontend/overview",
-              "migration/stroke-risk-score"
+              "migration/frontend/overview"
             ]
           },
           "risk-factors-names"

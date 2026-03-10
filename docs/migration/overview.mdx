@@ -3,23 +3,10 @@ title: "Overview"
 description: "System migration from Flask/PythonAnywhere to FastAPI + React-TS."
 ---
 
-## Why We're Migrating
-
-The current system runs a Flask backend on PythonAnywhere serving server-rendered HTML. While functional, this architecture has scaling limits and couples rendering logic tightly to the backend. The migration separates concerns cleanly: FastAPI handles all data and business logic via a REST API, while a React frontend owns all UI rendering.
-
-**Goals:**
-- Decouple frontend and backend into independently deployable apps
-- Replace HTML-rendering Flask routes with typed, documented JSON API endpoints
-- Enable parallel data fetching on the frontend (React can fetch multiple endpoints simultaneously)
-- Improve testability with a proper unit + integration test suite
-- Lay the groundwork for full AWS deployment
-
----
-
 ## Architecture: Before vs. After
 
 <CardGroup cols={2}>
-  <Card title="Current System (Live)" icon="server">
+  <Card icon="server" title="Current System (Live)">
     **Frontend:** HTML/CSS rendered server-side via Flask templates
 
     **Backend:** Flask on PythonAnywhere — handles routing, rendering, and business logic in one process
@@ -28,7 +15,7 @@ The current system runs a Flask backend on PythonAnywhere serving server-rendere
 
     **Auth:** Session-based, handled in Flask
   </Card>
-  <Card title="New System (In Progress)" icon="arrows-rotate">
+  <Card icon="arrows-rotate" title="New System (In Progress)">
     **Frontend:** React 19 + TypeScript + Vite — runs in the browser, fetches data from the API
 
     **Backend:** FastAPI + Uvicorn — pure JSON API, no HTML rendering
@@ -43,68 +30,30 @@ The current system runs a Flask backend on PythonAnywhere serving server-rendere
 
 ## Shared Business Logic
 
-Both systems share the same clinical logic layer located in `sources/syntrillo/`. This includes:
+Both systems will the same logic layer located in `sources/syntrillo/`. This includes:
 
-- `blood_pressure/` — BP analysis and grading
-- `stroke_risk_score_v2/` — stroke risk score computation
+- `blood_pressure/` — BP analysis and grading (DB fetch and BP calculations)
+- `stroke_risk_score_v2/` — stroke risk score computation (All DB fetches and Risk score calculation)
 - `api_healthie/` — Healthie EHR integration
 - `api_tenovi/` — Tenovi device integration
 - `remote_monitoring/` — database manager
-- `billing/`, `chatbots/`, `patient_onboarding/` — other clinical modules
-
-The FastAPI backend imports directly from this shared layer via a symlink (`apps/FastAPI/syntrillo → sources/syntrillo`). This means no business logic is duplicated — the migration is purely a transport and rendering layer change.
-
----
-
-## What Has Been Migrated
-
-| Feature | Legacy Route | New Endpoint | Status |
-|---|---|---|---|
-| BP Summary | `POST /healthie/.../analysis` | `GET /api/v1/blood-pressure/summary` | ✅ Done |
-| BP Analysis Table | `POST /healthie/.../analysis` | `GET /api/v1/blood-pressure/analysis` | ✅ Done |
-| BP Extremes | `POST /healthie/.../analysis` | `GET /api/v1/blood-pressure/extremes` | ✅ Done |
-| BP Distribution | `POST /healthie/.../analysis` | `GET /api/v1/blood-pressure/distribution` | ✅ Done |
-| BP Download (PDF) | `GET /healthie/.../download` | `GET /api/v1/blood-pressure/download` | ✅ Done |
-| BP Metrics | `POST /healthie/.../metrics` | `GET /api/v1/blood-pressure/metrics` | ✅ Done |
-| Resting HR | `POST /healthie/.../hr` | `GET /api/v1/blood-pressure/hr` | ✅ Done |
-| Biometrics | `POST /healthie/.../biometrics` | `GET /api/v1/blood-pressure/biometrics` | ✅ Done |
-| Risk Score | Legacy Flask route | `GET /api/v1/risk-score/...` | 🔄 In Progress |
-| Devices | Legacy Flask route | `GET /api/v1/devices/...` | 🔄 In Progress |
-
----
+- `billing/`, `chatbots/`, `patient_onboarding/` — other modules //comment from Navya not entirely sure what all of these are
 
 ## Migration Plan
 
-**Phase 1 — API layer (current)**
-Port all Flask routes to FastAPI. Each old route becomes one or more focused REST endpoints that return JSON. No HTML is returned from the API. Auth is enforced via FastAPI dependency injection before any patient data is accessed.
+**Phase 1 — API layer (ongoing)** Port all Flask routes to FastAPI. Each old route becomes one or more focused REST endpoints that return JSON. No HTML is returned from the API. Auth is enforced via FastAPI dependency injection before any patient data is accessed.
 
-**Phase 2 — Frontend**
-Build the React-TS frontend to consume the new API. The React app replaces all Jinja templates and Flask-rendered iframes. Components are organized by clinical domain (BP tab, risk score tab, etc.).
+**Phase 2 — Frontend (ongoing)** Build the React-TS frontend to consume the new API. The React app replaces all Jinja templates and Flask-rendered iframes. Components are organized by clinical domain (BP tab, risk score tab, etc.).
 
-**Phase 3 — Deployment**
-Deploy FastAPI to AWS (replacing PythonAnywhere for the backend). The React app is served as a static build. The `apps/AWS` directory contains CDK infrastructure and Lambda functions for this phase.
-
----
-
-## Key Design Decisions
-
-**Single endpoint per data concern** — The legacy `/analysis` endpoint returned a large bundle. The new API splits this into `/summary`, `/analysis`, `/extremes`, and `/distribution` so the React frontend can fetch them in parallel or on-demand.
-
-**Server-side PDF generation** — The legacy PDF download required the client to send pre-rendered JSON. The new `/download` endpoint computes everything server-side and streams the PDF directly.
-
-**Auth before data** — All endpoints that touch patient data require a valid `syntrillo_internal_key`. The `TestAuthEnforcement` test suite must always pass — it verifies unauthenticated requests are rejected at the route level.
-
-**No PHI in tests** — All test data is synthetic. Real patient identifiers must never appear under `tests/`.
-
----
+**Phase 3 — Deployment** Deploy FastAPI to AWS (replacing PythonAnywhere for the backend). The React app is served as a static build. The `apps/AWS` directory contains CDK infrastructure and Lambda functions for this phase.
 
 ## Navigation
 
 <CardGroup cols={2}>
-  <Card title="Backend (FastAPI)" icon="python" href="/migration/backend/overview">
+  <Card icon="python" href="/migration/backend/overview" title="Backend (FastAPI)">
     Route structure, dependency injection, schemas, and testing
   </Card>
-  <Card title="Frontend (React-TS)" icon="browser" href="/migration/frontend/overview">
+  <Card icon="browser" href="/migration/frontend/overview" title="Frontend (React-TS)">
     App structure, pages, components, and API integration
   </Card>
 </CardGroup>

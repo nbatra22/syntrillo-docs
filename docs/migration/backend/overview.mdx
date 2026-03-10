@@ -19,25 +19,7 @@ The server runs via Uvicorn and auto-generates interactive API docs at `/docs` (
 pip install -r requirements.txt
 ```
 
-**2. Create the syntrillo symlink** (one-time)
-
-```bash
-ln -s ../../sources/syntrillo syntrillo
-```
-
-This makes `syntrillo` importable from within `apps/FastAPI/` and resolves the relative SSL certificate path used by the database connection layer.
-
-**3. Configure environment variables**
-
-Create a `.env` file in `apps/FastAPI/`:
-
-```
-FAST_ENV=development          # set to "production" in prod
-DATABASE_SERVER=AWS           # or PythonAnywhere
-CORS_ORIGINS=["http://localhost:5173"]
-```
-
-**4. Start the server**
+**2. Start the server**
 
 ```bash
 uvicorn main:app --reload
@@ -45,17 +27,17 @@ uvicorn main:app --reload
 
 The server starts at `http://127.0.0.1:8000`.
 
-| URL | Purpose |
-|---|---|
-| `http://127.0.0.1:8000/docs` | Swagger UI (interactive) |
-| `http://127.0.0.1:8000/redoc` | ReDoc |
-| `http://127.0.0.1:8000/health` | Health check |
+| URL                            | Purpose                  |
+| ------------------------------ | ------------------------ |
+| `http://127.0.0.1:8000/docs`   | Swagger UI (interactive) |
+| `http://127.0.0.1:8000/redoc`  | ReDoc                    |
+| `http://127.0.0.1:8000/health` | Health check             |
 
 ---
 
 ## App Structure
 
-```
+```text
 apps/FastAPI/
 ├── main.py           # App factory, CORS middleware, router registration
 ├── config.py         # Settings loaded from .env
@@ -74,82 +56,6 @@ apps/FastAPI/
 
 ---
 
-## Routes
-
-### Blood Pressure — `/api/v1/blood-pressure`
-
-All BP endpoints share a `get_loaded_bp` dependency that instantiates `BloodPressureAnalysis` and loads the patient's data once per request. This avoids redundant DB calls when multiple endpoints are hit in parallel.
-
-| Endpoint | Description |
-|---|---|
-| `GET /summary` | Key metrics with grades for the current timeframe. Powers the summary card at the top of the BP tab. |
-| `GET /analysis` | Full timeframed analysis table with per-metric grades and progress deltas. |
-| `GET /extremes` | Out-of-bounds readings: SBP < 90, SBP > 170, or DBP > 110. |
-| `GET /distribution` | Box-and-whisker statistics (systolic + diastolic) by hour of day. Powers the distribution chart. |
-| `GET /hr` | Baseline, prior, and current resting heart rate averages. |
-| `GET /biometrics` | Physical activity, BMI, and SSQ data across timeframes. |
-| `GET /metrics` | SSQ score, BMI, and resting heart rate for a patient. |
-| `GET /download` | Streams a PDF blood pressure report. Analysis computed server-side. |
-
-All endpoints accept `temporary_lookup_code` as a query parameter. FastAPI's dependency injection resolves and caches identity within the request.
-
-### Risk Score — `/api/v1/risk-score`
-
-Stroke risk score endpoints. In progress.
-
-### Devices — `/api/v1/devices`
-
-Device listing and status endpoints (Tenovi integration). In progress.
-
----
-
 ## Authentication
 
-Auth is enforced via FastAPI dependency injection. The `get_syntrillo_internal_key` dependency resolves the patient's internal key from the `temporary_lookup_code` query parameter. Any endpoint that accesses patient data depends on this — unauthenticated requests are rejected with `401` before any data is touched.
-
-The `TestAuthEnforcement` test class verifies this behavior and must always pass.
-
----
-
-## Shared Business Logic
-
-The FastAPI app imports from `sources/syntrillo/` via the symlink. Key modules used:
-
-| Module | Purpose |
-|---|---|
-| `syntrillo.blood_pressure.analysis` | New BP analysis class used by `/summary`, `/analysis`, `/extremes`, `/distribution` |
-| `syntrillo.bp_analysis.bp_analysis` | Legacy BP analysis (aliased `LegacyBPAnalysis`) — used by `/download` because `BloodPressureReport` requires DataFrames |
-| `syntrillo.bp_analysis.bp_report` | PDF report generation |
-| `syntrillo.stroke_risk_score_v2` | Stroke risk scoring |
-| `syntrillo.api_healthie` | Healthie EHR API client |
-| `syntrillo.remote_monitoring.syntrillo_database_manager` | AWS database manager |
-
----
-
-## Testing
-
-All test data is synthetic — no real patient information or PHI.
-
-```bash
-# Run all tests
-pytest
-
-# Unit tests only (no HTTP, no network)
-pytest tests/unit/
-
-# Integration tests only (HTTP layer, mocked dependencies)
-pytest tests/integration/
-
-# With coverage
-pytest --cov=. --cov-report=term-missing
-
-# Stop on first failure
-pytest -x
-
-# Specific test
-pytest tests/unit/test_bp_analysis.py::TestGradeMetric::test_avg_sbp_optimal
-```
-
-**Rules:**
-- `TestAuthEnforcement` must always pass — it verifies unauthenticated requests are rejected before any patient data is accessed.
-- Never add real patient identifiers, lookup codes, or health records to any file under `tests/`.
+??
