@@ -5,35 +5,9 @@ description: "FastAPI architecture, route structure, dependencies, and testing."
 
 ## Overview
 
-The new backend is a FastAPI application located at `apps/FastAPI/`. It replaces the Flask server on PythonAnywhere and exposes a versioned JSON REST API under `/api/v1/`. No HTML is returned — all rendering is handled by the React frontend.
+The new backend is a FastAPI application located at `apps/FastAPI/`. It should replace the Flask server on PythonAnywhere.
 
-The server runs via Uvicorn and auto-generates interactive API docs at `/docs` (Swagger UI) and `/redoc`.
-
----
-
-## Setup
-
-**1. Install dependencies** (from `apps/FastAPI/`)
-
-```bash
-pip install -r requirements.txt
-```
-
-**2. Start the server**
-
-```bash
-uvicorn main:app --reload
-```
-
-The server starts at `http://127.0.0.1:8000`.
-
-| URL                            | Purpose                  |
-| ------------------------------ | ------------------------ |
-| `http://127.0.0.1:8000/docs`   | Swagger UI (interactive) |
-| `http://127.0.0.1:8000/redoc`  | ReDoc                    |
-| `http://127.0.0.1:8000/health` | Health check             |
-
----
+The server runs via Uvicorn and also auto-generates API docs at `/docs` and `/redoc`.
 
 ## App Structure
 
@@ -55,6 +29,12 @@ apps/FastAPI/
 ```
 
 ---
+
+## Stroke Risk Score
+
+Basic Stroke Risk Score flow will look like: 
+
+Webhook (healthie update or internal db update) → will call class function like engine_run("trigger") or something which will run aggregate_data() followed by srs_update().
 
 ## Authentication
 

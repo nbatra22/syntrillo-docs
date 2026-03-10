@@ -3,6 +3,32 @@ title: "Overview"
 description: "System migration from Flask/PythonAnywhere to FastAPI + React-TS."
 ---
 
+Start the system: (Install dependencies if needed)
+
+1. In one terminal open AWS/syntrillo-clinic-backend/utils/bastion
+
+   run the command:
+
+```text
+./ssm-start.sh staging mysql-tunnel
+```
+
+2. In a new terminal enter  app/FastAPI directory
+
+   To install dependencies run _<u>pip install -r requirements.txt</u>_
+
+   To run the program run command:
+
+`uvicorn main:app --reload`
+
+3. In a third terminal cd into app/React-TS directory
+
+   To install dependencies run _<u>npm install</u>_
+
+   run the command
+
+`npm run dev`
+
 ## Architecture: Before vs. After
 
 <CardGroup cols={2}>
@@ -27,17 +53,6 @@ description: "System migration from Flask/PythonAnywhere to FastAPI + React-TS."
 </CardGroup>
 
 ---
-
-## Shared Business Logic
-
-Both systems will the same logic layer located in `sources/syntrillo/`. This includes:
-
-- `blood_pressure/` — BP analysis and grading (DB fetch and BP calculations)
-- `stroke_risk_score_v2/` — stroke risk score computation (All DB fetches and Risk score calculation)
-- `api_healthie/` — Healthie EHR integration
-- `api_tenovi/` — Tenovi device integration
-- `remote_monitoring/` — database manager
-- `billing/`, `chatbots/`, `patient_onboarding/` — other modules //comment from Navya not entirely sure what all of these are
 
 ## Migration Plan
 
