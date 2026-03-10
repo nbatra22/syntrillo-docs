@@ -1,10 +1,105 @@
 ---
-title: "Frontend"
-description: "This page is coming soon."
+title: "Frontend (React-TS)"
+description: "React + TypeScript architecture, app structure, and API integration."
 ---
 
-<Warning>
-  This page is currently under construction.
-</Warning>
+## Overview
 
-This section will cover the **New System Frontend Overview**. Check back soon for full documentation.
+The new frontend is a React 19 + TypeScript application built with Vite, located at `apps/React-TS/`. It replaces all Flask-rendered HTML templates and Jinja iframes. The app runs entirely in the browser and fetches data from the FastAPI backend.
+
+---
+
+## Setup
+
+**1. Install dependencies** (from `apps/React-TS/`)
+
+```bash
+npm install
+```
+
+**2. Start the development server**
+
+```bash
+npm run dev
+```
+
+The app runs at `http://localhost:5173` by default. The FastAPI backend must also be running at `http://127.0.0.1:8000` (configured via `CORS_ORIGINS` in the backend `.env`).
+
+**Other scripts:**
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Development server with HMR |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+
+---
+
+## Stack
+
+| Tool | Purpose |
+|---|---|
+| **React 19** | UI framework |
+| **TypeScript** | Static typing |
+| **Vite** | Build tool and dev server (HMR via SWC) |
+| **Tailwind CSS 4** | Utility-first styling |
+| **React Router** | Client-side navigation |
+
+---
+
+## App Structure
+
+```
+apps/React-TS/src/
+├── main.tsx              # Entry point — renders <App /> into the DOM
+├── App.tsx               # Root component, router setup
+├── App.css
+├── index.css             # Tailwind base styles
+├── pages/
+│   ├── login/            # Login page
+│   ├── patient-sidebar/  # Patient-facing sidebar view
+│   ├── provider-sidebar/ # Provider-facing sidebar view
+│   └── provider-tab/     # Provider tab views (BP, risk score, etc.)
+├── components/
+│   ├── auth/             # Auth-related components
+│   ├── inputs/           # Shared input components
+│   ├── patient-sidebar/  # Components for the patient sidebar page
+│   ├── provider-sidebar/ # Components for the provider sidebar page
+│   └── provider-tab/     # Components for the provider tab pages
+├── utils/                # Shared utilities and API client helpers
+└── assets/               # Static assets
+```
+
+---
+
+## Pages
+
+**Provider Tab** — The main clinical view. Loads data from the FastAPI API and renders the BP tab, risk score tab, and other clinical panels. Corresponds to the legacy Flask iframes that were embedded in Healthie.
+
+**Provider Sidebar** — Provider-facing patient list and navigation.
+
+**Patient Sidebar** — Patient-facing view showing their own data.
+
+**Login** — Authentication entry point.
+
+---
+
+## API Integration
+
+The React app fetches data from the FastAPI backend (`http://127.0.0.1:8000/api/v1/...` in development). A key design advantage over the legacy system: the frontend can fetch multiple endpoints **in parallel** rather than waiting for a single large response.
+
+For example, the BP tab can simultaneously fetch `/summary`, `/analysis`, `/extremes`, and `/distribution` using `Promise.all`, reducing total load time compared to the legacy single-payload approach.
+
+All API calls pass a `temporary_lookup_code` query parameter for patient identity resolution. Auth failures return `401` and are handled by the app before rendering any patient data.
+
+---
+
+## Key Differences from the Legacy System
+
+| Legacy (Flask) | New (React-TS) |
+|---|---|
+| HTML rendered server-side by Flask/Jinja | React renders entirely in the browser |
+| Single large `/analysis` payload | Multiple focused endpoints, fetched in parallel |
+| iFrame-based embedding in Healthie | Standalone React app (or embeddable component) |
+| No TypeScript — Python templates | Fully typed TypeScript components |
+| Tailwind not used | Tailwind CSS 4 for all styling |
