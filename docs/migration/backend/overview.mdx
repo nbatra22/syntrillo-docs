@@ -32,10 +32,25 @@ apps/FastAPI/
 
 ## Stroke Risk Score
 
-Basic Stroke Risk Score flow will look like: 
+Basic Stroke Risk Score flow will look like:
 
-Webhook (healthie update or internal db update) → will call class function like engine_run("trigger") or something which will run aggregate_data() followed by srs_update().
+Webhook (healthie update or internal db update) → will call our stroke risk score flow aggregate_data() and srs_update().
 
-## Authentication
+To view details about the current status of the Stroke Risk Score architecture and plans view:
 
-??
+<Columns cols={2}>
+  <Column>
+    <Card icon="sparkles" title="SRS / JOSH">
+      Click to view implementation plan and specs
+    </Card>
+  </Column>
+  <Column>
+    <Card icon="sparkles" title="SRS / NAV">
+      Click to view current status of stroke risk score updates
+    </Card>
+  </Column>
+</Columns>
+
+## Blood Pressure
+
+Will be almost identical to our current blood pressure flow. Will add a visual representation of most recent reading + old readings. 

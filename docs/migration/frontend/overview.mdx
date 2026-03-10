@@ -47,3 +47,29 @@ apps/React-TS/src/
 The React app fetches data from the FastAPI backend (`http://127.0.0.1:8000/api/v1/...` in development). A key design advantage over the legacy system: the frontend can fetch multiple endpoints **in parallel** rather than waiting for a single large response.
 
 For example, the BP tab can simultaneously fetch `/summary`, `/analysis`, `/extremes`, and `/distribution` using `Promise.all`, reducing total load time compared to the legacy single-payload approach. Planning on making this event driven
+
+<Columns cols={3}>
+  <Column>
+    Provider Tab: Dashboard that includes Stroke Risk Score data, Blood pressure card, and interactie cards to enable data updates
+  </Column>
+  <Column>
+    Provider Sidebar
+  </Column>
+  <Column>
+    Patient Sidebar
+  </Column>
+</Columns>
+
+<Columns cols={3}>
+  <Column>
+    <Frame>
+      ![Screenshot 2026 03 10 At 3 26 54 PM](/images/Screenshot2026-03-10at3.26.54PM.png)
+    </Frame>
+  </Column>
+  <Column>
+    
+  </Column>
+  <Column>
+    
+  </Column>
+</Columns>
