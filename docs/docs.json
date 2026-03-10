@@ -35,10 +35,10 @@
             "pages": [
               "migration/overview",
               "migration/backend/overview",
-              "migration/frontend/overview"
+              "migration/frontend/overview",
+              "migration/aws-updates"
             ]
-          },
-          "risk-factors-names"
+          }
         ]
       },
       {
