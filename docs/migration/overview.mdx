@@ -30,11 +30,11 @@ description: "System migration from Flask/PythonAnywhere to FastAPI + React-TS."
 
 ## Migration Plan
 
-**Phase 1 — API layer (ongoing)** Port all Flask routes to FastAPI. Each old route becomes one or more focused REST endpoints that return JSON. No HTML is returned from the API. Auth is enforced via FastAPI dependency injection before any patient data is accessed.
+**Phase 1 — API layer (ongoing)** Port all Flask routes to FastAPI. Each old route becomes one or more focused REST endpoints that return JSON. No HTML is returned from the API.
 
-**Phase 2 — Frontend (ongoing)** Build the React-TS frontend to consume the new API. The React app replaces all Jinja templates and Flask-rendered iframes. Components are organized by clinical domain (BP tab, risk score tab, etc.).
+**Phase 2 — Frontend (ongoing)** Build the React-TS frontend to consume the new API. The React app replaces all Jinja templates and Flask-rendered iframes. Components are organized by feature (BP tab, risk score, etc.).
 
-**Phase 3 — Deployment** Deploy FastAPI to AWS (replacing PythonAnywhere for the backend). The React app is served as a static build. The `apps/AWS` directory contains CDK infrastructure and Lambda functions for this phase.
+**Phase 3 — Deployment** Lambda functions for webhook triggers to update databases and stroke risk score. Each page deployed separately. 
 
 ## Read More About:
 
