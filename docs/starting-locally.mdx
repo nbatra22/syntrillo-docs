@@ -2,4 +2,62 @@
 title: "Starting Locally"
 ---
 
-Our system migration code exists in our repositiory in the 'system-migration' branch.
+Our system migration code exists in our repositiory in the 'system-migration' branch. Once you are on this branch, open three different terminals:
+
+1. Backend / FastAPI
+
+   ```text
+   // from ~/SyntrilloClinic, navigate to the FastAPI directory
+   cd apps/FastAPI
+   
+   // run the server
+   uvicorn main:app --reload
+   ```
+2. mySQL tunnel
+
+   ```text
+   // navigate to bastion directory
+   cd apps/AWS/syntrillo_clinic_backend/utils/bastion
+   
+   // initiate the mysql tunnel
+   ./ssm-start.sh staging mysql-tunnel
+   ```
+3. Frontend / React
+
+   ```text
+   // navigate to React directory
+   cd apps/React-TS
+   
+   // start the server
+   npm run dev
+   ```
+
+Once you have the tunnel connected and the frontend + backend servers running, open up your browser and navigate to the following URL:
+
+```text
+http://localhost:5173/
+```
+
+This will take you to our landing page, which isn't being used. Instead, you will need to navigate to the provider page:
+
+```text
+http://localhost:5173/provider/[patientID]
+```
+
+Since we are not making use of the patientID query parameter at this point in time, you can just leave that as any integer value for now. This specific URL path is meant to mirror a patient's 'Extra' tab in Healthie. Our plan moving forward is to convert the existing Flask routes into the following React displays:
+
+- Provider View
+  - `/iframe_provider_tab` ⇒ `/provider/[patientID]`
+- Patient Dashboard
+  - `/iframe_patient_sidebar` ⇒ `/patient/[patientID]`
+- Admin Page
+  - `/iframe_provider_sidebar` ⇒ `/admin/[adminID]`
+
+Having a standalone, data-driven backend server also allows us with better flexibility with how we structure our backend routing. One issue with the legacy Flask system is that we needed to create similar routes for different displays in Healthie. An example of is having to have two versions of a `GET /blood_pressure/summary` route in both the `/iframe_provider_tab` and the `/iframe_patient_sidebar`. With the new FastAPI framework, we can now call the same backend route across different frontend pages. This is the general layout of our new backend routing system:
+
+- /blood_pressure
+- /risk_score
+- /medications
+- /devices
+
+Keep in mind that a lot of this system migration is still under development and subject to change.
