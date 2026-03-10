@@ -412,7 +412,7 @@ class SRSCalculator():
 
 ### SRS Engine
 
-The main entry point to this entire automation. 
+The main entry point to this entire automation.
 
 ```text
 class SRSEngine():
@@ -429,7 +429,7 @@ class SRSEngine():
 
 ### My brain is fried
 
-You may have noticed some weird props thrown in above. This is because I think we can speed up parts of this process by passing in a trigger prop into the engine class, which would signify what bucket was updated. Knowing this information, the aggregator class can simply get that respective bucket's updated data and replace it in the latest copy of the patient's SRS data object. 
+You may have noticed some weird props thrown in above. This is because I think we can speed up parts of this process by passing in a trigger prop into the engine class, which would signify what bucket was updated. Knowing this information, the aggregator class can simply get that respective bucket's updated data and replace it in the latest copy of the patient's SRS data object.
 
 An example would be if a post-onboarding patient has a new lab value recorded, then from the Lambda function after receiving the webhook event, we instantiate this class something along these lines:
 
@@ -491,3 +491,20 @@ class SRSDataAggregator():
 ```
 
 Finally, back in the engine class, after aggregating and calculating, we can save the new copy with the trigger as an additional column to this new datatable we've been talking bout
+
+## DB Schema
+
+### srs_risk_factor_names
+
+https://docs.google.com/spreadsheets/d/1cjdvPtfFSro3z_RcawgzVU7HvSFctLRc2F_bWlctuOQ/edit?usp=sharing
+
+The link above includes all of the metrics we'd want to show somewhere in the display. Here's the updated list of columns:
+
+- **metric_key**: this will serve as a unique metric identifier which should be used across relative tables like medical_history and substance_use
+- **display_name**: long metric naming convention to be used in frontend
+- **short_name**: shortened metric naming convention to be used in frontend
+- **unit** (optional)
+- **calc_type**: depdenist vs. independent risk factor
+- **compliance**: boolean value to determine whether we need to track treatment compliance / optimization
+- **dependency**: list of related fields that are required for specified metric to be not null
+- **factor_group**: risk factor metric group / bucket / type 
