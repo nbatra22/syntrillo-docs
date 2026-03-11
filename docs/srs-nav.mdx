@@ -5,7 +5,7 @@ title: "SRS / NAV"
 ## Current status
 
 - **✅** create medical history, srs_names, and substance use tables
-- <kbd>x</kbd> populate medical_history and substance_use from srs_form_responses or Healthie getAllFormResponses endpoint (currently got dummy data)
+- <kbd>x</kbd> populate medical_history and substance_use from srs_form_responses or Healthie getAllFormResponses endpoint (currently got dummy data + Cris P Bacon)
 - **✅** make sure`medical_history` and `substance_use` are **append-only** db (keep full history with `created_at`) or **upsert/latest-only** (one row per patient)?
 - **✅**  write a new data_agg.py in stroke_risk_score_v3
   - **✅** add get_medical_history(patient-lookup-key) ← from new data table
@@ -14,18 +14,108 @@ title: "SRS / NAV"
   - **✅** get_physical_activity ← get_srs_healthie()
   - **✅** get_lab_values ← get_lab_data()
   - **✅** get_heart_rate ← from tenovi
-- <kbd>x</kbd>  restructure data_agg output to be:
+- **✅**  data_agg output looks like:
 
 ```text
-def aggregate_data(self) -> dict:
-    return {
-        'medical_history': self.get_medical_history(),
-        'blood_pressure': self.get_blood_pressure(),
-        'lab_values': self.get_lab_values(),
-        'substance_use': self.get_substance_use(),
-        'physical_activity': self.get_physical_activity(),
-        'heart_rate': self.get_heart_rate(),
-    }
+{
+  "patient_name": "Cris P. Bacon",
+  "syntrillo_internal_key": "99fddf03-9304-4e48-8711-0cc4d825eb94",
+  "last_updated": "2026-03-11T11:29:32.909832",
+  "medical_history": {
+    "created_at": "2026-03-11 14:46:05",
+    "updated_at": "2026-03-11 14:46:05",
+    "has_stroke": 1,
+    "stroke_count": "One",
+    "stroke_mechanism": "Cryptogenic",
+    "has_tia": 0,
+    "tia_likelihood": null,
+    "tia_mechanism": null,
+    "has_prior_head_ct": 1,
+    "prior_ct_date": "2024-01-15",
+    "has_chronic_infarct": 0,
+    "chronic_infarct_mechanism": null,
+    "has_afib": 0,
+    "has_id_anemia": 0,
+    "anemia_severity": null,
+    "arterial_clots": "Unknown",
+    "venous_clots": "Unknown",
+    "pfo_presence": "Unknown",
+    "has_chf": 0,
+    "ejection_fraction": "Unknown",
+    "has_carotid_stenosis": 0,
+    "stenosis_percentage": "Unknown",
+    "has_osa": 1,
+    "osa_severity": "Mild",
+    "has_cad": 0,
+    "cad_type": "Unknown",
+    "has_valvular_heart_disease": 0,
+    "has_ckd": 0,
+    "has_hyperlipidemia": 1
+  },
+  "blood_pressure": {
+    "systolic": {
+      "trailing": {
+        "SBP Count (>= 175)": 0.0,
+        "variability": 2.9,
+        "Avg SBP (mmHg)": 161.4,
+        "Peak AVG SBP": 168.7
+      },
+      "baseline": {
+        "SBP Count (>= 175)": 0.0,
+        "Avg SBP (mmHg)": 110.7,
+        "variability": 8.0,
+        "Peak AVG SBP": 118.7
+      }
+    },
+    "diastolic": {
+      "trailing": {
+        "Avg DBP (mmHg)": 102.0
+      },
+      "baseline": {
+        "Avg DBP (mmHg)": 63.0
+      }
+    },
+    "baseline_start_date": "2024-06-19 09:38:00-04:00"
+  },
+  "lab_values": {
+    "ldl_value": 110.0,
+    "hdl_value": 1.2,
+    "creatintine_value": 2.1,
+    "hgA1c_value": 10.2,
+    "hsCRP_value": 2.2,
+    "hemoglobin_value": 3.2
+  },
+  "substance_use": {
+    "created_at": "2026-03-11 14:46:05",
+    "updated_at": "2026-03-11 14:46:05",
+    "uses_alcohol": 1,
+    "alcohol_frequency": "Occasionally",
+    "alcohol_drinks_per_day": 1.0,
+    "alcohol_drinking_days_per_month": 4.0,
+    "alcohol_use_updated_at": null,
+    "uses_tobacco": 1,
+    "tobacco_type": "Cigarettes",
+    "tobacco_status": "Former",
+    "tobacco_cigarettes_per_day": 10.0,
+    "tobacco_pack_years": 5.0,
+    "tobacco_use_updated_at": null,
+    "uses_marijuana": 0,
+    "marijuana_frequency": null,
+    "marijuana_use_updated_at": null
+  },
+  "physical_activity": {
+    "inactivity_hours_answer": 8.0,
+    "activity_minutes_answer": 60.0,
+    "ssq_score": null
+  },
+  "heart_rate": {
+    "average_rhr_baseline": 124.14,
+    "average_rhr_trailing": null,
+    "average_rhr_prior": null,
+    "trailing_hr_average": null,
+    "trailing_hr_variability": null
+  }
+}
 ```
 
 - <kbd>x</kbd>  start on srsCalculator (not here yet)  intermediate steps after talking w Josh
@@ -46,7 +136,7 @@ Webhook (healthie update or internal db update) → call a engine class function
 
   ```text
   'data': {
-  	'medical_history': {...}, // pulled from healthie and internal db
+  	'medical_history': {...}, // pulled from internal db
   	'blood_pressure': {...}, // pulled from internal db
   	'lab_values': {...}, // pulled from healthie
   	'substance_use': {...} // healthie and internal db
