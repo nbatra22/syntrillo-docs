@@ -7,13 +7,13 @@ title: "SRS / NAV"
 - **✅** create medical history, srs_names, and substance use tables
 - <kbd>x</kbd> populate medical_history and substance_use from srs_form_responses or Healthie getAllFormResponses endpoint (currently got dummy data)
 - **✅** make sure`medical_history` and `substance_use` are **append-only** db (keep full history with `created_at`) or **upsert/latest-only** (one row per patient)?
-- <kbd>x</kbd>  write a new data_agg.py in stroke_risk_score_v3
+- **✅**  write a new data_agg.py in stroke_risk_score_v3
   - **✅** add get_medical_history(patient-lookup-key) ← from new data table
   - **✅** add get_substance_use(patient-lookup-key) ← from new data table
-  - <kbd>x</kbd> add get_blood_pressure (this can be the same way it is doing before)
-  - <kbd>x</kbd> get_physical_activity (can also be the same)
-  - <kbd>x</kbd> get_lab_values (can also be the same)
-  - <kbd>x</kbd> get_heart_rate (can be the same)
+  - **✅** add get_blood_pressure ← via tenovi
+  - **✅** get_physical_activity ← get_srs_healthie()
+  - **✅** get_lab_values ← get_lab_data()
+  - **✅** get_heart_rate ← from tenovi
 - <kbd>x</kbd>  restructure data_agg output to be:
 
 ```text
